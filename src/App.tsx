@@ -345,6 +345,7 @@ const MarketplaceReceipts = lazyRetry(() => import("./pages/MarketplaceReceipts"
 const LeadDetail = lazyRetry(() => import("./pages/LeadDetail"));
 const SharedLead = lazyRetry(() => import("./pages/SharedLead"));
 const MyMortgageRadar = lazyRetry(() => import("./pages/MyMortgageRadar"));
+const AcceptTeamInvite = lazyRetry(() => import("./pages/AcceptTeamInvite"));
 const MyMissedCall = lazyRetry(() => import("./pages/MyMissedCall"));
 const MySiteRadar = lazyRetry(() => import("./pages/MySiteRadar"));
 const SiteRadarLanding = lazyRetry(() => import("./pages/SiteRadarLanding"));
@@ -991,6 +992,7 @@ const App = () => (
                     <Route path="/join/:code" element={<JoinTeam />} />
                     <Route path="/coach-hub" element={<ProtectedRoute><CoachHub /></ProtectedRoute>} />
                     <Route path="/my-team" element={<ProtectedRoute><MyTeam /></ProtectedRoute>} />
+                    <Route path="/accept-team-invite" element={<AcceptTeamInvite />} />
                     <Route path="/client-dash" element={<ProtectedRoute><ClientDashboard /></ProtectedRoute>} />
                     <Route path="/agency-portal" element={<ClientRoute><AgencyClientPortal /></ClientRoute>} />
                     <Route path="/embed/capture/:tenantId" element={<EmbedCapture />} />

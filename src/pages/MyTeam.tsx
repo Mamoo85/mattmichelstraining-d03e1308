@@ -1,129 +1,169 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
-import AppNavbar from "@/components/layout/AppNavbar";
-import TeamFeed from "@/components/teams/TeamFeed";
-import TeamLeaderboard from "@/components/teams/TeamLeaderboard";
-import TeamTodayWorkout from "@/components/teams/TeamTodayWorkout";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Users, Trophy, Flame } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { Loader2, Mail, Trash2, Users, Plus } from "lucide-react";
 
-const MyTeam = () => {
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  const [membership, setMembership] = useState<any>(null);
-  const [team, setTeam] = useState<any>(null);
-  const [memberCount, setMemberCount] = useState(0);
+interface Member {
+  id: string;
+  member_email: string;
+  status: "invited" | "active" | "revoked";
+  role: string;
+  invited_at: string;
+  accepted_at: string | null;
+}
+
+export default function MyTeam() {
   const [loading, setLoading] = useState(true);
+  const [members, setMembers] = useState<Member[]>([]);
+  const [seatCap, setSeatCap] = useState(10);
+  const [email, setEmail] = useState("");
+  const [inviting, setInviting] = useState(false);
+
+  const load = async () => {
+    setLoading(true);
+    const { data, error } = await supabase.functions.invoke("team-seat-manager", {
+      body: { action: "list" },
+    });
+    if (error) {
+      toast.error("Couldn't load team");
+    } else {
+      setMembers((data as any)?.members || []);
+      setSeatCap((data as any)?.seat_cap || 10);
+    }
+    setLoading(false);
+  };
 
   useEffect(() => {
-    if (!user) return;
-    const load = async () => {
-      const { data: member } = await supabase
-        .from("team_members")
-        .select("*, team_rosters(*)")
-        .eq("athlete_user_id", user.id)
-        .eq("status", "active")
-        .limit(1)
-        .maybeSingle();
-
-      if (member) {
-        setMembership(member);
-        setTeam(member.team_rosters);
-
-        // Get member count
-        const { count } = await supabase
-          .from("team_members")
-          .select("*", { count: "exact", head: true })
-          .eq("roster_id", (member.team_rosters as any).id)
-          .eq("status", "active");
-        setMemberCount(count || 0);
-      }
-      setLoading(false);
-    };
     load();
-  }, [user]);
+  }, []);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <AppNavbar />
-        <div className="flex items-center justify-center pt-32">
-          <Loader2 className="animate-spin text-primary" size={32} />
-        </div>
-      </div>
-    );
-  }
+  const invite = async () => {
+    const e = email.trim().toLowerCase();
+    if (!e) return;
+    setInviting(true);
+    const { data, error } = await supabase.functions.invoke("team-seat-manager?action=invite", {
+      body: { email: e },
+    });
+    setInviting(false);
+    if (error || (data as any)?.error) {
+      const msg = (data as any)?.error || error?.message || "Invite failed";
+      toast.error(msg === "seat_cap_reached" ? `Seat cap reached (${seatCap})` : msg);
+      return;
+    }
+    toast.success(`Invited ${e}`);
+    setEmail("");
+    load();
+  };
 
-  if (!team) {
-    return (
-      <div className="min-h-screen bg-background">
-        <AppNavbar />
-        <div className="flex flex-col items-center justify-center pt-32 gap-4 px-6 text-center">
-          <Users size={48} className="text-muted-foreground" />
-          <h1 className="text-xl font-bold text-foreground">No Team Yet</h1>
-          <p className="text-muted-foreground text-sm">
-            Ask your coach for an invite link to join a team.
-          </p>
-          <Button variant="outline" onClick={() => navigate("/dashboard")}>
-            Back to Dashboard
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  const revoke = async (id: string, e: string) => {
+    if (!confirm(`Revoke access for ${e}?`)) return;
+    const { error } = await supabase.functions.invoke("team-seat-manager?action=revoke", {
+      body: { id },
+    });
+    if (error) toast.error("Revoke failed");
+    else {
+      toast.success("Access revoked");
+      load();
+    }
+  };
+
+  const active = members.filter((m) => m.status !== "revoked");
 
   return (
-    <div className="min-h-screen bg-background">
-      <AppNavbar />
-      <div className="container pt-20 pb-24 space-y-4">
-        {/* Team header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-black text-foreground uppercase tracking-wider">
-              {team.team_name}
-            </h1>
-            <div className="flex items-center gap-3 mt-1">
-              {team.sport && (
-                <Badge variant="default" className="text-[10px] uppercase tracking-wider">
-                  {team.sport}
-                </Badge>
-              )}
-              <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                <Users size={12} /> {memberCount}
-              </span>
-              {team.school_name && (
-                <span className="text-xs text-muted-foreground">{team.school_name}</span>
-              )}
-            </div>
-          </div>
+    <div className="min-h-screen bg-background text-foreground">
+      <Helmet>
+        <title>Team Seats · Detroit Web Agency</title>
+        <meta name="robots" content="noindex" />
+      </Helmet>
+      <div className="container max-w-2xl mx-auto px-4 py-10">
+        <div className="flex items-center gap-3 mb-2">
+          <Users className="w-6 h-6 text-primary" />
+          <h1 className="text-2xl font-bold">Team Seats</h1>
         </div>
+        <p className="text-sm text-muted-foreground mb-6">
+          Share your subscription with up to {seatCap} teammates. Flat fee — no extra cost per seat.
+        </p>
 
-        <Tabs defaultValue="feed" className="w-full">
-          <TabsList className="w-full grid grid-cols-3">
-            <TabsTrigger value="feed" className="text-xs">🔥 Feed</TabsTrigger>
-            <TabsTrigger value="workout" className="text-xs">💪 Workout</TabsTrigger>
-            <TabsTrigger value="board" className="text-xs">🏆 Board</TabsTrigger>
-          </TabsList>
+        <Card className="p-5 mb-6">
+          <h2 className="text-sm font-semibold uppercase tracking-wider mb-3">Invite a teammate</h2>
+          <div className="flex gap-2">
+            <Input
+              type="email"
+              value={email}
+              placeholder="teammate@company.com"
+              onChange={(e) => setEmail(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && invite()}
+            />
+            <Button onClick={invite} disabled={inviting || !email}>
+              {inviting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+              Invite
+            </Button>
+          </div>
+        </Card>
 
-          <TabsContent value="feed">
-            <TeamFeed rosterId={team.id} />
-          </TabsContent>
-
-          <TabsContent value="workout">
-            <TeamTodayWorkout rosterId={team.id} />
-          </TabsContent>
-
-          <TabsContent value="board">
-            <TeamLeaderboard rosterId={team.id} />
-          </TabsContent>
-        </Tabs>
+        <Card className="p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-semibold uppercase tracking-wider">
+              Members ({active.length}/{seatCap})
+            </h2>
+          </div>
+          {loading ? (
+            <div className="py-8 text-center text-muted-foreground">
+              <Loader2 className="w-5 h-5 animate-spin inline mr-2" /> Loading…
+            </div>
+          ) : members.length === 0 ? (
+            <div className="py-8 text-center text-muted-foreground text-sm">
+              No teammates yet. Invite one above.
+            </div>
+          ) : (
+            <ul className="divide-y divide-border">
+              {members.map((m) => (
+                <li key={m.id} className="flex items-center justify-between py-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <Mail className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                    <div className="min-w-0">
+                      <div className="text-sm font-medium truncate">{m.member_email}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {m.status === "active" && m.accepted_at
+                          ? `Joined ${new Date(m.accepted_at).toLocaleDateString()}`
+                          : `Invited ${new Date(m.invited_at).toLocaleDateString()}`}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <Badge
+                      variant={
+                        m.status === "active"
+                          ? "default"
+                          : m.status === "revoked"
+                            ? "outline"
+                            : "secondary"
+                      }
+                    >
+                      {m.status}
+                    </Badge>
+                    {m.status !== "revoked" && (
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => revoke(m.id, m.member_email)}
+                        title="Revoke access"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Card>
       </div>
     </div>
   );
-};
-
-export default MyTeam;
+}
