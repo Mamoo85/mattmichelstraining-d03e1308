@@ -17,6 +17,8 @@ export interface DwaEmailOpts {
   subject: string;
   html: string;
   bcc?: string;
+  /** When set, mirrors a successful send onto the HubSpot contact's timeline. */
+  hubspotContactId?: string;
 }
 
 export async function dwaEmail(opts: DwaEmailOpts): Promise<{ ok: boolean; error?: string }> {
@@ -40,6 +42,15 @@ export async function dwaEmail(opts: DwaEmailOpts): Promise<{ ok: boolean; error
     if (!r.ok) {
       const txt = await r.text().catch(() => "");
       return { ok: false, error: `Resend ${r.status}: ${txt}` };
+    }
+    if (opts.hubspotContactId) {
+      // Lazy import to avoid edge-function cold-start cost when HubSpot isn't used
+      try {
+        const { logEngagement } = await import("./hubspot.ts");
+        await logEngagement(opts.hubspotContactId, "EMAIL", opts.html.replace(/<[^>]+>/g, " ").slice(0, 1000), opts.subject);
+      } catch (e) {
+        console.warn("[dwaEmail→hubspot]", e instanceof Error ? e.message : e);
+      }
     }
     return { ok: true };
   } catch (e) {
