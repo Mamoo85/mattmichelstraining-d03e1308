@@ -392,11 +392,22 @@ serve(async (req) => {
       ? `<div style="margin:0 0 20px;border-radius:8px;overflow:hidden;border:1px solid #1e3a5f;"><img src="${mapUrl}" alt="Lead map" width="600" style="display:block;width:100%;height:auto;"></div>`
       : "";
 
+    // Header copy varies for proof-of-work digests
+    const headerEyebrow = isProofOfWork
+      ? "🏠 Mortgage Radar — Market Pulse"
+      : "🏠 Mortgage Radar — Morning Brief";
+    const headerH1 = isProofOfWork
+      ? `Good morning ${c.contact_name || "there"} — no in-ZIP leads today, but here's nearby market activity worth watching.`
+      : `Good morning ${c.contact_name || "there"} — your top ${leads.length} in-market lead${leads.length === 1 ? "" : "s"} from the last 24 hours.`;
+    const headerSub = isProofOfWork
+      ? `<p style="color:#fbbf24;font-size:12px;margin:0 0 6px;">📡 Adjacent-area signals — outside your exclusive ZIPs but in your county. Useful for trend awareness, not direct outreach.</p><p style="color:#94a3b8;font-size:13px;margin:0 0 20px;">All from public records + behavioral signals.</p>`
+      : `<p style="color:#94a3b8;font-size:13px;margin:0 0 20px;">All from public records + behavioral signals. Outreach must be sent manually by you, in compliance with TCPA + FCRA.</p>`;
+
     const html = `<!DOCTYPE html><html><body style="margin:0;background:#030711;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
       <div style="max-width:640px;margin:0 auto;padding:28px 20px;">
-        <p style="margin:0;color:#00d4ff;font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase;">🏠 Mortgage Radar — Morning Brief</p>
-        <h1 style="color:#fff;font-size:24px;margin:10px 0 6px;line-height:1.3;">Good morning ${c.contact_name || "there"} — your top ${leads.length} in-market lead${leads.length === 1 ? "" : "s"} from the last 24 hours.</h1>
-        <p style="color:#94a3b8;font-size:13px;margin:0 0 20px;">All from public records + behavioral signals. Outreach must be sent manually by you, in compliance with TCPA + FCRA.</p>
+        <p style="margin:0;color:#00d4ff;font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase;">${headerEyebrow}</p>
+        <h1 style="color:#fff;font-size:24px;margin:10px 0 6px;line-height:1.3;">${headerH1}</h1>
+        ${headerSub}
         ${mapHtml}
         ${clusterHtml}
         ${cards}
@@ -407,8 +418,10 @@ serve(async (req) => {
         <p style="color:#64748b;font-size:10px;margin-top:24px;text-align:center;">Mortgage Radar uses public + behavioral signals only. We do not access, purchase, or resell credit-bureau trigger leads.</p>
       </div></body></html>`;
 
-    // #19 smart subject line
-    const subject = buildSubject(leads[0], leads.length);
+    // #19 smart subject line — softer for proof-of-work
+    const subject = isProofOfWork
+      ? `📡 ${c.contact_name?.split(" ")[0] || "Market"} pulse — ${leads.length} signal${leads.length === 1 ? "" : "s"} in your county`
+      : buildSubject(leads[0], leads.length);
 
     if (RESEND_API_KEY) {
       try {
