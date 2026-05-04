@@ -588,8 +588,10 @@ async function upsertWithDedup(sb: ReturnType<typeof createClient>, s: RawSignal
   if (!s.address) return null;
   // Phase B trust gate: LLM-only-sourced leads are capped at 3 until a 2nd source confirms.
   // Deterministic scrapers + APIs use full base score immediately.
+  // Soft-pass (street/block-only geocode) capped at 4 + flagged for manual review.
   const rawBase = scoreFor(s.signal_type);
-  const baseScore = s.source_method === "llm_search" ? Math.min(3, rawBase) : rawBase;
+  let baseScore = s.source_method === "llm_search" ? Math.min(3, rawBase) : rawBase;
+  if ((s as any).soft_pass) baseScore = Math.min(4, baseScore);
   const { opener, window } = openerFor(s.signal_type);
 
   const lookupAddress = s.address.toLowerCase();
