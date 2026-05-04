@@ -236,6 +236,8 @@ export interface LeadGateResult {
   formatted?: string;
   reject_code?: string;
   reject_reason?: string;
+  /** True when address geocoded only at street/block level. Caller must cap score and flag pipeline_stage='manual_review'. */
+  soft_pass?: boolean;
 }
 
 export async function validateLead(
@@ -264,13 +266,14 @@ export async function validateLead(
   }
 
   // 4. LLM-sourced rows demand a working source URL (no LLM citation = no insert).
+  //    Soft-pass addresses are still held to this standard.
   if (opts.sourceMethod === "llm_search") {
     if (!signal.signal_url || !/^https?:\/\//.test(signal.signal_url)) {
       return { pass: false, reject_code: "llm_no_citation", reject_reason: "LLM-sourced lead lacks a real source URL" };
     }
   }
 
-  return { pass: true, lat: addr.lat, lon: addr.lon, formatted: addr.formatted };
+  return { pass: true, lat: addr.lat, lon: addr.lon, formatted: addr.formatted, soft_pass: addr.soft_pass };
 }
 
 // -----------------------------------------------------------------------------
