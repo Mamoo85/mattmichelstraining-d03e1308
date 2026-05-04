@@ -41,6 +41,8 @@ const AREA_ALERT_TYPES = new Set<string>([
   "homeowner_equity_area", "home_improvement_loan_area", "aging_panel_area",
   // Phase 33 batch 3
   "historical_hail_county", "storm_tree_damage_area",
+  // CourtListener foreclosure filings — case names not street addresses
+  "courtlistener_foreclosure",
 ]);
 
 // Verticals where home turnover (FSBO listing, estate sale) is a high-quality
