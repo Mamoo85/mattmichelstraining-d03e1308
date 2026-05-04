@@ -12,6 +12,7 @@ import MortgageRadarTerritoryPicker from "@/components/mortgage/MortgageRadarTer
 import TradeRadarLeadCard, { TradeRadarLead } from "@/components/trade-radar/TradeRadarLeadCard";
 import LeadActionBar from "@/components/trade-radar/LeadActionBar";
 import RadarExportBar from "@/components/shared/RadarExportBar";
+import CrmWebhookSettings from "@/components/shared/CrmWebhookSettings";
 import { Wrench, Lock, Bell, TrendingUp, Calendar, Target, MapPin, ShieldCheck, Mail } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
