@@ -688,6 +688,36 @@ async function upsertWithDedup(sb: ReturnType<typeof createClient>, s: RawSignal
     console.warn("[upsertWithDedup] insert error:", error.message);
     return null;
   }
+  // Mirror new lead to HubSpot (homeowner pipeline) — non-blocking
+  if (ins?.id) {
+    try {
+      const dealName = `${s.formatted_address || s.address} — ${s.signal_type}`;
+      const contactId = s.full_name
+        ? await upsertContact({
+            email: `${ins.id}@mortgage-radar.dwa.local`, // placeholder unique key (no homeowner email yet)
+            firstname: s.full_name.split(" ")[0],
+            lastname: s.full_name.split(" ").slice(1).join(" ") || undefined,
+            company: s.address || undefined,
+            dwa_signal_source: "mortgage_radar",
+          })
+        : null;
+      await createDeal(
+        {
+          dealname: dealName,
+          amount: s.estimated_loan_amount || s.estimated_equity || undefined,
+          pipeline: "default",
+          dealstage: "qualifiedtobuy",
+          dwa_signal_source: "mortgage_radar",
+          dwa_signal_type: s.signal_type,
+          dwa_address: s.formatted_address || s.address,
+          dwa_zip: s.zip || undefined,
+        },
+        contactId ? { contactId } : undefined,
+      );
+    } catch (e) {
+      console.warn("[mortgage-radar→hubspot]", e instanceof Error ? e.message : e);
+    }
+  }
   return ins ? { id: ins.id, created: true } : null;
 }
 
