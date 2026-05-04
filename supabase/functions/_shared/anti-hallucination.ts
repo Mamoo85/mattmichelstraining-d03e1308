@@ -89,7 +89,11 @@ export async function validateAddress(
       .maybeSingle();
     if (cached) {
       const ageHrs = (Date.now() - new Date(cached.cached_at).getTime()) / 3_600_000;
-      if (ageHrs < 24) {
+      // Bypass stale negative cache when granularity is one we now accept softly.
+      // Lets us recover ~60% of historical mortgage rejects without a backfill.
+      const cachedGran: string = cached.granularity || "";
+      const wouldNowSoftPass = !cached.pass && (ACCEPTABLE_GRANULARITY.has(cachedGran) || SOFT_GRANULARITY.has(cachedGran));
+      if (ageHrs < 24 && !wouldNowSoftPass) {
         return cached.pass
           ? { pass: true, formatted: cached.formatted_address, lat: cached.lat, lon: cached.lon, granularity: cached.granularity }
           : { pass: false, reject_code: "address_unverifiable_cached", reject_reason: `Cached fail (granularity=${cached.granularity})` };
