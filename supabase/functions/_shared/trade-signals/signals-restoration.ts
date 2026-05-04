@@ -1127,5 +1127,36 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[restoration] fire incidents:", e); }
 
+  // CourtListener foreclosure filings — SE Michigan distressed property proxy (DLBA substitute)
+  // nature_of_suit=320 = foreclosure; courts miwd+mied cover Wayne/Oakland/Macomb
+  try {
+    const COURTLISTENER_KEY = Deno.env.get("COURTLISTENER_API_KEY") ?? "";
+    const since90 = new Date(Date.now() - 90 * 86400_000).toISOString().slice(0, 10);
+    const url = `https://www.courtlistener.com/api/rest/v3/dockets/?court=miwd,mied&date_filed__gte=${since90}&nature_of_suit=320&format=json&page_size=20`;
+    const res = await fetch(url, {
+      headers: COURTLISTENER_KEY ? { Authorization: `Token ${COURTLISTENER_KEY}` } : { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" },
+      signal: AbortSignal.timeout(12_000),
+    });
+    if (res.ok) {
+      const d = await res.json();
+      for (const item of (d?.results ?? [])) {
+        const addr = item.case_name ?? "";
+        if (!addr) continue;
+        signals.push({
+          address: addr, city: "Wayne/Oakland/Macomb County", zip: "",
+          signal_type: "courtlistener_foreclosure",
+          signal_date: item.date_filed ?? new Date().toISOString().split("T")[0],
+          score: 7,
+          signal_detail: `Foreclosure filing: ${addr} — property entering legal distress. Foreclosed homes commonly need water/mold remediation after vacancy; insurance-grade documentation speeds legal proceedings`,
+          source_method: "courtlistener_foreclosure",
+          suggested_opener: "Foreclosed homes commonly need water/mold remediation after vacancy — we provide insurance-grade documentation for legal proceedings and can be on-site within 48 hours.",
+          best_call_window: "Within 30 days of filing",
+          estimated_value: 8000,
+          raw_source_data: { case_name: item.case_name, date_filed: item.date_filed, court: item.court, docket_number: item.docket_number },
+        });
+      }
+    }
+  } catch (e) { console.error("[restoration] CourtListener foreclosure:", e); }
+
   return signals;
 }
