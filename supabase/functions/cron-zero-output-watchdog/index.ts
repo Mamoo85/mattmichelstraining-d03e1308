@@ -63,8 +63,8 @@ const WATCHLIST: ZeroCheck[] = [
   {
     cron: "industry-pulse-commercial-3am-et",
     functionName: "industry-pulse-scanner",
-    outputTable: "industry_pulse_signals",
-    outputColumn: "created_at",
+    outputTable: "demand_radar_runs",
+    outputColumn: "started_at",
     windowHours: 30,
     description: "Demand Radar — commercial",
     critical: true,
