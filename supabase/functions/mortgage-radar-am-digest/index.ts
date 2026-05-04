@@ -218,7 +218,7 @@ serve(async (req) => {
   // them separately and fall back gracefully.
   const { data: clients } = await sb
     .from("mortgage_radar_clients")
-    .select("id, email, contact_name, business_name, zip_codes, phone")
+    .select("id, email, contact_name, business_name, zip_codes, phone, crm_webhook_url, crm_webhook_secret")
     .eq("active", true);
 
   // Best-effort fetch of new geo columns (may not exist yet — ignore errors)
