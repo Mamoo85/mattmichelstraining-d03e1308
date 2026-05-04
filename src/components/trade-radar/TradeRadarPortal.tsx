@@ -56,6 +56,7 @@ export default function TradeRadarPortal({
   const [authError, setAuthError] = useState<string | null>(null);
   const [client, setClient] = useState<Client | null>(null);
   const [leads, setLeads] = useState<Lead[]>([]);
+  const [actions, setActions] = useState<Record<string, { status: string; snooze_until: string | null }>>({});
   const [loading, setLoading] = useState(true);
   const [activeSignalType, setActiveSignalType] = useState<string>("all");
   const [notEnrolled, setNotEnrolled] = useState(false);
