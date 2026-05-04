@@ -267,7 +267,26 @@ serve(async (req) => {
         .limit(5);
       leads = fallback.data;
     }
-    if (!leads || leads.length === 0) continue;
+    // Tier 3 — zero-lead "proof of work" digest. If no leads in client's ZIPs/counties,
+    // pull adjacent signals (same counties, score >=6, last 48h) so the email isn't dark.
+    let isProofOfWork = false;
+    if (!leads || leads.length === 0) {
+      if (counties.length === 0 && regions.length === 0 && zips.length === 0) continue;
+      // Widen window to 48h, drop geo to county-level only, score >=6
+      const since48h = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+      let adjacentQuery = (sb.from as any)("mortgage_radar_leads")
+        .select(baseSelect)
+        .gte("created_at", since48h)
+        .gte("score", 6)
+        .order("score", { ascending: false })
+        .limit(3);
+      if (counties.length > 0) adjacentQuery = adjacentQuery.in("county", counties);
+      else if (regions.length > 0) adjacentQuery = adjacentQuery.in("region", regions);
+      const { data: adjacent } = await adjacentQuery;
+      if (!adjacent || adjacent.length === 0) continue;
+      leads = adjacent;
+      isProofOfWork = true;
+    }
 
     // #14 — This week's lead count (separate query, last 7 days)
     const { count: weekCount } = await applyGeoFilter(
