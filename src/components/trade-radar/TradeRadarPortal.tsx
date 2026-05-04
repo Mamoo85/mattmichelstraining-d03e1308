@@ -104,7 +104,7 @@ export default function TradeRadarPortal({
       const since = new Date(Date.now() - 90 * 86_400_000).toISOString();
       let query = (supabase.from as any)("trade_radar_leads")
         .select(
-          "id, full_name, address, city, zip, signal_type, signal_detail, signal_date, score, signal_count, suggested_opener, best_call_window, estimated_value, street_view_url, created_at"
+          "id, full_name, address, city, zip, signal_type, signal_detail, signal_date, score, signal_count, suggested_opener, best_call_window, estimated_value, street_view_url, owner_name, owner_phone, owner_email, enriched_at, created_at"
         )
         .eq("vertical", vertical)
         .gte("created_at", since)
