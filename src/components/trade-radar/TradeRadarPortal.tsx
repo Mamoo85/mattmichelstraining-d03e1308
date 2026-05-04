@@ -119,7 +119,21 @@ export default function TradeRadarPortal({
         toast.error("Could not load leads");
         console.warn("[TradeRadarPortal] lead query failed", error);
       } else {
-        setLeads((data as Lead[]) || []);
+        const rows = (data as Lead[]) || [];
+        setLeads(rows);
+        // Load this client's actions for those leads
+        if (rows.length) {
+          const ids = rows.map((r) => r.id);
+          const { data: actData } = await (supabase.from as any)("trade_radar_lead_actions")
+            .select("lead_id, status, snooze_until")
+            .eq("client_id", clientRow.id)
+            .in("lead_id", ids);
+          const map: Record<string, { status: string; snooze_until: string | null }> = {};
+          (actData || []).forEach((a: any) => {
+            map[a.lead_id] = { status: a.status, snooze_until: a.snooze_until };
+          });
+          setActions(map);
+        }
       }
       setLoading(false);
     })();
