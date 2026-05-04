@@ -184,6 +184,31 @@ serve(async (req) => {
             : null,
         }).eq("id", target.id);
 
+        // Mirror to HubSpot CRM (fire-and-forget; helper swallows errors)
+        const domain = domainFromUrl(website);
+        const companyId = await upsertCompany({
+          domain: domain || undefined,
+          name: target.company_name,
+          city: target.city || undefined,
+          state: target.state || undefined,
+          numberofemployees: employeeCount || undefined,
+          dwa_signal_source: "techalert",
+        });
+        if (ownerEmail) {
+          await upsertContact({
+            email: ownerEmail,
+            firstname: firstName || undefined,
+            lastname: lastName || undefined,
+            phone: ownerPhone || undefined,
+            company: target.company_name,
+            website: website || undefined,
+            lifecyclestage: "lead",
+            hs_lead_status: "NEW",
+            dwa_signal_source: "techalert",
+            dwa_role: target.role || undefined,
+          });
+        }
+
         enriched++;
         await new Promise((r) => setTimeout(r, 300));
       } catch (e) {
