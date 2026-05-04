@@ -514,6 +514,7 @@ export default function MyMortgageRadar() {
                     </Card>
                   ))}
                 </div>
+                </>
               )}
             </TabsContent>
 
