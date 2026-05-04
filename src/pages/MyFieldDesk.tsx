@@ -191,19 +191,29 @@ export default function MyFieldDesk() {
           </Card>
         </div>
 
-        <Tabs value={tab} onValueChange={setTab} className="mb-5">
-          <TabsList className="bg-[#0a1628] border border-[#1e3a5f] flex-wrap h-auto">
-            {STATUS_TABS.map((t) => (
-              <TabsTrigger
-                key={t.value}
-                value={t.value}
-                className="data-[state=active]:bg-[#00d4ff] data-[state=active]:text-black text-[#94a3b8]"
-              >
-                {t.label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
+        <div className="flex items-center justify-between mb-5 gap-3 flex-wrap">
+          <Tabs value={tab} onValueChange={setTab}>
+            <TabsList className="bg-[#0a1628] border border-[#1e3a5f] flex-wrap h-auto">
+              {STATUS_TABS.map((t) => (
+                <TabsTrigger
+                  key={t.value}
+                  value={t.value}
+                  className="data-[state=active]:bg-[#00d4ff] data-[state=active]:text-black text-[#94a3b8]"
+                >
+                  {t.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+          {filtered.length > 0 && (
+            <button
+              onClick={exportJobsCsv}
+              className="flex items-center gap-1.5 text-xs font-semibold text-[#00d4ff] border border-[#00d4ff]/40 hover:border-[#00d4ff] hover:bg-[#00d4ff]/10 transition-colors rounded-md px-2.5 py-1.5"
+            >
+              <Download className="w-3 h-3" /> Export CSV
+            </button>
+          )}
+        </div>
 
         {loading ? (
           <p className="text-[#94a3b8]">Loading jobs…</p>
