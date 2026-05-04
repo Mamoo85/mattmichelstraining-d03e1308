@@ -25,6 +25,7 @@ import DemoModeBadge, { isDemoMode, DEMO_MASTER_TOKEN } from "@/components/DemoM
 import { supabase } from "@/integrations/supabase/client";
 import DWASuiteNav from "@/components/shared/DWASuiteNav";
 import ManageBillingButton from "@/components/billing/ManageBillingButton";
+import CrmWebhookSettings from "@/components/shared/CrmWebhookSettings";
 import EmptyDashboardState from "@/components/shared/EmptyDashboardState";
 
 const HEALTHCARE_ROLES = ["cna", "rn", "lpn", "director_of_nursing", "home_health_aide"];
@@ -69,6 +70,7 @@ interface Candidate {
 
 interface DashboardData {
   client: {
+    id?: string;
     company_name: string;
     target_roles: string[];
     target_zip_codes: string[];
@@ -1180,6 +1182,13 @@ export default function MyTechAlert() {
             )}
           </CardContent>
         </Card>
+
+        {/* CRM/ATS webhook bridge */}
+        {data?.client?.id && (
+          <div className="mt-6">
+            <CrmWebhookSettings table="hire_alert_clients" clientId={data.client.id} brand="dwa" />
+          </div>
+        )}
 
         {/* Footer */}
         <div className="text-center py-6 border-t border-white/5 space-y-3">

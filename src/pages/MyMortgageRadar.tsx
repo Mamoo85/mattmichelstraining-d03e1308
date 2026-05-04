@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import SEOHead from "@/components/layout/SEOHead";
 import DWASuiteNav from "@/components/shared/DWASuiteNav";
 import ManageBillingButton from "@/components/billing/ManageBillingButton";
+import CrmWebhookSettings from "@/components/shared/CrmWebhookSettings";
 import EmptyDashboardState from "@/components/shared/EmptyDashboardState";
 import { Home, Lock, Phone, MessageSquare, MapPin, Bell, Download, Send, Check, X, List, Map as MapIcon, Columns } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -601,6 +602,12 @@ export default function MyMortgageRadar() {
           </div>
         </div>
       </section>
+
+      {clientId && (
+        <section className="max-w-3xl mx-auto px-4 py-8 border-t border-[#1e3a5f]/40">
+          <CrmWebhookSettings table="mortgage_radar_clients" clientId={clientId} brand="dwa" />
+        </section>
+      )}
 
       {clientEmail && (
         <div className="py-6 text-center border-t border-[#1e3a5f]/40">

@@ -12,6 +12,7 @@ import MortgageRadarTerritoryPicker from "@/components/mortgage/MortgageRadarTer
 import TradeRadarLeadCard, { TradeRadarLead } from "@/components/trade-radar/TradeRadarLeadCard";
 import LeadActionBar from "@/components/trade-radar/LeadActionBar";
 import RadarExportBar from "@/components/shared/RadarExportBar";
+import CrmWebhookSettings from "@/components/shared/CrmWebhookSettings";
 import { Wrench, Lock, Bell, TrendingUp, Calendar, Target, MapPin, ShieldCheck, Mail } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -431,6 +432,12 @@ export default function TradeRadarPortal({
           credit-bureau trigger leads. All outreach is your responsibility and must comply with TCPA + CAN-SPAM.
         </p>
       </section>
+
+      {client && (
+        <section className="max-w-3xl mx-auto px-4 py-8 border-t border-[#1e3a5f]/40">
+          <CrmWebhookSettings table="trade_radar_clients" clientId={client.id} brand="dwa" />
+        </section>
+      )}
 
       {clientEmail && (
         <div className="py-6 text-center border-t border-[#1e3a5f]/40">
