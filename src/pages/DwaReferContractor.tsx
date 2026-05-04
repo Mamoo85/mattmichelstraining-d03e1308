@@ -5,7 +5,14 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Loader2, CheckCircle, Copy, Users, DollarSign, Send } from "lucide-react";
+import { Loader2, CheckCircle, Copy, Users, DollarSign, Send, Trophy, Crown } from "lucide-react";
+
+const TIER_META: Record<string, { label: string; color: string; icon: any }> = {
+  platinum: { label: "Platinum", color: "text-cyan-300", icon: Crown },
+  gold: { label: "Gold", color: "text-yellow-400", icon: Trophy },
+  silver: { label: "Silver", color: "text-slate-300", icon: Trophy },
+  bronze: { label: "Bronze", color: "text-amber-700", icon: Trophy },
+};
 
 const PRODUCTS = [
   { value: "any", label: "Any DWA product" },
