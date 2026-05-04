@@ -291,6 +291,18 @@ const DwaReferContractor = () => {
               </div>
             </div>
 
+            <label className="flex items-start gap-2 text-xs text-slate-400 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={optInLeaderboard}
+                onChange={(e) => setOptInLeaderboard(e.target.checked)}
+                className="mt-0.5 accent-[#00d4ff]"
+              />
+              <span>
+                Show my <strong className="text-slate-200">first name only</strong> on the public Top Referrers leaderboard above.
+              </span>
+            </label>
+
             <Button
               type="submit"
               disabled={loading}
