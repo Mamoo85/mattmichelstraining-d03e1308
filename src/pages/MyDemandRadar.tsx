@@ -173,6 +173,15 @@ export default function MyDemandRadar() {
       </header>
 
       <section className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8">
+        <OnboardingChecklist
+          product="Demand Radar"
+          steps={[
+            { id: "auth", label: "Dashboard link verified", done: !!client, hint: "Open from your weekly digest email." },
+            { id: "signals", label: "First signals delivered", done: signals.length > 0, hint: "Scanner runs daily." },
+            { id: "hot", label: "First hot signal", done: stats.hot > 0, hint: "Highest-intent prospects — call today." },
+            { id: "outreach", label: "First outreach sent", done: signals.some((s: any) => s.client_action), hint: "Mark a signal Called or Emailed to track ROI." },
+          ]}
+        />
         <div className="grid grid-cols-3 gap-3 mb-6">
           <Card className="bg-gradient-to-br from-[#0a1628] to-[#0a1628]/60 border-[#00d4ff]/40">
             <CardContent className="p-4">
