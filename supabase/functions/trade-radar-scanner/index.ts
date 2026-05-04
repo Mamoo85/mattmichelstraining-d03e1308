@@ -452,6 +452,21 @@ Deno.serve(async (req) => {
     const stats = { inserted: 0, updated: 0, quarantined: 0, skipped: 0, area: 0, notified: 0 };
     summary[vertical] = stats;
 
+    // Right-size: skip this vertical if we already have enough fresh inventory
+    // for the current customer count. Override with body.initial=true.
+    if (!body.initial) {
+      try {
+        const { shouldScanMore } = await import("../_shared/intake-throttle.ts");
+        const gate = await shouldScanMore(sb, "trade_radar", { vertical });
+        if (gate.skip) {
+          (stats as any).skip_reason = gate.reason;
+          (stats as any).fresh = gate.fresh;
+          (stats as any).target = gate.target;
+          continue;
+        }
+      } catch (e) { /* throttle failure must never block scanning */ }
+    }
+
     try {
       const rawSignals = await SCANNERS[vertical](state);
 

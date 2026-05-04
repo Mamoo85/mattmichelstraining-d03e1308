@@ -74,11 +74,21 @@ async function sonarSearch(role: typeof ROLES[number]): Promise<Posting[]> {
       signal: AbortSignal.timeout(45_000),
     });
     if (!res.ok) {
-      // 402 = out of credits / payment required. Disable Sonar for the rest of this run
-      // so we don't burn time hammering a paid endpoint that will keep saying no.
-      if (res.status === 402 || res.status === 429) {
+      // 402 = out of credits, 403 = blocked, 429 = rate limited.
+      // Disable Sonar for the rest of this run so we don't burn time hammering
+      // a paid endpoint that will keep saying no.
+      if (res.status === 402 || res.status === 403 || res.status === 429) {
         SONAR_DISABLED_REASON = `HTTP ${res.status}`;
         console.warn(`[hunter] sonar disabled for this run: ${SONAR_DISABLED_REASON}`);
+        try {
+          const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+          await sb.from("system_comms_log").insert({
+            product: "techalert_sonar",
+            status: "skipped",
+            channel: "api",
+            meta: { reason: `sonar_${res.status}`, role: role.key },
+          });
+        } catch { /* swallow — logging must never break the run */ }
       } else {
         console.error(`[hunter] sonar ${role.key} HTTP ${res.status}`);
       }
@@ -205,7 +215,7 @@ async function scanUSPTOPatents(): Promise<Posting[]> {
 
   for (const cpc of cpcSubclasses) {
     try {
-      const res = await fetch("https://api.patentsview.org/patents/query", {
+      const res = await fetch("https://search.patentsview.org/api/v1/patent/", {
         method: "POST",
         headers: { "Content-Type": "application/json", "User-Agent": "TechAlert matt@detroitwebagent.com" },
         body: JSON.stringify({
@@ -221,7 +231,12 @@ async function scanUSPTOPatents(): Promise<Posting[]> {
       }
       const data = await res.json();
       for (const patent of (data?.patents || [])) {
-        const assignee: string = patent.assignee_organization || "";
+        // v1 API returns assignee inside an array; legacy returned it inline.
+        const assignee: string =
+          patent.assignee_organization ||
+          patent?.assignees?.[0]?.assignee_organization ||
+          patent?.assignees?.[0]?.organization ||
+          "";
         if (!assignee) continue;
         results.push({
           company_name: assignee,
@@ -1063,6 +1078,24 @@ serve(async (req) => {
   const startedAt = Date.now();
   let inserted = 0, updated = 0, scanned = 0;
 
+  // Right-size: skip if we already have plenty of fresh prospects for the
+  // current TechAlert customer count. Body {force:true} overrides.
+  let _force = false;
+  try { const b = await req.clone().json(); _force = !!b?.force; } catch { /* default */ }
+  if (!_force) {
+    try {
+      const { shouldScanMore } = await import("../_shared/intake-throttle.ts");
+      const gate = await shouldScanMore(sb, "techalert");
+      if (gate.skip) {
+        return new Response(
+          JSON.stringify({ skipped: true, reason: gate.reason, fresh: gate.fresh, target: gate.target }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+    } catch { /* throttle failure must never block scanning */ }
+  }
+
+
   try {
     const all: Posting[] = [];
     for (const role of ROLES) {
@@ -1074,7 +1107,7 @@ serve(async (req) => {
     // Supplemental signals + NOAA weather bonus — all run in parallel
     // Includes the new signal-waterfall (DOL WARN, OSHA, FMCSA, DOT prequal, SAM expanded)
     const { fetchHireSignals } = await import("../_shared/signal-waterfall.ts");
-    const [githubSignals, edgarSignals, usptoSignals, samSignals, samEntitySignals, blsSignals, eventbriteSignals, usaSpendingSignals, linkedinSignals, oshaSignals, laraNewSignals, laraDissolvedSignals, laraExpiringSignals, nlrbSignals, cfpbSignals, ch7Signals, detroitCertifiedSignals, detroitOpenBizSignals, councilSurveyedSignals, detroitCityContractSignals, multifamilySignals, demoContractorSignals, demoPipelineSignals, billionDollarSignals, detroitBizLicenseSignals, commercialRedSignals, weatherBonus, hireWaterfallSignals] = await Promise.all([
+    const [githubSignals, edgarSignals, usptoSignals, samSignals, samEntitySignals, blsSignals, eventbriteSignals, usaSpendingSignals, linkedinSignals, oshaSignals, laraNewSignals, laraDissolvedSignals, laraExpiringSignals, nlrbSignals, cfpbSignals, ch7Signals, detroitCertifiedSignals, detroitOpenBizSignals, councilSurveyedSignals, detroitCityContractSignals, multifamilySignals, demoContractorSignals, demoPipelineSignals, billionDollarSignals, detroitBizLicenseSignals, commercialRedSignals, weatherBonus, hireWaterfallSignals] = (await Promise.allSettled([
       scanGitHubSignals(),
       scanEDGARFundings(),
       scanUSPTOPatents(),
@@ -1103,7 +1136,7 @@ serve(async (req) => {
       scanCommercialComplianceRed(),
       getWeatherHiringBonus(),
       fetchHireSignals(sb, { state: "MI", naics: "238220" }).catch(() => []),
-    ]);
+    ])).map((r) => (r.status === "fulfilled" ? r.value : []) as any) as any;
     const supplemental = [...githubSignals, ...edgarSignals, ...usptoSignals, ...samSignals, ...samEntitySignals, ...blsSignals, ...eventbriteSignals, ...usaSpendingSignals, ...linkedinSignals, ...oshaSignals, ...laraNewSignals, ...laraDissolvedSignals, ...laraExpiringSignals, ...nlrbSignals, ...cfpbSignals, ...ch7Signals, ...detroitCertifiedSignals, ...detroitOpenBizSignals, ...councilSurveyedSignals, ...detroitCityContractSignals, ...multifamilySignals, ...demoContractorSignals, ...demoPipelineSignals, ...billionDollarSignals, ...detroitBizLicenseSignals, ...commercialRedSignals];
     all.push(...supplemental);
     scanned += supplemental.length;

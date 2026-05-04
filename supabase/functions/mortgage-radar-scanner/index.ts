@@ -1173,6 +1173,24 @@ serve(async (req) => {
   const sb = createClient(SUPABASE_URL, SERVICE_ROLE, { auth: { persistSession: false } });
   const startedAt = new Date().toISOString();
 
+  // Right-size: skip if pool already at target for active customer count.
+  // Pass {force:true} in body to override.
+  let force = false;
+  try { const b = await req.clone().json(); force = !!b?.force; } catch { /* default */ }
+  if (!force) {
+    try {
+      const { shouldScanMore } = await import("../_shared/intake-throttle.ts");
+      const gate = await shouldScanMore(sb, "mortgage_radar");
+      if (gate.skip) {
+        return new Response(
+          JSON.stringify({ skipped: true, reason: gate.reason, fresh: gate.fresh, target: gate.target }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+    } catch { /* throttle failure must never block scanning */ }
+  }
+
+
   const results = await Promise.allSettled([
     scanBSEEDPermits(),
     scanForeclosureNotices(),
