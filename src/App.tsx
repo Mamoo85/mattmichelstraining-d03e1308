@@ -338,6 +338,7 @@ const FieldDeskMigration = lazyRetry(() => import("./pages/FieldDeskMigration"))
 const HealthcareStaffingMI = lazyRetry(() => import("./pages/HealthcareStaffingMI"));
 const DwaReferContractor = lazyRetry(() => import("./pages/DwaReferContractor"));
 const MortgageRadarVsTriggerLeads = lazyRetry(() => import("./pages/MortgageRadarVsTriggerLeads"));
+const MortgageRadarCompliance = lazyRetry(() => import("./pages/MortgageRadarCompliance"));
 const FsboHeatmap = lazyRetry(() => import("./pages/FsboHeatmap"));
 const MortgageRadar = lazyRetry(() => import("./pages/MortgageRadar"));
 const Marketplace = lazyRetry(() => import("./pages/Marketplace"));
