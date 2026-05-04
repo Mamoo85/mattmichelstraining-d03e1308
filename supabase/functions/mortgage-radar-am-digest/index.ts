@@ -230,7 +230,14 @@ serve(async (req) => {
   for (const g of (geoRows || [])) geoById[g.id] = g;
 
   let sent = 0;
-  const debug: Record<string, unknown> = { clients_count: clients?.length ?? 0, clients_null: clients === null };
+  const debug: Record<string, unknown> = {
+    clients_count: clients?.length ?? 0,
+    clients_null: clients === null,
+    resend_key_set: !!RESEND_API_KEY,
+    since24h,
+    since7d,
+    client_traces: [] as any[],
+  };
 
   for (const c of (clients || [])) {
     const geo = geoById[c.id] || {};
@@ -247,6 +254,9 @@ serve(async (req) => {
       return q; // no geo restriction set — show all leads
     }
 
+    const trace: Record<string, unknown> = { email: c.email, zips_count: zips.length, regions_count: regions.length, counties_count: counties.length };
+    (debug.client_traces as any[]).push(trace);
+
     // Today's top 5 leads — uses last_signal_at so leads refreshed by today's scanner
     // run appear even if they were first inserted days ago.
     let leads: any[] | null = null;
@@ -258,6 +268,7 @@ serve(async (req) => {
         .limit(5)
     );
     leads = geoFiltered.data;
+    trace.tier1_count = leads?.length ?? 0;
     if ((!leads || leads.length === 0) && zips.length > 0 && regions.length === 0 && counties.length === 0) {
       const fallback = await (sb.from as any)("mortgage_radar_leads")
         .select(baseSelect)
@@ -265,6 +276,7 @@ serve(async (req) => {
         .order("score", { ascending: false })
         .limit(5);
       leads = fallback.data;
+      trace.tier2_count = leads?.length ?? 0;
     }
     // Tier 3 — broaden to 7 days if nothing refreshed in 24h (weekends, sparse signal days).
     let isProofOfWork = false;
@@ -278,7 +290,9 @@ serve(async (req) => {
           .order("score", { ascending: false })
           .limit(5)
       );
+      trace.tier3_count = broad?.length ?? 0;
       if (!broad || broad.length === 0) {
+        trace.outcome = "zero_leads_sms";
         await sendSMS(
           "+13138064952",
           `Mortgage Radar digest ran for ${c.email} — 0 leads in 7 days. Check scanner logs.`,
@@ -427,7 +441,7 @@ serve(async (req) => {
 
     if (RESEND_API_KEY) {
       try {
-        await fetch("https://api.resend.com/emails", {
+        const sendRes = await fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -437,10 +451,16 @@ serve(async (req) => {
             html,
           }),
         });
-        sent += 1;
+        const sendBody = await sendRes.json().catch(() => ({}));
+        trace.outcome = sendRes.ok ? "email_sent" : `email_failed_${sendRes.status}`;
+        trace.resend_response = sendBody;
+        if (sendRes.ok) sent += 1;
       } catch (e) {
+        trace.outcome = `email_exception_${e instanceof Error ? e.message : String(e)}`;
         console.warn("[mortgage-radar-am-digest] send failed:", e instanceof Error ? e.message : String(e));
       }
+    } else {
+      trace.outcome = "no_resend_key";
     }
 
     // CRM webhook fan-out — fire-and-forget, one POST per top lead
