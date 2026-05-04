@@ -446,6 +446,13 @@ export default function MyMortgageRadar() {
                         "Weekly digest email queued",
                       ]}
                       setupGuideHref="mailto:matt@detroitwebagent.com?subject=Mortgage%20Radar%20setup"
+                      sampleLead={{
+                        title: "Refi candidate — rate trigger",
+                        address: "2914 Lakeshore Dr, St. Clair Shores, MI 48080",
+                        signal: "Originated 2019 @ 6.8% · current rate would save $340/mo",
+                        score: 9,
+                        opener: "Hi — saw your 2019 mortgage is sitting around 6.8%. Quick math says you could drop ~$340/mo at today's rates. 5-min call this week to walk through it?",
+                      }}
                     />
                   </>
                 ) : (
