@@ -15,6 +15,7 @@ import MortgageRadarMap from "@/components/mortgage/MortgageRadarMap";
 import MortgageRadarPipeline from "@/components/mortgage/MortgageRadarPipeline";
 import MortgageRadarWelcome from "@/components/mortgage/MortgageRadarWelcome";
 import MortgageRadarSeedLead from "@/components/mortgage/MortgageRadarSeedLead";
+import LeadActionBar from "@/components/trade-radar/LeadActionBar";
 
 type Lead = {
   id: string;
