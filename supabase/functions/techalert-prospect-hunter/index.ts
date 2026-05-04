@@ -1306,28 +1306,43 @@ serve(async (req) => {
       notes: SONAR_DISABLED_REASON ? `sonar_disabled:${SONAR_DISABLED_REASON}` : null,
     });
 
-    // Auto-refill dead-lead pool when below threshold (fire-and-forget)
+    // Auto-refill dead-lead pool when below threshold (fire-and-forget).
+    // Once-per-24h SMS to avoid spam (was firing every 6am + 2pm cron).
     try {
       const { count: pendingCount } = await sb
         .from("dead_lead_contacts")
         .select("id", { count: "exact", head: true })
         .eq("status", "pending");
       if ((pendingCount ?? 0) < DEAD_LEAD_MIN_POOL) {
-        console.log(`[hunter] dead-lead pool low (${pendingCount} < ${DEAD_LEAD_MIN_POOL}), notifying admin`);
-        await sendSMS(
-          ADMIN_PHONE, TWILIO_PHONE,
-          `⚠️ Dead Lead pool low: ${pendingCount ?? 0} pending contacts (min ${DEAD_LEAD_MIN_POOL}). Need contractor intake refill: ${Deno.env.get("SITE_URL") || "https://detroitwebagent.com"}/dead-lead-intake`,
-          "dead_lead_pool_low",
-        );
-        // Trigger any auto-refill function if present
+        console.log(`[hunter] dead-lead pool low (${pendingCount} < ${DEAD_LEAD_MIN_POOL})`);
+        // Trigger the actual refill function (correct name: dead-lead-pool-refresh)
         try {
-          await fetch(`${SUPABASE_URL}/functions/v1/dead-lead-pool-refill`, {
+          await fetch(`${SUPABASE_URL}/functions/v1/dead-lead-pool-refresh`, {
             method: "POST",
             headers: { Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({ trigger: "low_pool", current: pendingCount }),
-            signal: AbortSignal.timeout(5000),
+            signal: AbortSignal.timeout(8000),
           }).catch(() => {});
         } catch (_) {}
+        // SMS Matt at most once per 24h
+        const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+        const { count: recent } = await sb
+          .from("system_comms_log")
+          .select("id", { count: "exact", head: true })
+          .eq("product", "dead_lead_pool")
+          .eq("status", "alert")
+          .gte("created_at", since);
+        if ((recent ?? 0) === 0) {
+          await sendSMS(
+            ADMIN_PHONE, TWILIO_PHONE,
+            `⚠️ Dead Lead pool low: ${pendingCount ?? 0} pending (min ${DEAD_LEAD_MIN_POOL}). Auto-refresh triggered. Refill: ${Deno.env.get("SITE_URL") || "https://detroitwebagent.com"}/dead-lead-intake`,
+            "dead_lead_pool_low",
+          );
+          await sb.from("system_comms_log").insert({
+            product: "dead_lead_pool", status: "alert", channel: "sms",
+            meta: { pending: pendingCount, threshold: DEAD_LEAD_MIN_POOL },
+          });
+        }
       }
     } catch (e) { console.error("[hunter] dead-lead pool check:", e); }
 
