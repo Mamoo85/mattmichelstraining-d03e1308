@@ -234,7 +234,7 @@ async function scrapeFax(website: string): Promise<string | null> {
       const m = html.match(p);
       if (m) return `+1${m[1]}${m[2]}${m[3]}`;
     }
-  } catch (_) {}
+  } catch (e) { console.warn("[silent-catch]", e instanceof Error ? e.message : e); }
   return null;
 }
 
@@ -245,7 +245,7 @@ async function scrapePhone(website: string): Promise<string | null> {
     const m = html.match(/(?:tel:|phone[:\s]*)\(?(\d{3})\)?[\s.-]?(\d{3})[\s.-]?(\d{4})/i)
           || html.match(/\(?(\d{3})\)?[\s.-]?(\d{3})[\s.-]?(\d{4})/);
     if (m) return `+1${m[1]}${m[2]}${m[3]}`;
-  } catch (_) {}
+  } catch (e) { console.warn("[silent-catch]", e instanceof Error ? e.message : e); }
   return null;
 }
 

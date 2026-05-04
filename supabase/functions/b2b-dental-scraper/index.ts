@@ -81,7 +81,7 @@ serve(async (req) => {
         const detail = await detailRes.json();
         phone = detail.result?.formatted_phone_number || null;
         website = detail.result?.website || null;
-      } catch (_) {}
+      } catch (e) { console.warn("[silent-catch]", e instanceof Error ? e.message : e); }
 
       // Parse city/state from address
       const addressParts = (place.formatted_address || "").split(",");

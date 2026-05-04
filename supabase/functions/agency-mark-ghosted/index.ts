@@ -64,7 +64,7 @@ serve(async (req) => {
       const msg = `${prefix}👻 ${agency?.agency_name || agency_id} reported ghost · 1 free fast-track credit granted (now ${newCredits})`;
       try {
         await sendSMS(ADMIN_PHONE, TWILIO_FROM, msg, "dwa_admin_reply");
-      } catch (_) {}
+      } catch (e) { console.warn("[silent-catch]", e instanceof Error ? e.message : e); }
     }
 
     return new Response(JSON.stringify({ ok: true, credits: newCredits }), {

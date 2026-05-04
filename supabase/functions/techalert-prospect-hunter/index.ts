@@ -427,7 +427,7 @@ async function scanBLSEmployment(): Promise<Posting[]> {
       const latest = data?.Results?.series?.[0]?.data?.[0];
       if (latest) console.log(`[hunter] BLS Detroit HVAC employment: ${latest.value} (${latest.year}-${latest.period})`);
     }
-  } catch (_) {}
+  } catch (e) { console.warn("[silent-catch]", e instanceof Error ? e.message : e); }
   return []; // BLS gives market intel only; company targets come from other sources
 }
 
@@ -1323,7 +1323,7 @@ serve(async (req) => {
             body: JSON.stringify({ trigger: "low_pool", current: pendingCount }),
             signal: AbortSignal.timeout(8000),
           }).catch(() => {});
-        } catch (_) {}
+        } catch (e) { console.warn("[silent-catch]", e instanceof Error ? e.message : e); }
         // SMS Matt at most once per 24h
         const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
         const { count: recent } = await sb
