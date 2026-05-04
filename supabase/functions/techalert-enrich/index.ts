@@ -20,6 +20,7 @@ import {
   domainFromUrl,
   googlePlacesWebsite,
 } from "../_shared/enrichment-pipeline.ts";
+import { upsertContact, upsertCompany } from "../_shared/hubspot.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
