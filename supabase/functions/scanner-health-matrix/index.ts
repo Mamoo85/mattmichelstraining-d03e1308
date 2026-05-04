@@ -1,6 +1,8 @@
 // Phase 4 — Scanner & Waterfall Quality Audit
 // Returns a green/yellow/red matrix per data source per product scanner.
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { probeAll, type ProbeResult } from "../_shared/source-probes.ts";
+import { breakerStatus } from "../_shared/circuit-breaker.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
