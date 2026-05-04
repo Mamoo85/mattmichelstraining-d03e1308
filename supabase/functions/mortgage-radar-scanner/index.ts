@@ -608,7 +608,14 @@ async function upsertWithDedup(sb: ReturnType<typeof createClient>, s: RawSignal
       h.signal_type === s.signal_type &&
       h.signal_date === (s.signal_date || null)
     );
-    if (alreadyLogged) return { id: existing.id, created: false };
+    // Always refresh last_signal_at so the digest's last_signal_at >= 24h filter
+    // picks up leads that the scanner touched today, even if nothing new was added.
+    if (alreadyLogged) {
+      await (sb.from as any)("mortgage_radar_leads")
+        .update({ last_signal_at: new Date().toISOString() })
+        .eq("id", existing.id);
+      return { id: existing.id, created: false };
+    }
 
     history.push({
       signal_type: s.signal_type,
