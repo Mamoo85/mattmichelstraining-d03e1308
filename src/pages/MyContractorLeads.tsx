@@ -397,6 +397,13 @@ export default function MyContractorLeads() {
                   "First-look priority enabled",
                 ]}
                 setupGuideHref="mailto:matt@detroitwebagent.com?subject=Contractor%20Leads%20setup"
+                sampleLead={{
+                  title: "Sarah K. — needs estimate this week",
+                  address: "Royal Oak, MI 48067",
+                  signal: "Submitted form 14 min ago · phone verified",
+                  score: 9,
+                  opener: "Hi Sarah, this is [your name] — got your request for an estimate. I can swing by Thursday morning or Friday afternoon, which works better?",
+                }}
               />
             ) : (
               <div className="bg-[#0f1f35] border border-white/10 rounded-xl py-16 text-center">

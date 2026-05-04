@@ -313,6 +313,13 @@ export default function TradeRadarPortal({
                 "Weekly digest email queued",
               ]}
               setupGuideHref="mailto:matt@detroitwebagent.com?subject=Trade%20Radar%20setup"
+              sampleLead={{
+                title: `Homeowner — ${productLabel} signal`,
+                address: "1842 Maplewood Dr, Grosse Pointe, MI 48230",
+                signal: "Permit pulled 2 days ago · public records match",
+                score: 8,
+                opener: `Saw the recent permit activity on Maplewood — wanted to reach out before someone else does. We handle ${productLabel.toLowerCase()} work in your area and can be out this week.`,
+              }}
             />
           ) : (
             <Card className="bg-[#0a1628] border-[#1e3a5f]">
