@@ -247,52 +247,46 @@ serve(async (req) => {
       return q; // no geo restriction set — show all leads
     }
 
-    // Today's top 5 leads — if zip filter returns 0 (leads pre-date county/region columns
-    // and have null zip), fall back to unfiltered so the digest always sends when leads exist.
+    // Today's top 5 leads — uses last_signal_at so leads refreshed by today's scanner
+    // run appear even if they were first inserted days ago.
     let leads: any[] | null = null;
     const geoFiltered = await applyGeoFilter(
       (sb.from as any)("mortgage_radar_leads")
         .select(baseSelect)
-        .gte("created_at", since24h)
+        .gte("last_signal_at", since24h)
         .order("score", { ascending: false })
         .limit(5)
     );
     leads = geoFiltered.data;
     if ((!leads || leads.length === 0) && zips.length > 0 && regions.length === 0 && counties.length === 0) {
-      // Zip filter matched nothing — leads likely have null zip (pre-migration).
-      // Fall back to all leads so the digest isn't silently empty.
       const fallback = await (sb.from as any)("mortgage_radar_leads")
         .select(baseSelect)
-        .gte("created_at", since24h)
+        .gte("last_signal_at", since24h)
         .order("score", { ascending: false })
         .limit(5);
       leads = fallback.data;
     }
-    // Tier 3 — zero-lead "proof of work" digest. If no leads in client's ZIPs/counties,
-    // pull adjacent signals (same counties, score >=6, last 48h) so the email isn't dark.
+    // Tier 3 — broaden to 7 days if nothing refreshed in 24h (weekends, sparse signal days).
     let isProofOfWork = false;
     if (!leads || leads.length === 0) {
-      if (counties.length === 0 && regions.length === 0 && zips.length === 0) continue;
-      // Widen window to 48h, drop geo to county-level only, score >=6
-      const since48h = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
-      let adjacentQuery = (sb.from as any)("mortgage_radar_leads")
-        .select(baseSelect)
-        .gte("created_at", since48h)
-        .gte("score", 6)
-        .order("score", { ascending: false })
-        .limit(3);
-      if (counties.length > 0) adjacentQuery = adjacentQuery.in("county", counties);
-      else if (regions.length > 0) adjacentQuery = adjacentQuery.in("region", regions);
-      const { data: adjacent } = await adjacentQuery;
-      if (!adjacent || adjacent.length === 0) {
+      const since7dFallback = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const { data: broad } = await applyGeoFilter(
+        (sb.from as any)("mortgage_radar_leads")
+          .select(baseSelect)
+          .gte("last_signal_at", since7dFallback)
+          .gte("score", 6)
+          .order("score", { ascending: false })
+          .limit(5)
+      );
+      if (!broad || broad.length === 0) {
         await sendSMS(
           "+13138064952",
-          `Mortgage Radar digest ran for ${c.email} — 0 leads in 48h. Scanner is healthy; no market signals matched today.`,
+          `Mortgage Radar digest ran for ${c.email} — 0 leads in 7 days. Check scanner logs.`,
           "mortgage_digest_zero_leads"
         );
         continue;
       }
-      leads = adjacent;
+      leads = broad;
       isProofOfWork = true;
     }
 
