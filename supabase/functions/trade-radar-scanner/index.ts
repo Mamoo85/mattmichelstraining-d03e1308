@@ -575,15 +575,8 @@ Deno.serve(async (req) => {
     }
   }
 
-  const totalInserted = Object.values(summary).reduce((n, s) => n + s.inserted, 0);
-  if (totalInserted > 0) {
-    await sendSMS(
-      ADMIN_PHONE,
-      TWILIO_FROM,
-      `🏠 Trade Radar: ${totalInserted} new leads across ${verticals.join(", ")} today. — DWA`,
-      "trade_radar",
-    ).catch(() => {});
-  }
+  // Per-vertical SMS is already sent by trade-radar-am-digest at 9:30am ET.
+  // No duplicate summary SMS here.
 
   return new Response(JSON.stringify({ ok: true, summary }), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
