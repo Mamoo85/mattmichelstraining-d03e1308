@@ -189,6 +189,22 @@ serve(async (req) => {
       return json({ ok: true, referral: data });
     }
 
+    if (action === "toggle_leaderboard") {
+      const email = String(body.email || "").trim().toLowerCase();
+      const opt_in = !!body.opt_in;
+      const name = String(body.name || "").trim();
+      if (!email) return json({ error: "missing_email" }, 400);
+      // Upsert minimal partner row keyed on email
+      const { error } = await sb
+        .from("referral_partners")
+        .upsert(
+          { email, name: name || email.split("@")[0], code: email.split("@")[0].toUpperCase().slice(0, 8) + Math.floor(Math.random() * 999), show_on_leaderboard: opt_in },
+          { onConflict: "email" },
+        );
+      if (error) return json({ error: error.message }, 500);
+      return json({ ok: true });
+    }
+
     return json({ error: "unknown_action" }, 400);
   } catch (e: any) {
     return json({ error: e?.message || "server_error" }, 500);
