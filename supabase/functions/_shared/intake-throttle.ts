@@ -44,12 +44,12 @@ const CONFIGS: Record<ProductKey, ProductConfig> = {
   },
   mortgage_radar: {
     table: "mortgage_radar_leads",
-    freshColumn: "created_at",
-    freshDays: 7,
+    freshColumn: "last_signal_at",
+    freshDays: 1,
     customerTable: "mortgage_radar_clients",
     customerActiveCol: "active",
     perCustomerPerWeek: 40,
-    minFloor: 100,
+    minFloor: 20,
     cap: 600,
   },
   techalert: {
