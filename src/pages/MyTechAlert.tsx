@@ -69,6 +69,7 @@ interface Candidate {
 
 interface DashboardData {
   client: {
+    id?: string;
     company_name: string;
     target_roles: string[];
     target_zip_codes: string[];
