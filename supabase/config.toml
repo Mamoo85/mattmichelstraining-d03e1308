@@ -3,6 +3,9 @@ project_id = "zmyczlfuufhngzovkjdh"
 [functions.e2e-link-auditor]
 verify_jwt = false
 
+[functions.cold-email-ramp-scheduler]
+verify_jwt = false
+
 [functions.trial-drip-runner]
 verify_jwt = false
 
