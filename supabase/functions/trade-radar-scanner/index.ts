@@ -399,6 +399,19 @@ async function notifyClients(
       html: dwaWrap(innerHtml),
     });
 
+    // CRM webhook fan-out (Salesforce, Jobber, Zapier, n8n, etc.) — fire-and-forget per lead
+    if (client.crm_webhook_url && top5.length) {
+      for (const lead of top5) {
+        deliverCrmWebhook({
+          product: `trade_radar:${vertical}`,
+          client_id: client.id,
+          url: client.crm_webhook_url,
+          secret: client.crm_webhook_secret,
+          payload: { lead },
+        }).catch(() => { /* logged inside */ });
+      }
+    }
+
     if (client.phone && top && top.score >= 9) {
       await sendSMS(
         client.phone,
