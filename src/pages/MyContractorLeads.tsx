@@ -211,6 +211,15 @@ export default function MyContractorLeads() {
         </header>
 
         <main className="max-w-5xl mx-auto px-4 py-6 space-y-6">
+          <OnboardingChecklist
+            product="Contractor Leads"
+            steps={[
+              { id: "auth", label: "Dashboard link verified", done: !!contractor, hint: "Open from your welcome email." },
+              { id: "leads", label: "First lead delivered", done: stats.total > 0, hint: "Leads delivered as they hit your trade + city." },
+              { id: "called", label: "First lead called", done: stats.called > 0 || stats.hired > 0, hint: "Tap the Call button on any lead." },
+              { id: "hired", label: "First job won", done: stats.hired > 0, hint: "Mark Hired so we tune your scoring." },
+            ]}
+          />
           {/* Shipping Upgrades banner */}
           {!bannerDismissed && (
             <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg px-4 py-3 flex items-start gap-3">
