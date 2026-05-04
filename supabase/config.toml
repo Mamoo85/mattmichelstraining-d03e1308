@@ -1884,6 +1884,9 @@ verify_jwt = false
 [functions.marketplace-lead-summarize]
 verify_jwt = false
 
+[functions.anniversary-notice-sender]
+verify_jwt = false
+
 [functions.create-mortgage-radar-checkout]
 verify_jwt = false
 
