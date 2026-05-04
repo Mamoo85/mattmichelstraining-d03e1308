@@ -14,6 +14,7 @@ import MortgageRadarROICalculator from "@/components/mortgage/MortgageRadarROICa
 import MortgageRadarTerritoryPicker from "@/components/mortgage/MortgageRadarTerritoryPicker";
 import MortgageRadarComplianceGate, { ComplianceState, isComplianceComplete } from "@/components/mortgage/MortgageRadarComplianceGate";
 import MortgageRadarProvisioningProgress from "@/components/mortgage/MortgageRadarProvisioningProgress";
+import { useUtmAttribution, readUtmAttribution } from "@/hooks/useUtmAttribution";
 
 type Tier = "solo" | "team";
 
@@ -77,6 +78,8 @@ export default function MortgageRadar() {
   const [loading, setLoading] = useState(false);
   const [compliance, setCompliance] = useState<ComplianceState>({ dob: "", tcpaConsent: false, manualAck: false });
 
+  useUtmAttribution();
+
   const handleCheckout = async (selected: Tier) => {
     if (!email) { toast.error("Email is required"); return; }
     if (!isComplianceComplete(compliance)) {
@@ -88,6 +91,14 @@ export default function MortgageRadar() {
     if (zip_codes.length === 0) { toast.error("At least one valid 5-digit ZIP is required"); return; }
     setLoading(true);
     try {
+      // Log first-touch attribution (fire-and-forget)
+      const utm = readUtmAttribution();
+      if (utm) {
+        supabase.functions.invoke("trial-attribution-log", {
+          body: { email, product: "mortgage_radar", source: utm.source, medium: utm.medium,
+            campaign: utm.campaign, content: utm.content, referrer: utm.referrer },
+        }).catch(() => {});
+      }
       const { data, error } = await supabase.functions.invoke("create-mortgage-radar-checkout", {
         body: {
           email, business_name: business, contact_name: contactName || business,
