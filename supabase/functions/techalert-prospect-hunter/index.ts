@@ -1110,7 +1110,7 @@ serve(async (req) => {
     // Supplemental signals + NOAA weather bonus — all run in parallel
     // Includes the new signal-waterfall (DOL WARN, OSHA, FMCSA, DOT prequal, SAM expanded)
     const { fetchHireSignals } = await import("../_shared/signal-waterfall.ts");
-    const [githubSignals, edgarSignals, usptoSignals, samSignals, samEntitySignals, blsSignals, eventbriteSignals, usaSpendingSignals, linkedinSignals, oshaSignals, laraNewSignals, laraDissolvedSignals, laraExpiringSignals, nlrbSignals, cfpbSignals, ch7Signals, detroitCertifiedSignals, detroitOpenBizSignals, councilSurveyedSignals, detroitCityContractSignals, multifamilySignals, demoContractorSignals, demoPipelineSignals, billionDollarSignals, detroitBizLicenseSignals, commercialRedSignals, weatherBonus, hireWaterfallSignals] = (await Promise.allSettled([
+    const [githubSignals, edgarSignals, usptoSignals, samSignals, samEntitySignals, blsSignals, eventbriteSignals, usaSpendingSignals, googleMapsSignals, oshaSignals, laraNewSignals, laraDissolvedSignals, laraExpiringSignals, nlrbSignals, cfpbSignals, ch7Signals, detroitCertifiedSignals, detroitOpenBizSignals, councilSurveyedSignals, detroitCityContractSignals, multifamilySignals, demoContractorSignals, demoPipelineSignals, billionDollarSignals, detroitBizLicenseSignals, commercialRedSignals, weatherBonus, hireWaterfallSignals] = (await Promise.allSettled([
       scanGitHubSignals(),
       scanEDGARFundings(),
       scanUSPTOPatents(),
@@ -1119,7 +1119,7 @@ serve(async (req) => {
       scanBLSEmployment(),
       scanEventbriteSignals(),
       scanUSASpending(),
-      scanLinkedInJobs(),
+      scanGoogleMapsTrades(),
       scanOSHAViolations(),
       scanLARANewLicenses(),
       scanLARADissolved(),
