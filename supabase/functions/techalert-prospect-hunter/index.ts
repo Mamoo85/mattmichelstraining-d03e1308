@@ -1166,8 +1166,8 @@ serve(async (req) => {
         const repostCount = existing ? (existing.repost_count ?? 0) + 1 : 0;
         const score = scorePosting(p, openRolesCount, repostCount, weatherBonus as number);
 
-        // Resolve clean primary domain (strip aggregators like indeed.com / ziprecruiter.com)
-        const primaryDomain = canonicalize(p.source_url);
+        // Resolve clean primary website (strip aggregators like indeed.com / ziprecruiter.com)
+        const primaryWebsite = canonicalize(p.source_url);
 
         if (existing) {
           await sb.from("techalert_prospect_targets").update({
@@ -1179,7 +1179,7 @@ serve(async (req) => {
             source_label: p.source_label,
             city: p.city,
             is_boiler: p.is_boiler,
-            ...(primaryDomain ? { primary_domain: primaryDomain } : {}),
+            ...(primaryWebsite ? { website: primaryWebsite } : {}),
           }).eq("id", existing.id);
           updated++;
         } else {
@@ -1194,7 +1194,7 @@ serve(async (req) => {
             score,
             source_url: p.source_url,
             source_label: p.source_label,
-            primary_domain: primaryDomain,
+            website: primaryWebsite,
             status: "new",
           });
           if (!error) inserted++;
