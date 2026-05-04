@@ -6,6 +6,7 @@ import { validateLead, quarantineRaw } from "../_shared/anti-hallucination.ts";
 import { runEmailWaterfall } from "../_shared/email-waterfall.ts";
 import { sendSMS } from "../_shared/twilio.ts";
 import { dwaEmail, dwaWrap } from "../_shared/dwa-email.ts";
+import { deliverCrmWebhook } from "../_shared/crm-webhook.ts";
 import { scanSignals as scanRoofing } from "../_shared/trade-signals/signals-roofing.ts";
 import { scanSignals as scanHvac } from "../_shared/trade-signals/signals-hvac.ts";
 import { scanSignals as scanPlumbing } from "../_shared/trade-signals/signals-plumbing.ts";
