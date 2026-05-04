@@ -3,6 +3,7 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { validateLead, quarantineRaw } from "../_shared/anti-hallucination.ts";
+import { runEmailWaterfall } from "../_shared/email-waterfall.ts";
 import { sendSMS } from "../_shared/twilio.ts";
 import { dwaEmail, dwaWrap } from "../_shared/dwa-email.ts";
 import { scanSignals as scanRoofing } from "../_shared/trade-signals/signals-roofing.ts";
