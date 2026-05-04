@@ -108,7 +108,7 @@ export default function MyFieldDesk() {
     return (
       <div className="min-h-screen bg-[#030711] text-foreground">
         <SEOHead title="My FieldDesk — Subscriber Dashboard" description="FieldDesk job board" />
-        <DWASuiteNav activeProduct="field_service" email={clientEmail || undefined} />
+        <DWASuiteNav activeProduct="fielddesk" email={clientEmail || undefined} />
         <div className="max-w-2xl mx-auto px-4 py-24">
           <Card className="bg-[#0a1628] border-red-900">
             <CardContent className="p-8 text-center">
@@ -125,7 +125,7 @@ export default function MyFieldDesk() {
   return (
     <div className="min-h-screen bg-[#030711] text-foreground">
       <SEOHead title="My FieldDesk — Subscriber Dashboard" description="Job board, status, and tech tracking." />
-      <DWASuiteNav activeProduct="field_service" email={clientEmail || undefined} />
+      <DWASuiteNav activeProduct="fielddesk" email={clientEmail || undefined} />
 
       <header className="border-b border-[#1e3a5f] bg-[#0a1628]/80 backdrop-blur sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
