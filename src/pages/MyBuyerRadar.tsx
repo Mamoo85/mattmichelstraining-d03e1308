@@ -65,6 +65,33 @@ export default function MyBuyerRadar() {
     })();
   }, [token]);
 
+  function exportSignalsCsv() {
+    const headers = ["company_name", "industry", "location", "confidence", "predicted_needs", "source_summary", "detected_at"];
+    const csvRows = [
+      headers.join(","),
+      ...signals.map((s) =>
+        [
+          s.company_name,
+          s.industry || "",
+          s.location || "",
+          s.confidence ?? "",
+          (s.predicted_needs || []).join("; "),
+          (s.source_summary || "").replace(/\n/g, " "),
+          s.detected_at,
+        ]
+          .map((v) => `"${String(v).replace(/"/g, '""')}"`)
+          .join(",")
+      ),
+    ];
+    const blob = new Blob([csvRows.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `buyer-radar-signals-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   if (!token) {
     return (
       <div className="min-h-screen bg-[#030711] text-white flex items-center justify-center p-6">
