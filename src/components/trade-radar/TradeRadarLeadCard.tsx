@@ -2,6 +2,7 @@ import { useState } from "react";
 import { MapPin, Clock, DollarSign, Lock, CheckCircle, Phone, ChevronRight, MessageSquare, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import ScoreBreakdown from "@/components/shared/ScoreBreakdown";
 
 export interface TradeRadarLead {
   id: string;
