@@ -378,6 +378,79 @@ export default function MySiteRadar() {
                 )}
               </div>
 
+              {/* Company detail slide-over */}
+              {companyDetail && (
+                <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", justifyContent: "flex-end" }}>
+                  <div
+                    style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.65)", backdropFilter: "blur(2px)" }}
+                    onClick={() => setSelectedCompany(null)}
+                  />
+                  <div style={{ position: "relative", width: 380, maxWidth: "100vw", height: "100vh", background: "#0a1628", borderLeft: "1px solid #1e3a5f", padding: "28px 24px", overflowY: "auto", display: "flex", flexDirection: "column", gap: 20 }}>
+                    <button
+                      onClick={() => setSelectedCompany(null)}
+                      style={{ position: "absolute", top: 14, right: 14, background: "transparent", border: "none", color: "#64748b", cursor: "pointer", fontSize: 20, lineHeight: 1 }}
+                      aria-label="Close"
+                    >✕</button>
+
+                    <div>
+                      <p style={{ color: "#00d4ff", fontSize: 10, fontWeight: 800, letterSpacing: 3, textTransform: "uppercase", margin: "0 0 6px" }}>Company Profile</p>
+                      <h2 style={{ color: "#fff", fontSize: 22, fontWeight: 800, margin: "0 0 4px", paddingRight: 28 }}>{companyDetail.name}</h2>
+                      {companyDetail.city && <p style={{ color: "#64748b", fontSize: 13, margin: 0 }}>{companyDetail.city}</p>}
+                      {companyDetail.icpMatch && (
+                        <span style={{ display: "inline-block", marginTop: 10, background: "#10b98122", color: "#34d399", fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 6, border: "1px solid #34d39930" }}>
+                          ✓ ICP Match
+                        </span>
+                      )}
+                    </div>
+
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                      <div style={{ background: "#030711", borderRadius: 10, padding: 14 }}>
+                        <p style={{ color: "#64748b", fontSize: 10, textTransform: "uppercase", letterSpacing: 1, margin: "0 0 4px" }}>Total visits</p>
+                        <p style={{ color: "#00d4ff", fontSize: 30, fontWeight: 800, margin: 0 }}>{companyDetail.visitCount}</p>
+                      </div>
+                      <div style={{ background: "#030711", borderRadius: 10, padding: 14 }}>
+                        <p style={{ color: "#64748b", fontSize: 10, textTransform: "uppercase", letterSpacing: 1, margin: "0 0 4px" }}>Pages viewed</p>
+                        <p style={{ color: "#fff", fontSize: 30, fontWeight: 800, margin: 0 }}>{companyDetail.pages.length}</p>
+                      </div>
+                    </div>
+
+                    {companyDetail.pages.length > 0 && (
+                      <div>
+                        <p style={{ color: "#94a3b8", fontSize: 11, textTransform: "uppercase", letterSpacing: 1, margin: "0 0 8px" }}>Pages visited</p>
+                        <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
+                          {companyDetail.pages.map((p) => (
+                            <li key={p} style={{ padding: "7px 0", borderBottom: "1px solid #1e3a5f", color: "#e2e8f0", fontSize: 12, wordBreak: "break-all" }}>{p}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    <div>
+                      <p style={{ color: "#94a3b8", fontSize: 11, textTransform: "uppercase", letterSpacing: 1, margin: "0 0 8px" }}>Timeline</p>
+                      {companyDetail.firstSeen && (
+                        <p style={{ color: "#64748b", fontSize: 12, margin: "0 0 4px" }}>
+                          First visit: <span style={{ color: "#e2e8f0" }}>{new Date(companyDetail.firstSeen).toLocaleString()}</span>
+                        </p>
+                      )}
+                      {companyDetail.lastSeen && (
+                        <p style={{ color: "#64748b", fontSize: 12, margin: 0 }}>
+                          Last visit: <span style={{ color: "#e2e8f0" }}>{new Date(companyDetail.lastSeen).toLocaleString()}</span>
+                        </p>
+                      )}
+                    </div>
+
+                    {companyDetail.latestEventId && (
+                      <button
+                        onClick={() => { enrich(companyDetail.latestEventId!); }}
+                        style={{ background: "#00d4ff", color: "#0a1628", border: "none", borderRadius: 8, padding: "11px 18px", fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+                      >
+                        ✨ Re-enrich company data
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Snippet */}
               <div style={cardStyle}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
