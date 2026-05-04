@@ -133,6 +133,7 @@ const GROUPS: SidebarGroup[] = [
     items: [
       { id: "health",          label: "🛡️ Health & Compliance" },
       { id: "suppression-lists", label: "🚫 Suppression Lists" },
+      { id: "system-audit",      label: "🔍 System Audit" },
       { id: "enrichment-audit", label: "🔬 Enrichment Audit" },
       { id: "buyer-radar-qa",  label: "🛡️ Buyer Radar QA" },
       { id: "simulation",      label: "🧪 Simulation Suite" },
