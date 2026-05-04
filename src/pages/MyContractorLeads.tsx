@@ -13,6 +13,7 @@ import FreeBoostCard from "@/components/contractor/FreeBoostCard";
 import DWASuiteNav from "@/components/shared/DWASuiteNav";
 import ManageBillingButton from "@/components/billing/ManageBillingButton";
 import EmptyDashboardState from "@/components/shared/EmptyDashboardState";
+import OnboardingChecklist from "@/components/shared/OnboardingChecklist";
 
 interface Lead {
   id: string;
