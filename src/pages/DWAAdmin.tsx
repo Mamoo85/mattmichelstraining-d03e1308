@@ -211,6 +211,8 @@ export default function DWAAdmin() {
           )}
 
           {activeTab === "djconley" && <Suspense fallback={lazyFallback("D.J. Conley")}><DJConleyCommandPanel /></Suspense>}
+          {activeTab === "manual-onboarding" && <Suspense fallback={lazyFallback("manual onboarding")}><AdminManualOnboardingQueue /></Suspense>}
+          {activeTab === "suppression-lists" && <Suspense fallback={lazyFallback("suppression lists")}><AdminSuppressionLists /></Suspense>}
 
           {activeTab === "lead-marketplace" && <Suspense fallback={lazyFallback("Lead Marketplace")}><LeadSalesOutreachHub /></Suspense>}
           {activeTab === "demand-radar"    && <Suspense fallback={lazyFallback("Demand Radar")}><DemandRadarHub /></Suspense>}
