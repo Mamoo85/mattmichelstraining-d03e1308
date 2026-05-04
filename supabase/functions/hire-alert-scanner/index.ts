@@ -2157,6 +2157,20 @@ serve(async (req: Request) => {
         await sendSMS(client.owner_phone, TWILIO_PHONE_NUMBER, smsBody, "hire_alert");
       }
 
+      // CRM/ATS webhook fan-out (Greenhouse, Lever, Zapier, n8n, etc.) — fire-and-forget
+      if ((client as any).crm_webhook_url && actionableCandidates.length) {
+        const { deliverCrmWebhook } = await import("../_shared/crm-webhook.ts");
+        for (const cand of actionableCandidates) {
+          deliverCrmWebhook({
+            product: "talent_radar",
+            client_id: client.id,
+            url: (client as any).crm_webhook_url,
+            secret: (client as any).crm_webhook_secret,
+            payload: { candidate: cand },
+          }).catch(() => {});
+        }
+      }
+
       // TA-9: Record which candidates were alerted to this client
       if (actionableCandidates.length) {
         const candidateIds = actionableCandidates
