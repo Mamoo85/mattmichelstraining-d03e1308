@@ -1,5 +1,5 @@
 import SEOHead from "@/components/layout/SEOHead";
-import { ShieldCheck, FileText, Phone, Mail } from "lucide-react";
+import { ShieldCheck, FileText, Phone, Mail, Printer } from "lucide-react";
 
 const SECTIONS = [
   {
