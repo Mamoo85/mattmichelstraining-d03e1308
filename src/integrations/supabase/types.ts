@@ -3097,6 +3097,93 @@ export type Database = {
         }
         Relationships: []
       }
+      cold_email_ramp_history: {
+        Row: {
+          action: string
+          bounce_pct: number
+          complaint_pct: number
+          day_index: number
+          evaluated_at: string
+          id: string
+          new_cap: number
+          notes: string | null
+          prev_cap: number
+          sent_24h: number
+        }
+        Insert: {
+          action: string
+          bounce_pct?: number
+          complaint_pct?: number
+          day_index: number
+          evaluated_at?: string
+          id?: string
+          new_cap: number
+          notes?: string | null
+          prev_cap: number
+          sent_24h?: number
+        }
+        Update: {
+          action?: string
+          bounce_pct?: number
+          complaint_pct?: number
+          day_index?: number
+          evaluated_at?: string
+          id?: string
+          new_cap?: number
+          notes?: string | null
+          prev_cap?: number
+          sent_24h?: number
+        }
+        Relationships: []
+      }
+      cold_email_ramp_state: {
+        Row: {
+          base_cap: number
+          bounce_threshold_pct: number
+          ceiling: number
+          complaint_threshold_pct: number
+          created_at: string | null
+          current_cap: number
+          id: number
+          last_evaluated_at: string | null
+          pause_reason: string | null
+          paused: boolean
+          ramp_start_date: string
+          step_per_day: number
+          updated_at: string | null
+        }
+        Insert: {
+          base_cap?: number
+          bounce_threshold_pct?: number
+          ceiling?: number
+          complaint_threshold_pct?: number
+          created_at?: string | null
+          current_cap?: number
+          id?: number
+          last_evaluated_at?: string | null
+          pause_reason?: string | null
+          paused?: boolean
+          ramp_start_date?: string
+          step_per_day?: number
+          updated_at?: string | null
+        }
+        Update: {
+          base_cap?: number
+          bounce_threshold_pct?: number
+          ceiling?: number
+          complaint_threshold_pct?: number
+          created_at?: string | null
+          current_cap?: number
+          id?: number
+          last_evaluated_at?: string | null
+          pause_reason?: string | null
+          paused?: boolean
+          ramp_start_date?: string
+          step_per_day?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       collections_clients: {
         Row: {
           active: boolean | null
