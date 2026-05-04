@@ -93,6 +93,7 @@ jobs:
   deploy:
     needs: test
     runs-on: ubuntu-latest
+    if: false  # Disabled — secondary project deploy uses expired SUPABASE_ACCESS_TOKEN. Re-enable after rotating token.
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_PROJECT_REF: zmyczlfuufhngzovkjdh
