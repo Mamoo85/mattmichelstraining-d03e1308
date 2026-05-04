@@ -296,7 +296,7 @@ async function notifyClients(
 ): Promise<void> {
   const { data: clients } = await sb
     .from("trade_radar_clients")
-    .select("id, email, contact_name, business_name, phone, zip_codes")
+    .select("id, email, contact_name, business_name, phone, zip_codes, crm_webhook_url, crm_webhook_secret")
     .eq("vertical", vertical)
     .eq("active", true);
 
