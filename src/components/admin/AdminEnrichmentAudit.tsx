@@ -180,7 +180,7 @@ export default function AdminEnrichmentAudit() {
                 <tr><td colSpan={8} className="p-6 text-center text-white/40">No audit rows in this window.</td></tr>
               )}
               {rows.map((r) => (
-                <tr key={r.id} className="border-t border-white/5 hover:bg-white/[0.02]">
+                <tr key={r.id} className="border-t border-white/5 hover:bg-white/[0.02] cursor-pointer" onClick={() => setDrillLead(r.lead_id)}>
                   <td className="p-2 font-mono text-white/60 whitespace-nowrap">{new Date(r.created_at).toLocaleTimeString()}</td>
                   <td className="p-2"><span className="px-1.5 py-0.5 rounded bg-white/5 font-mono">{r.vertical}</span></td>
                   <td className="p-2 font-mono">
@@ -188,7 +188,7 @@ export default function AdminEnrichmentAudit() {
                     <div className="text-white/40 text-[10px]">{r.stage}</div>
                   </td>
                   <td className="p-2 font-mono text-white/80">{r.provider}</td>
-                  <td className="p-2 font-mono text-white/40">{r.lead_id?.slice(0, 8)}…</td>
+                  <td className="p-2 font-mono text-[#00d4ff] hover:underline">{r.lead_id?.slice(0, 8)}…</td>
                   <td className="p-2 text-right font-mono text-white/60">{r.duration_ms}</td>
                   <td className="p-2 text-center">
                     {r.success ? (
