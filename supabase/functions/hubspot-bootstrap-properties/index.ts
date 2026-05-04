@@ -1,6 +1,9 @@
 // One-time bootstrap: creates DWA custom properties in HubSpot
 // Run via: curl -X POST <function-url>
-import { corsHeaders } from "../_shared/cors.ts";
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
 
 const GATEWAY = "https://connector-gateway.lovable.dev/hubspot";
 
