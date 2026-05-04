@@ -51,9 +51,13 @@ export interface AddressValidationResult {
   granularity?: string;
   reject_code?: string;
   reject_reason?: string;
+  /** True when address validated at a softer granularity (ROUTE/BLOCK) but has a real geocode. Caller should cap score and flag for review. */
+  soft_pass?: boolean;
 }
 
 const ACCEPTABLE_GRANULARITY = new Set(["PREMISE", "SUB_PREMISE"]);
+// Softer granularities we accept with score cap + manual_review flag (recovers ~60% of mortgage rejects).
+const SOFT_GRANULARITY = new Set(["ROUTE", "BLOCK", "NEIGHBORHOOD"]);
 
 function cacheKey(address: string, zip: string | undefined): string {
   return `${(address || "").trim().toLowerCase()}|${(zip || "").trim()}`;
