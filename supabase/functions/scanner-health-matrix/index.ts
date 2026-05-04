@@ -53,10 +53,11 @@ function statusFor(hoursSince: number | null): "green" | "yellow" | "red" {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  const url = new URL(req.url);
+  const skipProbes = url.searchParams.get("probes") === "false";
 
   const products = [];
   for (const [product, cfg] of Object.entries(PRODUCT_SCANNERS)) {
-    // Agent heartbeats
     const { data: heartbeats } = await sb
       .from("agent_heartbeats")
       .select("agent_name, last_beat, status")
@@ -73,7 +74,6 @@ Deno.serve(async (req) => {
       };
     });
 
-    // Latest row per data table (proves writes are flowing)
     const tables = await Promise.all(cfg.tables.map(async ({ table, tsCol }) => {
       const { data, error } = await sb.from(table as any).select(tsCol).order(tsCol, { ascending: false }).limit(1);
       if (error) return { table, last_row: null, hours_since: null, status: "red" as const, error: error.message };
@@ -87,8 +87,14 @@ Deno.serve(async (req) => {
       };
     }));
 
-    // Roll up product status from worst agent + worst table
-    const allStatuses = [...agents.map((a) => a.status), ...tables.map((t) => t.status)];
+    // Live source probes (HTTP HEAD/GET behind circuit breaker)
+    const probes: ProbeResult[] = skipProbes ? [] : await probeAll(product);
+
+    const allStatuses = [
+      ...agents.map((a) => a.status),
+      ...tables.map((t) => t.status),
+      ...probes.map((p) => p.status),
+    ];
     const overall: "green" | "yellow" | "red" = allStatuses.includes("red")
       ? "red"
       : allStatuses.includes("yellow")
@@ -100,12 +106,34 @@ Deno.serve(async (req) => {
       overall,
       agents,
       tables,
-      sources: cfg.sources, // declarative for now; future = ping each
+      sources: cfg.sources,
+      probes,
     });
   }
 
-  return new Response(JSON.stringify({ ok: true, generated_at: new Date().toISOString(), products }, null, 2), {
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-    status: 200,
-  });
+  // Best-effort log to link_audit_results (Phase 2 table) for historical trend
+  try {
+    const rows = products.flatMap((p) =>
+      (p.probes as ProbeResult[]).map((pr) => ({
+        target_url: pr.url,
+        target_label: `${p.product} · ${pr.name}`,
+        http_status: pr.http_status,
+        response_time_ms: pr.latency_ms,
+        ok: pr.status === "green",
+        error_message: pr.error || null,
+      }))
+    );
+    if (rows.length) await sb.from("link_audit_results" as any).insert(rows);
+  } catch { /* table may not exist; ignore */ }
+
+  return new Response(
+    JSON.stringify({
+      ok: true,
+      generated_at: new Date().toISOString(),
+      products,
+      circuit_breakers: breakerStatus(),
+    }, null, 2),
+    { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 },
+  );
+});
 });
