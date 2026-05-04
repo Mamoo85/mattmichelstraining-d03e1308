@@ -196,6 +196,11 @@ const BASE_SCORES: Record<string, number> = {
   tax_delinquency: 8,
   fixer_upper_listing: 7,
   sba_loan_approved: 6,
+  new_homeowner: 7,
+  high_equity_renovation: 7,
+  fixer_upper: 6,
+  fsbo_presale: 7,
+  fema_disaster: 5,
 };
 
 const OPENERS: Record<string, { opener: string; window: string }> = {
@@ -253,6 +258,22 @@ const OPENERS: Record<string, { opener: string; window: string }> = {
   },
   sba_loan_approved: {
     opener: "Hi {name} — congrats on the SBA approval. A lot of new business owners don't realize they can still qualify for a home purchase using bank-statement or business-bank lending programs even with a new LLC. Worth knowing about.",
+    window: "10am–noon",
+  },
+  new_homeowner: {
+    opener: "Hi {name} — saw the recent purchase at {address}. Congrats on the new home. A lot of buyers don't realize they can restructure their rate or pull equity for improvements within the first year. Happy to run a quick comparison — no pressure.",
+    window: "5pm–7pm weekdays",
+  },
+  high_equity_renovation: {
+    opener: "Hi {name} — saw the renovation work at {address}. Homeowners doing this size of project often find a cash-out refi beats a HELOC on rate. Happy to run both scenarios side by side.",
+    window: "11am–1pm or 5pm–7pm",
+  },
+  fixer_upper: {
+    opener: "Hi {name} — saw the listing at {address}. Buyers of fixer-uppers often use renovation loans (203k or Fannie HomeStyle) that roll purchase and rehab into one payment. Happy to explain if that's useful.",
+    window: "5pm–8pm weekdays / weekends",
+  },
+  fsbo_presale: {
+    opener: "Hi {name} — saw the pre-sale inspection at {address}. Sellers often need a cash-out refi to fund repairs before listing, or want a bridge loan on the next purchase. I can run numbers on both quietly.",
     window: "10am–noon",
   },
 };
