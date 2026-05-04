@@ -167,6 +167,14 @@ export default function MyMissedCall() {
                               "{c.voicemail_transcript}"
                             </p>
                           )}
+                          {c.recording_url && (
+                            <audio
+                              controls
+                              preload="none"
+                              src={c.recording_url}
+                              style={{ width: "100%", height: 32, marginTop: 4, marginBottom: 6 }}
+                            />
+                          )}
                           {c.text_sent && (
                             <p style={{ color: "#94a3b8", fontSize: 11, margin: "4px 0 0" }}>
                               <span style={{ color: "#00d4ff" }}>Sent:</span> {c.text_sent}
