@@ -3,6 +3,7 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { validateLead, quarantineRaw } from "../_shared/anti-hallucination.ts";
+import { runEmailWaterfall } from "../_shared/email-waterfall.ts";
 import { sendSMS } from "../_shared/twilio.ts";
 import { dwaEmail, dwaWrap } from "../_shared/dwa-email.ts";
 import { scanSignals as scanRoofing } from "../_shared/trade-signals/signals-roofing.ts";
@@ -221,7 +222,7 @@ async function upsertWithDedup(
     return "updated";
   }
 
-  const { error } = await sb.from("trade_radar_leads").insert({
+  const { data: insertedRow, error } = await sb.from("trade_radar_leads").insert({
     vertical,
     address: validation.formatted ?? signal.address,
     city: signal.city,
@@ -245,14 +246,45 @@ async function upsertWithDedup(
     status: "new",
     signal_count: 1,
     last_signal_at: new Date().toISOString(),
-  });
+  }).select("id").maybeSingle();
 
   if (error) {
     if (error.code === "23505") return "skipped"; // unique conflict — already exists
     console.error(`[trade-scanner] insert error (${vertical}):`, error.message);
     return "skipped";
   }
+
+  // Enrichment waterfall (gated on score ≥ 7 to control spend) — fire-and-forget
+  if (insertedRow?.id && score >= 7) {
+    enrichLeadAsync(sb, insertedRow.id, signal).catch((e) =>
+      console.warn(`[trade-scanner] enrichment failed for ${insertedRow.id}:`, e instanceof Error ? e.message : String(e))
+    );
+  }
+
   return "inserted";
+}
+
+async function enrichLeadAsync(
+  sb: ReturnType<typeof createClient>,
+  leadId: string,
+  signal: any,
+): Promise<void> {
+  const fullName = signal.full_name || signal.owner_name || "";
+  const [firstName, ...rest] = fullName.split(/\s+/);
+  const lastName = rest.join(" ");
+  const result = await runEmailWaterfall(sb as any, {
+    business_name: signal.full_name || null,
+    city: signal.city || null,
+    state: "MI",
+    contact_first_name: firstName || null,
+    contact_last_name: lastName || null,
+  });
+  await sb.from("trade_radar_leads").update({
+    owner_email: result.email,
+    owner_name: fullName || null,
+    enriched_at: new Date().toISOString(),
+    enrichment_meta: { enrichment_trace: result.trace, source: result.source, confidence: result.confidence } as any,
+  }).eq("id", leadId);
 }
 
 async function notifyClients(

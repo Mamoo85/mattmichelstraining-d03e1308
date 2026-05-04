@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import SEOHead from "@/components/layout/SEOHead";
-import { Factory, Loader2, ExternalLink, Clock, Zap, TrendingUp, Radar } from "lucide-react";
+import { Factory, Loader2, ExternalLink, Clock, Zap, TrendingUp, Radar, Download } from "lucide-react";
 
 type Signal = {
   id: string;
@@ -64,6 +64,33 @@ export default function MyBuyerRadar() {
       setLoading(false);
     })();
   }, [token]);
+
+  function exportSignalsCsv() {
+    const headers = ["company_name", "industry", "location", "confidence", "predicted_needs", "source_summary", "detected_at"];
+    const csvRows = [
+      headers.join(","),
+      ...signals.map((s) =>
+        [
+          s.company_name,
+          s.industry || "",
+          s.location || "",
+          s.confidence ?? "",
+          (s.predicted_needs || []).join("; "),
+          (s.source_summary || "").replace(/\n/g, " "),
+          s.detected_at,
+        ]
+          .map((v) => `"${String(v).replace(/"/g, '""')}"`)
+          .join(",")
+      ),
+    ];
+    const blob = new Blob([csvRows.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `buyer-radar-signals-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
 
   if (!token) {
     return (
@@ -159,7 +186,18 @@ export default function MyBuyerRadar() {
               <h2 className="text-xl font-bold tracking-tight">Buyer Signals</h2>
               <p className="text-[11px] text-[#64748b] mt-0.5">Last 14 days · sorted by confidence</p>
             </div>
-            <span className="text-xs text-[#64748b] tabular-nums">{signals.length} signals</span>
+            <div className="flex items-center gap-3">
+              {signals.length > 0 && (
+                <button
+                  onClick={exportSignalsCsv}
+                  className="flex items-center gap-1.5 text-xs font-semibold text-[#00d4ff] border border-[#00d4ff]/40 hover:border-[#00d4ff] hover:bg-[#00d4ff]/10 transition-colors rounded-md px-2.5 py-1"
+                  title="Download all signals as CSV"
+                >
+                  <Download className="w-3 h-3" /> CSV
+                </button>
+              )}
+              <span className="text-xs text-[#64748b] tabular-nums">{signals.length} signals</span>
+            </div>
           </div>
           {signals.length === 0 ? (
             <div className="bg-[#0a1628] border border-dashed border-[#1e3a5f] rounded-xl p-8 text-center">
