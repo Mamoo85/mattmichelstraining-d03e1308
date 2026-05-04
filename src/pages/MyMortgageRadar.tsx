@@ -104,7 +104,7 @@ export default function MyMortgageRadar() {
         if (resolvedClientId) setClientId(resolvedClientId);
       }
 
-      const since = new Date(Date.now() - 14 * 86_400_000).toISOString();
+      const since = new Date(Date.now() - 90 * 86_400_000).toISOString();
       let query = (supabase.from as any)("mortgage_radar_leads")
         .select("id, full_name, address, city, zip, phone, email, signal_type, signal_source, signal_detail, signal_date, score, signal_count, suggested_opener, best_call_window, created_at, pipeline_stage")
         .gte("created_at", since)

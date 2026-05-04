@@ -99,8 +99,8 @@ export default function TradeRadarPortal({
       }
       setClient(clientRow as Client);
 
-      // Pull leads for this vertical, filtered by client's zip_codes (last 14 days)
-      const since = new Date(Date.now() - 14 * 86_400_000).toISOString();
+      // Pull leads for this vertical, filtered by client's zip_codes (last 90 days)
+      const since = new Date(Date.now() - 90 * 86_400_000).toISOString();
       let query = (supabase.from as any)("trade_radar_leads")
         .select(
           "id, full_name, address, city, zip, signal_type, signal_detail, signal_date, score, signal_count, suggested_opener, best_call_window, estimated_value, street_view_url, created_at"
