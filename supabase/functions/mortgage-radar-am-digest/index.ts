@@ -15,6 +15,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 import { encode } from "https://deno.land/std@0.190.0/encoding/base64url.ts";
 import { sendSMS } from "../_shared/twilio.ts";
+import { deliverCrmWebhook } from "../_shared/crm-webhook.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
