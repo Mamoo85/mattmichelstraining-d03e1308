@@ -313,9 +313,26 @@ export default function TradeRadarPortal({
           )
         ) : (
           <div className="grid gap-5">
-            {filtered.map((l) => (
-              <TradeRadarLeadCard key={l.id} lead={l} />
-            ))}
+            {filtered.map((l) => {
+              const a = actions[l.id];
+              return (
+                <TradeRadarLeadCard
+                  key={l.id}
+                  lead={l}
+                  actionBar={
+                    client ? (
+                      <LeadActionBar
+                        leadId={l.id}
+                        clientId={client.id}
+                        product="trade"
+                        initialStatus={(a?.status as any) || "new"}
+                        initialSnoozeUntil={a?.snooze_until || null}
+                      />
+                    ) : null
+                  }
+                />
+              );
+            })}
           </div>
         )}
 
