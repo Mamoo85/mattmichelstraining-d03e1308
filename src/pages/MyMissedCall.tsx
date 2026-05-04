@@ -21,6 +21,8 @@ type Capture = {
   caller_number: string;
   city: string | null;
   voicemail_transcript: string | null;
+  recording_url: string | null;
+  recording_duration: number | null;
   text_sent: string | null;
   reply_received: string | null;
   status: string;
