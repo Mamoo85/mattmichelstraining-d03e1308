@@ -158,6 +158,51 @@ export type Database = {
         }
         Relationships: []
       }
+      account_team_members: {
+        Row: {
+          accepted_at: string | null
+          account_owner_id: string
+          created_at: string
+          id: string
+          invite_token: string | null
+          invited_at: string
+          member_email: string
+          member_user_id: string | null
+          revoked_at: string | null
+          role: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          account_owner_id: string
+          created_at?: string
+          id?: string
+          invite_token?: string | null
+          invited_at?: string
+          member_email: string
+          member_user_id?: string | null
+          revoked_at?: string | null
+          role?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          account_owner_id?: string
+          created_at?: string
+          id?: string
+          invite_token?: string | null
+          invited_at?: string
+          member_email?: string
+          member_user_id?: string | null
+          revoked_at?: string | null
+          role?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       activity_feed_notes: {
         Row: {
           activity_id: string
@@ -24226,6 +24271,7 @@ export type Database = {
       expire_industrial_pulse_snapshots: { Args: never; Returns: number }
       expire_marketplace_access: { Args: never; Returns: number }
       extract_domain: { Args: { input: string }; Returns: string }
+      get_account_owner: { Args: { _user_id: string }; Returns: string }
       get_active_training_programs: {
         Args: never
         Returns: {
