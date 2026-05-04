@@ -36,7 +36,7 @@ serve(async (req) => {
   // Pull last 30 captures (global table — currently single-tenant; safe).
   const { data: captures } = await sb
     .from("missed_call_captures")
-    .select("id, caller_number, city, voicemail_transcript, text_sent, reply_received, status, created_at")
+    .select("id, caller_number, city, voicemail_transcript, recording_url, recording_duration, text_sent, reply_received, status, created_at")
     .order("created_at", { ascending: false })
     .limit(30);
 

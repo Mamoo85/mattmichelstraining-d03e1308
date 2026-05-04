@@ -21,6 +21,8 @@ type Capture = {
   caller_number: string;
   city: string | null;
   voicemail_transcript: string | null;
+  recording_url: string | null;
+  recording_duration: number | null;
   text_sent: string | null;
   reply_received: string | null;
   status: string;
@@ -164,6 +166,14 @@ export default function MyMissedCall() {
                             <p style={{ color: "#cbd5e1", fontSize: 12, margin: "0 0 6px", fontStyle: "italic", borderLeft: "2px solid #00d4ff", paddingLeft: 10 }}>
                               "{c.voicemail_transcript}"
                             </p>
+                          )}
+                          {c.recording_url && (
+                            <audio
+                              controls
+                              preload="none"
+                              src={c.recording_url}
+                              style={{ width: "100%", height: 32, marginTop: 4, marginBottom: 6 }}
+                            />
                           )}
                           {c.text_sent && (
                             <p style={{ color: "#94a3b8", fontSize: 11, margin: "4px 0 0" }}>

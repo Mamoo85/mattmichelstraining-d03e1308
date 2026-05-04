@@ -158,6 +158,51 @@ export type Database = {
         }
         Relationships: []
       }
+      account_team_members: {
+        Row: {
+          accepted_at: string | null
+          account_owner_id: string
+          created_at: string
+          id: string
+          invite_token: string | null
+          invited_at: string
+          member_email: string
+          member_user_id: string | null
+          revoked_at: string | null
+          role: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          account_owner_id: string
+          created_at?: string
+          id?: string
+          invite_token?: string | null
+          invited_at?: string
+          member_email: string
+          member_user_id?: string | null
+          revoked_at?: string | null
+          role?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          account_owner_id?: string
+          created_at?: string
+          id?: string
+          invite_token?: string | null
+          invited_at?: string
+          member_email?: string
+          member_user_id?: string | null
+          revoked_at?: string | null
+          role?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       activity_feed_notes: {
         Row: {
           activity_id: string
@@ -12735,6 +12780,8 @@ export type Database = {
           created_at: string
           google_review_sent_at: string | null
           id: string
+          recording_duration: number | null
+          recording_url: string | null
           reply_received: string | null
           status: string
           text_sent: string | null
@@ -12747,6 +12794,8 @@ export type Database = {
           created_at?: string
           google_review_sent_at?: string | null
           id?: string
+          recording_duration?: number | null
+          recording_url?: string | null
           reply_received?: string | null
           status?: string
           text_sent?: string | null
@@ -12759,6 +12808,8 @@ export type Database = {
           created_at?: string
           google_review_sent_at?: string | null
           id?: string
+          recording_duration?: number | null
+          recording_url?: string | null
           reply_received?: string | null
           status?: string
           text_sent?: string | null
@@ -13116,6 +13167,8 @@ export type Database = {
           created_at: string
           days_on_radar: number | null
           email: string | null
+          enriched_at: string | null
+          enrichment_meta: Json | null
           equity_range_high_cents: number | null
           equity_range_low_cents: number | null
           est_loan_high_cents: number | null
@@ -13181,6 +13234,8 @@ export type Database = {
           created_at?: string
           days_on_radar?: number | null
           email?: string | null
+          enriched_at?: string | null
+          enrichment_meta?: Json | null
           equity_range_high_cents?: number | null
           equity_range_low_cents?: number | null
           est_loan_high_cents?: number | null
@@ -13246,6 +13301,8 @@ export type Database = {
           created_at?: string
           days_on_radar?: number | null
           email?: string | null
+          enriched_at?: string | null
+          enrichment_meta?: Json | null
           equity_range_high_cents?: number | null
           equity_range_low_cents?: number | null
           est_loan_high_cents?: number | null
@@ -21891,6 +21948,8 @@ export type Database = {
           city: string | null
           county: string | null
           created_at: string
+          enriched_at: string | null
+          enrichment_meta: Json | null
           estimated_value: number | null
           full_name: string | null
           id: string
@@ -21898,6 +21957,9 @@ export type Database = {
           last_signal_at: string | null
           lat: number | null
           lon: number | null
+          owner_email: string | null
+          owner_name: string | null
+          owner_phone: string | null
           quarantine_reason: string | null
           raw_source_data: Json | null
           region: string | null
@@ -21919,6 +21981,8 @@ export type Database = {
           city?: string | null
           county?: string | null
           created_at?: string
+          enriched_at?: string | null
+          enrichment_meta?: Json | null
           estimated_value?: number | null
           full_name?: string | null
           id?: string
@@ -21926,6 +21990,9 @@ export type Database = {
           last_signal_at?: string | null
           lat?: number | null
           lon?: number | null
+          owner_email?: string | null
+          owner_name?: string | null
+          owner_phone?: string | null
           quarantine_reason?: string | null
           raw_source_data?: Json | null
           region?: string | null
@@ -21947,6 +22014,8 @@ export type Database = {
           city?: string | null
           county?: string | null
           created_at?: string
+          enriched_at?: string | null
+          enrichment_meta?: Json | null
           estimated_value?: number | null
           full_name?: string | null
           id?: string
@@ -21954,6 +22023,9 @@ export type Database = {
           last_signal_at?: string | null
           lat?: number | null
           lon?: number | null
+          owner_email?: string | null
+          owner_name?: string | null
+          owner_phone?: string | null
           quarantine_reason?: string | null
           raw_source_data?: Json | null
           region?: string | null
@@ -24199,6 +24271,7 @@ export type Database = {
       expire_industrial_pulse_snapshots: { Args: never; Returns: number }
       expire_marketplace_access: { Args: never; Returns: number }
       extract_domain: { Args: { input: string }; Returns: string }
+      get_account_owner: { Args: { _user_id: string }; Returns: string }
       get_active_training_programs: {
         Args: never
         Returns: {
