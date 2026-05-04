@@ -134,6 +134,16 @@ export default function MyBuyerRadar() {
       </header>
 
       <main className="max-w-6xl mx-auto px-3 sm:px-4 py-6 sm:py-8 space-y-8 sm:space-y-10">
+        <OnboardingChecklist
+          product="Buyer Radar"
+          steps={[
+            { id: "auth", label: "Dashboard access confirmed", done: !!client, hint: "Open from your Buyer Radar welcome email." },
+            { id: "signals", label: "First buyer signals received", done: signals.length > 0, hint: "Scanner runs daily — check back tomorrow." },
+            { id: "hot", label: "Hot signal (8+) detected", done: signals.some((s) => (s.confidence ?? 0) >= 8), hint: "High-confidence signals trigger a same-day call." },
+            { id: "export", label: "Signal list exported", done: false, hint: "Download your signals as CSV to work them in your CRM." },
+          ]}
+        />
+
         {/* Hero glow band with KPI cards — tap to jump to section on mobile */}
         <section className="relative">
           <div
