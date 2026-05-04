@@ -97,6 +97,20 @@ export default function ScannerHealth() {
                 </div>
 
                 <div className="mt-4">
+                  <div className="text-xs uppercase tracking-wide opacity-80 mb-2">Live source probes ({p.probes?.length || 0})</div>
+                  <div className="grid sm:grid-cols-2 gap-1">
+                    {p.probes?.map((pr) => (
+                      <div key={pr.name} className={`text-xs flex justify-between border rounded px-2 py-1 ${tone[pr.status]}`} title={pr.url}>
+                        <span className="font-mono truncate mr-2">{pr.name}</span>
+                        <span className="whitespace-nowrap">
+                          {pr.skipped ? "⛔ breaker" : pr.http_status ? `${pr.http_status} · ${pr.latency_ms}ms` : pr.error || "fail"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mt-4">
                   <div className="text-xs uppercase tracking-wide opacity-80 mb-2">Declared sources ({p.sources.length})</div>
                   <div className="flex flex-wrap gap-1">
                     {p.sources.map((s) => (
