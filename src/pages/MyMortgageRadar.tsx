@@ -17,6 +17,7 @@ import MortgageRadarWelcome from "@/components/mortgage/MortgageRadarWelcome";
 import MortgageRadarSeedLead from "@/components/mortgage/MortgageRadarSeedLead";
 import LeadActionBar from "@/components/trade-radar/LeadActionBar";
 import RadarExportBar from "@/components/shared/RadarExportBar";
+import OnboardingChecklist from "@/components/shared/OnboardingChecklist";
 
 type Lead = {
   id: string;
@@ -292,6 +293,15 @@ export default function MyMortgageRadar() {
       </header>
 
       <section className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8">
+        <OnboardingChecklist
+          product="Mortgage Radar"
+          steps={[
+            { id: "auth", label: "Dashboard link verified", done: !!clientId, hint: "Open this page from your weekly digest email." },
+            { id: "leads", label: "First leads delivered", done: leads.length > 0, hint: "Scanner runs daily at 8am ET." },
+            { id: "hot", label: "First hot lead (score 9+)", done: hotCount > 0, hint: "Highest-intent in-market signal." },
+            { id: "outreach", label: "First outreach sent", done: outreach.length > 0, hint: "Use the Reach Out button on any lead." },
+          ]}
+        />
         {/* KPI cards with hero glow — explicit 1-2-3 hierarchy */}
         <div className="relative mb-5 sm:mb-6">
           <div
