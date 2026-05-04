@@ -14,6 +14,36 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Current Session State
 *Last updated: 2026-05-04*
 
+### Phase 40 — Product Polish Sweep COMPLETE ✅
+
+**This session deliverables:**
+- `MySiteRadar.tsx` — company detail slide-over panel: click any visitor/company → see visit count, all pages visited, first/last seen, ICP badge, re-enrich button
+- `MyContractorLeads.tsx` — "Request Credit →" mailto link on disputed (bad_lead) leads, pre-filled with lead details
+- `src/pages/MortgageRadarCompliance.tsx` — FCRA/TCPA disclosure page at `/mortgage-radar-compliance`; linked from portal footer
+- `techalert-prospect-hunter/index.ts` — replaced broken LinkedIn Jobs API (`/v2/jobPostings` = restricted Partner API, always returned empty) with `scanGoogleMapsTrades()` using Google Maps Places API (GOOGLE_MAPS_API_KEY already in Supabase)
+
+**Revised % Customer-Ready scores (Phase 40):**
+- SiteRadar: **85%** (company detail panel — major gap closed)
+- ContractorLeads: **80%** (credit request flow now in place)
+- Mortgage Radar: **93%** (FCRA/TCPA compliance page live)
+- TechAlert: **82%** (LinkedIn broken scan replaced; 1 fewer silent failure)
+- Trade Radar (all 11): **88%** (owner contact visible in UI since Phase 39)
+- FieldDesk: **82%** (CSV export since Phase 39)
+- Buyer Radar: **75%** (OnboardingChecklist since Phase 39)
+- Missed-Call: **80%** (unchanged)
+- Dead Lead Reactivation: **72%** (unchanged)
+- Demand Radar: **75%** (unchanged)
+
+**Remaining gaps that require business decisions (not code):**
+- Lead guarantee policy terms (Trade Radar, Contractor Leads) — what qualifies for a credit?
+- Nationwide ZIP expansion — which Michigan cities beyond Detroit to enable?
+- CRM integrations (Salesforce, Jobber) — requires API keys from those platforms
+- ATS integration for TechAlert (Greenhouse/Lever) — requires partner API access
+- Compliance PDF bundle for Mortgage Radar (page exists; PDF download not yet)
+
+**One remaining Matt action item:**
+- Add `EVENTBRITE_API_KEY` to Supabase Edge Function secrets — `scanEventbriteSignals()` in TechAlert silently returns empty without it. Key was in Lovable Cloud (see Phase 28) but may not be in Supabase secrets store.
+
 ### Phase 39 — Portal Polish + Secrets Fixed COMPLETE ✅
 
 **This session deliverables:**
@@ -21,16 +51,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `MyBuyerRadar.tsx` — `OnboardingChecklist` added (4 steps: access → signals → hot signal → export)
 - `MyFieldDesk.tsx` — CSV export button added (exports filtered job list as dated CSV)
 
-**Revised % Customer-Ready scores:**
-- Trade Radar (all 11 live): **88%** (owner contact now visible in UI)
-- Buyer Radar: **75%** (OnboardingChecklist now present)
-- FieldDesk: **82%** (CSV export now live)
-
 **SECRETS FIXED (2026-05-04) — Matt added to Supabase Edge Function secrets:**
 - `GOOGLE_MAPS_API_KEY` ✅ — per-address leads now flow through `validateLead`; Street View images now populate
 - `FIRECRAWL_API_KEY` ✅ — FSBO/estate sale/probate scrapers now active; Apollo→Hunter→Firecrawl waterfall complete
-
-**No remaining Matt action items.**
 
 ### Phase 38 — Zero-Lead Pipeline Diagnosis + Fix COMPLETE ✅
 
