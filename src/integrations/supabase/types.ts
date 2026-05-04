@@ -10439,6 +10439,48 @@ export type Database = {
         }
         Relationships: []
       }
+      ingestion_dlq: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          job_name: string
+          last_attempt_at: string | null
+          max_retries: number
+          next_retry_at: string
+          payload: Json
+          resolved_at: string | null
+          retry_count: number
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          job_name: string
+          last_attempt_at?: string | null
+          max_retries?: number
+          next_retry_at?: string
+          payload?: Json
+          resolved_at?: string | null
+          retry_count?: number
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          job_name?: string
+          last_attempt_at?: string | null
+          max_retries?: number
+          next_retry_at?: string
+          payload?: Json
+          resolved_at?: string | null
+          retry_count?: number
+          status?: string
+        }
+        Relationships: []
+      }
       instagram_posts: {
         Row: {
           active: boolean | null
@@ -13163,9 +13205,11 @@ export type Database = {
           building_sqft: number | null
           buyer_type: string | null
           city: string | null
+          confidence_score: number | null
           county: string | null
           created_at: string
           days_on_radar: number | null
+          dedupe_key: string | null
           email: string | null
           enriched_at: string | null
           enrichment_meta: Json | null
@@ -13196,6 +13240,7 @@ export type Database = {
           notified_client_ids: string[] | null
           phone: string | null
           pipeline_stage: string
+          provenance: Json | null
           provenance_screenshot_paths: Json | null
           provenance_source_urls: Json | null
           quarantine_reason: string | null
@@ -13230,9 +13275,11 @@ export type Database = {
           building_sqft?: number | null
           buyer_type?: string | null
           city?: string | null
+          confidence_score?: number | null
           county?: string | null
           created_at?: string
           days_on_radar?: number | null
+          dedupe_key?: string | null
           email?: string | null
           enriched_at?: string | null
           enrichment_meta?: Json | null
@@ -13263,6 +13310,7 @@ export type Database = {
           notified_client_ids?: string[] | null
           phone?: string | null
           pipeline_stage?: string
+          provenance?: Json | null
           provenance_screenshot_paths?: Json | null
           provenance_source_urls?: Json | null
           quarantine_reason?: string | null
@@ -13297,9 +13345,11 @@ export type Database = {
           building_sqft?: number | null
           buyer_type?: string | null
           city?: string | null
+          confidence_score?: number | null
           county?: string | null
           created_at?: string
           days_on_radar?: number | null
+          dedupe_key?: string | null
           email?: string | null
           enriched_at?: string | null
           enrichment_meta?: Json | null
@@ -13330,6 +13380,7 @@ export type Database = {
           notified_client_ids?: string[] | null
           phone?: string | null
           pipeline_stage?: string
+          provenance?: Json | null
           provenance_screenshot_paths?: Json | null
           provenance_source_urls?: Json | null
           quarantine_reason?: string | null
@@ -18186,6 +18237,33 @@ export type Database = {
         }
         Relationships: []
       }
+      registry_qa_snapshots: {
+        Row: {
+          created_at: string
+          id: string
+          metadata: Json | null
+          signal_count: number
+          snapshot_date: string
+          waterfall: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          signal_count?: number
+          snapshot_date: string
+          waterfall: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          signal_count?: number
+          snapshot_date?: string
+          waterfall?: string
+        }
+        Relationships: []
+      }
       regulatory_monitor_clients: {
         Row: {
           active: boolean | null
@@ -21946,8 +22024,10 @@ export type Database = {
           address: string | null
           best_call_window: string | null
           city: string | null
+          confidence_score: number | null
           county: string | null
           created_at: string
+          dedupe_key: string | null
           enriched_at: string | null
           enrichment_meta: Json | null
           estimated_value: number | null
@@ -21960,6 +22040,7 @@ export type Database = {
           owner_email: string | null
           owner_name: string | null
           owner_phone: string | null
+          provenance: Json | null
           quarantine_reason: string | null
           raw_source_data: Json | null
           region: string | null
@@ -21979,8 +22060,10 @@ export type Database = {
           address?: string | null
           best_call_window?: string | null
           city?: string | null
+          confidence_score?: number | null
           county?: string | null
           created_at?: string
+          dedupe_key?: string | null
           enriched_at?: string | null
           enrichment_meta?: Json | null
           estimated_value?: number | null
@@ -21993,6 +22076,7 @@ export type Database = {
           owner_email?: string | null
           owner_name?: string | null
           owner_phone?: string | null
+          provenance?: Json | null
           quarantine_reason?: string | null
           raw_source_data?: Json | null
           region?: string | null
@@ -22012,8 +22096,10 @@ export type Database = {
           address?: string | null
           best_call_window?: string | null
           city?: string | null
+          confidence_score?: number | null
           county?: string | null
           created_at?: string
+          dedupe_key?: string | null
           enriched_at?: string | null
           enrichment_meta?: Json | null
           estimated_value?: number | null
@@ -22026,6 +22112,7 @@ export type Database = {
           owner_email?: string | null
           owner_name?: string | null
           owner_phone?: string | null
+          provenance?: Json | null
           quarantine_reason?: string | null
           raw_source_data?: Json | null
           region?: string | null
@@ -22351,6 +22438,48 @@ export type Database = {
           stripe_charge_id?: string | null
           stripe_subscription_id?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      trial_attribution: {
+        Row: {
+          campaign: string | null
+          email: string
+          id: string
+          metadata: Json | null
+          product: string
+          source: string | null
+          sub_converted_at: string | null
+          trial_converted_at: string | null
+          trial_started_at: string
+          utm_content: string | null
+          utm_medium: string | null
+        }
+        Insert: {
+          campaign?: string | null
+          email: string
+          id?: string
+          metadata?: Json | null
+          product: string
+          source?: string | null
+          sub_converted_at?: string | null
+          trial_converted_at?: string | null
+          trial_started_at?: string
+          utm_content?: string | null
+          utm_medium?: string | null
+        }
+        Update: {
+          campaign?: string | null
+          email?: string
+          id?: string
+          metadata?: Json | null
+          product?: string
+          source?: string | null
+          sub_converted_at?: string | null
+          trial_converted_at?: string | null
+          trial_started_at?: string
+          utm_content?: string | null
+          utm_medium?: string | null
         }
         Relationships: []
       }
