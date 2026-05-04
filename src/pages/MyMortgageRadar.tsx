@@ -602,6 +602,12 @@ export default function MyMortgageRadar() {
         </div>
       </section>
 
+      {clientId && (
+        <section className="max-w-3xl mx-auto px-4 py-8 border-t border-[#1e3a5f]/40">
+          <CrmWebhookSettings table="mortgage_radar_clients" clientId={clientId} brand="dwa" />
+        </section>
+      )}
+
       {clientEmail && (
         <div className="py-6 text-center border-t border-[#1e3a5f]/40">
           <ManageBillingButton email={clientEmail} />
