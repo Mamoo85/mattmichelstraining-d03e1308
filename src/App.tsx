@@ -377,6 +377,8 @@ const MyPestControlRadar = lazyRetry(() => import("./pages/MyPestControlRadar"))
 const MyGuttersRadar = lazyRetry(() => import("./pages/MyGuttersRadar"));
 const MyPaintingRadar = lazyRetry(() => import("./pages/MyPaintingRadar"));
 const MyExteriorRadar = lazyRetry(() => import("./pages/MyExteriorRadar"));
+const MyFieldDesk = lazyRetry(() => import("./pages/MyFieldDesk"));
+const MyDemandRadar = lazyRetry(() => import("./pages/MyDemandRadar"));
 const MyTreeRadar = lazyRetry(() => import("./pages/MyTreeRadar"));
 const MyRestorationRadar = lazyRetry(() => import("./pages/MyRestorationRadar"));
 const MyDemoJunkRadar = lazyRetry(() => import("./pages/MyDemoJunkRadar"));
