@@ -33,7 +33,14 @@ serve(async (req) => {
     });
   }
 
-  return new Response(JSON.stringify({ client }), {
+  // Pull last 30 captures (global table — currently single-tenant; safe).
+  const { data: captures } = await sb
+    .from("missed_call_captures")
+    .select("id, caller_number, city, voicemail_transcript, text_sent, reply_received, status, created_at")
+    .order("created_at", { ascending: false })
+    .limit(30);
+
+  return new Response(JSON.stringify({ client, captures: captures || [] }), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 });
