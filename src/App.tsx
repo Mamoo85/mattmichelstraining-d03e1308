@@ -897,6 +897,8 @@ const App = () => (
                     <Route path="/my-gutters-radar" element={<MyGuttersRadar />} />
                     <Route path="/my-painting-radar" element={<MyPaintingRadar />} />
                     <Route path="/my-exterior-radar" element={<MyExteriorRadar />} />
+                    <Route path="/my-field-desk" element={<MyFieldDesk />} />
+                    <Route path="/my-demand-radar" element={<MyDemandRadar />} />
                     <Route path="/my-tree-radar" element={<MyTreeRadar />} />
                     <Route path="/my-restoration-radar" element={<MyRestorationRadar />} />
                     <Route path="/my-demo-junk-radar" element={<MyDemoJunkRadar />} />
