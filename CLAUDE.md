@@ -14,6 +14,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Current Session State
 *Last updated: 2026-05-04*
 
+### Phase 39 — Portal Polish + Secrets Fixed COMPLETE ✅
+
+**This session deliverables:**
+- `TradeRadarLeadCard.tsx` — owner contact info (name/phone/email) now displayed on claimed lead cards; "Call Now" button fixed to use `owner_phone`
+- `MyBuyerRadar.tsx` — `OnboardingChecklist` added (4 steps: access → signals → hot signal → export)
+- `MyFieldDesk.tsx` — CSV export button added (exports filtered job list as dated CSV)
+
+**Revised % Customer-Ready scores:**
+- Trade Radar (all 11 live): **88%** (owner contact now visible in UI)
+- Buyer Radar: **75%** (OnboardingChecklist now present)
+- FieldDesk: **82%** (CSV export now live)
+
+**SECRETS FIXED (2026-05-04) — Matt added to Supabase Edge Function secrets:**
+- `GOOGLE_MAPS_API_KEY` ✅ — per-address leads now flow through `validateLead`; Street View images now populate
+- `FIRECRAWL_API_KEY` ✅ — FSBO/estate sale/probate scrapers now active; Apollo→Hunter→Firecrawl waterfall complete
+
+**No remaining Matt action items.**
+
 ### Phase 38 — Zero-Lead Pipeline Diagnosis + Fix COMPLETE ✅
 
 **Root cause of "no new signals (yet)" across all 6+ radar products:**
@@ -21,7 +39,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Three compounding bugs found and fixed:
 
 **Bug 1 — `validateAddress` fail-closed on missing key (`anti-hallucination.ts`)**
-- `GOOGLE_MAPS_API_KEY` exists in Lovable Cloud secrets but NOT in Supabase Edge Function runtime secrets (different stores). So every BSEED/ArcGIS per-address signal went to quarantine with `validation_unavailable`.
+- `GOOGLE_MAPS_API_KEY` existed in Lovable Cloud secrets but NOT in Supabase Edge Function runtime secrets (different stores). Every BSEED/ArcGIS per-address signal went to quarantine with `validation_unavailable`.
 - **Fix**: fail-OPEN when key missing for `scraper`/`api` sources (trusted government data). LLM sources still require a source URL citation. Commit: `8030a6d6`.
 
 **Bug 2 — Area signals invisible in morning digest (`trade-radar-am-digest/index.ts`)**
@@ -36,10 +54,6 @@ Three compounding bugs found and fixed:
 - `trade-radar-scanner` (all 11 verticals)
 - `mortgage-radar-scanner`
 - Any future scanner using `validateLead()`
-
-**Remaining Matt action items (not code — infrastructure):**
-1. **Add `GOOGLE_MAPS_API_KEY` to Supabase Edge Function secrets** (not just Lovable Cloud). Go to Supabase dashboard → Edge Functions → Secrets. Once added, address geocoding and Street View images will start working automatically.
-2. **Add `FIRECRAWL_API_KEY` to Supabase secrets** — FSBO, estate sale, probate scrapers log a startup warning and return empty without it.
 
 **All 23 My* customer portals confirmed live with routes:**
 - 11 Trade Radar portals (roofing, hvac, plumbing, electrical, pest, gutters, exterior, tree, restoration, demo_junk, foundation)
