@@ -204,6 +204,16 @@ export default function TradeRadarLeadCard({
 
           <ScoreMeter score={lead.score} />
 
+          <ScoreBreakdown
+            score={lead.score}
+            signalType={lead.signal_type}
+            signalLabel={signalLabel}
+            signalDate={lead.signal_date}
+            estimatedValueCents={lead.estimated_value}
+            sourceMethod={lead.source_method}
+            signalCount={lead.signal_count ?? null}
+          />
+
           <div className="rounded-xl border border-white/8 bg-white/3 p-4 space-y-2">
             <div className="flex items-center gap-1.5 text-[11px] font-mono font-bold uppercase tracking-widest text-[#00d4ff]/70">
               <Zap className="w-3 h-3" />
