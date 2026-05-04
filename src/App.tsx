@@ -862,6 +862,7 @@ const App = () => (
                     <Route path="/dwa/refer" element={<DwaReferContractor />} />
                     <Route path="/refer-a-contractor" element={<DwaReferContractor />} />
                     <Route path="/mortgage-radar-vs-trigger-leads" element={<MortgageRadarVsTriggerLeads />} />
+                    <Route path="/mortgage-radar-compliance" element={<MortgageRadarCompliance />} />
                     <Route path="/mortgage-radar" element={<MortgageRadar />} />
                     <Route path="/fsbo-heatmap" element={<FsboHeatmap />} />
                     <Route path="/my-mortgage-radar" element={<MyMortgageRadar />} />
