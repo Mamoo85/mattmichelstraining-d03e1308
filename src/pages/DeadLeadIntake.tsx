@@ -306,17 +306,38 @@ export default function DeadLeadIntake() {
           </Field>
 
           <Field
-            label="Dead Leads — Phone Numbers *"
-            hint="One per line. Format: phone  OR  phone, First Name"
+            label="Dead Leads *"
+            hint={inputMode === "paste" ? "One per line. Format: phone  OR  phone, First Name" : "Upload a .csv with phone numbers in any column. We auto-detect headers and pull names too."}
           >
-            <textarea
-              required
-              value={form.leads}
-              onChange={(e) => setForm({ ...form, leads: e.target.value })}
-              placeholder={"3135550101\n3135550102, Sarah\n3135550103, Mike Johnson"}
-              rows={8}
-              style={{ ...inputStyle, resize: "vertical", fontFamily: "monospace", fontSize: 13 }}
-            />
+            <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+              <button type="button" onClick={() => setInputMode("paste")} style={{ flex: 1, padding: "8px 12px", background: inputMode === "paste" ? "#00d4ff" : "#0a1628", color: inputMode === "paste" ? "#0a1628" : "#94a3b8", border: "1px solid #1e3a5f", borderRadius: 7, fontWeight: 700, fontSize: 12, cursor: "pointer" }}>📝 Paste numbers</button>
+              <button type="button" onClick={() => setInputMode("csv")} style={{ flex: 1, padding: "8px 12px", background: inputMode === "csv" ? "#00d4ff" : "#0a1628", color: inputMode === "csv" ? "#0a1628" : "#94a3b8", border: "1px solid #1e3a5f", borderRadius: 7, fontWeight: 700, fontSize: 12, cursor: "pointer" }}>📂 Upload CSV</button>
+            </div>
+            {inputMode === "paste" ? (
+              <textarea
+                required
+                value={form.leads}
+                onChange={(e) => setForm({ ...form, leads: e.target.value })}
+                placeholder={"3135550101\n3135550102, Sarah\n3135550103, Mike Johnson"}
+                rows={8}
+                style={{ ...inputStyle, resize: "vertical", fontFamily: "monospace", fontSize: 13 }}
+              />
+            ) : (
+              <div>
+                <input
+                  type="file"
+                  accept=".csv,text/csv"
+                  onChange={(e) => { const f = e.target.files?.[0]; if (f) handleCsvUpload(f); }}
+                  style={{ ...inputStyle, padding: "10px 14px", fontSize: 13 }}
+                />
+                {csvFileName && csvPreview.length > 0 && (
+                  <div style={{ marginTop: 10, padding: "10px 12px", background: "#0a1628", border: "1px solid #1e3a5f", borderRadius: 7 }}>
+                    <p style={{ color: "#10b981", fontSize: 12, fontWeight: 700, margin: "0 0 6px" }}>✓ {csvPreview.length} valid leads parsed from {csvFileName}</p>
+                    <pre style={{ color: "#94a3b8", fontSize: 11, fontFamily: "monospace", margin: 0, maxHeight: 100, overflow: "auto", whiteSpace: "pre-wrap" }}>{csvPreview.slice(0, 5).join("\n")}{csvPreview.length > 5 ? `\n…and ${csvPreview.length - 5} more` : ""}</pre>
+                  </div>
+                )}
+              </div>
+            )}
           </Field>
 
           <Field label="Google Review Link (optional)" hint="We'll ask dead leads who say no to leave you a review instead">
