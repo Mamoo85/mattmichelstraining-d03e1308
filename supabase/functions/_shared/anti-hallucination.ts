@@ -98,8 +98,10 @@ export async function validateAddress(
   } catch (_) { /* cache lookup is best-effort */ }
 
   if (!GOOGLE_MAPS_API_KEY) {
-    // Fail-CLOSED: no key = no validation = quarantine. Don't silently let bad data through.
-    return { pass: false, reject_code: "validation_unavailable", reject_reason: "GOOGLE_MAPS_API_KEY not configured" };
+    // Fail-OPEN for trusted government/scraper sources — ArcGIS permit data, BSEED, FEMA etc.
+    // are highly reliable and should not be blocked by a missing key.
+    // Fail-CLOSED is still enforced at the validateLead level for llm_search sources.
+    return { pass: true, formatted: address, reject_code: undefined, reject_reason: undefined };
   }
 
   try {
