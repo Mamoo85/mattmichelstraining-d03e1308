@@ -1212,7 +1212,7 @@ serve(async (req) => {
       sam: samSignals.length,
       eventbrite: eventbriteSignals.length,
       usaspending: usaSpendingSignals.length,
-      linkedin: googleMapsSignals.length,
+      googleMaps: googleMapsSignals.length,
       osha: oshaSignals.length,
       lara_new: laraNewSignals.length,
       lara_dissolved: laraDissolvedSignals.length,
