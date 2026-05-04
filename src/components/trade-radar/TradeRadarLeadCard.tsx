@@ -27,6 +27,8 @@ interface TradeRadarLeadCardProps {
   claimed?: boolean;
   onClaim?: (lead: TradeRadarLead) => void | Promise<void>;
   className?: string;
+  /** Optional action bar (Mark Called / Snooze / Pass). Renders below CTA when provided. */
+  actionBar?: React.ReactNode;
 }
 
 const SIGNAL_LABELS: Record<string, string> = {
