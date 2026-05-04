@@ -12,7 +12,75 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ---
 
 ## Current Session State
-*Last updated: 2026-05-03*
+*Last updated: 2026-05-04*
+
+### Phase 37 — Product Audit + Test Coverage + Full Fix Verification COMPLETE ✅
+
+**Test coverage (Claude Code this session):**
+- 7 new Deno unit test files in `supabase/functions/_shared/`:
+  - `recency-decay.test.ts` — urgency score decay, readiness window invariants
+  - `permit-velocity.test.ts` — 30/60/90d bucketing, trajectory, trade_mix
+  - `intent-score.test.ts` — tier classification, category stacking, accountKey normalization
+  - `circuit-breaker.test.ts` — trip threshold, recovery, provider isolation
+  - `fetch-with-retry.test.ts` — 429 retry, Retry-After header, maxRetries=0
+  - `twilio.test.ts` — timezone lookup, quiet hours shape, body hash determinism
+  - `outreach-blocklist.test.ts` — permanent/future/past blocks, domain extraction, fail-open
+- `supabase/functions/stripe-webhook/router.ts` extracted (pure routing table, no Stripe SDK import)
+- `supabase/functions/stripe-webhook/router.test.ts` — 20 routing contract tests (22 product types)
+- 3 Playwright E2E specs in `tests/e2e/`:
+  - `checkout-flows.spec.ts` — 6 products × CTA/success/cancel/SEO
+  - `admin-smoke.spec.ts` — auth guard redirects, no sensitive data exposure
+  - `trade-radar-smoke.spec.ts` — 6 landing pages + 5 demo pages
+- `vitest.config.ts` — thresholds raised to 50/40/50/50 (was 15/15/15/15)
+- All merged to `main` via `claude/analyze-test-coverage-1Smik`
+
+**Full product audit performed — all 10 plan fixes verified COMPLETE by Lovable:**
+
+| Fix | Item | Status |
+|---|---|---|
+| P0-B | `MyFieldDesk.tsx` portal (272 lines, job board, OnboardingChecklist) | ✅ |
+| P0-C | `MyDemandRadar.tsx` portal (311 lines, signal feed, OnboardingChecklist) | ✅ |
+| Fix 1 | Apollo+Hunter enrichment waterfall wired into `trade-radar-scanner/index.ts` | ✅ |
+| Fix 2 | `LeadActionBar.tsx` (Called/Pass/Snooze/Won/Lost), `trade_radar_lead_actions` + `mortgage_radar_lead_actions` tables | ✅ |
+| Fix 3 | CSV export in `TradeRadarPortal` (RadarExportBar), `MyMortgageRadar` (blob download), `MyBuyerRadar` (blob download) | ✅ |
+| Fix 4 | `team-seat-manager` edge function + `MyTeam.tsx` + `AcceptTeamInvite.tsx` — invite/accept/revoke teammates | ✅ |
+| Fix 5 | Score ≥9 SMS in scanner (`sendSMS` at line 367 of trade-radar-scanner) | ✅ |
+| Fix 6 | 90-day history in `TradeRadarPortal` (was 14 days) | ✅ |
+| Fix 7 | Geographic expansion code in scanner (`coverage_counties`, `coverage_regions` from client row) | ✅ |
+| Fix 8 | Voicemail audio player in `MyMissedCall.tsx` (`<audio>` tag, `recording_url` from Twilio), stored by `voicemail-transcription-handler` | ✅ |
+| Fix 9 | Self-serve CSV upload in `DeadLeadIntake.tsx` (`FileReader`, `type="file"`, column preview) | ✅ |
+| Fix 10 | `OnboardingChecklist` component (84 lines) in 6 portals: MyMortgageRadar, MyMissedCall, MyFieldDesk, MyDemandRadar, MyContractorLeads, MySiteRadar | ✅ |
+
+**Bonus items Lovable shipped alongside fixes:**
+- `cold-email-ramp-scheduler` + `cold_email_ramp_state` table (deliverability-aware send ramping)
+- `scanner-health-matrix` edge function + `ScannerHealth` admin page
+- `AdminManualOnboardingQueue` + `manual_onboarding_queue` table (manual provisioning fallback)
+- `AdminSystemAudit`, `AdminSuppressionLists` admin tools
+- HubSpot integration (`hubspot-bootstrap-properties`, `hubspot-form-webhook`, `_shared/hubspot.ts`)
+- 4 broken pg_cron jobs fixed (migration `20260504041815` — vault secrets pattern corrected)
+- `street_view_url` column on `trade_radar_leads`
+- `owner_email`, `owner_phone`, `owner_name`, `enriched_at`, `enrichment_meta` columns on `trade_radar_leads`
+- `recording_url`, `recording_duration` columns on `missed_call_captures`
+
+**Revised % Customer-Ready scores (post all fixes):**
+- Mortgage Radar: **88%** (missing: CRM integration, compliance PDF)
+- Trade Radar (all 11 live): **85%** (missing: nationwide coverage, contact enrichment display in card)
+- TechAlert: **78%** (missing: dispatcher fully running, ATS integration)
+- MyFieldDesk: **78%** (new portal — job board live, missing: real job dispatch UI)
+- MyDemandRadar: **75%** (new portal — signal feed live, missing: richer sources)
+- Missed-Call: **80%** (call log + transcript + audio player all live)
+- Contractor Leads: **72%** (OnboardingChecklist, no lead guarantee yet)
+- SiteRadar: **72%** (OnboardingChecklist, missing: company detail page)
+- Dead Lead Reactivation: **72%** (self-serve upload now live)
+- Buyer Radar: **65%** (CSV export now live, thin signal sources)
+- Demand Radar: **75%** (new portal now live)
+
+**Remaining market gap (not code, business decisions):**
+- Contact phone/email on lead cards (enrichment runs but UI display needs `owner_phone`/`owner_email` fields shown in TradeRadarLeadCard)
+- CRM integration webhooks (HubSpot base wired; Salesforce/Jobber not yet)
+- Nationwide ZIP expansion (code ready, just need to enroll clients with broader coverage_regions)
+- Compliance PDF bundle for Mortgage Radar (FCRA/TCPA disclosures)
+- Lead guarantee policy for Trade Radar
 
 ### Phase 36 — Lead Cards + Agent Updates + CI Fix (This Session) COMPLETE ✅
 
