@@ -739,6 +739,34 @@ serve(async (req) => {
         console.error("[WEBHOOK] checkout_receipts upsert failed:", e);
       }
 
+      // ── HUBSPOT CRM SYNC (fire-and-forget; never blocks fulfillment) ──
+      try {
+        const email = session.customer_details?.email || meta.email;
+        if (email) {
+          const { upsertContact, createDeal } = await import("../_shared/hubspot.ts");
+          const [firstname, ...rest] = (session.customer_details?.name || "").split(" ");
+          const contactId = await upsertContact({
+            email,
+            firstname: firstname || undefined,
+            lastname: rest.join(" ") || undefined,
+            phone: session.customer_details?.phone || undefined,
+            lifecyclestage: "customer",
+            hs_lead_status: "CONNECTED",
+          });
+          if (contactId) {
+            await createDeal({
+              dealname: `${meta.type || "purchase"} — ${email}`,
+              amount: (session.amount_total || 0) / 100,
+              dealstage: "closedwon",
+              pipeline: "default",
+              closedate: new Date().toISOString(),
+            }, { contactId });
+          }
+        }
+      } catch (e) {
+        console.error("[WEBHOOK] hubspot sync failed (non-fatal):", e);
+      }
+
       // ── TRAINING SESSION BOOKING FALLBACK ──
       // If user closes browser before verify-session-booking runs, the webhook ensures the booking is created
       if (meta.type === "training_session" && meta.user_id && meta.slot_ids) {
