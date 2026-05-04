@@ -12735,6 +12735,8 @@ export type Database = {
           created_at: string
           google_review_sent_at: string | null
           id: string
+          recording_duration: number | null
+          recording_url: string | null
           reply_received: string | null
           status: string
           text_sent: string | null
@@ -12747,6 +12749,8 @@ export type Database = {
           created_at?: string
           google_review_sent_at?: string | null
           id?: string
+          recording_duration?: number | null
+          recording_url?: string | null
           reply_received?: string | null
           status?: string
           text_sent?: string | null
@@ -12759,6 +12763,8 @@ export type Database = {
           created_at?: string
           google_review_sent_at?: string | null
           id?: string
+          recording_duration?: number | null
+          recording_url?: string | null
           reply_received?: string | null
           status?: string
           text_sent?: string | null
@@ -13116,6 +13122,8 @@ export type Database = {
           created_at: string
           days_on_radar: number | null
           email: string | null
+          enriched_at: string | null
+          enrichment_meta: Json | null
           equity_range_high_cents: number | null
           equity_range_low_cents: number | null
           est_loan_high_cents: number | null
@@ -13181,6 +13189,8 @@ export type Database = {
           created_at?: string
           days_on_radar?: number | null
           email?: string | null
+          enriched_at?: string | null
+          enrichment_meta?: Json | null
           equity_range_high_cents?: number | null
           equity_range_low_cents?: number | null
           est_loan_high_cents?: number | null
@@ -13246,6 +13256,8 @@ export type Database = {
           created_at?: string
           days_on_radar?: number | null
           email?: string | null
+          enriched_at?: string | null
+          enrichment_meta?: Json | null
           equity_range_high_cents?: number | null
           equity_range_low_cents?: number | null
           est_loan_high_cents?: number | null
@@ -21891,6 +21903,8 @@ export type Database = {
           city: string | null
           county: string | null
           created_at: string
+          enriched_at: string | null
+          enrichment_meta: Json | null
           estimated_value: number | null
           full_name: string | null
           id: string
@@ -21898,6 +21912,9 @@ export type Database = {
           last_signal_at: string | null
           lat: number | null
           lon: number | null
+          owner_email: string | null
+          owner_name: string | null
+          owner_phone: string | null
           quarantine_reason: string | null
           raw_source_data: Json | null
           region: string | null
@@ -21919,6 +21936,8 @@ export type Database = {
           city?: string | null
           county?: string | null
           created_at?: string
+          enriched_at?: string | null
+          enrichment_meta?: Json | null
           estimated_value?: number | null
           full_name?: string | null
           id?: string
@@ -21926,6 +21945,9 @@ export type Database = {
           last_signal_at?: string | null
           lat?: number | null
           lon?: number | null
+          owner_email?: string | null
+          owner_name?: string | null
+          owner_phone?: string | null
           quarantine_reason?: string | null
           raw_source_data?: Json | null
           region?: string | null
@@ -21947,6 +21969,8 @@ export type Database = {
           city?: string | null
           county?: string | null
           created_at?: string
+          enriched_at?: string | null
+          enrichment_meta?: Json | null
           estimated_value?: number | null
           full_name?: string | null
           id?: string
@@ -21954,6 +21978,9 @@ export type Database = {
           last_signal_at?: string | null
           lat?: number | null
           lon?: number | null
+          owner_email?: string | null
+          owner_name?: string | null
+          owner_phone?: string | null
           quarantine_reason?: string | null
           raw_source_data?: Json | null
           region?: string | null
