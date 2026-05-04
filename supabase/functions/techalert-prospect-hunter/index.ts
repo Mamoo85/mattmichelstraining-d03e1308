@@ -10,6 +10,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { sendSMS, ADMIN_PHONE } from "../_shared/twilio.ts";
+import { canonicalize } from "../_shared/domain-resolver.ts";
 
 const TWILIO_PHONE = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
 // Below this many fresh prospects in a run, SMS Matt
@@ -1165,6 +1166,9 @@ serve(async (req) => {
         const repostCount = existing ? (existing.repost_count ?? 0) + 1 : 0;
         const score = scorePosting(p, openRolesCount, repostCount, weatherBonus as number);
 
+        // Resolve clean primary website (strip aggregators like indeed.com / ziprecruiter.com)
+        const primaryWebsite = canonicalize(p.source_url);
+
         if (existing) {
           await sb.from("techalert_prospect_targets").update({
             days_posted: p.days_posted,
@@ -1175,6 +1179,7 @@ serve(async (req) => {
             source_label: p.source_label,
             city: p.city,
             is_boiler: p.is_boiler,
+            ...(primaryWebsite ? { website: primaryWebsite } : {}),
           }).eq("id", existing.id);
           updated++;
         } else {
@@ -1189,6 +1194,7 @@ serve(async (req) => {
             score,
             source_url: p.source_url,
             source_label: p.source_label,
+            website: primaryWebsite,
             status: "new",
           });
           if (!error) inserted++;

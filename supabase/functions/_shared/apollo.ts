@@ -136,6 +136,24 @@ export function apolloHealth() {
 
 // ---- Backward-compatible wrappers for enrichment functions ----
 
+/**
+ * Default decision-maker titles for trade/contractor outreach. Filters out
+ * irrelevant junior staff and avoids gatekeepers when used with people search.
+ */
+export const DECISION_MAKER_TITLES = [
+  "owner", "founder", "co-founder", "president", "ceo", "principal",
+  "general manager", "operations manager", "managing partner",
+  "director of operations", "vp operations",
+];
+
+/**
+ * Default exclusion titles — strip these post-search. Apollo's `not_titles`
+ * sometimes silently drops the call so we filter client-side as a safety net.
+ */
+export const EXCLUDED_TITLES = [
+  "intern", "assistant", "receptionist", "apprentice", "student", "trainee",
+];
+
 export async function apolloPeopleSearch(params: {
   name?: string;
   email?: string;
@@ -144,9 +162,25 @@ export async function apolloPeopleSearch(params: {
   person_locations?: string[];
   page?: number;
   per_page?: number;
+  /** When true (default), only decision-maker titles are returned. */
+  decision_makers_only?: boolean;
 }): Promise<ApolloContact[]> {
-  const res = await apolloMixedPeopleSearch(params as Record<string, unknown>);
-  return (res.data?.people || []) as ApolloContact[];
+  const { decision_makers_only = true, ...rest } = params;
+  const titleFilter = rest.person_titles && rest.person_titles.length > 0
+    ? rest.person_titles
+    : (decision_makers_only ? DECISION_MAKER_TITLES : undefined);
+
+  const res = await apolloMixedPeopleSearch({
+    ...rest,
+    ...(titleFilter ? { person_titles: titleFilter } : {}),
+  } as Record<string, unknown>);
+
+  const people = (res.data?.people || []) as ApolloContact[];
+  // Client-side scrub for excluded titles
+  return people.filter((p) => {
+    const t = (p.title || "").toLowerCase();
+    return !EXCLUDED_TITLES.some((bad) => t.includes(bad));
+  });
 }
 
 export async function apolloOrganizationSearch(params: {
