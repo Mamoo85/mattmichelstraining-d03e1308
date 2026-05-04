@@ -992,6 +992,7 @@ const App = () => (
                     <Route path="/join/:code" element={<JoinTeam />} />
                     <Route path="/coach-hub" element={<ProtectedRoute><CoachHub /></ProtectedRoute>} />
                     <Route path="/my-team" element={<ProtectedRoute><MyTeam /></ProtectedRoute>} />
+                    <Route path="/accept-team-invite" element={<AcceptTeamInvite />} />
                     <Route path="/client-dash" element={<ProtectedRoute><ClientDashboard /></ProtectedRoute>} />
                     <Route path="/agency-portal" element={<ClientRoute><AgencyClientPortal /></ClientRoute>} />
                     <Route path="/embed/capture/:tenantId" element={<EmbedCapture />} />
