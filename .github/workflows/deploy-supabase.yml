@@ -68,6 +68,7 @@ jobs:
           supabase functions delete ag-price-alerts --project-ref $SUPABASE_PROJECT_REF || true
           supabase functions delete ai-automated-bots --project-ref $SUPABASE_PROJECT_REF || true
           supabase functions delete ai-churn-preventer --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete ai-price-monitor-alerts --project-ref $SUPABASE_PROJECT_REF || true
           supabase functions delete ai-price-monitor-sender --project-ref $SUPABASE_PROJECT_REF || true
           supabase functions delete battlecard-sender --project-ref $SUPABASE_PROJECT_REF || true
           supabase functions delete bid-intel-scan --project-ref $SUPABASE_PROJECT_REF || true
