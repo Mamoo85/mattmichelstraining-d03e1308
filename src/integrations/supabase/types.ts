@@ -4809,6 +4809,39 @@ export type Database = {
           },
         ]
       }
+      crm_webhook_deliveries: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          error: string | null
+          id: string
+          ok: boolean
+          payload_summary: string | null
+          product: string
+          status_code: number | null
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          ok?: boolean
+          payload_summary?: string | null
+          product: string
+          status_code?: number | null
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          ok?: boolean
+          payload_summary?: string | null
+          product?: string
+          status_code?: number | null
+        }
+        Relationships: []
+      }
       cron_expected_jobs: {
         Row: {
           created_at: string
@@ -9601,6 +9634,8 @@ export type Database = {
           booking_link: string | null
           company_name: string
           created_at: string | null
+          crm_webhook_secret: string | null
+          crm_webhook_url: string | null
           dashboard_token: string | null
           fielddesk_cross_sell_sent: boolean | null
           id: string
@@ -9632,6 +9667,8 @@ export type Database = {
           booking_link?: string | null
           company_name: string
           created_at?: string | null
+          crm_webhook_secret?: string | null
+          crm_webhook_url?: string | null
           dashboard_token?: string | null
           fielddesk_cross_sell_sent?: boolean | null
           id?: string
@@ -9663,6 +9700,8 @@ export type Database = {
           booking_link?: string | null
           company_name?: string
           created_at?: string | null
+          crm_webhook_secret?: string | null
+          crm_webhook_url?: string | null
           dashboard_token?: string | null
           fielddesk_cross_sell_sent?: boolean | null
           id?: string
@@ -13005,6 +13044,8 @@ export type Database = {
           business_name: string | null
           contact_name: string | null
           created_at: string
+          crm_webhook_secret: string | null
+          crm_webhook_url: string | null
           dob: string | null
           email: string
           extra_zip_count: number | null
@@ -13027,6 +13068,8 @@ export type Database = {
           business_name?: string | null
           contact_name?: string | null
           created_at?: string
+          crm_webhook_secret?: string | null
+          crm_webhook_url?: string | null
           dob?: string | null
           email: string
           extra_zip_count?: number | null
@@ -13049,6 +13092,8 @@ export type Database = {
           business_name?: string | null
           contact_name?: string | null
           created_at?: string
+          crm_webhook_secret?: string | null
+          crm_webhook_url?: string | null
           dob?: string | null
           email?: string
           extra_zip_count?: number | null
@@ -21929,6 +21974,8 @@ export type Database = {
           business_name: string | null
           contact_name: string | null
           created_at: string
+          crm_webhook_secret: string | null
+          crm_webhook_url: string | null
           dashboard_token: string | null
           email: string
           id: string
@@ -21944,6 +21991,8 @@ export type Database = {
           business_name?: string | null
           contact_name?: string | null
           created_at?: string
+          crm_webhook_secret?: string | null
+          crm_webhook_url?: string | null
           dashboard_token?: string | null
           email: string
           id?: string
@@ -21959,6 +22008,8 @@ export type Database = {
           business_name?: string | null
           contact_name?: string | null
           created_at?: string
+          crm_webhook_secret?: string | null
+          crm_webhook_url?: string | null
           dashboard_token?: string | null
           email?: string
           id?: string
