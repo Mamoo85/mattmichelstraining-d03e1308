@@ -2,6 +2,7 @@ import { useState } from "react";
 import { MapPin, Clock, DollarSign, Lock, CheckCircle, Phone, ChevronRight, MessageSquare, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import ScoreBreakdown from "@/components/shared/ScoreBreakdown";
 
 export interface TradeRadarLead {
   id: string;
@@ -20,6 +21,7 @@ export interface TradeRadarLead {
   street_view_url?: string;
   raw_source_data?: Record<string, unknown>;
   status: "pending" | "approved" | "rejected";
+  signal_count?: number | null;
 }
 
 interface TradeRadarLeadCardProps {
@@ -201,6 +203,16 @@ export default function TradeRadarLeadCard({
           </div>
 
           <ScoreMeter score={lead.score} />
+
+          <ScoreBreakdown
+            score={lead.score}
+            signalType={lead.signal_type}
+            signalLabel={signalLabel}
+            signalDate={lead.signal_date}
+            estimatedValueCents={lead.estimated_value}
+            sourceMethod={lead.source_method}
+            signalCount={lead.signal_count ?? null}
+          />
 
           <div className="rounded-xl border border-white/8 bg-white/3 p-4 space-y-2">
             <div className="flex items-center gap-1.5 text-[11px] font-mono font-bold uppercase tracking-widest text-[#00d4ff]/70">

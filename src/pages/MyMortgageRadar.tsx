@@ -18,6 +18,7 @@ import MortgageRadarSeedLead from "@/components/mortgage/MortgageRadarSeedLead";
 import LeadActionBar from "@/components/trade-radar/LeadActionBar";
 import RadarExportBar from "@/components/shared/RadarExportBar";
 import OnboardingChecklist from "@/components/shared/OnboardingChecklist";
+import ScoreBreakdown from "@/components/shared/ScoreBreakdown";
 
 type Lead = {
   id: string;
@@ -496,6 +497,16 @@ export default function MyMortgageRadar() {
                       </CardHeader>
                       <CardContent>
                         {l.signal_detail && <p className="text-sm text-[#cbd5e1] mb-3">{l.signal_detail}</p>}
+                        <div className="mb-3">
+                          <ScoreBreakdown
+                            score={l.score}
+                            signalType={l.signal_type}
+                            signalLabel={l.signal_type.replace(/_/g, " ")}
+                            signalDate={(l as any).signal_date ?? null}
+                            sourceMethod={l.signal_source}
+                            signalCount={l.signal_count ?? null}
+                          />
+                        </div>
                         {l.suggested_opener && (
                           <div className="bg-[#030711] border border-[#1e3a5f] rounded p-3 mb-3">
                             <p className="text-[10px] uppercase tracking-widest text-[#00d4ff] mb-1">Suggested opener</p>
