@@ -9,6 +9,7 @@ import SEOHead from "@/components/layout/SEOHead";
 import DWASuiteNav from "@/components/shared/DWASuiteNav";
 import ManageBillingButton from "@/components/billing/ManageBillingButton";
 import EmptyDashboardState from "@/components/shared/EmptyDashboardState";
+import OnboardingChecklist from "@/components/shared/OnboardingChecklist";
 import { Briefcase, MapPin, Clock, CheckCircle2, AlertCircle, User } from "lucide-react";
 
 type Job = {
@@ -138,6 +139,15 @@ export default function MyFieldDesk() {
       </header>
 
       <section className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8">
+        <OnboardingChecklist
+          product="FieldDesk"
+          steps={[
+            { id: "auth", label: "Dashboard link verified", done: !!client, hint: "Open from your welcome email." },
+            { id: "jobs", label: "First job created", done: jobs.length > 0, hint: "Add a job from your CRM or via SMS intake." },
+            { id: "scheduled", label: "First job scheduled", done: jobs.some((j) => j.scheduled_date), hint: "Assign a date so techs see it on the route." },
+            { id: "completed", label: "First job completed", done: jobs.some((j) => j.status === "completed"), hint: "Mark complete to trigger invoicing." },
+          ]}
+        />
         <div className="grid grid-cols-3 gap-3 mb-6">
           <Card className="bg-gradient-to-br from-[#0a1628] to-[#0a1628]/60 border-[#00d4ff]/40">
             <CardContent className="p-4">

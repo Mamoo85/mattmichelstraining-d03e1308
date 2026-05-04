@@ -7,6 +7,7 @@ import SEOHead from "@/components/layout/SEOHead";
 import DWASuiteNav from "@/components/shared/DWASuiteNav";
 import ManageBillingButton from "@/components/billing/ManageBillingButton";
 import EmptyDashboardState from "@/components/shared/EmptyDashboardState";
+import OnboardingChecklist from "@/components/shared/OnboardingChecklist";
 import MortgageRadarTerritoryPicker from "@/components/mortgage/MortgageRadarTerritoryPicker";
 import TradeRadarLeadCard, { TradeRadarLead } from "@/components/trade-radar/TradeRadarLeadCard";
 import LeadActionBar from "@/components/trade-radar/LeadActionBar";
@@ -225,6 +226,16 @@ export default function TradeRadarPortal({
       </header>
 
       <section className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8">
+        <OnboardingChecklist
+          product={productLabel}
+          storageKey={`trade-radar-${vertical}`}
+          steps={[
+            { id: "auth", label: "Dashboard link verified", done: !!client, hint: "Open this page from your weekly digest email." },
+            { id: "leads", label: "First leads delivered", done: leads.length > 0, hint: "Scanner runs daily at 8am ET." },
+            { id: "hot", label: "First hot lead (score 8+)", done: weeklyStats.hotLeads > 0, hint: "Highest-intent signals — call today." },
+            { id: "outreach", label: "First outreach sent", done: Object.values(actions).some((a) => a.status === "called" || a.status === "emailed"), hint: "Use the action bar on any lead." },
+          ]}
+        />
         {/* This week summary */}
         <div className="mb-6">
           <h2 className="text-[10px] uppercase tracking-widest text-[#00d4ff] font-bold mb-2 flex items-center gap-1.5">
