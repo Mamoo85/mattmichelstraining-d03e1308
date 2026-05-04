@@ -7,6 +7,7 @@ import SEOHead from "@/components/layout/SEOHead";
 import DWASuiteNav from "@/components/shared/DWASuiteNav";
 import ManageBillingButton from "@/components/billing/ManageBillingButton";
 import EmptyDashboardState from "@/components/shared/EmptyDashboardState";
+import OnboardingChecklist from "@/components/shared/OnboardingChecklist";
 import MortgageRadarTerritoryPicker from "@/components/mortgage/MortgageRadarTerritoryPicker";
 import TradeRadarLeadCard, { TradeRadarLead } from "@/components/trade-radar/TradeRadarLeadCard";
 import LeadActionBar from "@/components/trade-radar/LeadActionBar";
