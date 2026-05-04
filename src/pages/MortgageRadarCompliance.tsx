@@ -58,10 +58,19 @@ export default function MortgageRadarCompliance() {
         description="Full compliance disclosure for Mortgage Radar: FCRA status, TCPA rules, data sources, and opt-out procedures."
       />
 
-      <header className="border-b border-[#1e3a5f] bg-[#0a1628]/80 backdrop-blur sticky top-0 z-30">
-        <div className="max-w-3xl mx-auto px-4 py-4 flex items-center gap-3">
-          <ShieldCheck className="w-5 h-5 text-[#00d4ff]" />
-          <span className="font-bold tracking-tight">Mortgage Radar — Compliance Disclosure</span>
+      <header className="border-b border-[#1e3a5f] bg-[#0a1628]/80 backdrop-blur sticky top-0 z-30 print:hidden">
+        <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <ShieldCheck className="w-5 h-5 text-[#00d4ff]" />
+            <span className="font-bold tracking-tight">Mortgage Radar — Compliance Disclosure</span>
+          </div>
+          <button
+            onClick={() => window.print()}
+            className="flex items-center gap-1.5 text-xs font-semibold text-[#00d4ff] border border-[#00d4ff]/40 hover:border-[#00d4ff] hover:text-white px-3 py-1.5 rounded-lg transition-colors"
+          >
+            <Printer className="w-3.5 h-3.5" />
+            Save / Print PDF
+          </button>
         </div>
       </header>
 
