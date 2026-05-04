@@ -283,7 +283,14 @@ serve(async (req) => {
       if (counties.length > 0) adjacentQuery = adjacentQuery.in("county", counties);
       else if (regions.length > 0) adjacentQuery = adjacentQuery.in("region", regions);
       const { data: adjacent } = await adjacentQuery;
-      if (!adjacent || adjacent.length === 0) continue;
+      if (!adjacent || adjacent.length === 0) {
+        await sendSMS(
+          "+13138064952",
+          `Mortgage Radar digest ran for ${c.email} — 0 leads in 48h. Scanner is healthy; no market signals matched today.`,
+          "mortgage_digest_zero_leads"
+        );
+        continue;
+      }
       leads = adjacent;
       isProofOfWork = true;
     }
