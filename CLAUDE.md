@@ -14,6 +14,37 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Current Session State
 *Last updated: 2026-05-04*
 
+### Phase 38 — Zero-Lead Pipeline Diagnosis + Fix COMPLETE ✅
+
+**Root cause of "no new signals (yet)" across all 6+ radar products:**
+
+Three compounding bugs found and fixed:
+
+**Bug 1 — `validateAddress` fail-closed on missing key (`anti-hallucination.ts`)**
+- `GOOGLE_MAPS_API_KEY` exists in Lovable Cloud secrets but NOT in Supabase Edge Function runtime secrets (different stores). So every BSEED/ArcGIS per-address signal went to quarantine with `validation_unavailable`.
+- **Fix**: fail-OPEN when key missing for `scraper`/`api` sources (trusted government data). LLM sources still require a source URL citation. Commit: `8030a6d6`.
+
+**Bug 2 — Area signals invisible in morning digest (`trade-radar-am-digest/index.ts`)**
+- NOAA/FEMA/county-level alerts write to `trade_radar_area_signals`, but the AM digest only queried `trade_radar_leads`. So even when real market intel existed (storm alerts, flood zones), the email said "no signals".
+- **Fix**: Query `trade_radar_area_signals` alongside leads; render a "📡 Market Intel" section in the zero-lead email. Commit: `0c2e19be`.
+
+**Bug 3 — Infrastructure failures poisoned quarantine history (`anti-hallucination.ts`)**
+- `quarantineRaw` was writing `validation_unavailable` rejections to `quarantine_history`. If this caused the 3-hit block to eventually trigger, those addresses would be permanently blocked even after the key is added.
+- **Fix**: Added `INFRA_CODES` set — `validation_unavailable` and `validation_api_error` skipped from `quarantine_history` writes. Commit: `0eaec780`.
+
+**All scanners affected by Bug 1 (all use shared `anti-hallucination.ts`):**
+- `trade-radar-scanner` (all 11 verticals)
+- `mortgage-radar-scanner`
+- Any future scanner using `validateLead()`
+
+**Remaining Matt action items (not code — infrastructure):**
+1. **Add `GOOGLE_MAPS_API_KEY` to Supabase Edge Function secrets** (not just Lovable Cloud). Go to Supabase dashboard → Edge Functions → Secrets. Once added, address geocoding and Street View images will start working automatically.
+2. **Add `FIRECRAWL_API_KEY` to Supabase secrets** — FSBO, estate sale, probate scrapers log a startup warning and return empty without it.
+
+**All 23 My* customer portals confirmed live with routes:**
+- 11 Trade Radar portals (roofing, hvac, plumbing, electrical, pest, gutters, exterior, tree, restoration, demo_junk, foundation)
+- Mortgage Radar, Missed-Call, SiteRadar, Buyer Radar, Contractor Leads, FieldDesk, Demand Radar, TechAlert (/talent-radar/dashboard), MyTeam, MyAddons, IndustryPulse
+
 ### Phase 37 — Product Audit + Test Coverage + Full Fix Verification COMPLETE ✅
 
 **Test coverage (Claude Code this session):**
