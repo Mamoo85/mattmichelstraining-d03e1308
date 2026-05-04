@@ -22,6 +22,10 @@ export interface TradeRadarLead {
   raw_source_data?: Record<string, unknown>;
   status: "pending" | "approved" | "rejected";
   signal_count?: number | null;
+  owner_name?: string | null;
+  owner_phone?: string | null;
+  owner_email?: string | null;
+  enriched_at?: string | null;
 }
 
 interface TradeRadarLeadCardProps {
