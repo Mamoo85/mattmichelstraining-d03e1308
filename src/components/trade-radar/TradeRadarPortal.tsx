@@ -10,6 +10,7 @@ import EmptyDashboardState from "@/components/shared/EmptyDashboardState";
 import MortgageRadarTerritoryPicker from "@/components/mortgage/MortgageRadarTerritoryPicker";
 import TradeRadarLeadCard, { TradeRadarLead } from "@/components/trade-radar/TradeRadarLeadCard";
 import LeadActionBar from "@/components/trade-radar/LeadActionBar";
+import RadarExportBar from "@/components/shared/RadarExportBar";
 import { Wrench, Lock, Bell, TrendingUp, Calendar, Target, MapPin } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -312,28 +313,48 @@ export default function TradeRadarPortal({
             </Card>
           )
         ) : (
-          <div className="grid gap-5">
-            {filtered.map((l) => {
-              const a = actions[l.id];
-              return (
-                <TradeRadarLeadCard
-                  key={l.id}
-                  lead={l}
-                  actionBar={
-                    client ? (
-                      <LeadActionBar
-                        leadId={l.id}
-                        clientId={client.id}
-                        product="trade"
-                        initialStatus={(a?.status as any) || "new"}
-                        initialSnoozeUntil={a?.snooze_until || null}
-                      />
-                    ) : null
-                  }
-                />
-              );
-            })}
-          </div>
+          <>
+            <div className="mb-4">
+              <RadarExportBar
+                radar="growth"
+                records={filtered.map((l) => ({
+                  id: l.id,
+                  full_name: l.full_name,
+                  signal_type: l.signal_type,
+                  vertical,
+                  score: l.score,
+                  city: (l as any).city ?? null,
+                  recommended_pitch: l.suggested_opener ?? null,
+                  detected_at: l.signal_date ?? l.created_at,
+                  source_url: (l as any).source_url ?? null,
+                }))}
+                clientId={client?.id}
+                businessName={client?.business_name ?? undefined}
+              />
+            </div>
+            <div className="grid gap-5">
+              {filtered.map((l) => {
+                const a = actions[l.id];
+                return (
+                  <TradeRadarLeadCard
+                    key={l.id}
+                    lead={l}
+                    actionBar={
+                      client ? (
+                        <LeadActionBar
+                          leadId={l.id}
+                          clientId={client.id}
+                          product="trade"
+                          initialStatus={(a?.status as any) || "new"}
+                          initialSnoozeUntil={a?.snooze_until || null}
+                        />
+                      ) : null
+                    }
+                  />
+                );
+              })}
+            </div>
+          </>
         )}
 
         {/* Territory picker — reused from Mortgage Radar (preview UI; ZIP saves persisted via support) */}

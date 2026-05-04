@@ -16,6 +16,7 @@ import MortgageRadarPipeline from "@/components/mortgage/MortgageRadarPipeline";
 import MortgageRadarWelcome from "@/components/mortgage/MortgageRadarWelcome";
 import MortgageRadarSeedLead from "@/components/mortgage/MortgageRadarSeedLead";
 import LeadActionBar from "@/components/trade-radar/LeadActionBar";
+import RadarExportBar from "@/components/shared/RadarExportBar";
 
 type Lead = {
   id: string;
@@ -444,6 +445,25 @@ export default function MyMortgageRadar() {
                   </CardContent></Card>
                 )
               ) : (
+                <>
+                <div className="mb-4">
+                  <RadarExportBar
+                    radar="growth"
+                    records={filtered.map((l) => ({
+                      id: l.id,
+                      full_name: l.full_name,
+                      name: l.address,
+                      city: l.city,
+                      signal_type: l.signal_type,
+                      score: l.score,
+                      phone: l.phone,
+                      email: l.email,
+                      recommended_pitch: l.suggested_opener,
+                      detected_at: l.signal_date ?? l.created_at,
+                    }))}
+                    clientId={clientId ?? undefined}
+                  />
+                </div>
                 <div className="grid gap-4">
                   {filtered.map((l) => (
                     <Card key={l.id} className={`bg-[#0a1628] border ${l.score >= 9 ? "border-[#00d4ff]" : "border-[#1e3a5f]"}`}>
@@ -495,6 +515,7 @@ export default function MyMortgageRadar() {
                     </Card>
                   ))}
                 </div>
+                </>
               )}
             </TabsContent>
 
