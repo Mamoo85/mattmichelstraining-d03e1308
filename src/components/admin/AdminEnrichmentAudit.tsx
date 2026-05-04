@@ -30,6 +30,7 @@ export default function AdminEnrichmentAudit() {
   const [vertical, setVertical] = useState<string>("all");
   const [successFilter, setSuccessFilter] = useState<"all" | "success" | "failure">("all");
   const [hours, setHours] = useState<number>(24);
+  const [drillLead, setDrillLead] = useState<string | null>(null);
 
   async function load() {
     setLoading(true);
