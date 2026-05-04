@@ -123,6 +123,7 @@ export default function TradeRadarLeadCard({
   claimed = false,
   onClaim,
   className,
+  actionBar,
 }: TradeRadarLeadCardProps) {
   const [loading, setLoading] = useState(false);
   const signalLabel = getSignalLabel(lead.signal_type);
