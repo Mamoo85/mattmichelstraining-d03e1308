@@ -5,14 +5,16 @@ import { Activity, Loader2, RefreshCw } from "lucide-react";
 
 interface AgentStatus { name: string; last_beat: string | null; hours_since: number | null; status: "green" | "yellow" | "red"; }
 interface TableStatus { table: string; last_row: string | null; hours_since: number | null; status: "green" | "yellow" | "red"; error?: string; }
+interface ProbeStatus { name: string; url: string; status: "green" | "yellow" | "red"; http_status: number | null; latency_ms: number | null; error?: string; skipped?: boolean; checked_at: string; }
 interface ProductRow {
   product: string;
   overall: "green" | "yellow" | "red";
   agents: AgentStatus[];
   tables: TableStatus[];
   sources: string[];
+  probes: ProbeStatus[];
 }
-interface Matrix { ok: boolean; generated_at: string; products: ProductRow[]; }
+interface Matrix { ok: boolean; generated_at: string; products: ProductRow[]; circuit_breakers?: Record<string, { open: boolean; failures: number }>; }
 
 const tone: Record<string, string> = {
   green: "bg-emerald-500/10 border-emerald-500/30 text-emerald-300",
@@ -91,6 +93,20 @@ export default function ScannerHealth() {
                         </div>
                       ))}
                     </div>
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <div className="text-xs uppercase tracking-wide opacity-80 mb-2">Live source probes ({p.probes?.length || 0})</div>
+                  <div className="grid sm:grid-cols-2 gap-1">
+                    {p.probes?.map((pr) => (
+                      <div key={pr.name} className={`text-xs flex justify-between border rounded px-2 py-1 ${tone[pr.status]}`} title={pr.url}>
+                        <span className="font-mono truncate mr-2">{pr.name}</span>
+                        <span className="whitespace-nowrap">
+                          {pr.skipped ? "⛔ breaker" : pr.http_status ? `${pr.http_status} · ${pr.latency_ms}ms` : pr.error || "fail"}
+                        </span>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
