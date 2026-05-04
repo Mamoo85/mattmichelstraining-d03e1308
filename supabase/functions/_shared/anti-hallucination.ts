@@ -164,6 +164,23 @@ export async function validateAddress(
     } catch (_) { /* best effort */ }
 
     if (pass) return { pass: true, formatted, lat, lon, granularity };
+
+    // SOFT-PASS path: rejected by strict gate, but Google still gave us a
+    // real geocode at street/block/neighborhood level. These are usually
+    // legitimate FSBO/estate-sale addresses with apartment numbers missing
+    // or non-standard formatting. Recover them at score cap.
+    const hasRealGeo = typeof lat === "number" && typeof lon === "number";
+    if (hasRealGeo && SOFT_GRANULARITY.has(granularity) && missing.length <= 1) {
+      return {
+        pass: true,
+        soft_pass: true,
+        formatted,
+        lat,
+        lon,
+        granularity,
+      };
+    }
+
     return {
       pass: false,
       reject_code: "address_unverifiable",
