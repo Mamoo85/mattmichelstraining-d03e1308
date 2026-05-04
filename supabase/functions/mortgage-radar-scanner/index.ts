@@ -1255,6 +1255,12 @@ serve(async (req) => {
     s.lat = gate.lat;
     s.lon = gate.lon;
     s.formatted_address = gate.formatted;
+    // Soft-pass: address geocoded only at street/block level. Insert at score cap=4
+    // and flag for manual review so it's still surfaced but never auto-SMSed.
+    if (gate.soft_pass) {
+      s.pipeline_stage = "manual_review";
+      s.soft_pass = true;
+    }
 
     const res = await upsertWithDedup(sb, s);
     if (!res) continue;
