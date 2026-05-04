@@ -15,8 +15,24 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const GOOGLE_MAPS_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY") || "";
+
+const TRADE_SEARCHES = [
+  "roofing contractor Detroit Michigan",
+  "HVAC contractor Detroit Michigan",
+  "plumber Detroit Michigan",
+  "electrician Detroit Michigan",
+  "pest control Detroit Michigan",
+  "gutter company Detroit Michigan",
+  "siding contractor Detroit Michigan",
+  "tree service Detroit Michigan",
+  "restoration contractor Detroit Michigan",
+  "demolition contractor Detroit Michigan",
+  "foundation repair Detroit Michigan",
+];
+
 interface PoolCandidate {
-  source: "field_service_jobs" | "marketplace_aged" | "contractor_uncontacted";
+  source: "field_service_jobs" | "marketplace_aged" | "contractor_uncontacted" | "bseed_contractor_registry" | "google_maps_places";
   business_name: string;
   phone: string | null;
   email: string | null;
@@ -138,6 +154,72 @@ serve(async (req) => {
       }
     } catch (e) {
       console.warn("[pool-refresh] contractor_leads source failed:", e instanceof Error ? e.message : e);
+    }
+
+    // SOURCE D — BSEED Detroit city-certified contractor registry (ArcGIS, ~305 records)
+    try {
+      const url = new URL("https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Detroit_Business_Certification_Register/FeatureServer/0/query");
+      url.searchParams.set("where", "1=1");
+      url.searchParams.set("outFields", "contractor_name,business_phone,business_email,nigp_description,certification_type");
+      url.searchParams.set("resultRecordCount", "305");
+      url.searchParams.set("orderByFields", "OBJECTID DESC");
+      url.searchParams.set("f", "json");
+      const res = await fetch(url.toString(), {
+        headers: { "User-Agent": "DWA-DeadLeadRefresh/1.0 (matt@detroitwebagent.com)" },
+        signal: AbortSignal.timeout(12_000),
+      });
+      if (res.ok) {
+        const d = await res.json();
+        for (const feat of (d?.features ?? [])) {
+          const a = feat.attributes ?? feat;
+          const name = a.contractor_name ?? a.business_name ?? "";
+          if (!name) continue;
+          const trade = a.nigp_description ?? a.certification_type ?? "general";
+          candidates.push({
+            source: "bseed_contractor_registry",
+            business_name: name,
+            phone: a.business_phone ?? null,
+            email: a.business_email ?? null,
+            trade: trade.toLowerCase().replace(/\s+/g, "_").slice(0, 50),
+            signal_age_days: 0,
+            source_ref: null,
+            tenant_id: null,
+          });
+        }
+      }
+    } catch (e) {
+      console.warn("[pool-refresh] bseed_contractor_registry source failed:", e instanceof Error ? e.message : e);
+    }
+
+    // SOURCE E — Google Maps Places API: Detroit-area trade businesses
+    if (GOOGLE_MAPS_KEY) {
+      for (const query of TRADE_SEARCHES.slice(0, 5)) { // limit to 5 searches per run to control quota
+        try {
+          const placesUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&key=${GOOGLE_MAPS_KEY}`;
+          const res = await fetch(placesUrl, { signal: AbortSignal.timeout(10_000) });
+          if (!res.ok) break;
+          const d = await res.json();
+          for (const place of (d?.results ?? []).slice(0, 10)) {
+            const name = place.name ?? "";
+            const phone = place.formatted_phone_number ?? null;
+            if (!name) continue;
+            const tradeWord = query.split(" ")[0].toLowerCase();
+            candidates.push({
+              source: "google_maps_places",
+              business_name: name,
+              phone: phone,
+              email: null,
+              trade: tradeWord,
+              signal_age_days: 0,
+              source_ref: place.place_id ?? null,
+              tenant_id: null,
+            });
+          }
+          await new Promise((r) => setTimeout(r, 300)); // gentle rate limit between searches
+        } catch (e) {
+          console.warn("[pool-refresh] google_maps_places search failed:", e instanceof Error ? e.message : e);
+        }
+      }
     }
 
     // Dedupe across sources + against existing pool
