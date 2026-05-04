@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Activity, AlertTriangle, CheckCircle2, Filter, Loader2, RefreshCw, XCircle } from "lucide-react";
+import { Activity, AlertTriangle, CheckCircle2, DollarSign, Filter, Loader2, RefreshCw, X, XCircle } from "lucide-react";
 
 interface AuditRow {
   id: string;
