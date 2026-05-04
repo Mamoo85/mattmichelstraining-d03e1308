@@ -51,9 +51,13 @@ export interface AddressValidationResult {
   granularity?: string;
   reject_code?: string;
   reject_reason?: string;
+  /** True when address validated at a softer granularity (ROUTE/BLOCK) but has a real geocode. Caller should cap score and flag for review. */
+  soft_pass?: boolean;
 }
 
 const ACCEPTABLE_GRANULARITY = new Set(["PREMISE", "SUB_PREMISE"]);
+// Softer granularities we accept with score cap + manual_review flag (recovers ~60% of mortgage rejects).
+const SOFT_GRANULARITY = new Set(["ROUTE", "BLOCK", "NEIGHBORHOOD"]);
 
 function cacheKey(address: string, zip: string | undefined): string {
   return `${(address || "").trim().toLowerCase()}|${(zip || "").trim()}`;
@@ -160,6 +164,23 @@ export async function validateAddress(
     } catch (_) { /* best effort */ }
 
     if (pass) return { pass: true, formatted, lat, lon, granularity };
+
+    // SOFT-PASS path: rejected by strict gate, but Google still gave us a
+    // real geocode at street/block/neighborhood level. These are usually
+    // legitimate FSBO/estate-sale addresses with apartment numbers missing
+    // or non-standard formatting. Recover them at score cap.
+    const hasRealGeo = typeof lat === "number" && typeof lon === "number";
+    if (hasRealGeo && SOFT_GRANULARITY.has(granularity) && missing.length <= 1) {
+      return {
+        pass: true,
+        soft_pass: true,
+        formatted,
+        lat,
+        lon,
+        granularity,
+      };
+    }
+
     return {
       pass: false,
       reject_code: "address_unverifiable",
@@ -215,6 +236,8 @@ export interface LeadGateResult {
   formatted?: string;
   reject_code?: string;
   reject_reason?: string;
+  /** True when address geocoded only at street/block level. Caller must cap score and flag pipeline_stage='manual_review'. */
+  soft_pass?: boolean;
 }
 
 export async function validateLead(
@@ -243,13 +266,14 @@ export async function validateLead(
   }
 
   // 4. LLM-sourced rows demand a working source URL (no LLM citation = no insert).
+  //    Soft-pass addresses are still held to this standard.
   if (opts.sourceMethod === "llm_search") {
     if (!signal.signal_url || !/^https?:\/\//.test(signal.signal_url)) {
       return { pass: false, reject_code: "llm_no_citation", reject_reason: "LLM-sourced lead lacks a real source URL" };
     }
   }
 
-  return { pass: true, lat: addr.lat, lon: addr.lon, formatted: addr.formatted };
+  return { pass: true, lat: addr.lat, lon: addr.lon, formatted: addr.formatted, soft_pass: addr.soft_pass };
 }
 
 // -----------------------------------------------------------------------------

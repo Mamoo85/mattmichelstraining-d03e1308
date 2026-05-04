@@ -588,8 +588,10 @@ async function upsertWithDedup(sb: ReturnType<typeof createClient>, s: RawSignal
   if (!s.address) return null;
   // Phase B trust gate: LLM-only-sourced leads are capped at 3 until a 2nd source confirms.
   // Deterministic scrapers + APIs use full base score immediately.
+  // Soft-pass (street/block-only geocode) capped at 4 + flagged for manual review.
   const rawBase = scoreFor(s.signal_type);
-  const baseScore = s.source_method === "llm_search" ? Math.min(3, rawBase) : rawBase;
+  let baseScore = s.source_method === "llm_search" ? Math.min(3, rawBase) : rawBase;
+  if ((s as any).soft_pass) baseScore = Math.min(4, baseScore);
   const { opener, window } = openerFor(s.signal_type);
 
   const lookupAddress = s.address.toLowerCase();
@@ -672,6 +674,7 @@ async function upsertWithDedup(sb: ReturnType<typeof createClient>, s: RawSignal
       : streetViewUrl(s.address || "", s.city || "", s.zip || ""),
     lat: s.lat ?? null,
     lon: s.lon ?? null,
+    pipeline_stage: (s as any).pipeline_stage || "active",
     raw: s as unknown as Record<string, unknown>,
   };
   const { data: ins, error } = await (sb.from as any)("mortgage_radar_leads")
@@ -1255,6 +1258,12 @@ serve(async (req) => {
     s.lat = gate.lat;
     s.lon = gate.lon;
     s.formatted_address = gate.formatted;
+    // Soft-pass: address geocoded only at street/block level. Insert at score cap=4
+    // and flag for manual review so it's still surfaced but never auto-SMSed.
+    if (gate.soft_pass) {
+      s.pipeline_stage = "manual_review";
+      s.soft_pass = true;
+    }
 
     const res = await upsertWithDedup(sb, s);
     if (!res) continue;
@@ -1287,8 +1296,10 @@ serve(async (req) => {
     }
 
     // Phase B: respect the trust cap. Unverified LLM-only leads cannot trigger hot SMS.
+    // Soft-pass (street/block-only geocode) leads also capped at 4 — surfaced in digest, no SMS.
     const rawScore = scoreFor(s.signal_type);
-    const score = s.source_method === "llm_search" ? Math.min(3, rawScore) : rawScore;
+    let score = s.source_method === "llm_search" ? Math.min(3, rawScore) : rawScore;
+    if (gate.soft_pass) score = Math.min(4, score);
     const matchedClientIds = await notifyClients(sb, s.zip, s.county, score);
     if (matchedClientIds.length > 0) {
       await (sb.from as any)("mortgage_radar_leads")
