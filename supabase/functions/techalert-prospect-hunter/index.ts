@@ -231,7 +231,12 @@ async function scanUSPTOPatents(): Promise<Posting[]> {
       }
       const data = await res.json();
       for (const patent of (data?.patents || [])) {
-        const assignee: string = patent.assignee_organization || "";
+        // v1 API returns assignee inside an array; legacy returned it inline.
+        const assignee: string =
+          patent.assignee_organization ||
+          patent?.assignees?.[0]?.assignee_organization ||
+          patent?.assignees?.[0]?.organization ||
+          "";
         if (!assignee) continue;
         results.push({
           company_name: assignee,
