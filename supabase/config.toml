@@ -2260,3 +2260,6 @@ verify_jwt = false
 
 [functions.missed-call-monthly-proof]
 verify_jwt = false
+
+[functions.create-dwa-annual-checkout]
+verify_jwt = false
