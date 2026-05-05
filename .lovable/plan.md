@@ -1,116 +1,95 @@
-I checked the live backend state. You are right to be upset: the 150/day cold-email floor is not being met, and the system has enough lead supply to send more. This is not a lead-supply problem; it is an orchestration/deployment/schema problem.
+# Trial Delivery Guarantee — Audit Response & Silent-Killer Sweep
 
-Current findings
+## Why Claude's audit found gaps
 
-1. Cold emails today are far below the 150 minimum
-- As of the live backend check, the deduplicated cold/app outreach log shows about 31 sent and 1 failed for the Detroit business day.
-- The deployed rebalancer dry-run sees only 19 counted toward its target because its day-boundary/counting logic is using the wrong day window and inconsistent template lists.
-- The rebalancer reports about 340 ready-to-send leads available, with a 131-email gap to reach 150. That means the floor is missable even when inventory exists.
+Honest answer: my prior plan duplicated schema (`trial_delivery_sla`, `trial_concierge_log`) instead of grepping for the existing `trial_signups` and `trial_drip_state` tables. I built parallel infrastructure rather than extending what was already live. That's the failure mode — I wrote a plan from intent, not from the codebase. Claude is right.
 
-2. Drips are not fully wired live
-- The live database is missing the drip timestamp columns that the TechAlert and channel follow-up functions expect.
-- The code/migrations for those columns exist in the repo, but the live backend does not have them applied.
-- The live scheduler does not show the expected TechAlert D0/outreach and follow-up drip jobs. So “including drips” is not currently guaranteed.
+**Guardrails going forward** (applied to this plan and all future ones):
+1. Before proposing any new table, `rg` for the noun in `supabase/migrations/` — extend, don't duplicate.
+2. Before proposing any new edge function, `rg` for the trigger event in existing functions — patch, don't fork.
+3. Every plan ends with a "What already exists that I'm NOT touching" section to force the audit.
+4. Silent-killer sweep: any function that can return early on empty data must have a proof-of-work fallback.
 
-3. The DJ Conley work email was accepted by the sender, but not tracked deeply enough
-- The common email log has no record for pmichels@djconley.com because the DJ Conley pitch function bypasses the canonical DWA email logger.
-- A separate pitch audit shows two sends to pmichels@djconley.com on May 1, both marked sent by the sending provider.
-- The private email send also shows as sent and was received.
-- Most likely explanation: the DJ Conley work domain silently filtered/quarantined the message after provider acceptance, and we currently do not have bounce/suppression/delivery-event visibility for that direct-send path.
-- Additional risk: DWA emails are being sent as matt@detroitwebagent.com while the project’s verified app-email domain is currently aligned to Matt’s training domain. That mismatch can be enough for a corporate domain to accept the message at the provider level but drop/quarantine it downstream.
+---
 
-4. Red GitHub deploys can absolutely be holding Claude-built code out of production
-- Live schema evidence confirms repo migrations are not fully reflected in the live backend.
-- This matches the deployment issue you called out: Claude commits can exist in GitHub while the Lovable-managed primary backend is still running older deployed code.
-- The 50+ source additions need a live deployment + source-by-source runtime audit, not just a repo audit.
+## Plan: Adopt all 11 enhancements
 
-Emergency fix plan
+### Schema (one migration, not two tables)
+- `20260506000000_trial_signups_delivery_columns.sql` — add to `trial_signups`: `first_lead_delivered_at`, `lead_count_d1..d7`, `sla_status` (green/yellow/red), `compensation_applied_at`, `compensation_amount_cents`, `last_concierge_touch_at`.
+- `20260506000001_trial_lead_count_triggers.sql` — Postgres triggers on `trade_radar_leads` and `mortgage_radar_leads` that increment the correct `lead_count_d{N}` column based on `NOW() - trial_started_at`. Zero scanner edits needed.
+- `20260506000002_trial_drip_runner_cron.sql` — daily 15:00 UTC pg_cron for `trial-drip-runner` (uses correct vault pattern from CLAUDE.md).
 
-Phase 1: Stop the bleeding today
-- Apply the missing live database changes for drip columns and scheduler compatibility.
-- Redeploy the currently critical backend functions from the repo:
-  - cold-email-rebalancer
-  - cold-email-volume-sentinel
-  - cold-email-ramp-scheduler
-  - techalert-outreach
-  - techalert-followup-drip
-  - channel-prospector-followup
-  - outreach-leads-enrich
-  - outreach-queue-worker
-  - trade-radar-scanner
-  - mortgage-radar-scanner
-  - pipeline-health-monitor
-  - dead-lead-pool-refresh
-- Run the cold-email rebalancer in controlled top-off mode until the live deduplicated count reaches 150, while preserving suppression lists, opt-outs, and sending safety.
-- Report the final count by category: D0 cold, drip/follow-up, failed, skipped, and ready supply remaining.
+### One drip runner replaces four functions
+- `supabase/functions/trial-drip-runner/index.ts` — wrapped in `withTelemetry`. Calculates `days_elapsed`, fires day2/day5/day6/day4-comp touches. Idempotent via `trial_drip_state` lookup on `(trial_signup_id, touch_key)`.
+- Day-4 auto-compensation: if `sla_status='red'` and `lead_count_d{1..3} < min_for_product`, call Stripe `subscriptions.update` with `trial_end` extended +7 days, write `compensation_applied_at`, SMS Matt + customer.
+- Per-product minimums hardcoded: trade=3/3d, mortgage=2/3d, contractor=2/3d, talent=1/3d.
 
-Phase 2: Make the 150/day floor automatic
-- Replace scattered counting with one canonical Detroit-time quota calculation.
-- Count by unique message ID, deduplicated to the latest status.
-- Include all active cold and drip templates in one maintained registry.
-- Fix the rebalancer so it uses the same Detroit-time counter as the dashboard and sentinel.
-- Add pacing checkpoints:
-  - 11am ET: should be at least 40 sent
-  - 2pm ET: should be at least 85 sent
-  - 5pm ET: should be at least 125 sent
-  - 8pm ET: must top off to 150 if safe inventory exists
-- If the floor is missed, the system should automatically run the rebalancer, notify Matt, and write a root-cause row: no supply, sender failure, schema mismatch, deployment mismatch, or safety pause.
+### Scanner patches (proof of delivery)
+- `trade-radar-scanner/index.ts` — after lead insert batch, if any `client_id` has a matching `trial_signups` row with `first_lead_delivered_at IS NULL`, set it.
+- `mortgage-radar-scanner/index.ts` — same write + add score≥9 SMS (parity with trade scanner, using shared `sendSMS`).
 
-Phase 3: Fix DJ Conley deliverability and logging
-- Move all DJ Conley pitch/proposal sends through the canonical DWA email path so every send writes to the common email log.
-- Add delivery-status logging for direct pitch sends: queued, accepted, failed, suppressed, bounced/complained when available.
-- Align the visible From domain with a verified DWA sending domain, or temporarily send from the verified domain with reply-to set to matt@detroitwebagent.com.
-- Add a “corporate-domain fallback” for high-value prospects:
-  - send the email;
-  - if no tracked open/click/reply within a short window, send Matt an alert with a one-click resend option;
-  - include a clean public proposal link that can be sent by SMS or personal email if the work mailbox filters it.
-- For Pat specifically, resend using the corrected route and provide the exact timestamp/status afterward.
+### Welcome SMS personalization (E10)
+- `stripe-webhook/index.ts` — both Trade and Mortgage welcome SMS blocks: extract `firstName` from `meta.contact_name`, rewrite copy to Matt's voice ("Hey {first} — it's Matt. Your trial just started…"). Fallback to "there" if no name.
 
-Phase 4: Prove Claude’s source work is live
-- Redeploy the scanner and digest functions that depend on Claude’s source additions.
-- Add a source health manifest that records, per scanner run:
-  - source name;
-  - attempted yes/no;
-  - rows fetched;
-  - rows inserted/updated/quarantined;
-  - error message if any;
-  - last successful run.
-- Add a non-destructive source diagnostic mode so we can test the 50+ sources without creating duplicate customer leads.
-- Add a DWA Admin “Source Health” view showing green/yellow/red status for every source and every vertical.
-- Add daily alerts if a source silently returns zero for too long, fails authentication, or has not been deployed since the latest repo change.
+### DEPLOY SMS keyword (E6)
+- `inbound-sms-relay/index.ts` — add `DEPLOY <function-name>` handler. Validates function name against allowlist (functions present in `supabase/functions/`), POSTs to GitHub `workflow_dispatch` for `deploy-supabase.yml` with the function name as input, replies with run URL. Requires `GITHUB_PAT` secret with `repo` + `workflow` scope.
+- Workflow update: `.github/workflows/deploy-supabase.yml` accepts a `function_name` input; when present, runs `supabase functions deploy <name>` only.
 
-Phase 5: Deployment backstop so red GitHub deploys cannot hide production gaps
-- Add a deployment manifest table for critical backend functions.
-- Each critical function should expose its deployed build/version marker in logs and heartbeat metadata.
-- Add an admin “Repo vs Live” health card that flags:
-  - function code changed in repo but not redeployed;
-  - migration exists in repo but live schema is missing it;
-  - scheduler exists but points at a stale/missing function;
-  - function has not run in the expected window.
-- Add a post-change checklist in the system itself: after any backend-function change, the corresponding function must be redeployed and then smoke-tested.
+### Shared UI component (E7)
+- `src/components/shared/LeadGuaranteeBar.tsx` — extract from `TradeRadarPortal`. Props: `productName`, `creditEmail`.
+- Wire into: `MyMortgageRadar.tsx`, `MySiteRadar.tsx`, `MyContractorLeads.tsx`, `TalentRadar/dashboard`.
 
-Phase 6: Customer-relations guardrails, especially for 7-day trials
-- Every trial gets a Day 0 fulfillment check within minutes of signup.
-- Every trial gets at least one visible proof-of-work event daily, even on low-signal days.
-- Trial dashboards should show “last updated” and “next scan scheduled” so the customer never feels ignored.
-- Add a silent-failure ban: if a trial has zero new leads/signals, send a fallback digest explaining what was scanned and what happens next.
-- Add admin alerts when a trial has no customer-visible value after 24 hours.
-- Add a credit/extension workflow when lead quality or delivery misses the promise.
-- Add a trial health score: onboarding complete, leads delivered, emails delivered, customer opened portal, next action due.
-- Add manual escalation queue for high-value trials if automation misses a checkpoint.
-- Add per-product “first 7 days” SLA targets in admin.
-- Add a weekly customer-relations report: who is happy, who is at risk, who needs Matt follow-up.
+### Trial Health admin tab (E8) — replace current AdminTrialHealth
+- Rewrite `src/components/dwa-admin/AdminTrialHealth.tsx` to query `trial_signups` (not `trial_delivery_sla`). Show: name/email, product, days elapsed, lead counts d1–d7, SLA badge, last touch, actions (Extend Trial via Stripe, Send SMS, View Leads, View concierge log from `trial_drip_state`).
+- Existing `HealthComplianceHub.tsx` "🎯 Trial Health" tab already wired — just points at the rewritten component.
 
-Logging strategy
+### Proof-of-work digest sweep (E11 — silent-killer kills)
+Apply zero-lead fallback to:
+- `demand-radar-digest/index.ts`
+- `site-radar-weekly-digest/index.ts`
+- `techalert-weekly-digest/index.ts`
+- `contractor-welcome-sequence/index.ts` (Day-2 path)
 
-Going forward, the source of truth should be:
-- email_send_log for all outbound email status, deduplicated by message_id;
-- pitch_send_audit only as a secondary audit trail, not the primary source of truth;
-- daily_quota_events for 150/day pacing and root causes;
-- source_run_results for scanner/source health;
-- deployment_manifest for repo/live deployment drift;
-- agent_heartbeats or system telemetry for scheduler health.
+Each must always send something on its scheduled run, with telemetry recording outcome reason.
 
-Approval request
+### Cleanup
+- Delete redundant `trial_delivery_sla` and `trial_concierge_log` tables created in the prior bad plan (drop migration). Migrate any rows (likely empty) before drop.
+- Delete `supabase/functions/trial-sla-watchdog/` (replaced by `trial-drip-runner`).
+- Remove its cron entry.
 
-Approve this and I will execute the emergency path first: live schema repair, critical function redeploys, cold-email top-off to 150 if safe inventory still exists, DJ Conley resend path repair, and a concrete report showing what changed and what the live counts are afterward.
+---
+
+## Other silent killers I went hunting for
+
+While auditing, I checked for the same class of bug elsewhere. Findings to confirm during build:
+1. **Welcome emails on non-trade products** — verify FieldDesk, SiteRadar, Missed-Call, TechAlert, Contractor Leads webhooks all send a welcome email AND fire their scanner (Trade + Mortgage do, others may not). Patch any that don't.
+2. **`enriched_at` set on failure** — confirmed in `outreach-leads-enrich`; check `techalert-enrich` does the same to prevent infinite retries.
+3. **Scanner runs that find 0 rows** — every scanner should write a `system_telemetry` row with `outcome='no_signals'` so dashboards show "ran, found nothing" vs "didn't run". Audit all 11 trade scanners + mortgage + techalert.
+4. **Cron jobs with broken vault patterns** — re-run the audit from Phase 43; grep all migrations for `current_setting('app.supabase_url')` and `WHERE name = 'SUPABASE_SERVICE_ROLE_KEY'` (without `_VAULT` suffix). Fix any survivors.
+5. **`fulfillment_status='pending'` rows older than 1 hour** — `stripe-webhook` self-healing retry should sweep these; verify the retry cron exists and is firing (per Stripe webhook memory).
+
+---
+
+## Verification checklist (run after build)
+- [ ] `SELECT first_lead_delivered_at, sla_status, lead_count_d1 FROM trial_signups LIMIT 5` returns columns
+- [ ] Insert test lead for trial client → trigger fires → `lead_count_d1` increments
+- [ ] Manual invoke `trial-drip-runner` on Day-2 fixture → `trial_drip_state` row written with `touch_key='day2'`
+- [ ] Day-4 fixture with 0 leads → Stripe subscription `trial_end` extended; `compensation_applied_at` set
+- [ ] Test trade checkout → SMS reads "Hey {name} — it's Matt"
+- [ ] Text "DEPLOY pipeline-health-monitor" → GitHub Actions run appears
+- [ ] Mortgage lead score=9 → SMS arrives
+- [ ] HealthComplianceHub → Trial Health tab renders live `trial_signups` rows
+- [ ] All 4 digest functions send something on a forced zero-lead run
+
+---
+
+## What already exists that this plan does NOT touch (the audit I should have done first)
+- `trial_signups`, `trial_drip_state` tables — extending only
+- Welcome SMS/email infrastructure in `stripe-webhook` — copy change only
+- Fire-and-forget scanner triggers on signup — already live
+- Score-9 SMS in trade scanner — already live (only adding parity to mortgage)
+- OnboardingChecklist in 7 portals — keeping as-is
+- HealthComplianceHub shell — keeping; only rewriting the Trial Health child
+- `system_telemetry` + `withTelemetry` wrapper — using as-is
+
+Approve and I'll execute end-to-end, then run the verification checklist and report results.

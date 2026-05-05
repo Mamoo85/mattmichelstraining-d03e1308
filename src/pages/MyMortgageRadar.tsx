@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import SEOHead from "@/components/layout/SEOHead";
 import DWASuiteNav from "@/components/shared/DWASuiteNav";
 import ManageBillingButton from "@/components/billing/ManageBillingButton";
+import LeadGuaranteeBar from "@/components/shared/LeadGuaranteeBar";
 import CrmWebhookSettings from "@/components/shared/CrmWebhookSettings";
 import EmptyDashboardState from "@/components/shared/EmptyDashboardState";
 import { Home, Lock, Phone, MessageSquare, MapPin, Bell, Download, Send, Check, X, List, Map as MapIcon, Columns } from "lucide-react";
@@ -646,6 +647,9 @@ export default function MyMortgageRadar() {
           </Card>
         </div>
       )}
+      <div className="max-w-5xl mx-auto px-4 pb-10">
+        <LeadGuaranteeBar productName="Mortgage Radar" />
+      </div>
     </div>
   );
 }

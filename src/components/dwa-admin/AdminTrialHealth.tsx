@@ -4,65 +4,69 @@ import { Loader2, Activity, AlertTriangle, CheckCircle2, ChevronDown, ChevronRig
 
 interface TrialRow {
   id: string;
-  customer_email: string;
-  product_slug: string;
+  email: string;
+  phone: string | null;
+  product_key: string;
+  stripe_subscription_id: string | null;
   trial_started_at: string;
   trial_ends_at: string;
-  promised_leads_per_week: number;
-  leads_delivered: number;
+  status: string;
+  first_lead_delivered_at: string | null;
+  lead_count_d1: number;
+  lead_count_d2: number;
+  lead_count_d3: number;
+  lead_count_d4: number;
+  lead_count_d5: number;
+  lead_count_d6: number;
+  lead_count_d7: number;
   sla_status: string;
-  welcome_pulse_sent_at: string | null;
-  day2_pulse_sent_at: string | null;
-  day5_pulse_sent_at: string | null;
-  day6_pulse_sent_at: string | null;
+  compensation_applied_at: string | null;
+  last_concierge_touch_at: string | null;
 }
 
-interface TouchRow {
+interface DripRow {
   id: string;
-  trial_sla_id: string | null;
-  customer_email: string;
-  touch_type: string;
+  trial_signup_id: string;
+  touch_key: string;
   channel: string;
-  body_preview: string | null;
-  delivery_status: string | null;
+  status: string;
+  error: string | null;
+  sent_at: string;
   meta: Record<string, unknown> | null;
-  created_at: string;
 }
 
-const StatusBadge = ({ s }: { s: string }) => {
+const PRODUCT_MIN_D3: Record<string, number> = {
+  trade_radar: 3, mortgage_radar: 2, contractor: 2, talent_radar: 1, hire_alert: 1,
+};
+
+function family(pk: string): string {
+  if (pk?.startsWith("trade_radar")) return "trade_radar";
+  if (pk?.startsWith("mortgage_radar")) return "mortgage_radar";
+  if (pk?.includes("contractor")) return "contractor";
+  if (pk?.includes("talent") || pk?.includes("hire_alert")) return "talent_radar";
+  return pk;
+}
+
+const SlaBadge = ({ s }: { s: string }) => {
   const map: Record<string, string> = {
-    on_track: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
-    at_risk: "bg-amber-500/20 text-amber-300 border-amber-500/40",
-    breached: "bg-red-500/20 text-red-300 border-red-500/40",
+    green: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    yellow: "bg-amber-500/20 text-amber-300 border-amber-500/40",
+    red: "bg-red-500/20 text-red-300 border-red-500/40",
   };
-  return <span className={`px-2 py-0.5 rounded text-xs border ${map[s] || "bg-white/10 text-white/60 border-white/20"}`}>{s}</span>;
-};
-
-const DeliveryDot = ({ s }: { s: string | null }) => {
-  if (!s) return <span className="text-white/40">—</span>;
-  const ok = ["sent", "delivered", "queued", "ok"].includes(s.toLowerCase());
-  const fail = ["failed", "error", "bounced", "suppressed"].includes(s.toLowerCase());
-  const cls = ok ? "text-emerald-300" : fail ? "text-red-300" : "text-amber-300";
-  return <span className={`text-xs font-mono ${cls}`}>{s}</span>;
-};
-
-const ChannelIcon = ({ ch }: { ch: string }) => {
-  if (ch === "sms") return <MessageSquare className="h-3 w-3 inline text-[#00d4ff]" />;
-  return <Mail className="h-3 w-3 inline text-[#00d4ff]" />;
+  const icon = s === "green" ? "🟢" : s === "yellow" ? "🟡" : "🔴";
+  return <span className={`px-2 py-0.5 rounded text-xs border ${map[s] || "bg-white/10 text-white/60 border-white/20"}`}>{icon} {s}</span>;
 };
 
 const TOUCH_LABELS: Record<string, string> = {
-  welcome: "Day 0 — Welcome",
   day2: "Day 2 — Check-in",
-  day5: "Day 5 — Mid-trial value",
+  day4_comp: "Day 4 — Auto-compensation",
+  day5: "Day 5 — Mid-trial",
   day6: "Day 6 — Convert ask",
-  at_risk_alert: "At-Risk admin alert",
-  breach_alert: "Breach admin alert",
 };
 
 export default function AdminTrialHealth() {
   const [rows, setRows] = useState<TrialRow[]>([]);
-  const [touches, setTouches] = useState<Record<string, TouchRow[]>>({});
+  const [drips, setDrips] = useState<Record<string, DripRow[]>>({});
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState(false);
@@ -70,167 +74,128 @@ export default function AdminTrialHealth() {
   const load = async () => {
     setLoading(true);
     const { data } = await supabase
-      .from("trial_delivery_sla" as any)
+      .from("trial_signups")
       .select("*")
+      .eq("status", "active")
       .order("trial_ends_at", { ascending: true })
       .limit(200);
     setRows((data as unknown as TrialRow[]) || []);
     setLoading(false);
   };
 
-  const loadTouches = async (trialId: string, email: string) => {
+  const loadDrips = async (id: string) => {
     const { data } = await supabase
-      .from("trial_concierge_log" as any)
+      .from("trial_drip_state")
       .select("*")
-      .or(`trial_sla_id.eq.${trialId},customer_email.eq.${email}`)
-      .order("created_at", { ascending: false })
-      .limit(50);
-    setTouches(t => ({ ...t, [trialId]: (data as unknown as TouchRow[]) || [] }));
+      .eq("trial_signup_id", id)
+      .order("sent_at", { ascending: false });
+    setDrips((p) => ({ ...p, [id]: (data as unknown as DripRow[]) || [] }));
   };
 
-  const toggleRow = async (r: TrialRow) => {
-    const isOpen = !!expanded[r.id];
-    setExpanded(e => ({ ...e, [r.id]: !isOpen }));
-    if (!isOpen && !touches[r.id]) await loadTouches(r.id, r.customer_email);
+  const toggle = async (id: string) => {
+    const next = !expanded[id];
+    setExpanded((p) => ({ ...p, [id]: next }));
+    if (next && !drips[id]) await loadDrips(id);
   };
 
-  const runWatchdog = async () => {
+  const runDrip = async () => {
     setRunning(true);
-    await supabase.functions.invoke("trial-sla-watchdog");
-    await load();
-    setTouches({});
-    setRunning(false);
+    try {
+      await supabase.functions.invoke("trial-drip-runner");
+      await load();
+    } finally { setRunning(false); }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { void load(); }, []);
 
-  const breached = rows.filter(r => r.sla_status === "breached").length;
-  const atRisk = rows.filter(r => r.sla_status === "at_risk").length;
-  const onTrack = rows.filter(r => r.sla_status === "on_track").length;
+  const daysSince = (iso: string) => Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-white flex items-center gap-2">
-          <Activity className="h-5 w-5 text-[#00d4ff]" /> Trial Health (7-Day SLA)
-        </h2>
+        <div>
+          <h2 className="text-xl font-bold text-white flex items-center gap-2">
+            <Activity className="h-5 w-5 text-[#00d4ff]" />
+            Trial Health — Live SLA Tracking
+          </h2>
+          <p className="text-xs text-white/50 mt-1">All active trials with daily lead counts, SLA status, and concierge touch log.</p>
+        </div>
         <button
-          onClick={runWatchdog}
+          onClick={runDrip}
           disabled={running}
-          className="px-3 py-1.5 bg-[#00d4ff]/20 text-[#00d4ff] border border-[#00d4ff]/40 rounded text-xs font-semibold disabled:opacity-50"
+          className="px-4 py-2 rounded-lg bg-[#00d4ff]/20 text-[#00d4ff] border border-[#00d4ff]/40 text-sm font-semibold hover:bg-[#00d4ff]/30 disabled:opacity-50"
         >
-          {running ? <Loader2 className="h-3 w-3 animate-spin inline" /> : "Run Watchdog Now"}
+          {running ? <Loader2 className="h-4 w-4 animate-spin" /> : "Run drip now"}
         </button>
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
-        <div className="border border-emerald-500/30 bg-emerald-500/5 rounded p-3">
-          <div className="text-xs text-white/60 flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> On Track</div>
-          <div className="text-2xl font-bold text-emerald-300">{onTrack}</div>
-        </div>
-        <div className="border border-amber-500/30 bg-amber-500/5 rounded p-3">
-          <div className="text-xs text-white/60 flex items-center gap-1"><AlertTriangle className="h-3 w-3" /> At Risk</div>
-          <div className="text-2xl font-bold text-amber-300">{atRisk}</div>
-        </div>
-        <div className="border border-red-500/30 bg-red-500/5 rounded p-3">
-          <div className="text-xs text-white/60 flex items-center gap-1"><AlertTriangle className="h-3 w-3" /> Breached</div>
-          <div className="text-2xl font-bold text-red-300">{breached}</div>
-        </div>
-      </div>
-
       {loading ? (
-        <div className="text-white/40 text-sm">Loading…</div>
+        <div className="flex items-center justify-center py-8"><Loader2 className="h-5 w-5 animate-spin text-white/50" /></div>
       ) : rows.length === 0 ? (
-        <div className="text-white/40 text-sm border border-white/10 rounded p-6 text-center">
-          No active trials yet. New 7-day trials will appear here automatically.
-        </div>
+        <div className="text-center py-8 text-white/40 text-sm">No active trials.</div>
       ) : (
-        <div className="border border-white/10 rounded overflow-hidden">
-          <table className="w-full text-xs text-white/80">
-            <thead className="bg-white/5 text-white/60 uppercase">
-              <tr>
-                <th className="w-6 px-2 py-2"></th>
-                <th className="text-left px-3 py-2">Email</th>
-                <th className="text-left px-3 py-2">Product</th>
-                <th className="text-left px-3 py-2">Status</th>
-                <th className="text-right px-3 py-2">Delivered</th>
-                <th className="text-right px-3 py-2">Promised/wk</th>
-                <th className="text-left px-3 py-2">Pulses</th>
-                <th className="text-right px-3 py-2">Ends</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/5">
-              {rows.map(r => {
-                const isOpen = !!expanded[r.id];
-                const log = touches[r.id] || [];
-                return (
-                  <>
-                    <tr key={r.id} className="hover:bg-white/5 cursor-pointer" onClick={() => toggleRow(r)}>
-                      <td className="px-2 py-2 text-white/40">
-                        {isOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
-                      </td>
-                      <td className="px-3 py-2 font-mono">{r.customer_email}</td>
-                      <td className="px-3 py-2">{r.product_slug}</td>
-                      <td className="px-3 py-2"><StatusBadge s={r.sla_status} /></td>
-                      <td className="px-3 py-2 text-right">{r.leads_delivered}</td>
-                      <td className="px-3 py-2 text-right">{r.promised_leads_per_week}</td>
-                      <td className="px-3 py-2 text-white/50 font-mono">
-                        <span className={r.welcome_pulse_sent_at ? "text-emerald-300" : ""}>W</span>
-                        <span className={r.day2_pulse_sent_at ? "text-emerald-300" : ""}>2</span>
-                        <span className={r.day5_pulse_sent_at ? "text-emerald-300" : ""}>5</span>
-                        <span className={r.day6_pulse_sent_at ? "text-emerald-300" : ""}>6</span>
-                      </td>
-                      <td className="px-3 py-2 text-right text-white/60">{new Date(r.trial_ends_at).toLocaleDateString()}</td>
-                    </tr>
-                    {isOpen && (
-                      <tr key={`${r.id}-log`} className="bg-black/30">
-                        <td></td>
-                        <td colSpan={7} className="px-3 py-3">
-                          <div className="text-[11px] uppercase tracking-widest text-white/50 mb-2">
-                            Touchpoint Log ({log.length})
-                          </div>
-                          {log.length === 0 ? (
-                            <div className="text-white/40 text-xs italic">No touchpoints recorded yet for this trial.</div>
-                          ) : (
-                            <div className="border border-white/10 rounded overflow-hidden">
-                              <table className="w-full text-[11px]">
-                                <thead className="bg-white/5 text-white/50 uppercase">
-                                  <tr>
-                                    <th className="text-left px-2 py-1.5">When</th>
-                                    <th className="text-left px-2 py-1.5">Touch</th>
-                                    <th className="text-left px-2 py-1.5">Ch</th>
-                                    <th className="text-left px-2 py-1.5">Status</th>
-                                    <th className="text-left px-2 py-1.5">Preview</th>
-                                  </tr>
-                                </thead>
-                                <tbody className="divide-y divide-white/5">
-                                  {log.map(t => (
-                                    <tr key={t.id}>
-                                      <td className="px-2 py-1.5 text-white/60 font-mono whitespace-nowrap">
-                                        {new Date(t.created_at).toLocaleString()}
-                                      </td>
-                                      <td className="px-2 py-1.5">
-                                        {TOUCH_LABELS[t.touch_type] || t.touch_type}
-                                      </td>
-                                      <td className="px-2 py-1.5"><ChannelIcon ch={t.channel} /></td>
-                                      <td className="px-2 py-1.5"><DeliveryDot s={t.delivery_status} /></td>
-                                      <td className="px-2 py-1.5 text-white/70 max-w-md truncate">
-                                        {t.body_preview || <span className="text-white/30">—</span>}
-                                      </td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
+        <div className="space-y-2">
+          {rows.map((t) => {
+            const days = daysSince(t.trial_started_at);
+            const sumD123 = t.lead_count_d1 + t.lead_count_d2 + t.lead_count_d3;
+            const min = PRODUCT_MIN_D3[family(t.product_key)] ?? 2;
+            const total = t.lead_count_d1 + t.lead_count_d2 + t.lead_count_d3 + t.lead_count_d4 + t.lead_count_d5 + t.lead_count_d6 + t.lead_count_d7;
+            return (
+              <div key={t.id} className="bg-[#0a1628] border border-[#1e3a5f] rounded-lg">
+                <button
+                  onClick={() => toggle(t.id)}
+                  className="w-full flex items-center justify-between p-3 hover:bg-[#1e3a5f]/30 transition-colors"
+                >
+                  <div className="flex items-center gap-3 text-left flex-1 min-w-0">
+                    {expanded[t.id] ? <ChevronDown className="h-4 w-4 text-white/40 flex-shrink-0" /> : <ChevronRight className="h-4 w-4 text-white/40 flex-shrink-0" />}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm font-semibold text-white truncate">{t.email}</span>
+                        <span className="text-[10px] uppercase tracking-wider text-white/50">{t.product_key}</span>
+                        <SlaBadge s={t.sla_status} />
+                        {t.compensation_applied_at && <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300">+7d ext</span>}
+                      </div>
+                      <div className="text-[11px] text-white/40 mt-1">
+                        Day {days} of 7 · {total} leads total · D1–D3: {sumD123}/{min} · {t.first_lead_delivered_at ? `1st lead: ${new Date(t.first_lead_delivered_at).toLocaleString()}` : "no leads yet"}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 text-[10px] font-mono text-white/40 flex-shrink-0">
+                    {[1, 2, 3, 4, 5, 6, 7].map((d) => {
+                      const cnt = (t as any)[`lead_count_d${d}`] || 0;
+                      return <span key={d} className={`px-1.5 py-0.5 rounded border ${cnt > 0 ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/30" : "bg-white/5 text-white/30 border-white/10"}`}>D{d}:{cnt}</span>;
+                    })}
+                  </div>
+                </button>
+                {expanded[t.id] && (
+                  <div className="px-3 pb-3 pt-1 border-t border-[#1e3a5f]/40">
+                    <div className="text-[11px] uppercase tracking-wider text-white/40 mb-2">Concierge touches</div>
+                    {drips[t.id] === undefined ? (
+                      <Loader2 className="h-4 w-4 animate-spin text-white/30" />
+                    ) : drips[t.id].length === 0 ? (
+                      <div className="text-xs text-white/40">No touches recorded yet.</div>
+                    ) : (
+                      <div className="space-y-1.5">
+                        {drips[t.id].map((d) => (
+                          <div key={d.id} className="flex items-start gap-2 text-xs bg-[#030711] border border-[#1e3a5f]/40 rounded p-2">
+                            {d.channel === "sms" ? <MessageSquare className="h-3 w-3 text-[#00d4ff] mt-0.5 flex-shrink-0" /> : <Mail className="h-3 w-3 text-[#00d4ff] mt-0.5 flex-shrink-0" />}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="font-semibold text-white">{TOUCH_LABELS[d.touch_key] || d.touch_key}</span>
+                                <span className="text-white/40">{new Date(d.sent_at).toLocaleString()}</span>
+                                {d.status === "sent" ? <CheckCircle2 className="h-3 w-3 text-emerald-400" /> : <AlertTriangle className="h-3 w-3 text-red-400" />}
+                              </div>
+                              {d.error && <div className="text-red-300 text-[11px] mt-0.5">{d.error}</div>}
                             </div>
-                          )}
-                        </td>
-                      </tr>
+                          </div>
+                        ))}
+                      </div>
                     )}
-                  </>
-                );
-              })}
-            </tbody>
-          </table>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

@@ -5,6 +5,7 @@ import { Copy, Check, Sparkles, Download, ArrowUpRight, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import ManageBillingButton from "@/components/billing/ManageBillingButton";
 import OnboardingChecklist from "@/components/shared/OnboardingChecklist";
+import LeadGuaranteeBar from "@/components/shared/LeadGuaranteeBar";
 
 type Client = {
   id: string;
@@ -500,6 +501,10 @@ export default function MySiteRadar() {
 
               <div style={{ marginTop: 8 }}>
                 <ManageBillingButton email={client.email} />
+              </div>
+
+              <div style={{ marginTop: 24 }}>
+                <LeadGuaranteeBar productName="SiteRadar" />
               </div>
             </div>
           )}
