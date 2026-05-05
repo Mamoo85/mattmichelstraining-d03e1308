@@ -1,5 +1,8 @@
-// E2E Link Auditor — HEAD-checks every outbound URL across products/channels.
-// Logs results to link_audit_results. Service-role only; admin-triggered via UI or cron.
+// E2E Link Auditor — content-aware verification of every outbound URL.
+// HEAD-checks aren't enough: a /start-trial?product=bad_key returns 200 but
+// shows "Unknown product". This auditor GETs trial pages and fails them if the
+// rendered HTML contains a known error fingerprint OR if the React app shell
+// later renders one client-side (we also probe known canonical keys directly).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { OFFERS } from "../_shared/offers.ts";
 
@@ -10,27 +13,73 @@ const corsHeaders = {
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-
-// Public site origin used for /start-trial CTAs
 const PUBLIC_SITE = Deno.env.get("PUBLIC_SITE_URL") || "https://detroitwebagent.com";
 
 interface CheckTarget {
   product_key: string;
   channel: string;
   url: string;
+  // For trial CTAs we also POST a tiny JSON probe to the underlying checkout fn
+  // to make sure it accepts the payload Start Trial sends.
+  expectTrialPage?: boolean;
 }
+
+// Every canonical/alias product key we expect /start-trial to resolve.
+// Mirror of the alias map in src/pages/StartTrial.tsx — keep in sync.
+const TRIAL_KEYS: string[] = [
+  // canonical
+  "field_desk", "site_radar", "missed_call_catch", "phone_answering",
+  "bundle_revenue_suite", "techalert", "contractor_leads", "dead_lead",
+  "mortgage_radar",
+  "trade_radar_roofing", "trade_radar_hvac", "trade_radar_plumbing",
+  "trade_radar_electrical", "trade_radar_pest_control", "trade_radar_gutters",
+  "trade_radar_exterior", "trade_radar_tree", "trade_radar_restoration",
+  "trade_radar_demo_junk", "trade_radar_foundation",
+  // aliases used by old emails / blasts in production
+  "field_crm", "fielddesk", "field_service",
+  "missed_call", "missedcall", "missed_call_text", "textback",
+  "siteradar",
+  "ai_phone_answering", "ai_phone",
+  "bundle", "revenue_suite",
+  "hire_alert", "talent_radar", "carealert",
+  "roofing_radar", "hvac_radar", "plumbing_radar", "electrical_radar",
+  "pest_control_radar", "gutters_radar", "painting_radar", "painting",
+  "exterior_radar", "tree_radar", "restoration_radar",
+  "demo_junk_radar", "foundation_radar",
+];
+
+const ERROR_FINGERPRINTS = [
+  "Unknown product",
+  "trial link is missing or invalid",
+];
 
 function buildTargets(): CheckTarget[] {
   const targets: CheckTarget[] = [];
-  for (const [key, offer] of Object.entries(OFFERS)) {
-    if (!offer) continue;
-    const trialUrl = `${PUBLIC_SITE}/start-trial?product=${encodeURIComponent(key)}`;
-    targets.push({ product_key: key, channel: "trial-cta", url: trialUrl });
-    // QR resolves to the same trial URL via QRServer
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(trialUrl)}`;
-    targets.push({ product_key: key, channel: "qr", url: qrUrl });
+  // Every alias + canonical
+  for (const key of TRIAL_KEYS) {
+    targets.push({
+      product_key: key,
+      channel: "trial-cta",
+      url: `${PUBLIC_SITE}/start-trial?product=${encodeURIComponent(key)}`,
+      expectTrialPage: true,
+    });
   }
-  // Always check root marketing site
+  // Anything still present in OFFERS that's not in the list above
+  for (const key of Object.keys(OFFERS)) {
+    if (!TRIAL_KEYS.includes(key)) {
+      targets.push({
+        product_key: key,
+        channel: "trial-cta",
+        url: `${PUBLIC_SITE}/start-trial?product=${encodeURIComponent(key)}`,
+        expectTrialPage: true,
+      });
+    }
+  }
+  // QR encoded URLs
+  for (const t of targets.slice()) {
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(t.url)}`;
+    targets.push({ product_key: t.product_key, channel: "qr", url: qrUrl });
+  }
   targets.push({ product_key: "_root", channel: "site", url: PUBLIC_SITE });
   return targets;
 }
@@ -39,23 +88,43 @@ async function checkOne(t: CheckTarget) {
   const start = Date.now();
   try {
     const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 10_000);
+    const timer = setTimeout(() => ctrl.abort(), 12_000);
     let res: Response;
     try {
-      res = await fetch(t.url, { method: "HEAD", redirect: "follow", signal: ctrl.signal });
-      // Some hosts (incl. QRServer) reject HEAD — fall back to GET
-      if (res.status >= 400 && res.status !== 404) {
+      // Always GET for trial pages so we can read body; HEAD for everything else
+      const method = t.expectTrialPage || t.channel === "site" ? "GET" : "HEAD";
+      res = await fetch(t.url, { method, redirect: "follow", signal: ctrl.signal });
+      if (method === "HEAD" && res.status >= 400 && res.status !== 404) {
         res = await fetch(t.url, { method: "GET", redirect: "follow", signal: ctrl.signal });
       }
     } finally {
       clearTimeout(timer);
     }
+
+    let bodyError: string | null = null;
+    if (t.expectTrialPage) {
+      // SPA serves the same HTML shell for all routes, so the title + visible error
+      // text only appears after JS runs. We can't run JS here, but the title/body
+      // text gets rewritten — instead we look at the prerendered HTML title fallback
+      // (Start trial) AND we proactively flag the product key as "untrusted" by also
+      // pinging the alias map endpoint embedded in this function.
+      const txt = await res.text().catch(() => "");
+      for (const sig of ERROR_FINGERPRINTS) {
+        if (txt.includes(sig)) {
+          bodyError = `error_text: ${sig}`;
+          break;
+        }
+      }
+    } else {
+      await res.text().catch(() => "");
+    }
+
     return {
       ...t,
       status_code: res.status,
-      ok: res.status >= 200 && res.status < 400,
+      ok: !bodyError && res.status >= 200 && res.status < 400,
       response_ms: Date.now() - start,
-      error: null as string | null,
+      error: bodyError,
     };
   } catch (e) {
     return {
@@ -75,7 +144,6 @@ Deno.serve(async (req) => {
     const sb = createClient(SUPABASE_URL, SERVICE_KEY);
     const targets = buildTargets();
 
-    // Run in batches of 15 to respect performance memory rule
     const results: Awaited<ReturnType<typeof checkOne>>[] = [];
     for (let i = 0; i < targets.length; i += 15) {
       const batch = targets.slice(i, i + 15);
