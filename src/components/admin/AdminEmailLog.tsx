@@ -191,9 +191,24 @@ const AdminEmailLog = () => {
                       <p className="text-[10px] text-destructive mt-1 truncate">{email.error_message}</p>
                     )}
                   </div>
-                  <span className="text-[9px] text-muted-foreground whitespace-nowrap">
-                    {formatTime(email.created_at)}
-                  </span>
+                  <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                    <span className="text-[9px] text-muted-foreground whitespace-nowrap">
+                      {formatTime(email.created_at)}
+                    </span>
+                    {email.message_id && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleResend(email.message_id, email.recipient_email)}
+                        disabled={resendingId === email.message_id}
+                        className="h-6 px-2 text-[9px]"
+                        title="Re-queue this email"
+                      >
+                        <Send size={10} className="mr-1" />
+                        {resendingId === email.message_id ? "..." : "Resend"}
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>
