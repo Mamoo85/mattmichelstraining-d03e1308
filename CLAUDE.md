@@ -12,7 +12,33 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ---
 
 ## Current Session State
-*Last updated: 2026-05-04 (Phase 43)*
+*Last updated: 2026-05-05 (Phase 44)*
+
+### Phase 44 — Enrichment Hardening + HubSpot Bridge + Trial SLA Guarantee COMPLETE ✅
+
+**This session deliverables:**
+
+**Fix 1 — Hunter.io header bug + Snov.io fallback** (commit `8b0dfd9`)
+- Fixed Hunter.io API key header bug in `outreach-leads-enrich`
+- Added Snov.io as Tier 5 fallback enrichment source. Full waterfall is now: Apollo → Hunter → Firecrawl → Snov (+ pattern_verify, PDL, crtsh, rdap, opencorporates as cheap fallbacks)
+- Snov uses OAuth client_credentials (`SNOV_USER_ID` + `SNOV_API_KEY` env vars; token cached)
+- Implemented in `_shared/email-waterfall.ts` (`snovDomainSearch`, `snovVerify`)
+
+**Fix 2 — HubSpot CRM bridge** (commit `a703ff6`)
+- New `_shared/crm-webhook.ts`: pushes identified SiteRadar visitors + voicemail leads to HubSpot contacts
+- Wired into `visitor-identify` (after Clearbit/ipinfo enrichment) and voicemail transcription handler
+- Idempotent contact upsert by email/phone
+
+**Fix 3 — Demand/Buyer/Dead-Lead enrollment + missing crons** (commit `1970c18`)
+- Matt enrolled in Demand Radar, Buyer Radar, Dead Lead Reactivation
+- Added missing cron: `demand-radar-enhanced-scan` daily at 12:00 UTC (8am ET)
+- Added missing cron: `field-service-daily-summary` daily at 13:00 UTC (9am ET)
+
+**Fix 4 — Trial Delivery Guarantee E1–E10** (commits `75e0df5`–`e163745`)
+- New SLA columns on `trial_signups`: `first_lead_delivered_at`, `sla_status` (`pending|met|breached|compensated`), `compensation_applied`
+- New `trial-drip-runner` edge function: runs hourly, checks each active trial against SLA, sends drip emails (D0/D1/D3/D7/D14)
+- Auto-compensation logic: if no lead delivered within SLA window, automatically issues credit/extension and notifies Matt + customer
+- Covers all radar trials (Trade Radar 11 verticals, Mortgage Radar, Demand Radar, Buyer Radar, TechAlert)
 
 ### Phase 43 — SMS Noise Fixes + Dead Lead Pool External Sources + Cron Repair COMPLETE ✅
 
