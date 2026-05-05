@@ -13,6 +13,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 import { sendSMS } from "../_shared/twilio.ts";
 import { dwaEmail, dwaWrap } from "../_shared/dwa-email.ts";
+import { wrapServe } from "../_shared/telemetry.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -313,7 +314,7 @@ async function sendDigestForClient(
   return { sent: result.ok, reason: result.error || "ok", leadCount: leads.length };
 }
 
-serve(async (req) => {
+serve(wrapServe("trade-radar-am-digest", async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   const sb = createClient(SUPABASE_URL, SERVICE_ROLE, { auth: { persistSession: false } });
@@ -391,4 +392,4 @@ serve(async (req) => {
   return new Response(JSON.stringify({ ok: true, digests_sent: totalSent, summary }), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
-});
+}));

@@ -21125,6 +21125,51 @@ export type Database = {
         }
         Relationships: []
       }
+      system_telemetry: {
+        Row: {
+          created_at: string
+          duration_ms: number | null
+          error_message: string | null
+          error_stack: string | null
+          finished_at: string | null
+          id: string
+          job_name: string
+          job_type: string
+          metadata: Json | null
+          result: Json | null
+          started_at: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          error_stack?: string | null
+          finished_at?: string | null
+          id?: string
+          job_name: string
+          job_type?: string
+          metadata?: Json | null
+          result?: Json | null
+          started_at?: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          error_stack?: string | null
+          finished_at?: string | null
+          id?: string
+          job_name?: string
+          job_type?: string
+          metadata?: Json | null
+          result?: Json | null
+          started_at?: string
+          status?: string
+        }
+        Relationships: []
+      }
       team_feed: {
         Row: {
           content: string

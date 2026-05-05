@@ -9,6 +9,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { sendSMS } from "../_shared/twilio.ts";
 import { dwaEmail } from "../_shared/dwa-email.ts";
+import { wrapServe } from "../_shared/telemetry.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -102,7 +103,7 @@ async function sendDay6(sb: any, trial: TrialRow) {
   await sb.from("trial_delivery_sla").update({ day6_pulse_sent_at: new Date().toISOString() }).eq("id", trial.id);
 }
 
-Deno.serve(async (req) => {
+Deno.serve(wrapServe("trial-sla-watchdog", async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   const sb = createClient(SUPABASE_URL, SERVICE_KEY);
 
@@ -148,4 +149,4 @@ Deno.serve(async (req) => {
   return new Response(JSON.stringify({ ok: true, processed: results.length, results }), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
-});
+}));

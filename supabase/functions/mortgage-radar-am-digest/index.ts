@@ -16,6 +16,7 @@ import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 import { encode } from "https://deno.land/std@0.190.0/encoding/base64url.ts";
 import { sendSMS } from "../_shared/twilio.ts";
 import { deliverCrmWebhook } from "../_shared/crm-webhook.ts";
+import { wrapServe } from "../_shared/telemetry.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -186,7 +187,7 @@ function personalizeOpener(opener: string | null, fullName: string | null, addre
 
 // ── Main handler ──────────────────────────────────────────────────────────────
 
-serve(async (req) => {
+serve(wrapServe("mortgage-radar-am-digest", async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   const sb = createClient(SUPABASE_URL, SERVICE_ROLE, { auth: { persistSession: false } });
@@ -489,4 +490,4 @@ serve(async (req) => {
   return new Response(JSON.stringify({ ok: true, digests_sent: sent, debug }), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
-});
+}));
