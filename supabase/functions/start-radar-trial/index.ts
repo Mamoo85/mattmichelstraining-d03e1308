@@ -247,6 +247,15 @@ Deno.serve(async (req) => {
     // Don't fail the request — the trial is created. The customer can re-request.
   }
 
+  // 🔔 Ping Matt — every trial signup (fire-and-forget, never blocks).
+  sendSMS(
+    ADMIN_PHONE,
+    TWILIO_FROM,
+    `🎯 NEW TRIAL — ${cfg.label}\n${email}${body.business_name ? `\n${body.business_name}` : ""}${body.phone ? `\n${body.phone}` : ""}${founder ? "\n(founder seat)" : ""}\nsrc: ${body.source || "direct"}`,
+    "trial_signup_alert",
+    { skipQuietHours: true, skipOptOutCheck: true },
+  ).catch((e) => console.error("[start-radar-trial] admin SMS failed", e));
+
   return new Response(
     JSON.stringify({
       ok: true,
