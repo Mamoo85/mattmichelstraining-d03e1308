@@ -115,8 +115,32 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
   try {
-    const [sam, sonar] = await Promise.all([scanSamGov(sb), scanSonarFallback(sb)]);
-    return new Response(JSON.stringify({ ok: true, sam, sonar }), {
+    const [sam, sonar, oshaSignals, sbaSignals, permitSignals] = await Promise.all([
+      scanSamGov(sb),
+      scanSonarFallback(sb),
+      scanOshaSignals("MI"),
+      scanSbaSignals("MI"),
+      scanBuildingPermitVolume([]),
+    ]);
+
+    // Write manufacturer rep signals to buyer_radar_rfqs as area-level intel
+    let manufacturerSignals = 0;
+    for (const sig of [...oshaSignals, ...sbaSignals, ...permitSignals]) {
+      const { error } = await (sb.from as any)("buyer_radar_rfqs").upsert({
+        source: sig.source,
+        source_id: `${sig.source}_${sig.signal_type}_${sig.signal_date}_${(sig.company_name || sig.state || "").replace(/\s/g, "_").slice(0, 40)}`,
+        title: sig.signal_detail,
+        agency: sig.company_name || null,
+        description: sig.signal_detail,
+        state: sig.state || null,
+        city: sig.city || null,
+        posted_at: new Date(sig.signal_date).toISOString(),
+        raw: sig,
+      }, { onConflict: "source,source_id", ignoreDuplicates: true });
+      if (!error) manufacturerSignals++;
+    }
+
+    return new Response(JSON.stringify({ ok: true, sam, sonar, manufacturer_signals: manufacturerSignals }), {
       status: 200, headers: { ...cors, "Content-Type": "application/json" },
     });
   } catch (e: unknown) {
