@@ -46,6 +46,16 @@ serve(async (req) => {
       false,
       { bypassQuietHours: true }
     );
+
+    // CRM bridge: push caller into HubSpot so voicemails land in the pipeline
+    import("../_shared/hubspot.ts").then(({ upsertContact }) =>
+      upsertContact({
+        email: `voicemail-${callerPhone.replace(/\D/g, "")}@missed-call.dwa.local`,
+        phone: callerPhone,
+        dwa_signal_source: "missed_call",
+        hs_lead_status: "NEW",
+      })
+    ).catch(() => {});
   } catch (e) {
     console.error("[voicemail-transcription-handler]", e);
   }

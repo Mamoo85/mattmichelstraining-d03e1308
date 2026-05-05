@@ -222,6 +222,18 @@ serve(async (req) => {
           if (eventId) {
             await sb.from("crm_visitor_events").update({ lead_auto_created: true, pipeline_lead_id: lead.id }).eq("id", eventId);
           }
+
+          // CRM bridge: push identified business visitor to HubSpot as a company contact
+          import("../_shared/hubspot.ts").then(({ upsertContact }) =>
+            upsertContact({
+              email: `siteradar-${ip.replace(/\./g, "-")}@visitor.dwa.local`,
+              company: companyName,
+              city,
+              state: region,
+              dwa_signal_source: "site_radar",
+              hs_lead_status: "NEW",
+            })
+          ).catch(() => {});
         }
       }
     }
