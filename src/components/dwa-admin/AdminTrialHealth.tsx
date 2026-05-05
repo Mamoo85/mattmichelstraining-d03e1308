@@ -106,6 +106,37 @@ export default function AdminTrialHealth() {
     } finally { setRunning(false); }
   };
 
+  const exportCsv = () => {
+    const headers = [
+      "email","phone","product_key","status","sla_status","trial_started_at","trial_ends_at",
+      "first_lead_delivered_at","compensation_applied_at","last_concierge_touch_at",
+      "lead_count_d1","lead_count_d2","lead_count_d3","lead_count_d4","lead_count_d5","lead_count_d6","lead_count_d7","lead_total",
+      "stripe_subscription_id",
+    ];
+    const esc = (v: any) => {
+      if (v === null || v === undefined) return "";
+      const s = String(v).replace(/"/g, '""');
+      return /[",\n]/.test(s) ? `"${s}"` : s;
+    };
+    const lines = [headers.join(",")];
+    for (const t of rows) {
+      const total = t.lead_count_d1+t.lead_count_d2+t.lead_count_d3+t.lead_count_d4+t.lead_count_d5+t.lead_count_d6+t.lead_count_d7;
+      lines.push([
+        t.email,t.phone,t.product_key,t.status,t.sla_status,t.trial_started_at,t.trial_ends_at,
+        t.first_lead_delivered_at,t.compensation_applied_at,t.last_concierge_touch_at,
+        t.lead_count_d1,t.lead_count_d2,t.lead_count_d3,t.lead_count_d4,t.lead_count_d5,t.lead_count_d6,t.lead_count_d7,total,
+        t.stripe_subscription_id,
+      ].map(esc).join(","));
+    }
+    const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `trial-health-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   useEffect(() => { void load(); }, []);
 
   const daysSince = (iso: string) => Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
@@ -120,13 +151,22 @@ export default function AdminTrialHealth() {
           </h2>
           <p className="text-xs text-white/50 mt-1">All active trials with daily lead counts, SLA status, and concierge touch log.</p>
         </div>
-        <button
-          onClick={runDrip}
-          disabled={running}
-          className="px-4 py-2 rounded-lg bg-[#00d4ff]/20 text-[#00d4ff] border border-[#00d4ff]/40 text-sm font-semibold hover:bg-[#00d4ff]/30 disabled:opacity-50"
-        >
-          {running ? <Loader2 className="h-4 w-4 animate-spin" /> : "Run drip now"}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={exportCsv}
+            disabled={rows.length === 0}
+            className="px-3 py-2 rounded-lg bg-white/5 text-white/80 border border-white/10 text-sm font-semibold hover:bg-white/10 disabled:opacity-40 flex items-center gap-1.5"
+          >
+            <Download className="h-3.5 w-3.5" /> Export CSV
+          </button>
+          <button
+            onClick={runDrip}
+            disabled={running}
+            className="px-4 py-2 rounded-lg bg-[#00d4ff]/20 text-[#00d4ff] border border-[#00d4ff]/40 text-sm font-semibold hover:bg-[#00d4ff]/30 disabled:opacity-50"
+          >
+            {running ? <Loader2 className="h-4 w-4 animate-spin" /> : "Run drip now"}
+          </button>
+        </div>
       </div>
 
       {loading ? (
