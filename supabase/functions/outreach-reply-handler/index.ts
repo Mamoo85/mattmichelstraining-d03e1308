@@ -1,6 +1,8 @@
 // Outreach Reply Handler
 // Accepts inbound replies (email forwarded as JSON, or SMS via Twilio).
 // Classifies sentiment with simple keyword rules and stores in outreach_replies.
+// Positive replies: instantly auto-responds with Claude-drafted follow-up + calendar link,
+//   and SMSes Matt with a summary so he can follow up personally.
 // Inbound email: configure Resend inbound or forward to this endpoint with { from, subject, body }.
 // Inbound SMS: configure Twilio Messaging webhook to POST here with form-encoded { From, Body }.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -18,8 +20,8 @@ const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN");
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
-// Matt's Calendly — auto-appended to every positive reply auto-response
-const CALENDLY_URL = "https://calendly.com/mattmichels/30min";
+// Matt's booking link — auto-appended to every positive reply auto-response
+const CALENDLY_URL = "https://calendly.com/detroitwebagency/discovery";
 
 const UNSUB_KEYWORDS = ["unsubscribe", "stop", "remove me", "opt out", "opt-out", "no thanks", "do not email"];
 const POSITIVE_KEYWORDS = ["interested", "yes", "send me", "tell me more", "sounds good", "let's talk", "lets talk", "more info", "pricing", "demo", "call me", "claim"];
@@ -38,6 +40,58 @@ function classify(body: string): "unsubscribe" | "positive" | "negative" | "auto
 function extractEmail(s: string): string | null {
   const m = s.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
   return m ? m[0].toLowerCase() : null;
+}
+
+async function sendPositiveAutoReply(
+  replyTo: string,
+  prospectName: string | null,
+  companyName: string | null,
+  originalBody: string,
+  channel: "email" | "sms",
+): Promise<void> {
+  const name = prospectName?.split(" ")[0] || "there";
+  const company = companyName || "your company";
+
+  try {
+    const draft = await generateWithHaiku(
+      `Write a warm 3-sentence reply to someone who expressed interest in our services.
+Context:
+- Their name: ${name}
+- Their company: ${company}
+- Their message snippet: "${originalBody.slice(0, 200)}"
+
+Rules:
+- Sentence 1: acknowledge their interest with genuine enthusiasm (mention their name)
+- Sentence 2: offer to schedule a quick 15-minute call to learn about their situation
+- Sentence 3: point them to the calendar link below to pick a time that works
+- Natural, conversational tone — NOT salesy
+- No subject, no sign-off, just the 3 sentences`,
+      "You write warm, human follow-up messages for a web agency owner.",
+      200,
+    );
+
+    if (channel === "email" && RESEND_API_KEY && replyTo) {
+      const html = `<div style="font-family:sans-serif;max-width:600px;color:#1a1a1a;line-height:1.7;font-size:15px">
+<p>Hi ${name},</p>
+<p>${draft.trim().replace(/\n\n/g, "</p><p>").replace(/\n/g, " ")}</p>
+<p><a href="${CALENDLY_URL}" style="display:inline-block;background:#0a1628;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;font-weight:600">📅 Pick a Time →</a></p>
+<p style="margin-top:20px">Talk soon,<br><strong>Matt Michels</strong><br>Detroit Web Agency<br>(313) 992-1219</p>
+</div>`;
+
+      await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          from: "Matt at Detroit Web Agency <matt@detroitwebagent.com>",
+          to: [replyTo],
+          subject: `Re: Let's connect`,
+          html,
+        }),
+      });
+    }
+  } catch (e) {
+    console.error("[reply-handler] auto-reply error:", e instanceof Error ? e.message : e);
+  }
 }
 
 Deno.serve(async (req) => {
@@ -100,17 +154,17 @@ Deno.serve(async (req) => {
   }
 
   // Resolve prospect
-  let prospect: { id: string; email: string | null; phone: string | null } | null = null;
+  let prospect: { id: string; email: string | null; phone: string | null; business_name?: string | null; owner_name?: string | null } | null = null;
   if (channel === "email") {
     const email = extractEmail(from) || from.toLowerCase();
     const { data } = await supabase
       .from("contractor_outreach_prospects")
-      .select("id,email,phone").ilike("email", email).maybeSingle();
+      .select("id,email,phone,business_name,owner_name").ilike("email", email).maybeSingle();
     prospect = data;
   } else {
     const { data } = await supabase
       .from("contractor_outreach_prospects")
-      .select("id,email,phone").eq("phone", from).maybeSingle();
+      .select("id,email,phone,business_name,owner_name").eq("phone", from).maybeSingle();
     prospect = data;
   }
 
@@ -155,6 +209,20 @@ Deno.serve(async (req) => {
           reason: "Reply contained unsubscribe keyword",
         }).select();
       }
+    }
+
+    // Positive reply: auto-respond instantly + SMS Matt
+    if (sentiment === "positive") {
+      const replyTo = channel === "email" ? (extractEmail(from) || from) : (prospect.email || "");
+      const prospectName = prospect.owner_name || null;
+      const companyName = prospect.business_name || null;
+
+      // Fire-and-forget auto-reply (non-blocking)
+      sendPositiveAutoReply(replyTo, prospectName, companyName, body, channel).catch(() => {});
+
+      // SMS Matt immediately so he can follow up personally
+      const mattAlert = `🔥 POSITIVE REPLY from ${companyName || replyTo} (${channel})\n"${body.slice(0, 120)}"\nCalendly auto-sent. Book: ${CALENDLY_URL}`;
+      sendSMS(ADMIN_PHONE, TWILIO_PHONE_NUMBER, mattAlert, "outreach_positive_reply").catch(() => {});
     }
   }
 
