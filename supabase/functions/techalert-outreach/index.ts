@@ -49,7 +49,7 @@ ${card}
 `;
 }
 
-async function sendEmail(sb: ReturnType<typeof createClient>, to: string, ownerName: string | null, companyName: string, role: string, isBoiler: boolean) {
+async function sendEmail(sb: ReturnType<typeof createClient>, to: string, ownerName: string | null, companyName: string, role: string, isBoiler: boolean, score: number) {
   const firstName = ownerName ? ownerName.split(" ")[0] : null;
   const subject = firstName
     ? `${firstName} — still hiring ${role.replace(/_/g, " ")}s?`
@@ -58,8 +58,8 @@ async function sendEmail(sb: ReturnType<typeof createClient>, to: string, ownerN
   const r = await dwaColdEmail({
     to,
     subject,
-    bodyHtml: buildEmailBody(ownerName, companyName, role, isBoiler),
-    product: "TechAlert", // hiring → 30-day trial automatically
+    bodyHtml: buildEmailBody(ownerName, companyName, role, isBoiler, score),
+    product: "TechAlert",
     ctaUrl: "https://detroitwebagent.com/talent-radar?utm_source=cold&utm_campaign=techalert",
     templateName: "techalert_cold_d0",
   }, sb);
