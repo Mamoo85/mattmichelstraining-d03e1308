@@ -165,14 +165,14 @@ function emailHtml(lead: any, pitch: ProductPitch): string {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  const sb = createClient(SUPABASE_URL, SERVICE_ROLE, { auth: { persistSession: false } });
+
   try {
     const ks = await isMarketingBlocked(sb);
     if (ks.blocked) {
       return new Response(JSON.stringify({ ok: true, sent: 0, reason: "marketing_kill_switch", detail: ks.reason }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
   } catch (_) { /* fail open */ }
-
-  const sb = createClient(SUPABASE_URL, SERVICE_ROLE, { auth: { persistSession: false } });
 
   // Pull eligible leads — has email, never SMS-blasted via this product channel before
   const { data: leads, error } = await sb
