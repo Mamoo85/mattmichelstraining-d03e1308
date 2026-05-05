@@ -658,10 +658,67 @@ export async function runEmailWaterfall(
     }
   } catch (e) { miss("email_extras_2", String(e)); }
 
+  // 30-39. Third-wave free extras: sitemap, LinkedIn slug, Facebook, MapQuest,
+  // HERE, OpenCage, SEC EDGAR, GovInfo, SAM.gov, Twitter/X bio.
+  try {
+    const ex3 = await import("./email-extras-3.ts");
+
+    if (domain) {
+      const e = await ex3.sitemapCrawl(domain);
+      if (e && looksValidEmail(e)) { await bump(sb, "sitemap_crawl", true); return hit("sitemap_crawl", e, 60); }
+      miss("sitemap_crawl");
+    }
+    if (input.business_name) {
+      const e = await ex3.linkedinSlugEmail(input.business_name);
+      if (e && looksValidEmail(e)) { await bump(sb, "linkedin_slug", true); return hit("linkedin_slug", e, 55); }
+      miss("linkedin_slug");
+    }
+    if (input.business_name) {
+      const e = await ex3.facebookPageEmail(input.business_name);
+      if (e && looksValidEmail(e)) { await bump(sb, "facebook_page", true); return hit("facebook_page", e, 55); }
+      miss("facebook_page");
+    }
+    if (input.business_name && input.city) {
+      const e = await ex3.mapquestEmail(input.business_name, input.city);
+      if (e && looksValidEmail(e)) { await bump(sb, "mapquest", true); return hit("mapquest", e, 50); }
+      miss("mapquest");
+    }
+    if (input.business_name && input.city) {
+      const e = await ex3.hereEmail(input.business_name, input.city);
+      if (e && looksValidEmail(e)) { await bump(sb, "here", true); return hit("here", e, 50); }
+      miss("here");
+    }
+    if (input.business_name && input.city) {
+      const e = await ex3.opencageEmail(input.business_name, input.city);
+      if (e && looksValidEmail(e)) { await bump(sb, "opencage", true); return hit("opencage", e, 45); }
+      miss("opencage");
+    }
+    if (input.business_name) {
+      const e = await ex3.secEdgarEmail(input.business_name);
+      if (e && looksValidEmail(e)) { await bump(sb, "sec_edgar", true); return hit("sec_edgar", e, 60); }
+      miss("sec_edgar");
+    }
+    if (input.business_name) {
+      const e = await ex3.govinfoEmail(input.business_name);
+      if (e && looksValidEmail(e)) { await bump(sb, "govinfo", true); return hit("govinfo", e, 50); }
+      miss("govinfo");
+    }
+    if (input.business_name) {
+      const e = await ex3.samEntityEmail(input.business_name);
+      if (e && looksValidEmail(e)) { await bump(sb, "sam_entity", true); return hit("sam_entity", e, 65); }
+      miss("sam_entity");
+    }
+    if (input.business_name) {
+      const e = await ex3.twitterBioEmail(input.business_name);
+      if (e && looksValidEmail(e)) { await bump(sb, "twitter_bio", true); return hit("twitter_bio", e, 45); }
+      miss("twitter_bio");
+    }
+  } catch (e) { miss("email_extras_3", String(e)); }
+
   return { email: null, source: null, confidence: 0, trace };
 }
 
-export const WATERFALL_PROVIDERS = ["site_scrape", "snov", "apollo", "pattern_verify", "firecrawl_deep", "hunter", "pdl", "pdl_name", "crtsh", "rdap_whois", "opencorporates", "wayback", "bbb", "detroit_open_biz", "google_places", "github_commits", "dns_mx_pattern", "bing_serp", "reddit", "common_crawl", "hunter_finder", "yellowpages", "yelp_fusion", "foursquare", "osm", "duckduckgo", "yandex", "github_events", "wayback_cdx", "crunchbase"] as const;
+export const WATERFALL_PROVIDERS = ["site_scrape", "snov", "apollo", "pattern_verify", "firecrawl_deep", "hunter", "pdl", "pdl_name", "crtsh", "rdap_whois", "opencorporates", "wayback", "bbb", "detroit_open_biz", "google_places", "github_commits", "dns_mx_pattern", "bing_serp", "reddit", "common_crawl", "hunter_finder", "yellowpages", "yelp_fusion", "foursquare", "osm", "duckduckgo", "yandex", "github_events", "wayback_cdx", "crunchbase", "sitemap_crawl", "linkedin_slug", "facebook_page", "mapquest", "here", "opencage", "sec_edgar", "govinfo", "sam_entity", "twitter_bio"] as const;
 
 /**
  * runFieldWaterfall — wrapper around runEmailWaterfall that reports which
