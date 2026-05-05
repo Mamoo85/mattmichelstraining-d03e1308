@@ -575,6 +575,9 @@ export default function MyContractorLeads() {
               )}
             </div>
           )}
+          <div className="mt-8">
+            <LeadGuaranteeBar productName="Contractor Leads" />
+          </div>
         </main>
 
         <footer className="py-8 border-t border-white/5 text-center space-y-3">
