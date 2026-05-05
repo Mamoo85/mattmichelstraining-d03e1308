@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Mail, CheckCircle, XCircle, AlertTriangle, Clock, RefreshCw } from "lucide-react";
+import { Mail, CheckCircle, XCircle, AlertTriangle, Clock, RefreshCw, Send } from "lucide-react";
+import { toast } from "sonner";
 
 const TIME_RANGES = [
   { label: "Today", value: "today" },
