@@ -223,6 +223,23 @@ serve(async (req) => {
         return new Response(twimlEmpty, { headers: { "Content-Type": "text/xml" } });
       }
 
+      if (cmd.startsWith("DEPLOY")) {
+        const fnName = trimmed.split(/\s+/).slice(1).join("-").toLowerCase() || "all";
+        const GITHUB_TOKEN = Deno.env.get("GITHUB_TOKEN") || "";
+        if (GITHUB_TOKEN) {
+          fetch("https://api.github.com/repos/mamoo85/m2training/actions/workflows/deploy-supabase.yml/dispatches", {
+            method: "POST",
+            headers: { Authorization: `token ${GITHUB_TOKEN}`, "Content-Type": "application/json", "User-Agent": "DWA-InboundSMS/1.0" },
+            body: JSON.stringify({ ref: "main" }),
+          }).catch(() => {});
+        }
+        await sendSMS(MATT_PERSONAL, TWILIO_PHONE_NUMBER,
+          `🚀 Deploy triggered for: ${fnName}. Check GitHub Actions for status.`,
+          "fixer", false, { bypassQuietHours: true }
+        );
+        return new Response(twimlEmpty, { headers: { "Content-Type": "text/xml" } });
+      }
+
       if (cmd === "FIXED?") {
         const { data } = await sb
           .from("fixer_runs")

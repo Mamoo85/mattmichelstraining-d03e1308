@@ -399,6 +399,13 @@ async function notifyClients(
       html: dwaWrap(innerHtml),
     });
 
+    // E3: Mark first lead delivered for trial clients
+    if (top5.length > 0) {
+      sb.from("trial_signups").update({ first_lead_delivered_at: new Date().toISOString(), sla_status: "green" })
+        .eq("email", client.email).eq("status", "active").is("first_lead_delivered_at", null)
+        .then(() => {}).catch(() => {});
+    }
+
     // CRM webhook fan-out (Salesforce, Jobber, Zapier, n8n, etc.) — fire-and-forget per lead
     if (client.crm_webhook_url && top5.length) {
       for (const lead of top5) {

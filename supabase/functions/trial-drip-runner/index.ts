@@ -1,10 +1,24 @@
-// Trial → Paid Recovery Drip
+// Trial → Paid Recovery Drip + SLA Watchdog
 // Runs daily 9am ET. Sends day 3, 5, 6, 8, 14 touches per active trial.
+// Also checks day-4 SLA: if < MIN_LEADS delivered, auto-extends trial 7 days via Stripe.
 // Uses centralized offers.ts for pricing/copy.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
 import { OFFERS, offerCopy, INTRO_DISCOUNT_PCT, INTRO_DISCOUNT_MONTHS, TRIAL_DAYS } from "../_shared/offers.ts";
+import { sendSMS } from "../_shared/twilio.ts";
+
+const TWILIO_FROM = Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219";
+const STRIPE_SECRET_KEY = Deno.env.get("STRIPE_SECRET_KEY") || "";
+
+// Minimum qualified leads expected by day 4 per product.
+const MIN_LEADS: Record<string, number> = {
+  trade_radar_roofing: 5, trade_radar_hvac: 5, trade_radar_plumbing: 5,
+  trade_radar_electrical: 5, trade_radar_pest_control: 5, trade_radar_gutters: 5,
+  trade_radar_exterior: 5, trade_radar_tree: 5, trade_radar_restoration: 5,
+  trade_radar_demo_junk: 5, trade_radar_foundation: 5,
+  mortgage_radar: 3, techalert: 2, contractor_leads: 2,
+};
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -95,7 +109,7 @@ Deno.serve(async (req) => {
 
   const { data: signups, error } = await sb
     .from("trial_signups")
-    .select("id, email, product_key, trial_started_at, status, converted_at")
+    .select("id, email, phone, product_key, trial_started_at, status, converted_at, stripe_subscription_id, first_lead_delivered_at, compensation_applied, sla_status")
     .in("status", ["active", "expired"])
     .is("converted_at", null);
 
@@ -114,6 +128,45 @@ Deno.serve(async (req) => {
     if (!offer) continue;
     const startMs = new Date(s.trial_started_at).getTime();
     const daysSince = Math.floor((now - startMs) / 86400000);
+
+    // E5: Day-4 SLA check — auto-compensate if no leads delivered yet
+    if (daysSince === 4 && !s.compensation_applied && !s.first_lead_delivered_at && s.status === "active") {
+      const minLeads = MIN_LEADS[s.product_key] ?? 2;
+      // Extend trial 7 days via Stripe if we have a subscription ID
+      if (s.stripe_subscription_id && STRIPE_SECRET_KEY) {
+        try {
+          const newTrialEnd = Math.floor((Date.now() + 7 * 86400 * 1000) / 1000);
+          await fetch(`https://api.stripe.com/v1/subscriptions/${s.stripe_subscription_id}`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${STRIPE_SECRET_KEY}`,
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: `trial_end=${newTrialEnd}`,
+          });
+        } catch (e) {
+          console.error(`[trial-drip-runner] Stripe trial extend failed for ${s.email}:`, e);
+        }
+      }
+      // Apology SMS if client has a phone
+      if (s.phone) {
+        await sendSMS(s.phone, TWILIO_FROM,
+          `Hey — we didn't hit our lead promise this week. Extending your ${offer.displayName} trial 7 more days free, no charge. — Matt (313) 992-1219`,
+          "trial_compensation"
+        ).catch(() => {});
+      }
+      await sb.from("trial_signups").update({
+        compensation_applied: true,
+        compensation_reason: `0 leads delivered by day 4 (minimum: ${minLeads})`,
+        sla_status: "red",
+      }).eq("id", s.id);
+      results.push({ email: s.email, product: s.product_key, action: "compensation_extended" });
+    }
+
+    // Update SLA status (amber if no lead by day 2)
+    if (daysSince >= 2 && !s.first_lead_delivered_at && s.sla_status === "green") {
+      await sb.from("trial_signups").update({ sla_status: "amber" }).eq("id", s.id);
+    }
 
     const due = TOUCHES.find((t) => t.daysAfterStart === daysSince);
     if (!due) continue;
