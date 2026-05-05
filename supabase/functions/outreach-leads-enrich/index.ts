@@ -17,6 +17,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { apolloOrganizationSearch, apolloPeopleSearch } from "../_shared/apollo.ts";
 import { hunterFindEmail } from "../_shared/hunter.ts";
 import { extractContactInfo } from "../_shared/firecrawl.ts";
+import { runEmailWaterfall } from "../_shared/email-waterfall.ts";
 import { isEmailBlocked } from "../_shared/email-suppression.ts";
 import {
   isAggregatorDomain,
