@@ -40,7 +40,7 @@ import { dwaWrap, trialCtaHtml } from "../_shared/dwa-email.ts";
  * by product). All cold-outreach builders in this file should call this.
  */
 function wrapDwaShell(innerHtml: string, opts: { product: string; ctaUrl: string }): string {
-  return dwaWrap(`${innerHtml}\n${trialCtaHtml(opts)}`);
+  return dwaWrap(`${innerHtml}\n${trialCtaHtml({ product: opts.product, url: opts.ctaUrl })}`);
 }
 
 function extractCityState(city: string): [string, string] {
