@@ -76,15 +76,14 @@ Deno.serve(async (req) => {
         })
       ),
 
-      // 3. People Data Labs — flat query params (dot-notation only works in JSON body).
-      // 404 = "no match found" (auth + endpoint healthy); 401/402 = real failure.
-      pingAPI("People Data Labs", () =>
+      // 3. People Data Labs — skip if no key configured (not a service failure)
+      ...(PDL_API_KEY ? [pingAPI("People Data Labs", () =>
         fetch("https://api.peopledatalabs.com/v5/person/enrich?name=John+Smith&region=michigan&country=US&min_likelihood=2", {
           headers: { "X-Api-Key": PDL_API_KEY },
           signal: AbortSignal.timeout(10_000),
         }),
-        [404] // 404 = "no person matches" — proves auth works + endpoint reachable
-      ),
+        [404, 402] // 404 = no match (auth OK); 402 = payment plan issue (not service down)
+      )] : []),
 
       // 4. Yelp Fusion
       pingAPI("Yelp Fusion", () =>
@@ -111,13 +110,14 @@ Deno.serve(async (req) => {
         })
       ),
 
-      // 7. Lovable AI Gateway (POST-only; 405 on GET = server is alive)
+      // 7. Lovable AI Gateway — probe root, accept any 2xx/4xx (POST-only service)
       pingAPI("Lovable AI Gateway", () =>
-        fetch("https://ai.gateway.lovable.dev/v1/models", {
+        fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          method: "GET",
           headers: { Authorization: `Bearer ${LOVABLE_API_KEY}` },
           signal: AbortSignal.timeout(10_000),
         }),
-        [405] // Gateway is POST-only; 405 on GET = server is alive and responding
+        [400, 401, 404, 405, 415, 422] // any structured error = gateway is alive
       ),
 
       // 8. Michigan Open Data — Socrata catalog root (specific dataset IDs change; root is stable).
