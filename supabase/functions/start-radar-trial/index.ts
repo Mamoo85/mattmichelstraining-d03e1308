@@ -253,7 +253,8 @@ Deno.serve(async (req) => {
     TWILIO_FROM,
     `🎯 NEW TRIAL — ${cfg.label}\n${email}${body.business_name ? `\n${body.business_name}` : ""}${body.phone ? `\n${body.phone}` : ""}${founder ? "\n(founder seat)" : ""}\nsrc: ${body.source || "direct"}`,
     "trial_signup_alert",
-    { skipQuietHours: true, skipOptOutCheck: true },
+    false,
+    { bypassQuietHours: true },
   ).catch((e) => console.error("[start-radar-trial] admin SMS failed", e));
 
   return new Response(
