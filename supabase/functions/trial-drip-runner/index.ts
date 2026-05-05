@@ -146,7 +146,7 @@ async function checkAndCompensate(sb: any, t: Trial): Promise<boolean> {
     })
     .eq("id", t.id);
 
-  await dwaEmail(t.email, "We owe you — your trial is extended +7 days", `<p>Hey,</p><p>Heads up: your first 3 trial days delivered fewer leads than we promised (${sumD123} delivered, ${minD3} expected).</p><p>We've automatically extended your trial by 7 more days at no charge. No action needed from you.</p><p>If you want to talk through what happened, reply or text me at (313) 992-1219.</p><p>— Matt</p>`);
+  await dwaEmail({ to: t.email, subject: "We owe you — your trial is extended +7 days", html: `<p>Hey,</p><p>Heads up: your first 3 trial days delivered fewer leads than we promised (${sumD123} delivered, ${minD3} expected).</p><p>We've automatically extended your trial by 7 more days at no charge. No action needed from you.</p><p>If you want to talk through what happened, reply or text me at (313) 992-1219.</p><p>— Matt</p>` });
 
   await sendSMS(ADMIN_PHONE, TWILIO_FROM, `⚠️ Auto-comp: ${t.email} (${t.product_key}) under-delivered (${sumD123}/${minD3} by D3). Trial extended +7d.`, "trial_auto_comp", false, { bypassQuietHours: true });
 
