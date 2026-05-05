@@ -108,11 +108,11 @@ function pitchFor(lead: any): ProductPitch {
         "Perfect for refinance, estate planning, bankruptcy referrals",
         "First-look pricing for legal partners",
       ],
-      ctaText: "See today's signals →",
-      ctaUrl: `${SITE}/mortgage-radar`,
+      ctaText: "Start free 7-day trial →",
+      ctaUrl: `${SITE}/start-trial?product=mortgage_radar`,
       subject: (b, c) => `${c} foreclosure & estate signal feed`,
       intro: (fn, b, c) =>
-        `Hey ${fn},\n\nMortgage Radar flags daily foreclosure, probate, and estate signals across ${c} — a strong referral source for legal practices. Free 7-day trial, no credit card.`,
+        `Hey ${fn},\n\nMortgage Radar flags daily foreclosure, probate, and estate signals across ${c} — a strong referral source for legal practices. Start the free 7-day trial here:`,
     };
   }
   // Fallback: Missed-Call Catch (universal)
