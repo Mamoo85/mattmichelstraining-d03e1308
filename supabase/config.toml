@@ -2227,3 +2227,6 @@ verify_jwt = false
 
 [functions.trial-sla-watchdog]
 verify_jwt = false
+
+[functions.resend-email-by-message]
+verify_jwt = false
