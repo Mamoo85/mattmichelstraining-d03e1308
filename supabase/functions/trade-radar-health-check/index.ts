@@ -187,28 +187,73 @@ async function checkLegalNewsForeclosures(): Promise<{ count: number; sample?: u
   return { count: matches.length, sample: matches[0]?.[0] };
 }
 
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
+const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
+
+const ALL_VERTICALS = [
+  "roofing","hvac","plumbing","electrical","pest_control",
+  "gutters","exterior","tree","restoration","demo_junk","foundation",
+];
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
-  const results: SourceResult[] = await Promise.all([
-    probe("nws_alerts_mi", checkNWS),
-    probe("fema_disasters_mi", checkFEMA),
-    probe("nfip_claims_mi", checkNFIP),
-    probe("hmda_originations_mi", checkHMDADetail),
-    probe("usgs_earthquakes_mi", checkUSGS),
-    probe("bseed_arcgis", checkBSEED),
-    probe("estatesales_net", checkEstateSales),
-    probe("zillow_fsbo", checkZillow),
-    probe("epa_echo", checkEPAECHO),
-    probe("legalnews_foreclosures", checkLegalNewsForeclosures),
+  const [results] = await Promise.all([
+    Promise.all([
+      probe("nws_alerts_mi", checkNWS),
+      probe("fema_disasters_mi", checkFEMA),
+      probe("nfip_claims_mi", checkNFIP),
+      probe("hmda_originations_mi", checkHMDADetail),
+      probe("usgs_earthquakes_mi", checkUSGS),
+      probe("bseed_arcgis", checkBSEED),
+      probe("estatesales_net", checkEstateSales),
+      probe("zillow_fsbo", checkZillow),
+      probe("epa_echo", checkEPAECHO),
+      probe("legalnews_foreclosures", checkLegalNewsForeclosures),
+    ]),
   ]);
 
   const ok = results.filter((r) => r.status === "ok").length;
   const broken = results.filter((r) => r.status === "broken").length;
   const needs_key = results.filter((r) => r.status === "requires_key").length;
 
+  // Zero-leads-for-3-days check: SMS Matt if any vertical has been silent
+  const zeroLeadAlerts: string[] = [];
+  if (SUPABASE_URL && SUPABASE_SERVICE_KEY) {
+    try {
+      const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
+      const { sendSMS, ADMIN_PHONE } = await import("../_shared/twilio.ts");
+      const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+      const threeDaysAgo = new Date(Date.now() - 3 * 86400000).toISOString();
+
+      for (const vertical of ALL_VERTICALS) {
+        const { count } = await sb
+          .from("trade_radar_leads")
+          .select("id", { count: "exact", head: true })
+          .eq("vertical", vertical)
+          .gte("created_at", threeDaysAgo);
+
+        if ((count ?? 0) === 0) {
+          zeroLeadAlerts.push(vertical);
+        }
+      }
+
+      if (zeroLeadAlerts.length > 0) {
+        const msg = `⚠️ Trade Radar: 0 leads in 3+ days for: ${zeroLeadAlerts.join(", ")}. Check ArcGIS endpoints or API keys.`;
+        await sendSMS(ADMIN_PHONE, TWILIO_PHONE_NUMBER, msg, "trade_radar_health").catch(() => {});
+      }
+    } catch (e) {
+      console.error("[health-check] zero-lead check error:", e instanceof Error ? e.message : e);
+    }
+  }
+
   return new Response(
-    JSON.stringify({ summary: { ok, broken, needs_key, total: results.length }, sources: results }, null, 2),
+    JSON.stringify({
+      summary: { ok, broken, needs_key, total: results.length },
+      sources: results,
+      zero_lead_verticals: zeroLeadAlerts,
+    }, null, 2),
     { headers: { ...corsHeaders, "Content-Type": "application/json" } },
   );
 });
