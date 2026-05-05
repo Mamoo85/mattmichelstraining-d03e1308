@@ -294,10 +294,28 @@ async function sendDigestForClient(
       <p style="color:#64748b;font-size:11px;margin-top:16px;">${label} by Detroit Web Agency</p>`;
   }
 
+  // White-label: swap DWA branding for agency brand
+  const fromName = client.is_whitelabel && client.whitelabel_brand
+    ? `${client.whitelabel_brand} Leads`
+    : "Trade Radar · Detroit Web Agency";
+  const replyTo = client.is_whitelabel && client.whitelabel_from_email
+    ? client.whitelabel_from_email
+    : "matt@detroitwebagency.com";
+  const footerBrand = client.is_whitelabel && client.whitelabel_brand
+    ? client.whitelabel_brand
+    : "Detroit Web Agency";
+
+  const finalBody = body.replace(
+    "by Detroit Web Agency",
+    `by ${footerBrand}`,
+  );
+
   const result = await dwaEmail({
     to: client.email,
     subject,
-    html: dwaWrap(body, { ctaText: "Open dashboard →", ctaUrl: dashboardLink }),
+    html: dwaWrap(finalBody, { ctaText: "Open dashboard →", ctaUrl: dashboardLink }),
+    replyTo,
+    fromName,
   });
 
   // Hot lead SMS (≥9)
