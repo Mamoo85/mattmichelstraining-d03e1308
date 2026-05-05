@@ -171,6 +171,44 @@ async function scanCannabisHvac(): Promise<DemandSignal[]> {
   }));
 }
 
+// ── 7. OSHA violations — companies cited recently are growing workforce fast ──
+async function scanOshaViolations(): Promise<DemandSignal[]> {
+  const items = await sonarSearch(
+    `Michigan companies cited by OSHA for safety violations in the last 60 days. Construction, manufacturing, or industrial firms expanding workforce rapidly. Include company name, city, violation type.`,
+    8,
+  );
+  return items.map((it: any) => ({
+    company_name: it.company_name || "Unknown Firm",
+    location: it.location || null,
+    county: it.county || null,
+    vertical: "industrial",
+    signal_type: "osha_violation_expansion",
+    confidence: 7,
+    recommended_pitch: `Company cited for OSHA violation — workforce expansion + compliance pressure. ${it.summary || ""}`.trim(),
+    source_urls: it.source_url ? [it.source_url] : [],
+    predicted_needs: ["safety training", "compliance consulting", "PPE supply", "process audit"],
+  }));
+}
+
+// ── 8. SBA loan recipients — fresh growth capital = active purchasing budget ──
+async function scanSbaLoanRecipients(): Promise<DemandSignal[]> {
+  const items = await sonarSearch(
+    `Michigan small businesses that received SBA loans or SBA EIDL grants in the last 90 days. Construction, retail, restaurant, or trade businesses expanding. Include company name, city, loan amount if available.`,
+    8,
+  );
+  return items.map((it: any) => ({
+    company_name: it.company_name || "Unknown Business",
+    location: it.location || null,
+    county: it.county || null,
+    vertical: "commercial",
+    signal_type: "sba_loan_growth",
+    confidence: 8,
+    recommended_pitch: `SBA loan recipient — actively spending on business expansion. ${it.summary || ""}`.trim(),
+    source_urls: it.source_url ? [it.source_url] : [],
+    predicted_needs: ["equipment", "facility upgrades", "HVAC", "electrical", "web presence"],
+  }));
+}
+
 import { withRunLog } from "../_shared/demand-radar-log.ts";
 
 serve(withRunLog("demand-radar-enhanced-scan", async (req) => {
@@ -184,6 +222,8 @@ serve(withRunLog("demand-radar-enhanced-scan", async (req) => {
     { name: "kitchen_hood_failure", fn: scanRestaurantHoodFailures },
     { name: "multifamily_starts", fn: scanMultiFamilyStarts },
     { name: "cannabis_hvac", fn: scanCannabisHvac },
+    { name: "osha_violation", fn: scanOshaViolations },
+    { name: "sba_loan", fn: scanSbaLoanRecipients },
   ];
 
   const results: Record<string, number> = {};
