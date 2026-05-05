@@ -2230,3 +2230,12 @@ verify_jwt = false
 
 [functions.resend-email-by-message]
 verify_jwt = false
+
+[functions.dwa-product-blast]
+verify_jwt = false
+
+[functions.fielddesk-cold-blast]
+verify_jwt = false
+
+[functions.siteradar-cold-blast]
+verify_jwt = false
