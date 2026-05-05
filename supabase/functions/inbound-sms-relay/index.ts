@@ -181,6 +181,22 @@ serve(async (req) => {
     if (sb && fromNormalized === MATT_PERSONAL) {
       const cmd = trimmed.toUpperCase();
 
+      if (cmd === "HELP" || cmd === "COMMANDS" || cmd === "?") {
+        await sendSMS(
+          MATT_PERSONAL, TWILIO_PHONE_NUMBER,
+          [
+            "DWA SMS commands:",
+            "• FIX — run code-fixer on recent errors",
+            "• ERRORS (or STATUS) — last 5 error logs",
+            "• FIXED? — last fixer run summary",
+            "• DEPLOY <fn-name> — deploy edge fn (e.g. DEPLOY pipeline-health-monitor)",
+            "• HELP — this message",
+          ].join("\n"),
+          "help", false, { bypassQuietHours: true }
+        );
+        return new Response(twimlEmpty, { headers: { "Content-Type": "text/xml" } });
+      }
+
       if (cmd === "FIX") {
         // Trigger watchdog immediately
         fetch(`${SUPABASE_URL}/functions/v1/code-fixer-watchdog`, {
