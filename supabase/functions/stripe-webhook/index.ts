@@ -1265,6 +1265,32 @@ serve(async (req) => {
         await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      // ── TechAlert SMS-only tier ($49/mo) ────────────────────────────────────
+      if (meta.type === "hire_alert_sms_subscription") {
+        const email = meta.email || customerEmail;
+        try {
+          if (email) {
+            await (sb.from as any)("hire_alert_clients").upsert({
+              email,
+              phone: meta.phone || null,
+              city: meta.city || null,
+              state: meta.state || "MI",
+              tier: "sms_only",
+              active: true,
+              stripe_customer_id: session.customer as string || null,
+              stripe_subscription_id: session.subscription as string || null,
+            }, { onConflict: "email" });
+          }
+          await notifyMatt(
+            `📱 TechAlert SMS Tier: ${email}`,
+            `<p>New $49/mo SMS-only TechAlert subscriber. They get text alerts only — no portal access.</p><p>Phone: ${meta.phone || "—"}</p><p>Email: ${email}</p>`
+          ).catch(() => {});
+        } catch (e) {
+          console.error("[WEBHOOK] hire_alert_sms_subscription error:", e);
+        }
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
       if (meta.type === "techalert_pay_per_hire") {
         const email = meta.email || customerEmail;
         try {
