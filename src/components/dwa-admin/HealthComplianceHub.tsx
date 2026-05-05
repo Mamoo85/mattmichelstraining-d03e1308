@@ -16,7 +16,7 @@ const safe = (label: string, node: ReactNode) => (
   </ErrorBoundary>
 );
 
-type Sub = "resilience" | "cron" | "tcpa" | "lara" | "errors";
+type Sub = "resilience" | "cron" | "tcpa" | "lara" | "errors" | "trials";
 
 const TABS: { id: Sub; label: string }[] = [
   { id: "resilience", label: "🛡️ Service Resilience" },
@@ -24,6 +24,7 @@ const TABS: { id: Sub; label: string }[] = [
   { id: "tcpa",       label: "📵 TCPA Compliance" },
   { id: "lara",       label: "🏛️ LARA Health" },
   { id: "errors",     label: "🚨 Error Logs" },
+  { id: "trials",     label: "🎯 Trial Health" },
 ];
 
 export default function HealthComplianceHub() {
