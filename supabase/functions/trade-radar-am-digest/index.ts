@@ -363,7 +363,7 @@ serve(wrapServe("trade-radar-am-digest", async (req) => {
   for (const vertical of verticals) {
     const { data: clients } = await sb
       .from("trade_radar_clients")
-      .select("id, email, contact_name, business_name, phone, zip_codes")
+      .select("id, email, contact_name, business_name, phone, zip_codes, is_whitelabel, whitelabel_brand, whitelabel_logo_url, whitelabel_from_email")
       .eq("vertical", vertical)
       .eq("active", true);
 
