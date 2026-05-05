@@ -26,6 +26,7 @@ import {
   googlePlacesWebsite,
 } from "../_shared/enrichment-pipeline.ts";
 import { canSpend, PROVIDER_COST_ESTIMATES, type Provider } from "../_shared/enrichment-budget.ts";
+import { wrapServe } from "../_shared/telemetry.ts";
 
 interface ProviderTally { ok: number; fail: number; cost_cents: number; capped: number; ms: number; }
 const newTally = (): ProviderTally => ({ ok: 0, fail: 0, cost_cents: 0, capped: 0, ms: 0 });
@@ -175,7 +176,7 @@ async function enrichOne(
   return { status: ownerEmail ? "enriched" : "failed", trace };
 }
 
-serve(async (req) => {
+serve(wrapServe("outreach-leads-enrich", async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
@@ -271,4 +272,4 @@ serve(async (req) => {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
-});
+}));

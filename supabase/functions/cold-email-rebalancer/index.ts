@@ -16,6 +16,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { sendSMS } from "../_shared/twilio.ts";
 import { evaluateBreaker, getActiveBreaker } from "../_shared/enrichment-breaker.ts";
 import { isFrugalMode } from "../_shared/enrichment-budget.ts";
+import { wrapServe } from "../_shared/telemetry.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -100,7 +101,7 @@ async function countSentToday(sb: any): Promise<number> {
   return new Set((data || []).map((r: any) => r.message_id).filter(Boolean)).size;
 }
 
-serve(async (req) => {
+serve(wrapServe("cold-email-rebalancer", async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
   try {
     const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
@@ -296,4 +297,4 @@ serve(async (req) => {
       status: 500, headers: { ...cors, "Content-Type": "application/json" },
     });
   }
-});
+}));
