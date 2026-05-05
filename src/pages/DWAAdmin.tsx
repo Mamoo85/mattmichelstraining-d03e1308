@@ -235,8 +235,9 @@ export default function DWAAdmin() {
 
           {activeTab === "health"          && <Suspense fallback={lazyFallback("health")}><HealthComplianceHub /></Suspense>}
           {activeTab === "enrichment-audit"  && <Suspense fallback={lazyFallback("enrichment audit")}><AdminEnrichmentAudit /></Suspense>}
-          {activeTab === "enrichment-health" && <Suspense fallback={lazyFallback("enrichment health")}><AdminEnrichmentHealth /></Suspense>}
-          {activeTab === "reply-inbox"       && <Suspense fallback={lazyFallback("reply inbox")}><AdminReplyInbox /></Suspense>}
+          {activeTab === "enrichment-health"  && <Suspense fallback={lazyFallback("enrichment health")}><AdminEnrichmentHealth /></Suspense>}
+          {activeTab === "reply-inbox"        && <Suspense fallback={lazyFallback("reply inbox")}><AdminReplyInbox /></Suspense>}
+          {activeTab === "client-attribution" && <Suspense fallback={lazyFallback("client attribution")}><AdminClientAttribution /></Suspense>}
           {activeTab === "buyer-radar-qa"  && <Suspense fallback={lazyFallback("Buyer Radar QA")}><BuyerRadarQAChecklist /></Suspense>}
           {activeTab === "simulation"      && <Suspense fallback={lazyFallback("simulation")}><AdminSimulationSuite /></Suspense>}
           {activeTab === "playbook-hub"  && <Suspense fallback={lazyFallback("playbook")}><PlaybookHub /></Suspense>}
