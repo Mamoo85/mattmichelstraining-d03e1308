@@ -3210,6 +3210,28 @@ serve(async (req) => {
         await markFulfilled(true); return new Response(JSON.stringify({ received: true, fallback: true }), { status: 200 });
       }
 
+      // Annual subscription variants — route to same provisioning as monthly but with billing_cycle=annual
+      if (meta.type && String(meta.type).endsWith("_annual")) {
+        const baseType = String(meta.type).replace(/_annual$/, "");
+        const email = session.customer_email || meta.email;
+        const productLabel = meta.product ? String(meta.product).replace(/_/g, " ") : baseType;
+        try {
+          await supabase.from("manual_onboarding_queue").insert({
+            email, product: meta.product || baseType, source: "annual_checkout",
+            stripe_session_id: session.id, stripe_subscription_id: session.subscription || null,
+            amount_cents: session.amount_total || 0, billing_cycle: "annual",
+            meta: { vertical: meta.vertical || null, contact_name: meta.contact_name || null, business_name: meta.business_name || null },
+          });
+          await notifyMatt(
+            `🎉 ANNUAL SIGNUP — ${productLabel} ($${((session.amount_total || 0) / 100).toFixed(0)}/yr)`,
+            `<p><strong>${email || "no email"}</strong> subscribed to <strong>${productLabel}</strong> annual plan — $${((session.amount_total || 0) / 100).toFixed(0)}/year prepaid.</p><p>That's ${Math.round((session.amount_total || 0) / 100 / 12)} per month equivalent. Session: ${session.id}</p>`,
+          ).catch(() => {});
+        } catch (e) {
+          console.error(`[WEBHOOK] annual ${meta.type} handler error:`, e);
+        }
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true, annual: true }), { status: 200 });
+      }
+
       // Unmatched checkout.session.completed — log and acknowledge
       console.log(`[WEBHOOK] checkout.session.completed with unhandled meta.type: ${meta.type || "none"}`);
       await notifyMatt(
