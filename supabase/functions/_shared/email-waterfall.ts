@@ -555,10 +555,56 @@ export async function runEmailWaterfall(
     } catch { miss("bbb"); }
   }
 
+  // 12-19. Free email-extras: Detroit Open Biz, Google Places, GitHub commits,
+  // DNS-MX pattern, Bing SERP, Reddit mentions, Common Crawl, NPI registry.
+  try {
+    const ex = await import("./email-extras.ts");
+
+    if (input.business_name) {
+      const e = await ex.detroitOpenBizEmail(input.business_name);
+      if (e && looksValidEmail(e)) { await bump(sb, "detroit_open_biz", true); return hit("detroit_open_biz", e, 65); }
+      miss("detroit_open_biz");
+    }
+    if (input.business_name && input.city) {
+      const e = await ex.googlePlacesEmail(input.business_name, input.city);
+      if (e && looksValidEmail(e)) { await bump(sb, "google_places", true); return hit("google_places", e, 55); }
+      miss("google_places");
+    }
+    if (domain) {
+      const e = await ex.githubCommitEmail(domain);
+      if (e && looksValidEmail(e)) { await bump(sb, "github_commits", true); return hit("github_commits", e, 60); }
+      miss("github_commits");
+    }
+    if (domain) {
+      const e = await ex.dnsMxPatternGuess(domain, input.contact_first_name, input.contact_last_name);
+      if (e && looksValidEmail(e)) {
+        // Verify via Snov (cheap, already in budget). Fall through if no token.
+        const ok = await snovVerify(sb, e);
+        if (ok) { await bump(sb, "dns_mx_pattern", true); return hit("dns_mx_pattern", e, 50); }
+      }
+      miss("dns_mx_pattern");
+    }
+    if (domain) {
+      const e = await ex.bingDomainEmail(domain);
+      if (e && looksValidEmail(e)) { await bump(sb, "bing_serp", true); return hit("bing_serp", e, 45); }
+      miss("bing_serp");
+    }
+    if (input.business_name) {
+      const e = await ex.redditMentionEmail(input.business_name);
+      if (e && looksValidEmail(e)) { await bump(sb, "reddit", true); return hit("reddit", e, 40); }
+      miss("reddit");
+    }
+    if (domain) {
+      const e = await ex.commonCrawlEmail(domain);
+      if (e && looksValidEmail(e)) { await bump(sb, "common_crawl", true); return hit("common_crawl", e, 50); }
+      miss("common_crawl");
+    }
+  } catch (e) { miss("email_extras", String(e)); }
+
   return { email: null, source: null, confidence: 0, trace };
 }
 
-export const WATERFALL_PROVIDERS = ["site_scrape", "snov", "apollo", "pattern_verify", "firecrawl_deep", "hunter", "pdl", "pdl_name", "crtsh", "rdap_whois", "opencorporates", "wayback", "bbb"] as const;
+export const WATERFALL_PROVIDERS = ["site_scrape", "snov", "apollo", "pattern_verify", "firecrawl_deep", "hunter", "pdl", "pdl_name", "crtsh", "rdap_whois", "opencorporates", "wayback", "bbb", "detroit_open_biz", "google_places", "github_commits", "dns_mx_pattern", "bing_serp", "reddit", "common_crawl"] as const;
 
 /**
  * runFieldWaterfall — wrapper around runEmailWaterfall that reports which
