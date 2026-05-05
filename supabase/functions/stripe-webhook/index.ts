@@ -3248,19 +3248,34 @@ serve(async (req) => {
         const expMeta = (expiredSession.metadata as Record<string, string>) || {};
         const expEmail = expMeta.email || (expiredSession.customer_details as Record<string, string>)?.email || null;
         const instantProductTypes = ["website_audit", "gbp_post_pack", "competitor_report"];
-        if (expMeta.type && instantProductTypes.includes(expMeta.type) && expEmail) {
+        const dwaProductTypes = [
+          "hire_alert_subscription", "trade_radar_subscription", "mortgage_radar_subscription",
+          "field_service_subscription", "field_crm_subscription", "missed_call_subscription",
+          "site_radar_subscription", "contractor_lead_subscription", "dead_lead_billing_setup",
+        ];
+        const isDwa = expMeta.type && dwaProductTypes.includes(expMeta.type);
+        const isM2 = expMeta.type && instantProductTypes.includes(expMeta.type);
+        if ((isDwa || isM2) && expEmail) {
           const { count: exists } = await sb.from("cart_abandonments")
             .select("*", { count: "exact", head: true })
             .eq("stripe_session_id", expiredSession.id as string);
           if (!exists) {
+            const dwaCartValues: Record<string, number> = {
+              hire_alert_subscription: 149, trade_radar_subscription: 149,
+              mortgage_radar_subscription: 149, field_service_subscription: 199,
+              field_crm_subscription: 199, missed_call_subscription: 99,
+              site_radar_subscription: 49, contractor_lead_subscription: 399,
+              dead_lead_billing_setup: 0,
+            };
             await sb.from("cart_abandonments").insert({
               email: expEmail,
               product_type: expMeta.type,
               stripe_session_id: expiredSession.id as string,
-              cart_value: expMeta.price ? parseFloat(expMeta.price) : 49,
+              cart_value: isDwa ? (dwaCartValues[expMeta.type] || 0) : (expMeta.price ? parseFloat(expMeta.price) : 49),
               metadata: expMeta,
+              brand: isDwa ? "dwa" : "m2",
             });
-            console.log(`[LUKE] Cart abandonment captured: ${expEmail} — ${expMeta.type}`);
+            console.log(`[LUKE] Cart abandonment captured (${isDwa ? "DWA" : "M2"}): ${expEmail} — ${expMeta.type}`);
           }
         }
       } catch (e) { console.error("[LUKE] cart_abandonment capture error:", e); }
