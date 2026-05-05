@@ -1486,8 +1486,9 @@ serve(async (req) => {
             );
           }
           if (meta.phone) {
+            const firstName = ((meta.contact_name as string) || "").trim().split(/\s+/)[0] || "there";
             await sendSMS(meta.phone, "+13139921219",
-              `Mortgage Radar is live. Dashboard: ${dashLink} — Reply STOP to opt out.`,
+              `Hey ${firstName} — it's Matt at DWA. Your Mortgage Radar trial is live. First in-market signals land within 24h. Dashboard: ${dashLink} — Reply STOP to opt out.`,
               "mortgage_radar_welcome");
           }
         } catch (e) {
