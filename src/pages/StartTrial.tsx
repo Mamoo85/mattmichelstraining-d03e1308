@@ -27,6 +27,8 @@ type CanonicalKey =
   | "trade_radar_demo_junk"
   | "trade_radar_foundation";
 
+type StartTrialProductKey = CanonicalKey | "trade_radar";
+
 interface ProductDef {
   fn: string;
   label: string;
@@ -40,7 +42,7 @@ interface ProductDef {
 }
 
 const PRODUCTS: Record<CanonicalKey, ProductDef> = {
-  mortgage_radar:       { fn: "create-mortgage-radar-checkout", label: "Mortgage Radar", trial: true, externalLandingUrl: "/mortgage-radar" },
+  mortgage_radar:       { fn: "start-radar-trial", label: "Mortgage Radar", trial: true, needsPhone: true },
   field_desk:           { fn: "create-field-crm-checkout", label: "FieldDesk", trial: true, needsPhone: true },
   site_radar:           { fn: "create-site-radar-checkout", label: "SiteRadar", trial: true, needsWebsite: true },
   missed_call_catch:    { fn: "create-missed-call-subscription", label: "Missed-Call Catch", trial: true, needsPhone: true },
@@ -55,11 +57,19 @@ const PRODUCTS: Record<CanonicalKey, ProductDef> = {
   trade_radar_electrical:   { fn: "create-trade-radar-checkout", label: "Electrical Radar",   trial: true, vertical: "electrical", needsPhone: true },
   trade_radar_pest_control: { fn: "create-trade-radar-checkout", label: "Pest Control Radar", trial: true, vertical: "pest_control", needsPhone: true },
   trade_radar_gutters:      { fn: "create-trade-radar-checkout", label: "Gutters Radar",      trial: true, vertical: "gutters", needsPhone: true },
-  trade_radar_exterior:     { fn: "create-trade-radar-checkout", label: "Exterior Radar",     trial: true, vertical: "painting", needsPhone: true },
-  trade_radar_tree:         { fn: "create-trade-radar-checkout", label: "Tree Radar",         trial: true, vertical: "painting", needsPhone: true },
-  trade_radar_restoration:  { fn: "create-trade-radar-checkout", label: "Restoration Radar",  trial: true, vertical: "painting", needsPhone: true },
-  trade_radar_demo_junk:    { fn: "create-trade-radar-checkout", label: "Demo & Junk Radar",  trial: true, vertical: "painting", needsPhone: true },
-  trade_radar_foundation:   { fn: "create-trade-radar-checkout", label: "Foundation Radar",   trial: true, vertical: "painting", needsPhone: true },
+  trade_radar_exterior:     { fn: "create-trade-radar-checkout", label: "Exterior Radar",     trial: true, vertical: "exterior", needsPhone: true },
+  trade_radar_tree:         { fn: "create-trade-radar-checkout", label: "Tree Radar",         trial: true, vertical: "tree", needsPhone: true },
+  trade_radar_restoration:  { fn: "create-trade-radar-checkout", label: "Restoration Radar",  trial: true, vertical: "restoration", needsPhone: true },
+  trade_radar_demo_junk:    { fn: "create-trade-radar-checkout", label: "Demo & Junk Radar",  trial: true, vertical: "demo_junk", needsPhone: true },
+  trade_radar_foundation:   { fn: "create-trade-radar-checkout", label: "Foundation Radar",   trial: true, vertical: "foundation", needsPhone: true },
+};
+
+const START_RADAR_TRIAL_PRODUCTS: Partial<Record<CanonicalKey, string>> = {
+  mortgage_radar: "mortgage_radar",
+};
+
+const GENERIC_PRODUCT_DEFAULTS: Record<string, CanonicalKey> = {
+  trade_radar: "trade_radar_roofing",
 };
 
 // Alias map → canonical key. Lowercase keys, hyphens & underscores normalized at lookup.
@@ -117,10 +127,10 @@ const ALIASES: Record<string, CanonicalKey> = {
   trade_radar_foundation: "trade_radar_foundation", foundation_radar: "trade_radar_foundation", foundation: "trade_radar_foundation",
 };
 
-function normalizeKey(raw: string): CanonicalKey | null {
+function normalizeKey(raw: string): StartTrialProductKey | null {
   if (!raw) return null;
   const k = raw.trim().toLowerCase().replace(/-/g, "_");
-  return ALIASES[k] ?? null;
+  return ALIASES[k] ?? GENERIC_PRODUCT_DEFAULTS[k] ?? null;
 }
 
 export default function StartTrial() {
