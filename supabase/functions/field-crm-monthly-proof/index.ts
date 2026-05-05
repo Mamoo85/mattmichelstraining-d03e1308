@@ -88,16 +88,7 @@ ${totalJobs === 0 ? `<p style="color:#fbbf24;background:#2d1f00;padding:12px;bor
 <p style="font-size:13px;color:#64748b;margin-top:24px">— Matt Michels · Detroit Web Agency</p>
 </div>`;
 
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        from: "Matt @ Detroit Web Agency <matt@detroitwebagent.com>",
-        to: [client.email],
-        subject: `Your FieldDesk Report — ${monthLabel}`,
-        html,
-      }),
-    });
+    const res = await dwaEmail({ to: client.email, subject: `Your FieldDesk Report — ${monthLabel}`, html });
     if (res.ok) sent++;
   }
 
