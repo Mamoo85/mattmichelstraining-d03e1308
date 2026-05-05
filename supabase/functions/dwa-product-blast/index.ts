@@ -91,7 +91,7 @@ function pitchFor(lead: any): ProductPitch {
         "Sold to one contractor only — no shared leads",
       ],
       ctaText: "See open leads →",
-      ctaUrl: `${SITE}/contractor-leads`,
+      ctaUrl: `${SITE}/start-trial?product=contractor_leads`,
       badge: "EXCLUSIVE",
       subject: (b, c) => `Verified ${c} project lead — exclusive`,
       intro: (fn, b, c) =>

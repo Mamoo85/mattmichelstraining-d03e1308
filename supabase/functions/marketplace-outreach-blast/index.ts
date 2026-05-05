@@ -60,7 +60,7 @@ function buildEmail(prospect: any, lead: any): { subject: string; html: string }
       "Exclusive — sold to ONE loan officer only",
     ],
     ctaText: "Claim This Lead →",
-    ctaUrl: "https://detroitwebagent.com/mortgage-radar",
+    ctaUrl: "https://detroitwebagent.com/start-trial?product=mortgage_radar",
     badge: "EXCLUSIVE · FIRST LOOK",
     blurContact: true,
   });
