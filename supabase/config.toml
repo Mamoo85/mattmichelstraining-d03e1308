@@ -2251,3 +2251,12 @@ verify_jwt = false
 
 [functions.email-deliverability-check]
 verify_jwt = false
+
+[functions.field-crm-monthly-proof]
+verify_jwt = false
+
+[functions.site-radar-monthly-proof]
+verify_jwt = false
+
+[functions.missed-call-monthly-proof]
+verify_jwt = false
