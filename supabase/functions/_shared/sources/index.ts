@@ -621,6 +621,10 @@ export async function dispatchFetch(sourceId: string, params: Record<string, str
     case "state_corp_filings_rss": return fetchStateCorpRss(params.feed_url ?? "");
     case "sec_edgar_ein": return fetchSecEdgar(params.ein ?? "");
     case "opencorporates_free": return fetchOpenCorporates(params.q ?? "", params.jurisdiction ?? "us");
+    case "state_sos_lookup": return fetchStateSosLookup(params.state ?? "MI", params.business_name ?? "");
+    case "wayback_contact": return fetchWaybackContact(params.website ?? "");
+    case "bbb_profile": return fetchBbbProfile(params.business_name ?? "", params.state ?? "MI");
+    case "yelp_business": return fetchYelpBusiness(params.slug ?? "");
     default: return [];
   }
 }
