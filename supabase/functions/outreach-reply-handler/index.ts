@@ -70,7 +70,7 @@ Rules:
       200,
     );
 
-    if (channel === "email" && RESEND_API_KEY && replyTo) {
+    if (channel === "email" && replyTo) {
       const html = `<div style="font-family:sans-serif;max-width:600px;color:#1a1a1a;line-height:1.7;font-size:15px">
 <p>Hi ${name},</p>
 <p>${draft.trim().replace(/\n\n/g, "</p><p>").replace(/\n/g, " ")}</p>
@@ -78,16 +78,7 @@ Rules:
 <p style="margin-top:20px">Talk soon,<br><strong>Matt Michels</strong><br>Detroit Web Agency<br>(313) 992-1219</p>
 </div>`;
 
-      await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          from: "Matt at Detroit Web Agency <matt@detroitwebagent.com>",
-          to: [replyTo],
-          subject: `Re: Let's connect`,
-          html,
-        }),
-      });
+      await dwaEmail({ to: replyTo, subject: `Re: Let's connect`, html });
     }
   } catch (e) {
     console.error("[reply-handler] auto-reply error:", e instanceof Error ? e.message : e);
