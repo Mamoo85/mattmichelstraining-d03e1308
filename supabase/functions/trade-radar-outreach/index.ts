@@ -114,16 +114,11 @@ Reply STOP to unsubscribe from future messages.
 </p>
 </div>`;
 
-          const res = await fetch("https://api.resend.com/emails", {
-            method: "POST",
-            headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-            body: JSON.stringify({
-              from: FROM_EMAIL,
-              to: [lead.owner_email],
-              reply_to: client.email || "matt@detroitwebagent.com",
-              subject,
-              html,
-            }),
+          const res = await dwaEmail({
+            to: lead.owner_email,
+            subject,
+            html,
+            replyTo: client.email || "matt@detroitwebagent.com",
           });
 
           if (res.ok) {
