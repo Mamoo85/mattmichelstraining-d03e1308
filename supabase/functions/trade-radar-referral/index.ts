@@ -111,22 +111,16 @@ Deno.serve(async (req) => {
       .eq("id", referrer.id);
 
     // Notify referrer
-    const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-    if (RESEND_API_KEY && referrer.email) {
-      await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          from: "Matt @ Detroit Web Agency <matt@detroitwebagent.com>",
-          to: [referrer.email],
-          subject: "🎉 Your referral just signed up — 30 days free added!",
-          html: `<div style="font-family:sans-serif;max-width:500px;background:#0a1628;color:#e2e8f0;padding:32px;border-radius:12px">
+    if (referrer.email) {
+      await dwaEmail({
+        to: referrer.email,
+        subject: "🎉 Your referral just signed up — 30 days free added!",
+        html: `<div style="font-family:sans-serif;max-width:500px;background:#0a1628;color:#e2e8f0;padding:32px;border-radius:12px">
 <h2 style="color:#00d4ff;margin:0 0 16px">Your referral converted!</h2>
 <p>Someone you referred just signed up for Trade Radar. We've added <strong style="color:#34d399">30 free days</strong> to your account — you now have <strong>${newCredits} days</strong> of referral credits banked.</p>
 <p style="color:#94a3b8;font-size:14px">Keep sharing your link to earn more free months: <a href="${SITE_URL}/trade-radar?ref=${code}" style="color:#00d4ff">${SITE_URL}/trade-radar?ref=${code}</a></p>
 <p style="color:#64748b;font-size:13px;margin-top:24px">— Matt Michels · Detroit Web Agency</p>
 </div>`,
-        }),
       }).catch(() => {});
     }
 
