@@ -3278,7 +3278,7 @@ serve(async (req) => {
         const email = session.customer_email || meta.email;
         const productLabel = meta.product ? String(meta.product).replace(/_/g, " ") : baseType;
         try {
-          await supabase.from("manual_onboarding_queue").insert({
+          await sb.from("manual_onboarding_queue").insert({
             email, product: meta.product || baseType, source: "annual_checkout",
             stripe_session_id: session.id, stripe_subscription_id: session.subscription || null,
             amount_cents: session.amount_total || 0, billing_cycle: "annual",
