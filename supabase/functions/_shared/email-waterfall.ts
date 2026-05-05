@@ -444,6 +444,21 @@ export async function runEmailWaterfall(
     miss("pattern_verify");
   }
 
+  // 4.5 firecrawl deep — multi-subpage scrape with mailto + deobfuscation.
+  // Free relative to Firecrawl budget; runs before paid Hunter/PDL tiers.
+  if (url) {
+    try {
+      const { deepExtractContact } = await import("./firecrawl.ts");
+      const { result: r, ms } = await timeStage(() => deepExtractContact(url, { maxPages: 5 }));
+      if (r?.email && looksValidEmail(r.email)) {
+        await bump(sb, "firecrawl_deep", true, { latency_ms: ms });
+        return hit("firecrawl_deep", r.email, 60);
+      }
+      await bump(sb, "firecrawl_deep", false, { latency_ms: ms });
+      miss("firecrawl_deep");
+    } catch { miss("firecrawl_deep"); }
+  }
+
   // 5. hunter
   if (domain && !(await isProviderRateLimited(sb, "hunter"))) {
     const { result: r, ms } = await timeStage(() => hunterDomainSearch(sb, domain));
