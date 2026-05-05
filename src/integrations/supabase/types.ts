@@ -22678,113 +22678,6 @@ export type Database = {
         }
         Relationships: []
       }
-      trial_concierge_log: {
-        Row: {
-          body_preview: string | null
-          channel: string
-          created_at: string
-          customer_email: string
-          delivery_status: string | null
-          id: string
-          meta: Json | null
-          touch_type: string
-          trial_sla_id: string | null
-        }
-        Insert: {
-          body_preview?: string | null
-          channel: string
-          created_at?: string
-          customer_email: string
-          delivery_status?: string | null
-          id?: string
-          meta?: Json | null
-          touch_type: string
-          trial_sla_id?: string | null
-        }
-        Update: {
-          body_preview?: string | null
-          channel?: string
-          created_at?: string
-          customer_email?: string
-          delivery_status?: string | null
-          id?: string
-          meta?: Json | null
-          touch_type?: string
-          trial_sla_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "trial_concierge_log_trial_sla_id_fkey"
-            columns: ["trial_sla_id"]
-            isOneToOne: false
-            referencedRelation: "trial_delivery_sla"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      trial_delivery_sla: {
-        Row: {
-          auto_extended: boolean | null
-          created_at: string
-          customer_email: string
-          day2_pulse_sent_at: string | null
-          day5_pulse_sent_at: string | null
-          day6_pulse_sent_at: string | null
-          id: string
-          last_check_at: string | null
-          last_lead_at: string | null
-          leads_delivered: number | null
-          notes: string | null
-          product_slug: string
-          promised_leads_per_week: number | null
-          sla_status: string | null
-          trial_ends_at: string
-          trial_started_at: string
-          updated_at: string
-          welcome_pulse_sent_at: string | null
-        }
-        Insert: {
-          auto_extended?: boolean | null
-          created_at?: string
-          customer_email: string
-          day2_pulse_sent_at?: string | null
-          day5_pulse_sent_at?: string | null
-          day6_pulse_sent_at?: string | null
-          id?: string
-          last_check_at?: string | null
-          last_lead_at?: string | null
-          leads_delivered?: number | null
-          notes?: string | null
-          product_slug: string
-          promised_leads_per_week?: number | null
-          sla_status?: string | null
-          trial_ends_at: string
-          trial_started_at?: string
-          updated_at?: string
-          welcome_pulse_sent_at?: string | null
-        }
-        Update: {
-          auto_extended?: boolean | null
-          created_at?: string
-          customer_email?: string
-          day2_pulse_sent_at?: string | null
-          day5_pulse_sent_at?: string | null
-          day6_pulse_sent_at?: string | null
-          id?: string
-          last_check_at?: string | null
-          last_lead_at?: string | null
-          leads_delivered?: number | null
-          notes?: string | null
-          product_slug?: string
-          promised_leads_per_week?: number | null
-          sla_status?: string | null
-          trial_ends_at?: string
-          trial_started_at?: string
-          updated_at?: string
-          welcome_pulse_sent_at?: string | null
-        }
-        Relationships: []
-      }
       trial_drip_state: {
         Row: {
           channel: string
@@ -22883,12 +22776,24 @@ export type Database = {
       trial_signups: {
         Row: {
           cancelled_at: string | null
+          compensation_amount_cents: number | null
+          compensation_applied_at: string | null
           converted_at: string | null
           created_at: string
           email: string
+          first_lead_delivered_at: string | null
           id: string
+          last_concierge_touch_at: string | null
+          lead_count_d1: number
+          lead_count_d2: number
+          lead_count_d3: number
+          lead_count_d4: number
+          lead_count_d5: number
+          lead_count_d6: number
+          lead_count_d7: number
           phone: string | null
           product_key: string
+          sla_status: string
           status: string
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
@@ -22900,12 +22805,24 @@ export type Database = {
         }
         Insert: {
           cancelled_at?: string | null
+          compensation_amount_cents?: number | null
+          compensation_applied_at?: string | null
           converted_at?: string | null
           created_at?: string
           email: string
+          first_lead_delivered_at?: string | null
           id?: string
+          last_concierge_touch_at?: string | null
+          lead_count_d1?: number
+          lead_count_d2?: number
+          lead_count_d3?: number
+          lead_count_d4?: number
+          lead_count_d5?: number
+          lead_count_d6?: number
+          lead_count_d7?: number
           phone?: string | null
           product_key: string
+          sla_status?: string
           status?: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
@@ -22917,12 +22834,24 @@ export type Database = {
         }
         Update: {
           cancelled_at?: string | null
+          compensation_amount_cents?: number | null
+          compensation_applied_at?: string | null
           converted_at?: string | null
           created_at?: string
           email?: string
+          first_lead_delivered_at?: string | null
           id?: string
+          last_concierge_touch_at?: string | null
+          lead_count_d1?: number
+          lead_count_d2?: number
+          lead_count_d3?: number
+          lead_count_d4?: number
+          lead_count_d5?: number
+          lead_count_d6?: number
+          lead_count_d7?: number
           phone?: string | null
           product_key?: string
+          sla_status?: string
           status?: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
