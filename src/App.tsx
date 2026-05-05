@@ -871,6 +871,8 @@ const App = () => (
                     <Route path="/my-mortgage-radar" element={<MyMortgageRadar />} />
                     <Route path="/my-missed-call" element={<MyMissedCall />} />
                     <Route path="/my-site-radar" element={<MySiteRadar />} />
+                    <Route path="/my-dead-lead-reactivation" element={<MyDeadLeadReactivation />} />
+                    <Route path="/matt-sales-pipeline" element={<MattSalesPipeline />} />
                     <Route path="/site-radar" element={<SiteRadarLanding />} />
                     <Route path="/bundle-revenue-suite" element={<BundleRevenueSuite />} />
                     <Route path="/buyer-radar" element={<BuyerRadar />} />
