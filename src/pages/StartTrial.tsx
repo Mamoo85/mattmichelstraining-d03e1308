@@ -199,6 +199,7 @@ export default function StartTrial() {
     const base: Record<string, unknown> = {
       email,
       name: "",
+      contact_name: businessName,
       phone,
       city: "",
       website,
@@ -212,6 +213,11 @@ export default function StartTrial() {
       base.vertical = config!.vertical;
       base.tcpa_consent = true;
     }
+    const radarTrialProduct = canonical ? START_RADAR_TRIAL_PRODUCTS[canonical] : undefined;
+    if (radarTrialProduct) {
+      base.product = radarTrialProduct;
+      base.source = params.get("utm_source") || "start-trial";
+    }
     return base;
   }
 
@@ -224,6 +230,10 @@ export default function StartTrial() {
         body: buildPayload(),
       });
       if (fnError) throw fnError;
+      if (data?.magic_url) {
+        window.location.href = data.magic_url;
+        return;
+      }
       const url = data?.url || data?.setup_url || data?.pilot_url;
       if (url) {
         window.location.href = url;
