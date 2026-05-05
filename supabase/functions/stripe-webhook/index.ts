@@ -3217,6 +3217,29 @@ serve(async (req) => {
         await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      // ── Trade Radar API tier ($49/mo developer access) ─────────────────────
+      if (meta.type === "trade_radar_api_subscription") {
+        const email = (meta.email as string) || (session.customer_email as string);
+        const vertical = (meta.vertical as string) || "roofing";
+        try {
+          if (email) {
+            const newApiKey = crypto.randomUUID();
+            await sb.from("trade_radar_clients").update({
+              api_tier: "developer",
+              api_key: newApiKey,
+            }).eq("email", email).eq("vertical", vertical);
+
+            await notifyMatt(
+              `🔌 Trade Radar API: ${email}`,
+              `<p>New $49/mo API subscriber for ${vertical}. API key generated: <code>${newApiKey}</code></p>`
+            ).catch(() => {});
+          }
+        } catch (e) {
+          console.error("[WEBHOOK] trade_radar_api_subscription error:", e);
+        }
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
       // Generic fallback for any *_subscription type without a dedicated handler.
       // Sends welcome email, alerts Matt, marks fulfilled so reconcile doesn't retry.
       // Wave/long-tail products land here — better than silent acknowledge.
