@@ -360,6 +360,19 @@ Deno.serve(async (req) => {
     const html = dwaShell(buildBody(firstName));
     const text = buildPlainText(firstName);
 
+    // Canonical email_send_log entry so deliverability/bounce/complaint tracking flows
+    // through the standard pipeline instead of bypassing it.
+    const messageId = `pitch-djconley-v2-${crypto.randomUUID()}`;
+    try {
+      await sb.from("email_send_log").insert({
+        message_id: messageId,
+        template_name: "djconley_pitch_v2",
+        recipient_email: recipientEmail,
+        status: "pending",
+        metadata: { triggered_by: triggeredBy, force, cold: false, product: "DJ Conley Premium" },
+      });
+    } catch (_) { /* best-effort */ }
+
     const resendRes = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
@@ -371,10 +384,25 @@ Deno.serve(async (req) => {
         subject: `${firstName} — the whole thing, top to bottom (D.J. Conley)`,
         html,
         text,
+        headers: { "X-Entity-Ref-ID": messageId },
+        tags: [
+          { name: "template", value: "djconley_pitch_v2" },
+          { name: "channel", value: "outreach_pitch" },
+        ],
       }),
     });
 
     const resendBody = await resendRes.json().catch(() => ({}));
+    try {
+      await sb.from("email_send_log").insert({
+        message_id: messageId,
+        template_name: "djconley_pitch_v2",
+        recipient_email: recipientEmail,
+        status: resendRes.ok ? "sent" : "failed",
+        error_message: resendRes.ok ? null : JSON.stringify(resendBody).slice(0, 500),
+        metadata: { resend_id: resendBody?.id, status_code: resendRes.status, triggered_by: triggeredBy, force },
+      });
+    } catch (_) { /* best-effort */ }
     if (!resendRes.ok) {
       console.error("[send-djconley-pitch-v2] Resend error", resendBody);
       await logPitchAudit(sb, {
