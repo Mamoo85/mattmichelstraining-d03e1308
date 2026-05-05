@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import SEOHead from "@/components/layout/SEOHead";
+import LeadGuaranteeBar from "@/components/shared/LeadGuaranteeBar";
 import {
   Phone, CheckCircle2, XCircle, Loader2, MapPin,
   Wrench, TrendingUp, RefreshCw, AlertTriangle, Star,
