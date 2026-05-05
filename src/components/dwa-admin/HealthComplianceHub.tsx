@@ -57,6 +57,7 @@ export default function HealthComplianceHub() {
       {sub === "tcpa"   && safe("TCPA", <AdminComplianceMonitor />)}
       {sub === "lara"   && safe("LARA", <AdminLaraHealth />)}
       {sub === "errors" && safe("error logs", <AdminErrorLogs />)}
+      {sub === "trials" && safe("trial health", <AdminTrialHealth />)}
     </div>
   );
 }
