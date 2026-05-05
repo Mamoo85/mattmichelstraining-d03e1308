@@ -27,7 +27,6 @@ type CanonicalKey =
   | "trade_radar_demo_junk"
   | "trade_radar_foundation";
 
-type StartTrialProductKey = CanonicalKey | "trade_radar";
 type ResolvedProductKey = CanonicalKey;
 
 interface ProductDef {
