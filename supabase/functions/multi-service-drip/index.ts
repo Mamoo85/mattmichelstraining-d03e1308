@@ -2,6 +2,8 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { generateText } from "../_shared/ai.ts";
 import { dwaColdEmail } from "../_shared/dwa-email.ts";
+import { dashboardPreviewHtml, pickProductForIndustry, missedRevenue } from "../_shared/dashboard-preview.ts";
+import { teaserCardHtml } from "../_shared/teaser-card.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
