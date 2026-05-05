@@ -71,16 +71,44 @@ serve(async (req) => {
 
     const newClients = (newTechAlertClients as number) + (newContractorClients as number) + (newMortgageClients as number);
 
+    // Enrichment health: hit rate + Trade Radar outreach stats
+    const [enrichmentTotal, enrichmentWithEmail, tradeLeadsTotal, tradeLeadsOutreached, positiveReplies, newTrials, trialsConverted] = await Promise.all([
+      (sb.from as any)("outreach_leads").select("id", { count: "exact", head: true })
+        .not("enriched_at", "is", null).gte("enriched_at", weekAgo).then((r: any) => r.count || 0),
+      (sb.from as any)("outreach_leads").select("id", { count: "exact", head: true })
+        .not("owner_email", "is", null).gte("enriched_at", weekAgo).then((r: any) => r.count || 0),
+      (sb.from as any)("trade_radar_leads").select("id", { count: "exact", head: true })
+        .gte("created_at", weekAgo).then((r: any) => r.count || 0),
+      (sb.from as any)("trade_radar_leads").select("id", { count: "exact", head: true })
+        .not("outreach_sent_at", "is", null).gte("outreach_sent_at", weekAgo).then((r: any) => r.count || 0),
+      (sb.from as any)("outreach_replies").select("id", { count: "exact", head: true })
+        .eq("sentiment", "positive").gte("created_at", weekAgo).then((r: any) => r.count || 0),
+      (sb.from as any)("hire_alert_clients").select("id", { count: "exact", head: true })
+        .eq("trial_status", "active").gte("created_at", weekAgo).then((r: any) => r.count || 0),
+      (sb.from as any)("hire_alert_clients").select("id", { count: "exact", head: true })
+        .eq("trial_status", "converted").gte("updated_at", weekAgo).then((r: any) => r.count || 0),
+    ]);
+
+    const hitRate = (enrichmentTotal as number) > 0
+      ? Math.round(((enrichmentWithEmail as number) / (enrichmentTotal as number)) * 100)
+      : 0;
+
     const msg = [
       `📊 DWA Weekly — ${new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" })}`,
+      ``,
+      `Enrichment: ${enrichmentWithEmail}/${enrichmentTotal} emails found (${hitRate}% hit rate)`,
       ``,
       `TechAlert pipeline:`,
       ` Found ${techAlertProspects} prospects`,
       ` Enriched ${techAlertEnriched} | Emailed ${techAlertEmailed}`,
       ` Replies: ${techAlertReplied}`,
+      ` Trials: ${newTrials} new | ${trialsConverted} converted`,
+      ``,
+      `Trade Radar: ${tradeLeadsTotal} new leads | ${tradeLeadsOutreached} auto-emailed`,
       ``,
       `Outreach (fax/postcard/sms):`,
       ` Sent ${outreachSent} | Follow-ups ${outreachFollowups}`,
+      ` Positive replies: ${positiveReplies}`,
       ``,
       `Dead Lead Drip:`,
       ` D1 texts ${deadLeadD1} | Replies ${deadLeadReplies}`,
