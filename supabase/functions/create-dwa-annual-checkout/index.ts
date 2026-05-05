@@ -81,8 +81,8 @@ Deno.serve(async (req) => {
       phone: phone || "",
       billing_cycle: "annual",
     },
-    success_url: `${Deno.env.get("SITE_URL") || "https://detroitwebagent.com"}${config.success_path}?session_id={CHECKOUT_SESSION_ID}&annual=true`,
-    cancel_url: `${Deno.env.get("SITE_URL") || "https://detroitwebagent.com"}${config.success_path}`,
+    success_url: `${Deno.env.get("SITE_URL") || "https://detroitwebagent.com"}${productKey === "trade_radar" && vertical ? `/my-${String(vertical).replace(/_/g, "-")}-radar` : config.success_path}?session_id={CHECKOUT_SESSION_ID}&annual=true`,
+    cancel_url: `${Deno.env.get("SITE_URL") || "https://detroitwebagent.com"}${productKey === "trade_radar" && vertical ? `/my-${String(vertical).replace(/_/g, "-")}-radar` : config.success_path}`,
     allow_promotion_codes: true,
   });
 
