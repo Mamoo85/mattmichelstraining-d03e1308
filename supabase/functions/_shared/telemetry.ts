@@ -80,6 +80,22 @@ export async function withTelemetry<T>(
   }
 }
 
+// Convenience: wrap a Deno serve handler so every non-preflight invocation
+// is recorded in system_telemetry. Errors still propagate to the runtime.
+export function wrapServe(
+  jobName: string,
+  handler: (req: Request) => Promise<Response> | Response,
+  opts: TelemetryOptions = {}
+): (req: Request) => Promise<Response> {
+  return async (req: Request) => {
+    if (req.method === "OPTIONS") return await handler(req);
+    return await withTelemetry(jobName, async () => await handler(req), {
+      ...opts,
+      metadata: { method: req.method, ...(opts.metadata ?? {}) },
+    });
+  };
+}
+
 function safeResult(r: unknown): Record<string, unknown> | null {
   try {
     if (r == null) return null;
