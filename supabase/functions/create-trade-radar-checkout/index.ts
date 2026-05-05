@@ -24,6 +24,26 @@ const VERTICAL_PRICES: Record<string, { cents: number; label: string }> = {
   pest_control: { cents: 9900,  label: "Pest Control Radar" },
   gutters:      { cents: 12900, label: "Gutters Radar" },
   painting:     { cents: 14900, label: "Painting Radar" },
+  exterior:     { cents: 14900, label: "Exterior Radar" },
+  tree:         { cents: 14900, label: "Tree Service Radar" },
+  restoration:  { cents: 24900, label: "Restoration Radar" },
+  demo_junk:    { cents: 14900, label: "Demo & Junk Radar" },
+  foundation:   { cents: 19900, label: "Foundation Radar" },
+};
+
+const PRODUCT_KEYS: Record<string, string> = {
+  roofing: "trade_radar_roofing",
+  hvac: "trade_radar_hvac",
+  plumbing: "trade_radar_plumbing",
+  electrical: "trade_radar_electrical",
+  pest_control: "trade_radar_pest_control",
+  gutters: "trade_radar_gutters",
+  painting: "trade_radar_exterior",
+  exterior: "trade_radar_exterior",
+  tree: "trade_radar_tree",
+  restoration: "trade_radar_restoration",
+  demo_junk: "trade_radar_demo_junk",
+  foundation: "trade_radar_foundation",
 };
 
 function isValidEmail(s: string): boolean {
@@ -61,7 +81,9 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ error: "tcpa_consent required" }), { status: 400, headers: corsHeaders });
   }
 
-  const priceConfig = VERTICAL_PRICES[vertical as string];
+  const normalizedVertical = vertical as string;
+  const priceConfig = VERTICAL_PRICES[normalizedVertical];
+  const productKey = PRODUCT_KEYS[normalizedVertical] || `trade_radar_${normalizedVertical}`;
   const origin = req.headers.get("origin") || "https://detroitwebagent.com";
   const stripe = new Stripe(STRIPE_SECRET_KEY, { apiVersion: "2023-10-16" });
 
@@ -105,7 +127,7 @@ Deno.serve(async (req) => {
           currency: "usd",
           product_data: {
             name: priceConfig.label,
-            description: `Exclusive homeowner lead signals for ${(vertical as string).replace(/_/g, " ")} contractors in your ZIPs. Delivered daily.`,
+            description: `Exclusive homeowner lead signals for ${normalizedVertical.replace(/_/g, " ")} contractors in your ZIPs. Delivered daily.`,
           },
           unit_amount: priceConfig.cents,
           recurring: { interval: "month" },
@@ -117,7 +139,7 @@ Deno.serve(async (req) => {
         trial_settings: { end_behavior: { missing_payment_method: "cancel" } },
         metadata: {
           type: "trade_radar_subscription",
-          vertical: vertical as string,
+          vertical: normalizedVertical,
           email: email as string,
           contact_name: (contact_name as string) ?? "",
           business_name: (business_name as string) ?? "",
@@ -127,8 +149,8 @@ Deno.serve(async (req) => {
           tcpa_consent_at: new Date().toISOString(),
         },
       },
-      success_url: `${origin}/${(vertical as string).replace(/_/g, "-")}-radar?success=1&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/${(vertical as string).replace(/_/g, "-")}-radar`,
+      success_url: `${origin}/start-trial?product=${productKey}&checkout=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/start-trial?product=${productKey}`,
     });
 
     return new Response(JSON.stringify({ url: session.url, session_id: session.id }), {
