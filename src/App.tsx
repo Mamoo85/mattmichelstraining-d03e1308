@@ -448,6 +448,8 @@ const DJConleyDemo1 = lazyRetry(() => import("./pages/DJConleyDemo1"));
 const DJConleyDemo2 = lazyRetry(() => import("./pages/DJConleyDemo2"));
 const DemoTemplate = lazyRetry(() => import("./pages/DemoTemplate"));
 const CommunicationsCenter = lazyRetry(() => import("./pages/CommunicationsCenter"));
+const MattSalesPipeline = lazyRetry(() => import("./pages/MattSalesPipeline"));
+const MyDeadLeadReactivation = lazyRetry(() => import("./pages/MyDeadLeadReactivation"));
 
 const persister = createSyncStoragePersister({
   storage: safeLocalStorage,
