@@ -115,7 +115,7 @@ Quick stat: the average contractor misses 3-5 calls a week while on a job. That'
 
 My system texts the missed caller back within 30 seconds — automatically. $99/mo. Takes 10 minutes to set up.
 
-Get started in 60 seconds → https://www.detroitwebagent.com/missed-call-catch
+Get started in 60 seconds → https://detroitwebagent.com/start-trial?product=missed_call_catch
 Or reply / text (313) 992-1219.
 
 — Matt`,
@@ -132,7 +132,7 @@ A plumber I set this up for in Warren picked up an extra $4,400 job last month b
 
 $99/mo. I set it up. You just keep working.
 
-Set it up in 60 seconds → https://www.detroitwebagent.com/missed-call-catch
+Set it up in 60 seconds → https://detroitwebagent.com/start-trial?product=missed_call_catch
 Or reply / text (313) 992-1219.
 
 — Matt, Grosse Pointe`,
@@ -145,7 +145,7 @@ Or reply / text (313) 992-1219.
 
 Last one. $99/mo automatic missed-call text back, set up in 60 seconds:
 
-→ https://www.detroitwebagent.com/missed-call-catch
+→ https://detroitwebagent.com/start-trial?product=missed_call_catch
 
 Or text me at (313) 992-1219.
 
