@@ -25,6 +25,11 @@ const PRODUCT_TABLES = [
   { table: "homeowner_campaign_clients", name: "New Homeowner", price: 59, lastField: "last_sent_at" },
   { table: "gbp_saas_clients", name: "GBP Auto-Poster", price: 49, lastField: "last_posted_at" },
   { table: "blog_post_clients", name: "Blog Writer", price: 39, lastField: "last_sent_at" },
+  // High-value DWA products — monitored separately below with custom thresholds
+  { table: "hire_alert_clients", name: "TechAlert", price: 149, lastField: "last_digest_at" },
+  { table: "mortgage_radar_clients", name: "Mortgage Radar", price: 149, lastField: "last_digest_sent_at" },
+  { table: "field_crm_clients", name: "FieldDesk", price: 199, lastField: "last_job_dispatched_at" },
+  { table: "missed_call_clients", name: "Missed-Call Catch", price: 99, lastField: "last_catch_at" },
 ];
 
 async function sendShieldEmail(subject: string, html: string) {
