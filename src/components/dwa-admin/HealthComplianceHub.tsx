@@ -8,6 +8,7 @@ const AdminCronStatus = lazy(() => import("@/components/dwa-admin/AdminCronStatu
 const AdminComplianceMonitor = lazy(() => import("@/components/dwa-admin/AdminComplianceMonitor"));
 const AdminLaraHealth = lazy(() => import("@/components/admin/AdminLaraHealth"));
 const AdminErrorLogs = lazy(() => import("@/components/dwa-admin/AdminErrorLogs"));
+const AdminTrialHealth = lazy(() => import("@/components/dwa-admin/AdminTrialHealth"));
 
 const safe = (label: string, node: ReactNode) => (
   <ErrorBoundary>
