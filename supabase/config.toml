@@ -1603,6 +1603,9 @@ verify_jwt = false
 [functions.create-hire-alert-checkout]
 verify_jwt = false
 
+[functions.create-techalert-sms-checkout]
+verify_jwt = false
+
 [functions.hire-alert-scanner]
 verify_jwt = false
 
