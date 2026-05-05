@@ -5892,6 +5892,36 @@ export type Database = {
         }
         Relationships: []
       }
+      deployment_drift_log: {
+        Row: {
+          checked_at: string
+          deployed_hash: string | null
+          drift_detected: boolean
+          function_name: string
+          id: string
+          notes: string | null
+          repo_hash: string | null
+        }
+        Insert: {
+          checked_at?: string
+          deployed_hash?: string | null
+          drift_detected?: boolean
+          function_name: string
+          id?: string
+          notes?: string | null
+          repo_hash?: string | null
+        }
+        Update: {
+          checked_at?: string
+          deployed_hash?: string | null
+          drift_detected?: boolean
+          function_name?: string
+          id?: string
+          notes?: string | null
+          repo_hash?: string | null
+        }
+        Relationships: []
+      }
       direct_mail_clients: {
         Row: {
           active: boolean | null
@@ -20558,6 +20588,51 @@ export type Database = {
         }
         Relationships: []
       }
+      source_run_results: {
+        Row: {
+          attempted: boolean
+          created_at: string
+          duration_ms: number | null
+          error_message: string | null
+          id: string
+          rows_fetched: number | null
+          rows_inserted: number | null
+          rows_quarantined: number | null
+          run_meta: Json | null
+          scanner_function: string | null
+          source_name: string
+          vertical: string | null
+        }
+        Insert: {
+          attempted?: boolean
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          id?: string
+          rows_fetched?: number | null
+          rows_inserted?: number | null
+          rows_quarantined?: number | null
+          run_meta?: Json | null
+          scanner_function?: string | null
+          source_name: string
+          vertical?: string | null
+        }
+        Update: {
+          attempted?: boolean
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          id?: string
+          rows_fetched?: number | null
+          rows_inserted?: number | null
+          rows_quarantined?: number | null
+          run_meta?: Json | null
+          scanner_function?: string | null
+          source_name?: string
+          vertical?: string | null
+        }
+        Relationships: []
+      }
       speed_lead_clients: {
         Row: {
           active: boolean | null
@@ -22555,6 +22630,113 @@ export type Database = {
           trial_started_at?: string
           utm_content?: string | null
           utm_medium?: string | null
+        }
+        Relationships: []
+      }
+      trial_concierge_log: {
+        Row: {
+          body_preview: string | null
+          channel: string
+          created_at: string
+          customer_email: string
+          delivery_status: string | null
+          id: string
+          meta: Json | null
+          touch_type: string
+          trial_sla_id: string | null
+        }
+        Insert: {
+          body_preview?: string | null
+          channel: string
+          created_at?: string
+          customer_email: string
+          delivery_status?: string | null
+          id?: string
+          meta?: Json | null
+          touch_type: string
+          trial_sla_id?: string | null
+        }
+        Update: {
+          body_preview?: string | null
+          channel?: string
+          created_at?: string
+          customer_email?: string
+          delivery_status?: string | null
+          id?: string
+          meta?: Json | null
+          touch_type?: string
+          trial_sla_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trial_concierge_log_trial_sla_id_fkey"
+            columns: ["trial_sla_id"]
+            isOneToOne: false
+            referencedRelation: "trial_delivery_sla"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trial_delivery_sla: {
+        Row: {
+          auto_extended: boolean | null
+          created_at: string
+          customer_email: string
+          day2_pulse_sent_at: string | null
+          day5_pulse_sent_at: string | null
+          day6_pulse_sent_at: string | null
+          id: string
+          last_check_at: string | null
+          last_lead_at: string | null
+          leads_delivered: number | null
+          notes: string | null
+          product_slug: string
+          promised_leads_per_week: number | null
+          sla_status: string | null
+          trial_ends_at: string
+          trial_started_at: string
+          updated_at: string
+          welcome_pulse_sent_at: string | null
+        }
+        Insert: {
+          auto_extended?: boolean | null
+          created_at?: string
+          customer_email: string
+          day2_pulse_sent_at?: string | null
+          day5_pulse_sent_at?: string | null
+          day6_pulse_sent_at?: string | null
+          id?: string
+          last_check_at?: string | null
+          last_lead_at?: string | null
+          leads_delivered?: number | null
+          notes?: string | null
+          product_slug: string
+          promised_leads_per_week?: number | null
+          sla_status?: string | null
+          trial_ends_at: string
+          trial_started_at?: string
+          updated_at?: string
+          welcome_pulse_sent_at?: string | null
+        }
+        Update: {
+          auto_extended?: boolean | null
+          created_at?: string
+          customer_email?: string
+          day2_pulse_sent_at?: string | null
+          day5_pulse_sent_at?: string | null
+          day6_pulse_sent_at?: string | null
+          id?: string
+          last_check_at?: string | null
+          last_lead_at?: string | null
+          leads_delivered?: number | null
+          notes?: string | null
+          product_slug?: string
+          promised_leads_per_week?: number | null
+          sla_status?: string | null
+          trial_ends_at?: string
+          trial_started_at?: string
+          updated_at?: string
+          welcome_pulse_sent_at?: string | null
         }
         Relationships: []
       }
