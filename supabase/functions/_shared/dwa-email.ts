@@ -17,12 +17,21 @@ export interface DwaEmailOpts {
   subject: string;
   html: string;
   bcc?: string;
+  /** Override sender display name (for white-label agency digests). */
+  fromName?: string;
+  /** Override reply-to address (for white-label agency digests). */
+  replyTo?: string;
   /** When set, mirrors a successful send onto the HubSpot contact's timeline. */
   hubspotContactId?: string;
 }
 
 export async function dwaEmail(opts: DwaEmailOpts): Promise<{ ok: boolean; error?: string }> {
   if (!RESEND_API_KEY) return { ok: false, error: "RESEND_API_KEY missing" };
+  const fromAddress = "matt@detroitwebagency.com";
+  const fromField = opts.fromName
+    ? `${opts.fromName} <${fromAddress}>`
+    : DWA_FROM;
+  const replyToField = opts.replyTo || DWA_REPLY_TO;
   try {
     const r = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -31,8 +40,8 @@ export async function dwaEmail(opts: DwaEmailOpts): Promise<{ ok: boolean; error
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: DWA_FROM,
-        reply_to: DWA_REPLY_TO,
+        from: fromField,
+        reply_to: replyToField,
         to: Array.isArray(opts.to) ? opts.to : [opts.to],
         bcc: [opts.bcc || DWA_BCC],
         subject: opts.subject,
