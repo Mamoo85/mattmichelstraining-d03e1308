@@ -7,6 +7,9 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { dwaEmail, dwaWrap } from "../_shared/dwa-email.ts";
 import { isFounder } from "../_shared/founder-seats.ts";
+import { sendSMS, ADMIN_PHONE } from "../_shared/twilio.ts";
+
+const TWILIO_FROM = Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
