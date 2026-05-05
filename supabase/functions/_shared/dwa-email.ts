@@ -124,41 +124,9 @@ export function isHiringProduct(product: string): boolean {
 }
 
 /**
- * Canonical cold-email sender. Wraps body in DWA branded shell, auto-injects
- * the correct trial CTA (7 or 30 days), and logs to email_send_log.
+ * Canonical cold-email sender. Wraps body in DWA branded shell, gates the
+ * trial CTA via TRIAL_ELIGIBLE_PRODUCTS, and logs to email_send_log.
  */
-export interface DwaColdEmailOpts {
-  to: string;
-  subject: string;
-  bodyHtml: string;       // inner copy (greeting + pitch). NO trial CTA — added automatically.
-  product: string;        // e.g. "TechAlert", "Mortgage Radar", "Contractor Leads"
-  ctaUrl: string;         // landing page / trial start URL
-  templateName: string;   // for email_send_log audit
-  bcc?: string;
-}
-
-export async function dwaColdEmail(
-  opts: DwaColdEmailOpts,
-  sb?: { from: (t: string) => any },
-): Promise<{ ok: boolean; error?: string; messageId?: string }> {
-  const inner = `${opts.bodyHtml}\n${trialCtaHtml({ product: opts.product, url: opts.ctaUrl })}`;
-  const html = dwaWrap(inner);
-  const messageId = `cold-${opts.templateName}-${crypto.randomUUID()}`;
-
-  if (sb) {
-    try {
-      await sb.from("email_send_log").insert({
-        message_id: messageId,
-        template_name: opts.templateName,
-        recipient_email: opts.to,
-        status: "pending",
-        metadata: { product: opts.product, cold: true },
-      });
-    } catch { /* best-effort */ }
-  }
-
-  const r = await dwaEmail({ to: opts.to, subject: opts.subject, html, bcc: opts.bcc });
-
 export interface DwaColdEmailOpts {
   to: string;
   subject: string;
