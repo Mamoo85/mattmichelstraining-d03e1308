@@ -912,9 +912,9 @@ Single test: `npx vitest run src/path/to/file.test.ts`
 
 ## Codebase Scale
 
-- **328** frontend pages in `src/pages/`
-- **859** Supabase Edge Functions in `supabase/functions/`
-- **707** migration files
+- **382** frontend pages in `src/pages/`
+- **918** Supabase Edge Functions in `supabase/functions/`
+- **791** migration files
 - **33** AI agents in `.claude/agents/`
 - **67+** product lines across 5 waves + DWA suite
 
@@ -961,12 +961,16 @@ Two purposes in one codebase:
   - `apollo.ts` — `apolloPeopleSearch`, `apolloOrganizationSearch`, `apolloOrganizationEnrich` (canonical; use this, not raw fetch)
   - `firecrawl.ts` — `firecrawlScrape`, `extractFaxNumber`, `extractPhoneNumbers`, `extractContactInfo`
   - `hunter.ts` — `hunterFindEmail(domain)`, `hunterVerifyEmail(email)`
-  - `email-waterfall.ts` — multi-source email enrichment waterfall (Apollo → Hunter → Firecrawl)
+  - `email-waterfall.ts` — multi-source email enrichment waterfall (site scrape → Snov → Apollo → pattern verify → Hunter → PDL → free sources Tiers 7–89); `runEmailWaterfall()` + `runFieldWaterfall()`
+  - `email-extras-4.ts` — Tiers 40–64: gov registries (IRS BMF/ProPublica, FCC ULS, NPI, NSF, NIH, Grants.gov, EPA FRS, FDA, USAspending, USPTO), well-known web files (impressum, security.txt, humans.txt, JSON-LD, og:email, RSS, vCard, robots.txt), trade directories (Manta, Superpages, MerchantCircle, Houzz, ThomasNet)
+  - `email-extras-5.ts` — Tiers 65–89: home service dirs (Angi, HomeAdvisor, Thumbtack, Porch, Nextdoor, BBB, Chamber), B2B dirs (ZoomInfo free, US Chamber, D&B, CorporationWiki, OpenGovUS, GovWin, SAM.gov), Michigan (LARA, business entity), local dirs (YellowBook, LocalEdge, Cylex, Brownbook, Tupalo, eZlocal, Cybo, TradeFord, ExportersIndia)
   - `circuit-breaker.ts`, `fetch-with-retry.ts`, `retry-policy.ts` — resilience utilities
   - `enrichment-audit.ts` — enrichment cost + result logging
+  - `enrichment-breaker.ts`, `enrichment-budget.ts`, `enrichment-pipeline.ts` — enrichment circuit breaker, per-lead cost gate, full Apollo→Hunter→Snov→Firecrawl pipeline orchestrator
   - `anti-hallucination.ts`, `llm-contradiction-check.ts`, `event-corroboration.ts` — LLM output validation
   - `cron-window.ts` — time-window helpers for ET-aligned cron guards
   - `outreach-blocklist.ts` — suppression list checks before any outreach
+  - `email-suppression.ts` — email-level suppression list check (complements outreach-blocklist)
   - `safe-parse.ts`, `strict-json.ts` — JSON parsing with graceful fallbacks
   - `stealth-scrape.ts`, `scraper.ts`, `scrape-fallback.ts` — browser/HTTP scraping stack
   - `flight-risk.ts`, `intent-score.ts`, `recency-decay.ts` — lead scoring signals
@@ -984,6 +988,33 @@ Two purposes in one codebase:
   - `sanitize-candidate.ts` — candidate data normalizer
   - `signup-classifier.ts` — signup intent classification
   - `dead-lead-emails.ts` — dead lead re-engagement email copy
+  - `crm-webhook.ts` — outbound CRM push (HubSpot contact upsert, HMAC-signed; Salesforce/Jobber/Zapier compatible)
+  - `budget-gate.ts` — per-function spend gate (abort run if budget exceeded)
+  - `compliance-waterfall.ts` — TCPA/FCRA compliance check chain
+  - `demand-radar-log.ts` — structured logging for Demand Radar scanner runs
+  - `dlq.ts` — dead-letter queue helpers for failed function invocations
+  - `domain-resolver.ts` — domain → company name resolution
+  - `dwa-email.ts` — DWA-branded Resend email sender (wrapper around Resend for DWA HTML templates)
+  - `engine-log.ts` — scanner engine run logging
+  - `error-log.ts` — writes structured errors to `error_logs` table (feeds fixer watchdog)
+  - `founder-seats.ts` — founder seat quota enforcement
+  - `intake-throttle.ts` — rate-limiter for scanner ingestion (prevents DB flood on bulk runs)
+  - `kpi-math.ts` — KPI calculation helpers (conversion rates, velocity, averages)
+  - `license-waterfall.ts` — LARA license lookup chain
+  - `llm-cache.ts` — prompt/response cache to avoid duplicate LLM calls within a run
+  - `market-waterfall.ts` — multi-source market signal aggregation chain
+  - `marketing-kill-switch.ts` — global outreach kill switch (checks DB flag before any send)
+  - `offer-ad-prompt.ts`, `offer-url.ts`, `offers.ts` — offer copy generation and URL helpers
+  - `provenance.ts` — tracks data source provenance on every lead record
+  - `request-id.ts` — generates/propagates X-Request-ID headers for tracing
+  - `signal-waterfall.ts` — multi-source signal aggregation pipeline
+  - `source-probes.ts` + `sources/` dir — source health-check registry (`registry.json`, `dispatchFetch`)
+  - `tech-session.ts` — TechAlert session state helpers
+  - `telemetry.ts` — lightweight event telemetry (fire-and-forget)
+  - `trade-canonical.ts` — canonical trade vertical name normalization (hvac → HVAC etc.)
+  - `cheap-extract.ts` — lightweight LLM extraction without full Opus call
+  - `address-validation.ts` — address validation wrapper
+  - `alert-rules.ts` — configurable alert thresholds per product
 - Checkout functions named `create-<product>-checkout/index.ts`
 - Stripe: always inline `price_data`, always set `metadata.type` for webhook routing
 - **SMS**: ALWAYS `import { sendSMS } from "../_shared/twilio.ts"` — never define a local sendSMS. The shared version checks `sms_opt_outs` (TCPA).
