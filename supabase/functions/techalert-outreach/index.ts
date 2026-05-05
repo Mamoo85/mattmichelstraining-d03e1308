@@ -6,11 +6,12 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { dwaColdEmail } from "../_shared/dwa-email.ts";
+import { teaserCardHtml } from "../_shared/teaser-card.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
-const DAILY_CAP = 50; // cold emails per day (TechAlert)
+const DAILY_CAP = 200; // cold emails per day (TechAlert) — raised from 50
 const MIN_SCORE = 3;  // skip low-signal prospects
 
 const corsHeaders = {
@@ -18,28 +19,37 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-function buildEmailBody(ownerName: string | null, companyName: string, role: string, isBoiler: boolean): string {
+function buildEmailBody(ownerName: string | null, companyName: string, role: string, isBoiler: boolean, score: number): string {
   const greeting = ownerName ? ownerName.split(" ")[0] : "there";
   const tradeLabel = isBoiler ? "boiler/stationary engineer" : role.replace(/_/g, " ");
   const jobType = isBoiler ? "licensed boiler operators" : `qualified ${tradeLabel}s`;
 
+  const card = teaserCardHtml({
+    badge: "TALENT RADAR · LIVE SIGNAL",
+    headline: `${companyName} is hiring — ${jobType} are entering the market this week`,
+    scoreLabel: `Score ${score}/10 · Active hiring signal`,
+    bullets: [
+      `Live job postings detected on Indeed/ZipRecruiter for ${tradeLabel}`,
+      "Same-day candidate alerts the moment a licensed tech goes on the market",
+      "Direct contact info — call them before your competitor sees the resume",
+    ],
+    ctaText: "See sample alerts →",
+    ctaUrl: "https://detroitwebagent.com/talent-radar?utm_source=cold&utm_campaign=techalert",
+    blurContact: true,
+  });
+
   return `
 <p style="color:#e6f1ff;">Hi ${greeting},</p>
-<p style="color:#e6f1ff;">I noticed <strong>${companyName}</strong> is actively hiring ${jobType} — the market's tight right now and the best candidates get picked up fast.</p>
-<p style="color:#e6f1ff;">I run <strong>TechAlert</strong>, a Detroit-area hiring intelligence service. We monitor job boards, licensing databases, and contractor networks 24/7 and alert you the moment a qualified candidate becomes available in your area.</p>
-<p style="color:#e6f1ff;"><strong>What you get:</strong></p>
-<ul style="margin:8px 0;padding-left:20px;color:#e6f1ff;">
-  <li>Same-day alerts when a licensed ${tradeLabel} enters the job market near you</li>
-  <li>Candidate profile: license status, years of experience, trade specialties</li>
-  <li>Direct contact info so you reach them before anyone else</li>
-</ul>
-<p style="color:#e6f1ff;">Most clients fill their open role within 3 weeks. Want me to send over a sample alert for ${companyName}'s area?</p>
+<p style="color:#e6f1ff;">I noticed <strong>${companyName}</strong> is actively hiring ${jobType} — Detroit's labor market is the tightest it's been in 5 years and the best candidates get picked up in 48 hours.</p>
+<p style="color:#e6f1ff;">I run <strong>Talent Radar</strong> (formerly TechAlert). We monitor job boards, MI licensing databases, and contractor networks 24/7 and ping you the moment a qualified candidate enters the market within 30 miles of you.</p>
+${card}
+<p style="color:#e6f1ff;">Most clients fill their open role within 3 weeks. Want me to send a free sample alert for ${companyName}'s area?</p>
 <p style="color:#e6f1ff;">Just reply or call/text (313) 992-1219.</p>
 <p style="color:#e6f1ff;">— Matt Michels<br>Detroit Web Agency</p>
 `;
 }
 
-async function sendEmail(sb: ReturnType<typeof createClient>, to: string, ownerName: string | null, companyName: string, role: string, isBoiler: boolean) {
+async function sendEmail(sb: ReturnType<typeof createClient>, to: string, ownerName: string | null, companyName: string, role: string, isBoiler: boolean, score: number) {
   const firstName = ownerName ? ownerName.split(" ")[0] : null;
   const subject = firstName
     ? `${firstName} — still hiring ${role.replace(/_/g, " ")}s?`
@@ -48,8 +58,8 @@ async function sendEmail(sb: ReturnType<typeof createClient>, to: string, ownerN
   const r = await dwaColdEmail({
     to,
     subject,
-    bodyHtml: buildEmailBody(ownerName, companyName, role, isBoiler),
-    product: "TechAlert", // hiring → 30-day trial automatically
+    bodyHtml: buildEmailBody(ownerName, companyName, role, isBoiler, score),
+    product: "TechAlert",
     ctaUrl: "https://detroitwebagent.com/talent-radar?utm_source=cold&utm_campaign=techalert",
     templateName: "techalert_cold_d0",
   }, sb);
@@ -99,7 +109,7 @@ serve(async (req) => {
     }
 
     for (const t of targets) {
-      const result = await sendEmail(sb, t.owner_email, t.owner_name, t.company_name, t.role, t.is_boiler);
+      const result = await sendEmail(sb, t.owner_email, t.owner_name, t.company_name, t.role, t.is_boiler, t.score ?? 5);
 
       if (!result.ok) {
         console.error(`[outreach] ${t.company_name}: ${result.err}`);
