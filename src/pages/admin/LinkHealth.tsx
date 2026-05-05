@@ -73,7 +73,7 @@ export default function LinkHealth() {
         <div>
           <h1 className="text-2xl font-bold">Link Health</h1>
           <p className="text-sm text-muted-foreground">
-            Latest HEAD-check per outbound URL across products and channels.
+            Content-aware conversion check — fails on "Unknown product", invalid trial text, 4xx/5xx, or non-200 redirects.
           </p>
         </div>
         <div className="flex gap-2">
