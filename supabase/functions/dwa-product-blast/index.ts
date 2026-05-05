@@ -16,7 +16,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { dwaEmail } from "../_shared/dwa-email.ts";
 import { teaserCardHtml } from "../_shared/teaser-card.ts";
 import { isBlocked } from "../_shared/outreach-blocklist.ts";
-import { isMarketingKilled } from "../_shared/marketing-kill-switch.ts";
+import { isMarketingBlocked } from "../_shared/marketing-kill-switch.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
