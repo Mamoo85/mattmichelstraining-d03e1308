@@ -2142,12 +2142,15 @@ serve(async (req: Request) => {
     }
 
     try {
-      if (client.notify_email && client.owner_email) {
+      // sms_only tier: skip email digest, SMS only when candidates found
+      const isSmsOnly = (client as any).tier === "sms_only";
+
+      if (!isSmsOnly && client.notify_email && client.owner_email) {
         await sendAlertEmail(client, actionableCandidates, dateStr);
         alertsSent++;
       }
 
-      if (client.notify_sms && client.owner_phone && clientHotCandidates.length) {
+      if ((isSmsOnly || client.notify_sms) && client.owner_phone && clientHotCandidates.length) {
         const top = clientHotCandidates[0];
         const dashLink = client.dashboard_token ? ` View all: detroitwebagent.com/talent-radar/dashboard?token=${client.dashboard_token}` : "";
         const availLabel = top.availability_score >= 8 ? "High Availability" : top.availability_score >= 5 ? "Possible Availability" : "Monitor";
