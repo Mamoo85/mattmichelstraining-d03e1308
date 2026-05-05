@@ -57,6 +57,7 @@ const AdminSuppressionLists = lazy(() => import("@/components/dwa-admin/AdminSup
 const AdminSystemAudit = lazy(() => import("@/components/dwa-admin/AdminSystemAudit"));
 const AdminEnrichmentHealth = lazy(() => import("@/components/admin/AdminEnrichmentHealth"));
 const AdminReplyInbox = lazy(() => import("@/components/admin/AdminReplyInbox"));
+const AdminClientAttribution = lazy(() => import("@/components/admin/AdminClientAttribution"));
 
 type Tab =
   | "ai-command"
