@@ -650,6 +650,44 @@ export async function runEmailWaterfall(
     }
   } catch (e) { miss("email_extras_5", String(e)); }
 
+  // 90–109. Gap-fill providers: Firecrawl structured, Apollo org enrich, pattern verify,
+  // nitter, Google cache, Bing domain scrape, Hunter domain-first, Bing HTML scrape,
+  // Yelp HTML scrape, Google Maps multi-page, MX existence probe, WHOIS RDAP,
+  // Firecrawl /about+team, Google Places phone pattern, state SOS, contractor license,
+  // PageSpeed DOM, Internet Archive, Apollo people decision-maker, smart MX pattern
+  try {
+    const ex6 = await import("./email-extras-6.ts");
+    const tries6: [string, number, () => Promise<string | null>][] = [
+      ["firecrawl_contact",          75, () => domain ? ex6.firecrawlContactEmail(domain) : Promise.resolve(null)],
+      ["apollo_org_enrich",          70, () => domain ? ex6.apolloOrgEnrichEmail(domain) : Promise.resolve(null)],
+      ["email_permutations_verified",65, () => domain ? ex6.emailPermutationsVerified(domain, undefined, undefined) : Promise.resolve(null)],
+      ["nitter_bio",                 45, () => input.business_name ? ex6.nitterBioEmail(input.business_name) : Promise.resolve(null)],
+      ["google_cache_contact",       50, () => domain ? ex6.googleCacheContactEmail(domain) : Promise.resolve(null)],
+      ["bing_domain_scrape",         55, () => domain ? ex6.bingDomainEmailScrape(domain) : Promise.resolve(null)],
+      ["hunter_domain_first",        70, () => domain ? ex6.hunterDomainFirstEmail(domain) : Promise.resolve(null)],
+      ["bing_html_scrape",           50, () => input.business_name ? ex6.bingHtmlScrapeEmail(input.business_name, input.city ?? undefined) : Promise.resolve(null)],
+      ["yelp_html_scrape",           50, () => input.business_name ? ex6.yelpHtmlScrapeEmail(input.business_name, input.city ?? undefined) : Promise.resolve(null)],
+      ["google_maps_multipage",      65, () => input.business_name ? ex6.googleMapsWebsiteMultipage(input.business_name, input.city ?? undefined) : Promise.resolve(null)],
+      ["mx_existence_pattern",       60, () => domain ? ex6.mxExistencePatternEmail(domain) : Promise.resolve(null)],
+      ["whois_rdap",                 55, () => domain ? ex6.whoisRegistrantEmail(domain) : Promise.resolve(null)],
+      ["firecrawl_about_team",       70, () => domain ? ex6.firecrawlAboutTeamEmail(domain) : Promise.resolve(null)],
+      ["google_places_phone_pattern",55, () => input.business_name ? ex6.googlePlacesPhonePatternEmail(input.business_name, input.city ?? undefined) : Promise.resolve(null)],
+      ["state_sos",                  60, () => input.business_name ? ex6.stateSosEmail(input.business_name, input.state ?? undefined) : Promise.resolve(null)],
+      ["contractors_state_license",  65, () => input.business_name ? ex6.contractorsStateLicenseEmail(input.business_name, input.state ?? undefined) : Promise.resolve(null)],
+      ["pagespeed_dom",              45, () => domain ? ex6.pagespeedDomEmail(domain) : Promise.resolve(null)],
+      ["internet_archive_contact",   55, () => domain ? ex6.internetArchiveContactPagesEmail(domain) : Promise.resolve(null)],
+      ["apollo_people_decision",     70, () => domain ? ex6.apolloPeopleDecisionMakerEmail(domain, input.business_name ?? undefined) : Promise.resolve(null)],
+      ["email_pattern_mx_smart",     65, () => domain ? ex6.emailPatternMxSmartEmail(domain, undefined, undefined) : Promise.resolve(null)],
+    ];
+    for (const [name, conf, fn] of tries6) {
+      try {
+        const e = await fn();
+        if (e && looksValidEmail(e)) { await bump(sb, name, true); return hit(name, e, conf); }
+        miss(name);
+      } catch (err) { miss(name, String(err)); }
+    }
+  } catch (e) { miss("email_extras_6", String(e)); }
+
   return { email: null, source: null, confidence: 0, trace };
 }
 
@@ -677,6 +715,14 @@ export const WATERFALL_PROVIDERS = [
   "michigan_lara", "michigan_business",
   "yellowbook", "localedge", "cylex", "brownbook", "tupalo",
   "ezlocal", "cybo", "tradeford", "exporters_india",
+  // Tiers 90–109 (email-extras-6)
+  "firecrawl_contact", "apollo_org_enrich", "email_permutations_verified",
+  "nitter_bio", "google_cache_contact", "bing_domain_scrape",
+  "hunter_domain_first", "bing_html_scrape", "yelp_html_scrape",
+  "google_maps_multipage", "mx_existence_pattern", "whois_rdap",
+  "firecrawl_about_team", "google_places_phone_pattern",
+  "state_sos", "contractors_state_license", "pagespeed_dom",
+  "internet_archive_contact", "apollo_people_decision", "email_pattern_mx_smart",
 ] as const;
 
 /**
