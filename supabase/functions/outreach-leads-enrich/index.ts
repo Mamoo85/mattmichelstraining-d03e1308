@@ -159,6 +159,24 @@ async function enrichOne(
     }
   }
 
+  // ── Tier 5 (FREE+CHEAP fallback): Snov / pattern_verify / PDL / crtsh / rdap / opencorporates
+  // Runs the full shared waterfall to squeeze the long-tail of unenriched leads.
+  if (!ownerEmail) {
+    const t = Date.now();
+    try {
+      const r = await runEmailWaterfall(sb, {
+        website,
+        business_name: lead.business_name,
+        city: lead.city,
+        state: "MI",
+      });
+      if (r.email) ownerEmail = r.email;
+      trace.push({ name: `waterfall:${r.source || "miss"}`, ms: Date.now() - t, got_email: !!r.email });
+    } catch (_) {
+      trace.push({ name: "waterfall_err", ms: Date.now() - t, got_email: false });
+    }
+  }
+
   // Reject if email is suppressed/duplicate before we save it
   if (ownerEmail && await isEmailBlocked(sb, ownerEmail)) {
     ownerEmail = null;
