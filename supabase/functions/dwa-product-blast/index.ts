@@ -126,7 +126,7 @@ function pitchFor(lead: any): ProductPitch {
       "Most shops recover 3–5 jobs per month",
     ],
     ctaText: "Start free trial →",
-    ctaUrl: `${SITE}/start-trial?product=missed_call`,
+    ctaUrl: `${SITE}/start-trial?product=missed_call_catch`,
     badge: "TRIAL · 50% off 3 mo",
     subject: (b, c) => `${b} — every missed call is money on the table`,
     intro: (fn, b, c) =>
