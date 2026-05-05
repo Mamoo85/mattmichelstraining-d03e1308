@@ -12,7 +12,40 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ---
 
 ## Current Session State
-*Last updated: 2026-05-04 (Phase 43)*
+*Last updated: 2026-05-05 (Phase 44)*
+
+### Phase 44 — Trial Delivery Guarantee + Enrichment Fixes + HubSpot CRM Bridge + Email Waterfall Expansion COMPLETE ✅
+
+**Trial Delivery Guarantee (E1–E10):**
+- `supabase/migrations/20260506000000_trial_signups_delivery_columns.sql` — adds `first_lead_delivered_at`, `sla_status` (green/amber/red), `compensation_applied`, `compensation_reason` to `trial_signups`
+- `trial-drip-runner` edge function — drip sequence for trial clients; writes `first_lead_delivered_at` on first qualified lead delivery
+- Auto-compensation: amber = no lead by day 2, red = no lead by day 4 → auto-extends trial
+- `mortgage-radar-scanner` updated to write `first_lead_delivered_at` on lead delivery (commit `e74733c`)
+- `techalert-weekly-digest` proof-of-work zero-signal fallback (E10) — sends non-empty digest even on 0-signal weeks (commit `45c0a9e`)
+
+**Enrichment: Hunter key fix + Snov.io added:**
+- `_shared/hunter.ts` — fixed API key header bug (Hunter requires lowercase `api-key` header)
+- `outreach-leads-enrich/index.ts` — Snov.io added as tertiary fallback in Apollo → Hunter → Snov → Firecrawl chain (commit `8b0dfd9`)
+
+**HubSpot CRM Bridge:**
+- `visitor-identify/index.ts` + `voicemail-transcription-handler/index.ts` — push identified visitors and voicemail leads to HubSpot contacts
+- `_shared/crm-webhook.ts` — new shared outbound CRM webhook helper (HubSpot contact upsert with HMAC signing; Salesforce/Jobber/Zapier/Make/n8n compatible) (commit `a703ff6`)
+
+**Email Waterfall Expansion (Tiers 40–89):**
+- `_shared/email-extras-4.ts` — 25 new free sources (Tiers 40–64): gov registries (IRS BMF via ProPublica, FCC ULS, NPI Registry, NSF Awards, NIH RePORTER, Grants.gov, EPA FRS, FDA, USAspending, USPTO assignee), well-known web files (impressum, security.txt, humans.txt, /.well-known/contact, JSON-LD schema.org, og:email meta, RSS managingEditor, vCard, /api/about, robots.txt), trade directories (Manta, Superpages, MerchantCircle, Houzz Pro, ThomasNet)
+- `_shared/email-extras-5.ts` — 25 new free sources (Tiers 65–89): home service directories (Angi, HomeAdvisor, Thumbtack, Porch, Nextdoor Biz, BBB, Chamber of Commerce), B2B directories (ZoomInfo free, US Chamber, D&B, CorporationWiki, OpenGovUS, GovWin, SAM.gov/FBO), Michigan-specific (LARA license search, Michigan business entity), local directories (YellowBook, LocalEdge, Cylex, Brownbook, Tupalo, eZlocal, Cybo, TradeFord, ExportersIndia)
+- `_shared/email-waterfall.ts` — wired in Tiers 40–89 after opencorporates; `WATERFALL_PROVIDERS` updated with all new source names
+
+**Missing crons added (migration `20260506010001`):**
+- `demand-radar-enhanced-scan` — daily 12:00 UTC (was built but never scheduled)
+- `field-service-daily-summary` — daily 13:00 UTC (was built but never scheduled)
+
+**Matt full enrollment (migration `20260506010000`):**
+- Demand Radar: `industry_pulse_clients` row (`buyer_type='contractor'`), token `matt-test-demand-radar-0001`
+- Buyer Radar: `industry_pulse_clients` row (`buyer_type='supplier'`), token `matt-test-buyer-radar-00001`
+- Dead Lead Reactivation: `dead_lead_campaigns` linked to Matt's HVAC `contractor_client`
+
+---
 
 ### Phase 43 — SMS Noise Fixes + Dead Lead Pool External Sources + Cron Repair COMPLETE ✅
 
