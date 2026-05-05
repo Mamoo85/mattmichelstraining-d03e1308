@@ -94,10 +94,40 @@ serve(async (req) => {
         return subCounties.some((c: string) => sigCounty.includes(c.toLowerCase()));
       }).slice(0, 5);
 
-      if (!matches.length) continue;
-
       const portalUrl = `https://www.detroitwebagent.com/demand-radar-portal?token=${sub.dashboard_token || sub.id}`;
-      const html = buildEmail(sub.company_name || "there", matches, portalUrl);
+
+      // Proof-of-Work fallback: even if 0 matches, send a "we're watching" email so client never wonders if system is alive.
+      const isZero = matches.length === 0;
+      const subject = isZero
+        ? `📡 Demand Radar — quiet 24h in your territory (still scanning)`
+        : `📡 ${matches.length} expansion ${matches.length === 1 ? "signal" : "signals"} in your territory today`;
+      const html = isZero
+        ? `<!DOCTYPE html><html><body style="margin:0;background:#0a1628;font-family:-apple-system,sans-serif;">
+            <div style="max-width:600px;margin:0 auto;padding:24px;color:#cbd5e1;">
+              <div style="text-align:center;margin-bottom:24px;">
+                <div style="display:inline-block;background:#00d4ff;color:#000;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;letter-spacing:1px;">📡 DEMAND RADAR</div>
+                <h1 style="color:#fff;font-size:22px;margin:12px 0 4px;">Quiet 24 hours</h1>
+                <p style="color:#64748b;font-size:13px;margin:0;">No qualifying expansion signals in your territory yet — but the radar is live and scanning.</p>
+              </div>
+              <div style="background:#0f1f35;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:18px;margin-bottom:12px;">
+                <p style="margin:0 0 8px;color:#fff;font-weight:600;">What we scanned in the last 24h:</p>
+                <ul style="margin:0;padding-left:18px;line-height:1.7;font-size:13px;">
+                  <li>SEC EDGAR filings</li>
+                  <li>OSHA + DOL hiring data</li>
+                  <li>BLS employment trends</li>
+                  <li>City/county permit feeds</li>
+                  <li>USASpending federal awards</li>
+                </ul>
+                <p style="margin:12px 0 0;color:#94a3b8;font-size:12px;">Signals below confidence 6/10 are filtered out so we don't waste your time on noise.</p>
+              </div>
+              <div style="margin-top:24px;text-align:center;">
+                <a href="${portalUrl}" style="display:inline-block;background:#00d4ff;color:#000;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">View Dashboard →</a>
+              </div>
+              <div style="margin-top:32px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.08);text-align:center;color:#475569;font-size:11px;">
+                Detroit Web Agency · Demand Radar<br>Reply STOP to unsubscribe
+              </div>
+            </div></body></html>`
+        : buildEmail(sub.company_name || "there", matches, portalUrl);
 
       // Sinkhole test accounts
       if (sub.is_test_account) {
@@ -119,7 +149,7 @@ serve(async (req) => {
           body: JSON.stringify({
             from: "Demand Radar <matt@detroitwebagent.com>",
             to: sub.email,
-            subject: `📡 ${matches.length} expansion ${matches.length === 1 ? "signal" : "signals"} in your territory today`,
+            subject,
             html,
           }),
         });
