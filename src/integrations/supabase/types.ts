@@ -14331,6 +14331,8 @@ export type Database = {
           enrichment_reset_at: string | null
           enrichment_trace: Json | null
           first_name: string | null
+          followup_d14_sent_at: string | null
+          followup_d7_sent_at: string | null
           gmail_message_id: string | null
           gmail_sent_at: string | null
           id: string
@@ -14346,6 +14348,7 @@ export type Database = {
           owner_name: string | null
           owner_phone: string | null
           phone: string | null
+          replied_at: string | null
           sms_2_sent: boolean
           sms_2_sent_at: string | null
           sms_sent: boolean
@@ -14376,6 +14379,8 @@ export type Database = {
           enrichment_reset_at?: string | null
           enrichment_trace?: Json | null
           first_name?: string | null
+          followup_d14_sent_at?: string | null
+          followup_d7_sent_at?: string | null
           gmail_message_id?: string | null
           gmail_sent_at?: string | null
           id?: string
@@ -14391,6 +14396,7 @@ export type Database = {
           owner_name?: string | null
           owner_phone?: string | null
           phone?: string | null
+          replied_at?: string | null
           sms_2_sent?: boolean
           sms_2_sent_at?: string | null
           sms_sent?: boolean
@@ -14421,6 +14427,8 @@ export type Database = {
           enrichment_reset_at?: string | null
           enrichment_trace?: Json | null
           first_name?: string | null
+          followup_d14_sent_at?: string | null
+          followup_d7_sent_at?: string | null
           gmail_message_id?: string | null
           gmail_sent_at?: string | null
           id?: string
@@ -14436,6 +14444,7 @@ export type Database = {
           owner_name?: string | null
           owner_phone?: string | null
           phone?: string | null
+          replied_at?: string | null
           sms_2_sent?: boolean
           sms_2_sent_at?: string | null
           sms_sent?: boolean
@@ -21450,6 +21459,9 @@ export type Database = {
           employee_count: number | null
           enriched_at: string | null
           enrichment_reset_at: string | null
+          followup_d14_sent_at: string | null
+          followup_d3_sent_at: string | null
+          followup_d7_sent_at: string | null
           id: string
           is_boiler: boolean | null
           last_contacted_at: string | null
@@ -21462,6 +21474,8 @@ export type Database = {
           owner_name: string | null
           owner_phone: string | null
           phone: string | null
+          replied_at: string | null
+          reply_positive: boolean | null
           repost_count: number | null
           role: string | null
           score: number | null
@@ -21481,6 +21495,9 @@ export type Database = {
           employee_count?: number | null
           enriched_at?: string | null
           enrichment_reset_at?: string | null
+          followup_d14_sent_at?: string | null
+          followup_d3_sent_at?: string | null
+          followup_d7_sent_at?: string | null
           id?: string
           is_boiler?: boolean | null
           last_contacted_at?: string | null
@@ -21493,6 +21510,8 @@ export type Database = {
           owner_name?: string | null
           owner_phone?: string | null
           phone?: string | null
+          replied_at?: string | null
+          reply_positive?: boolean | null
           repost_count?: number | null
           role?: string | null
           score?: number | null
@@ -21512,6 +21531,9 @@ export type Database = {
           employee_count?: number | null
           enriched_at?: string | null
           enrichment_reset_at?: string | null
+          followup_d14_sent_at?: string | null
+          followup_d3_sent_at?: string | null
+          followup_d7_sent_at?: string | null
           id?: string
           is_boiler?: boolean | null
           last_contacted_at?: string | null
@@ -21524,6 +21546,8 @@ export type Database = {
           owner_name?: string | null
           owner_phone?: string | null
           phone?: string | null
+          replied_at?: string | null
+          reply_positive?: boolean | null
           repost_count?: number | null
           role?: string | null
           score?: number | null
