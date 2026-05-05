@@ -348,7 +348,7 @@ function buildEmailHtml(body: string): string {
   const htmlBody = body.replace(/\n/g, "<br>");
   return wrapDwaShell(htmlBody, {
     product: "Contractor Leads",
-    ctaUrl: "https://detroitwebagent.com/contractor-leads?utm_source=cold&utm_campaign=contractor_drip",
+    ctaUrl: "https://detroitwebagent.com/start-trial?product=contractor_leads",
   });
 }
 
@@ -397,7 +397,7 @@ function buildDeadLeadEmailHtml(body: string): string {
   const htmlBody = body.replace(/\n/g, "<br>");
   return wrapDwaShell(htmlBody, {
     product: "Dead Lead Reactivation",
-    ctaUrl: "https://detroitwebagent.com/dead-lead-intake?utm_source=cold&utm_campaign=dead_lead",
+    ctaUrl: "https://detroitwebagent.com/start-trial?product=dead_lead",
   });
 }
 
@@ -478,7 +478,7 @@ Rules:
 2. Sentence 1: Prove you found them specifically — mention their review count, trade, or city
 3. Sentence 2: Mention hiring pain — good licensed ${tradeClean} techs are hard to find, and by the time you hear about one, they're already gone
 4. Sentence 3: TechAlert scans Michigan's MIOSHA license DB daily — when a new tech gets licensed in your area, you get a text first. Free trial, no card required.
-5. Sentence 4: MUST include this exact self-serve link on its own line: https://www.detroitwebagent.com/hire-alert — then add "or reply / text (313) 992-1219"
+5. Sentence 4: MUST include this exact self-serve link on its own line: https://detroitwebagent.com/start-trial?product=techalert — then add "or reply / text (313) 992-1219"
 6. Start with "Hey —"
 7. Sign off: "— Matt, Detroit Web Agency"
 8. Conversational, direct. Not salesy.
@@ -502,7 +502,7 @@ function buildTechAlertEmailHtml(body: string): string {
   const htmlBody = body.replace(/\n/g, "<br>");
   return wrapDwaShell(htmlBody, {
     product: "TechAlert", // hiring → 30-day trial
-    ctaUrl: "https://detroitwebagent.com/talent-radar?utm_source=cold&utm_campaign=techalert_pitch",
+    ctaUrl: "https://detroitwebagent.com/start-trial?product=techalert",
   });
 }
 
@@ -525,7 +525,7 @@ Rules:
 2. Sentence 1: Prove you found them specifically — mention their review count, trade, or city
 3. Sentence 2: Every missed call is a job they're handing to a competitor. While they're on a job, a homeowner calls, gets voicemail, and calls the next plumber.
 4. Sentence 3: For $99/mo we text every missed caller back in 60 seconds — "Thanks for calling ${businessName}, we'll call you right back." They stop calling around.
-5. Sentence 4: MUST include this exact self-serve link on its own line: https://www.detroitwebagent.com/missed-call-catch — then add "or reply / text (313) 992-1219"
+5. Sentence 4: MUST include this exact self-serve link on its own line: https://detroitwebagent.com/start-trial?product=missed_call_catch — then add "or reply / text (313) 992-1219"
 6. Start with "Hey —"
 7. Sign off: "— Matt, Detroit Web Agency"
 8. Conversational, direct. Not salesy.
@@ -549,7 +549,7 @@ function buildMissedCallEmailHtml(body: string): string {
   const htmlBody = body.replace(/\n/g, "<br>");
   return wrapDwaShell(htmlBody, {
     product: "Missed-Call Catch",
-    ctaUrl: "https://detroitwebagent.com/missed-call-catch?utm_source=cold&utm_campaign=missed_call",
+    ctaUrl: "https://detroitwebagent.com/start-trial?product=missed_call_catch",
   });
 }
 
@@ -579,7 +579,7 @@ Rules:
 2. Sentence 1: Acknowledge the staffing crisis — Michigan nursing homes are cited every week for insufficient staffing
 3. Sentence 2: Position CareAlert — we monitor Michigan's CNA/LPN/RN license database daily; the moment a new nurse gets licensed near ${cityShort}, you get a text before any recruiter does
 4. Sentence 3: No recruiter fees, no job board bidding wars — $99/mo flat, cancel anytime
-5. Sentence 4: MUST include this exact self-serve link on its own line: https://www.detroitwebagent.com/hire-alert — then add "or call/text (313) 992-1219"
+5. Sentence 4: MUST include this exact self-serve link on its own line: https://detroitwebagent.com/start-trial?product=techalert — then add "or call/text (313) 992-1219"
 6. Start with "Hi —"
 7. Sign off: "— Matt, Detroit Web Agency"
 8. Conversational, direct. Not salesy. Empathetic to staffing pressure.
@@ -603,7 +603,7 @@ function buildCareAlertEmailHtml(body: string): string {
   const htmlBody = body.replace(/\n/g, "<br>");
   return wrapDwaShell(htmlBody, {
     product: "CareAlert", // hiring → 30-day trial
-    ctaUrl: "https://detroitwebagent.com/hire-alert?utm_source=cold&utm_campaign=carealert",
+    ctaUrl: "https://detroitwebagent.com/start-trial?product=techalert",
   });
 }
 
