@@ -194,7 +194,8 @@ Deno.serve(async (req) => {
     if (!lead.email || !lead.email.includes("@")) { skipped++; continue; }
 
     try {
-      if (await isBlocked(lead.email)) { blocked++; continue; }
+      const block = await isBlocked(sb, { email: lead.email, business_name: lead.business_name });
+      if (block.blocked) { blocked++; continue; }
     } catch (_) { /* fail open */ }
 
     const pitch = pitchFor(lead);
