@@ -2263,3 +2263,9 @@ verify_jwt = false
 
 [functions.create-dwa-annual-checkout]
 verify_jwt = false
+
+[functions.trade-radar-referral]
+verify_jwt = false
+
+[functions.create-dead-lead-campaign-checkout]
+verify_jwt = false
