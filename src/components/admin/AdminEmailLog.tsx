@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Mail, CheckCircle, XCircle, AlertTriangle, Clock, RefreshCw } from "lucide-react";
+import { Mail, CheckCircle, XCircle, AlertTriangle, Clock, RefreshCw, Send } from "lucide-react";
+import { toast } from "sonner";
 
 const TIME_RANGES = [
   { label: "Today", value: "today" },
@@ -74,6 +75,26 @@ const AdminEmailLog = () => {
     },
     refetchInterval: 30000,
   });
+
+  const [resendingId, setResendingId] = useState<string | null>(null);
+  const handleResend = async (messageId: string, currentRecipient: string) => {
+    const to = window.prompt("Send to (leave as-is to resend to original recipient):", currentRecipient);
+    if (!to) return;
+    setResendingId(messageId);
+    try {
+      const { data, error } = await supabase.functions.invoke("resend-email-by-message", {
+        body: { message_id: messageId, recipient_email: to },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error + ": " + ((data as any).details || ""));
+      toast.success(`Re-queued to ${to}`);
+      refetch();
+    } catch (e: any) {
+      toast.error(`Resend failed: ${e?.message || e}`);
+    } finally {
+      setResendingId(null);
+    }
+  };
 
   const templates = [...new Set(emails.map((e: any) => e.template_name))].sort();
   const filtered = templateFilter === "all" ? emails : emails.filter((e: any) => e.template_name === templateFilter);
@@ -170,9 +191,24 @@ const AdminEmailLog = () => {
                       <p className="text-[10px] text-destructive mt-1 truncate">{email.error_message}</p>
                     )}
                   </div>
-                  <span className="text-[9px] text-muted-foreground whitespace-nowrap">
-                    {formatTime(email.created_at)}
-                  </span>
+                  <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                    <span className="text-[9px] text-muted-foreground whitespace-nowrap">
+                      {formatTime(email.created_at)}
+                    </span>
+                    {email.message_id && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleResend(email.message_id, email.recipient_email)}
+                        disabled={resendingId === email.message_id}
+                        className="h-6 px-2 text-[9px]"
+                        title="Re-queue this email"
+                      >
+                        <Send size={10} className="mr-1" />
+                        {resendingId === email.message_id ? "..." : "Resend"}
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>
