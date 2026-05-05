@@ -112,6 +112,36 @@ export async function isBlocked(
  * Writes a 90-day cooldown row. Paying clients already have NULL (forever) rows
  * via DB triggers — those take precedence.
  */
+/**
+ * Cross-product 7-day deduplication check.
+ * Returns true if this domain was contacted (via any product) within the last 7 days.
+ * Used by trade-radar-outreach and other outreach functions before sending.
+ */
+export async function isRecentlyContacted(
+  supabase: any,
+  domain: string,
+): Promise<boolean> {
+  if (!domain) return false;
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  try {
+    const { data } = await supabase
+      .from("global_outreach_log")
+      .select("id")
+      .eq("domain", domain.toLowerCase())
+      .gte("contacted_at", sevenDaysAgo)
+      .limit(1)
+      .maybeSingle();
+    return !!data;
+  } catch {
+    return false; // fail open — never block outreach due to a lookup error
+  }
+}
+
+/**
+ * Record that we just sent cold outreach to this prospect.
+ * Writes a 90-day cooldown row. Paying clients already have NULL (forever) rows
+ * via DB triggers — those take precedence.
+ */
 export async function recordOutreach(
   supabase: any,
   ids: BlocklistIdentifiers & { agent: string },
