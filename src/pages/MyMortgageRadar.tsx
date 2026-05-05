@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import SEOHead from "@/components/layout/SEOHead";
 import DWASuiteNav from "@/components/shared/DWASuiteNav";
 import ManageBillingButton from "@/components/billing/ManageBillingButton";
+import LeadGuaranteeBar from "@/components/shared/LeadGuaranteeBar";
 import CrmWebhookSettings from "@/components/shared/CrmWebhookSettings";
 import EmptyDashboardState from "@/components/shared/EmptyDashboardState";
 import { Home, Lock, Phone, MessageSquare, MapPin, Bell, Download, Send, Check, X, List, Map as MapIcon, Columns } from "lucide-react";
