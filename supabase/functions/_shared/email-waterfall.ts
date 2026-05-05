@@ -582,7 +582,7 @@ export async function runEmailWaterfall(
       ["nsf_awards",        55, () => input.business_name ? ex4.nsfAwardsEmail(input.business_name) : Promise.resolve(null)],
       ["nih_reporter",      55, () => input.business_name ? ex4.nihReporterEmail(input.business_name) : Promise.resolve(null)],
       ["grants_gov",        50, () => input.business_name ? ex4.grantsGovEmail(input.business_name) : Promise.resolve(null)],
-      ["epa_frs",           55, () => input.business_name ? ex4.epaFrsEmail(input.business_name) : Promise.resolve(null)],
+      ["epa_frs",           55, () => input.business_name ? ex4.epaFrsEmail(input.business_name, input.state ?? undefined) : Promise.resolve(null)],
       ["fda_registration",  55, () => input.business_name ? ex4.fdaRegistrationEmail(input.business_name) : Promise.resolve(null)],
       ["usaspending_poc",   55, () => input.business_name ? ex4.usaspendingPocEmail(input.business_name) : Promise.resolve(null)],
       ["uspto_assignee",    50, () => input.business_name ? ex4.usptoAssigneeEmail(input.business_name) : Promise.resolve(null)],

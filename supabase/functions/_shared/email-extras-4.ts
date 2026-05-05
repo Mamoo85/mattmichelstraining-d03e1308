@@ -125,10 +125,11 @@ export async function grantsGovEmail(name: string): Promise<string | null> {
   return t ? pickEmail(t) : null;
 }
 
-// 46. EPA FRS (Facility Registry Service)
-export async function epaFrsEmail(name: string): Promise<string | null> {
+// 46. EPA FRS (Facility Registry Service) — manufacturing/industrial contacts
+export async function epaFrsEmail(name: string, state?: string): Promise<string | null> {
+  const st = state?.toUpperCase().slice(0, 2) || "MI";
   const t = await safeText(
-    `https://data.epa.gov/efservice/frs.frs_facility_site/facility_name/CONTAINING/${enc(name)}/JSON`,
+    `https://ofmpub.epa.gov/frs_public2/frs_rest_services.get_facilities?facility_name=${enc(name)}&state_abbr=${st}&output=JSON&p_limit=5`,
   );
   return t ? pickEmail(t) : null;
 }
