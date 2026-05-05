@@ -100,6 +100,32 @@ serve(async (req) => {
       }
     }
 
+    // Trade Radar: flag any active client whose vertical has had no leads for 5+ days
+    try {
+      const fiveDaysAgo = new Date(Date.now() - 5 * 86400000).toISOString();
+      const { data: tradeClients } = await sb
+        .from("trade_radar_clients")
+        .select("id, email, company_name, vertical")
+        .eq("active", true);
+
+      for (const tc of (tradeClients || [])) {
+        const { count: recentLeads } = await sb
+          .from("trade_radar_leads")
+          .select("id", { count: "exact", head: true })
+          .eq("vertical", tc.vertical)
+          .gte("created_at", fiveDaysAgo);
+
+        if ((recentLeads ?? 0) === 0) {
+          mrrAtRisk += 149;
+          warnings.push(`<div style="margin:8px 0;padding:8px;background:#78350f;border-radius:6px;">
+            <strong>Trade Radar (${tc.vertical})</strong> — ${tc.company_name || tc.email}: 0 leads in 5+ days
+          </div>`);
+        }
+      }
+    } catch (e) {
+      console.log("[SHIELD] Trade Radar check error:", e);
+    }
+
     // Check delivery_failures in last 24h
     const dayAgo = new Date(Date.now() - 86400000).toISOString();
     const { data: failures, count: failCount } = await sb
