@@ -5,6 +5,7 @@
 // Founders are auto-marked status='founder' and never expire.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { encode } from "https://deno.land/std@0.190.0/encoding/base64url.ts";
 import { dwaEmail, dwaWrap } from "../_shared/dwa-email.ts";
 import { isFounder } from "../_shared/founder-seats.ts";
 import { sendSMS, ADMIN_PHONE } from "../_shared/twilio.ts";
@@ -97,6 +98,31 @@ const PRODUCT_CONFIG: Record<string, { label: string; dashboardPath: string; pit
     dashboardPath: "/my-painting-radar",
     pitch: "new ownership deed transfers and FSBO prep listings in your service area",
   },
+  exterior_radar: {
+    label: "Exterior Radar",
+    dashboardPath: "/my-exterior-radar",
+    pitch: "siding, windows, paint, storm, and homeowner turnover signals in your ZIPs",
+  },
+  tree_radar: {
+    label: "Tree Service Radar",
+    dashboardPath: "/my-tree-radar",
+    pitch: "storm damage, tree hazards, drought stress, and 311 tree requests in your service area",
+  },
+  restoration_radar: {
+    label: "Restoration Radar",
+    dashboardPath: "/my-restoration-radar",
+    pitch: "fire, water, mold, flood, and vacancy signals that create restoration work",
+  },
+  demo_junk_radar: {
+    label: "Demo & Junk Radar",
+    dashboardPath: "/my-demo-junk-radar",
+    pitch: "demolition, estate, vacant-property, and cleanup signals before the job gets shopped",
+  },
+  foundation_radar: {
+    label: "Foundation Radar",
+    dashboardPath: "/my-foundation-radar",
+    pitch: "flooding, structural, basement, and foundation permit signals in your ZIPs",
+  },
 };
 
 function genToken(): string {
@@ -107,6 +133,20 @@ function genToken(): string {
 
 function isValidEmail(s: string): boolean {
   return typeof s === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s) && s.length <= 254;
+}
+
+async function signDashboardToken(email: string): Promise<string> {
+  const payload = JSON.stringify({ email, exp: Date.now() + 7 * 24 * 60 * 60 * 1000 });
+  const tokenB64 = encode(new TextEncoder().encode(payload));
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(SUPABASE_SERVICE_KEY),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(tokenB64));
+  return `${tokenB64}.${encode(new Uint8Array(sig))}`;
 }
 
 Deno.serve(async (req) => {
@@ -222,7 +262,8 @@ Deno.serve(async (req) => {
     }
   }
 
-  const magicUrl = `${SITE_URL}${cfg.dashboardPath}?trial=${magicToken}`;
+  const dashboardToken = await signDashboardToken(email);
+  const magicUrl = `${SITE_URL}${cfg.dashboardPath}?email=${encodeURIComponent(email)}&token=${encodeURIComponent(dashboardToken)}&trial=${encodeURIComponent(magicToken)}`;
   const inner = `
     <h1 style="color:#00d4ff;font-size:24px;margin:0 0 16px;">Your ${cfg.label} trial is live</h1>
     <p style="margin:0 0 14px;font-size:15px;line-height:1.6;">
