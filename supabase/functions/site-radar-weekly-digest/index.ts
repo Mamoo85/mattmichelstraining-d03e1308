@@ -28,38 +28,54 @@ serve(async (req) => {
       .gte("created_at", since)
       .order("visit_count", { ascending: false });
 
-    if (!events?.length) continue;
-    const businesses = (events as Array<{ company_name?: string; city?: string; page_visited?: string; visit_count: number; is_business: boolean }>).filter((e) => e.is_business && e.company_name);
-    if (!businesses.length) continue;
-
-    const totalVisits = events.length;
+    const businesses = (events || []).filter((e: any) => e.is_business && e.company_name) as Array<{ company_name?: string; city?: string; page_visited?: string; visit_count: number; is_business: boolean }>;
+    const totalVisits = events?.length || 0;
     const topCompany = businesses[0];
     const portalUrl = client.dispatch_token
       ? `https://detroitwebagent.com/my-site-radar?token=${client.dispatch_token}`
       : "https://detroitwebagent.com/my-site-radar";
 
+    // Proof-of-Work: send weekly even if 0 business visitors so client knows tracker is live.
+    const isZero = businesses.length === 0;
+    const subject = isZero
+      ? `📡 SiteRadar weekly — quiet week (${totalVisits} total visits, 0 companies identified)`
+      : `${topCompany.company_name} visited your site this week — ${totalVisits} total visits`;
+
     const rows = businesses.slice(0, 5).map((b) =>
       `<tr><td style="padding:8px;border-bottom:1px solid #1e293b;">${b.company_name}</td><td style="padding:8px;border-bottom:1px solid #1e293b;">${b.city || "—"}</td><td style="padding:8px;border-bottom:1px solid #1e293b;">${b.page_visited || "homepage"}</td><td style="padding:8px;border-bottom:1px solid #1e293b;">${b.visit_count}</td></tr>`
     ).join("");
 
+    const zeroBody = `
+      <div style="font-family:sans-serif;max-width:560px;margin:0 auto;background:#0a1628;color:#fff;padding:32px;border-radius:8px;">
+        <h2 style="color:#00d4ff;margin:0 0 8px;">Quiet week on your site</h2>
+        <p style="margin:0 0 12px;color:#94a3b8;">${totalVisits} total visits this week, 0 identifiable business visitors.</p>
+        <p style="margin:0 0 20px;color:#cbd5e1;font-size:14px;line-height:1.6;">
+          Your tracker is live and firing. We watched all 7 days for repeat visits, ICP companies, and high-intent pageviews — none crossed the threshold.
+          This usually means: traffic is mostly consumer, or you need more top-of-funnel volume.
+        </p>
+        <a href="${portalUrl}" style="display:inline-block;background:#00d4ff;color:#0a1628;font-weight:700;padding:12px 24px;border-radius:6px;text-decoration:none;">Open dashboard →</a>
+      </div>`;
+    const body = isZero ? zeroBody : `
+      <div style="font-family:sans-serif;max-width:560px;margin:0 auto;background:#0a1628;color:#fff;padding:32px;border-radius:8px;">
+        <h2 style="color:#00d4ff;margin:0 0 8px;">Your weekly visitor report</h2>
+        <p style="margin:0 0 20px;color:#94a3b8;">${totalVisits} visits · ${businesses.length} companies identified</p>
+        <table style="width:100%;border-collapse:collapse;font-size:14px;">
+          <thead><tr style="color:#00d4ff;text-align:left;">
+            <th style="padding:8px;">Company</th><th style="padding:8px;">City</th><th style="padding:8px;">Page</th><th style="padding:8px;">Visits</th>
+          </tr></thead><tbody>${rows}</tbody>
+        </table>
+        <a href="${portalUrl}" style="display:inline-block;margin-top:24px;background:#00d4ff;color:#0a1628;font-weight:700;padding:12px 24px;border-radius:6px;text-decoration:none;">View full dashboard →</a>
+      </div>`;
+
+    if (!RESEND_API_KEY) continue;
     await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         from: "SiteRadar <matt@detroitwebagent.com>",
         to: [client.email],
-        subject: `${topCompany.company_name} visited your site this week — ${totalVisits} total visits`,
-        html: `
-          <div style="font-family:sans-serif;max-width:560px;margin:0 auto;background:#0a1628;color:#fff;padding:32px;border-radius:8px;">
-            <h2 style="color:#00d4ff;margin:0 0 8px;">Your weekly visitor report</h2>
-            <p style="margin:0 0 20px;color:#94a3b8;">${totalVisits} visits · ${businesses.length} companies identified</p>
-            <table style="width:100%;border-collapse:collapse;font-size:14px;">
-              <thead><tr style="color:#00d4ff;text-align:left;">
-                <th style="padding:8px;">Company</th><th style="padding:8px;">City</th><th style="padding:8px;">Page</th><th style="padding:8px;">Visits</th>
-              </thead><tbody>${rows}</tbody>
-            </table>
-            <a href="${portalUrl}" style="display:inline-block;margin-top:24px;background:#00d4ff;color:#0a1628;font-weight:700;padding:12px 24px;border-radius:6px;text-decoration:none;">View full dashboard →</a>
-          </div>`,
+        subject,
+        html: body,
       }),
     });
     sent++;
