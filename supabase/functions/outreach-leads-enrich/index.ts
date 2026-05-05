@@ -18,6 +18,7 @@ import { apolloOrganizationSearch, apolloPeopleSearch } from "../_shared/apollo.
 import { hunterFindEmail } from "../_shared/hunter.ts";
 import { extractContactInfo } from "../_shared/firecrawl.ts";
 import { runEmailWaterfall } from "../_shared/email-waterfall.ts";
+import { runLeadEnrichmentWaterfall } from "../_shared/lead-enrichment-extras.ts";
 import { isEmailBlocked } from "../_shared/email-suppression.ts";
 import {
   isAggregatorDomain,
@@ -177,6 +178,35 @@ async function enrichOne(
     }
   }
 
+  // ── Tier 6: Lead enrichment waterfall — decision-maker intel + tech stack + buying signals
+  // Runs regardless of email status to augment company intelligence.
+  let leadIntel: { title?: string; tech_stack?: string[]; industry?: string; company_size?: string; buying_signals?: string[] } = {};
+  {
+    const t = Date.now();
+    try {
+      const domain = website ? domainFromUrl(website) : undefined;
+      const r = await runLeadEnrichmentWaterfall({
+        domain: domain ?? undefined,
+        business_name: lead.business_name,
+        city: lead.city,
+        state: "MI",
+      }, { stop_on_email: !ownerEmail });
+      if (!ownerEmail && r.email) ownerEmail = r.email;
+      if (!ownerName && (r.first_name || r.last_name)) {
+        ownerName = [r.first_name, r.last_name].filter(Boolean).join(" ") || null;
+      }
+      if (!ownerPhone && r.phone) ownerPhone = r.phone;
+      if (r.title) leadIntel.title = r.title;
+      if (r.tech_stack?.length) leadIntel.tech_stack = r.tech_stack;
+      if (r.industry) leadIntel.industry = r.industry;
+      if (r.company_size) leadIntel.company_size = r.company_size;
+      if (r.buying_signals?.length) leadIntel.buying_signals = r.buying_signals;
+      trace.push({ name: `lead_enrich:${r.sources_hit.join(",")||"miss"}`, ms: Date.now() - t, got_email: !!r.email });
+    } catch (_) {
+      trace.push({ name: "lead_enrich_err", ms: Date.now() - t, got_email: false });
+    }
+  }
+
   // Reject if email is suppressed/duplicate before we save it
   if (ownerEmail && await isEmailBlocked(sb, ownerEmail)) {
     ownerEmail = null;
@@ -190,6 +220,7 @@ async function enrichOne(
     website,
     enriched_at: new Date().toISOString(),
     enrichment_trace: trace,
+    ...(Object.keys(leadIntel).length ? { enrichment_meta: leadIntel } : {}),
   }).eq("id", lead.id);
 
   return { status: ownerEmail ? "enriched" : "failed", trace };
