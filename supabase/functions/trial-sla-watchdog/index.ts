@@ -6,7 +6,7 @@
 //   - Logs every touch into trial_concierge_log
 // Notifies ADMIN_PHONE (Matt) on breach.
 
-import { createClient } from "https://esm.sh/@supabase/[email protected]";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { sendSMS } from "../_shared/twilio.ts";
 import { dwaEmail } from "../_shared/dwa-email.ts";
 
