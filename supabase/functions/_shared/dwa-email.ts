@@ -159,6 +159,46 @@ export async function dwaColdEmail(
 
   const r = await dwaEmail({ to: opts.to, subject: opts.subject, html, bcc: opts.bcc });
 
+export interface DwaColdEmailOpts {
+  to: string;
+  subject: string;
+  bodyHtml: string;       // inner copy (greeting + pitch). NO CTA — added automatically.
+  product: string;        // e.g. "TechAlert", "Mortgage Radar", "Web Design Build"
+  ctaUrl: string;         // landing page / trial start URL
+  ctaText?: string;       // CTA button label for non-trial products. Default: "See it live →"
+  templateName: string;   // for email_send_log audit
+  bcc?: string;
+  // Visual blocks — render BEFORE the body for max impact (humans are visual).
+  teaserHtml?: string;    // pre-rendered teaserCardHtml() output
+  previewHtml?: string;   // pre-rendered dashboardPreviewHtml() output
+}
+
+export async function dwaColdEmail(
+  opts: DwaColdEmailOpts,
+  sb?: { from: (t: string) => any },
+): Promise<{ ok: boolean; error?: string; messageId?: string }> {
+  const ctaBlock = isTrialEligible(opts.product)
+    ? trialCtaHtml({ product: opts.product, url: opts.ctaUrl })
+    : plainCtaHtml({ url: opts.ctaUrl, text: opts.ctaText || "See it live →" });
+  const visuals = `${opts.previewHtml || ""}${opts.teaserHtml || ""}`;
+  const inner = `${visuals}${opts.bodyHtml}\n${ctaBlock}`;
+  const html = dwaWrap(inner);
+  const messageId = `cold-${opts.templateName}-${crypto.randomUUID()}`;
+
+  if (sb) {
+    try {
+      await sb.from("email_send_log").insert({
+        message_id: messageId,
+        template_name: opts.templateName,
+        recipient_email: opts.to,
+        status: "pending",
+        metadata: { product: opts.product, cold: true },
+      });
+    } catch { /* best-effort */ }
+  }
+
+  const r = await dwaEmail({ to: opts.to, subject: opts.subject, html, bcc: opts.bcc });
+
   if (sb) {
     try {
       await sb.from("email_send_log").insert({
