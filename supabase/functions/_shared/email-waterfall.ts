@@ -715,10 +715,88 @@ export async function runEmailWaterfall(
     }
   } catch (e) { miss("email_extras_3", String(e)); }
 
+  // 40-64. Fourth-wave free extras: gov registries, well-known files, directories.
+  try {
+    const ex4 = await import("./email-extras-4.ts");
+    const tries: [string, number, () => Promise<string | null>][] = [
+      ["irs_bmf", 60, () => input.business_name ? ex4.irsBmfEmail(input.business_name) : Promise.resolve(null)],
+      ["fcc_uls", 50, () => input.business_name ? ex4.fccUlsEmail(input.business_name) : Promise.resolve(null)],
+      ["npi_registry", 60, () => input.business_name ? ex4.npiRegistryEmail(input.business_name, input.city || undefined) : Promise.resolve(null)],
+      ["nsf_awards", 55, () => input.business_name ? ex4.nsfAwardsEmail(input.business_name) : Promise.resolve(null)],
+      ["nih_reporter", 55, () => input.business_name ? ex4.nihReporterEmail(input.business_name) : Promise.resolve(null)],
+      ["grants_gov", 50, () => input.business_name ? ex4.grantsGovEmail(input.business_name) : Promise.resolve(null)],
+      ["epa_frs", 55, () => input.business_name ? ex4.epaFrsEmail(input.business_name) : Promise.resolve(null)],
+      ["fda_registration", 55, () => input.business_name ? ex4.fdaRegistrationEmail(input.business_name) : Promise.resolve(null)],
+      ["usaspending_poc", 55, () => input.business_name ? ex4.usaspendingPocEmail(input.business_name) : Promise.resolve(null)],
+      ["uspto_assignee", 50, () => input.business_name ? ex4.usptoAssigneeEmail(input.business_name) : Promise.resolve(null)],
+      ["impressum", 65, () => domain ? ex4.impressumEmail(domain) : Promise.resolve(null)],
+      ["security_txt", 70, () => domain ? ex4.securityTxtEmail(domain) : Promise.resolve(null)],
+      ["humans_txt", 55, () => domain ? ex4.humansTxtEmail(domain) : Promise.resolve(null)],
+      ["well_known_contact", 65, () => domain ? ex4.wellKnownContactEmail(domain) : Promise.resolve(null)],
+      ["jsonld_org", 70, () => domain ? ex4.jsonLdOrgEmail(domain) : Promise.resolve(null)],
+      ["meta_og", 60, () => domain ? ex4.metaOgEmail(domain) : Promise.resolve(null)],
+      ["rss_feed", 55, () => domain ? ex4.rssFeedEmail(domain) : Promise.resolve(null)],
+      ["vcard", 75, () => domain ? ex4.vcardEmail(domain) : Promise.resolve(null)],
+      ["api_about", 55, () => domain ? ex4.apiAboutEmail(domain) : Promise.resolve(null)],
+      ["robots_txt", 45, () => domain ? ex4.robotsTxtEmail(domain) : Promise.resolve(null)],
+      ["manta", 50, () => input.business_name ? ex4.mantaEmail(input.business_name, input.city || undefined) : Promise.resolve(null)],
+      ["superpages", 50, () => input.business_name ? ex4.superpagesEmail(input.business_name, input.city || undefined) : Promise.resolve(null)],
+      ["merchantcircle", 50, () => input.business_name ? ex4.merchantcircleEmail(input.business_name, input.city || undefined) : Promise.resolve(null)],
+      ["houzz_pro", 55, () => input.business_name ? ex4.houzzProEmail(input.business_name) : Promise.resolve(null)],
+      ["thomasnet", 55, () => input.business_name ? ex4.thomasnetEmail(input.business_name) : Promise.resolve(null)],
+    ];
+    for (const [name, conf, fn] of tries) {
+      try {
+        const e = await fn();
+        if (e && looksValidEmail(e)) { await bump(sb, name, true); return hit(name, e, conf); }
+        miss(name);
+      } catch (err) { miss(name, String(err)); }
+    }
+  } catch (e) { miss("email_extras_4", String(e)); }
+
+  // 65-89. Fifth-wave free extras: trade directories, gov license search, B2B.
+  try {
+    const ex5 = await import("./email-extras-5.ts");
+    const tries: [string, number, () => Promise<string | null>][] = [
+      ["angi", 50, () => input.business_name ? ex5.angiEmail(input.business_name, input.city || undefined) : Promise.resolve(null)],
+      ["homeadvisor", 50, () => input.business_name ? ex5.homeadvisorEmail(input.business_name, input.city || undefined) : Promise.resolve(null)],
+      ["thumbtack", 50, () => input.business_name ? ex5.thumbtackEmail(input.business_name, input.city || undefined) : Promise.resolve(null)],
+      ["porch", 45, () => input.business_name ? ex5.porchEmail(input.business_name) : Promise.resolve(null)],
+      ["nextdoor_biz", 50, () => input.business_name ? ex5.nextdoorBizEmail(input.business_name) : Promise.resolve(null)],
+      ["bbb_profile", 60, () => input.business_name ? ex5.bbbProfileEmail(input.business_name, input.city || undefined) : Promise.resolve(null)],
+      ["chamber_of_commerce", 55, () => input.business_name ? ex5.chamberOfCommerceEmail(input.business_name, input.city || undefined) : Promise.resolve(null)],
+      ["zoominfo_free", 55, () => input.business_name ? ex5.zoomInfoFreeEmail(input.business_name) : Promise.resolve(null)],
+      ["us_chamber", 50, () => input.business_name ? ex5.usChamberEmail(input.business_name) : Promise.resolve(null)],
+      ["dnb", 55, () => input.business_name ? ex5.dnbEmail(input.business_name) : Promise.resolve(null)],
+      ["corporation_wiki", 50, () => input.business_name ? ex5.corporationWikiEmail(input.business_name) : Promise.resolve(null)],
+      ["opengovus", 55, () => input.business_name ? ex5.opengovusEmail(input.business_name) : Promise.resolve(null)],
+      ["govwin", 50, () => input.business_name ? ex5.govWinEmail(input.business_name) : Promise.resolve(null)],
+      ["fbo311", 55, () => input.business_name ? ex5.fbo311Email(input.business_name) : Promise.resolve(null)],
+      ["michigan_lara", 65, () => input.business_name ? ex5.michiganLaraEmail(input.business_name) : Promise.resolve(null)],
+      ["michigan_business", 65, () => input.business_name ? ex5.michiganBusinessEmail(input.business_name) : Promise.resolve(null)],
+      ["yellowbook", 45, () => input.business_name ? ex5.yellowBookEmail(input.business_name, input.city || undefined) : Promise.resolve(null)],
+      ["localedge", 45, () => input.business_name ? ex5.localEdgeEmail(input.business_name, input.city || undefined) : Promise.resolve(null)],
+      ["cylex", 45, () => input.business_name ? ex5.cylexEmail(input.business_name, input.city || undefined) : Promise.resolve(null)],
+      ["brownbook", 45, () => input.business_name ? ex5.brownbookEmail(input.business_name) : Promise.resolve(null)],
+      ["tupalo", 45, () => input.business_name ? ex5.tupaloEmail(input.business_name, input.city || undefined) : Promise.resolve(null)],
+      ["ezlocal", 45, () => input.business_name ? ex5.ezlocalEmail(input.business_name, input.city || undefined) : Promise.resolve(null)],
+      ["cybo", 45, () => input.business_name ? ex5.cybolEmail(input.business_name, input.city || undefined) : Promise.resolve(null)],
+      ["tradeford", 45, () => input.business_name ? ex5.tradeFordEmail(input.business_name) : Promise.resolve(null)],
+      ["exporters_india", 40, () => input.business_name ? ex5.exportersIndiaEmail(input.business_name) : Promise.resolve(null)],
+    ];
+    for (const [name, conf, fn] of tries) {
+      try {
+        const e = await fn();
+        if (e && looksValidEmail(e)) { await bump(sb, name, true); return hit(name, e, conf); }
+        miss(name);
+      } catch (err) { miss(name, String(err)); }
+    }
+  } catch (e) { miss("email_extras_5", String(e)); }
+
   return { email: null, source: null, confidence: 0, trace };
 }
 
-export const WATERFALL_PROVIDERS = ["site_scrape", "snov", "apollo", "pattern_verify", "firecrawl_deep", "hunter", "pdl", "pdl_name", "crtsh", "rdap_whois", "opencorporates", "wayback", "bbb", "detroit_open_biz", "google_places", "github_commits", "dns_mx_pattern", "bing_serp", "reddit", "common_crawl", "hunter_finder", "yellowpages", "yelp_fusion", "foursquare", "osm", "duckduckgo", "yandex", "github_events", "wayback_cdx", "crunchbase", "sitemap_crawl", "linkedin_slug", "facebook_page", "mapquest", "here", "opencage", "sec_edgar", "govinfo", "sam_entity", "twitter_bio"] as const;
+export const WATERFALL_PROVIDERS = ["site_scrape", "snov", "apollo", "pattern_verify", "firecrawl_deep", "hunter", "pdl", "pdl_name", "crtsh", "rdap_whois", "opencorporates", "wayback", "bbb", "detroit_open_biz", "google_places", "github_commits", "dns_mx_pattern", "bing_serp", "reddit", "common_crawl", "hunter_finder", "yellowpages", "yelp_fusion", "foursquare", "osm", "duckduckgo", "yandex", "github_events", "wayback_cdx", "crunchbase", "sitemap_crawl", "linkedin_slug", "facebook_page", "mapquest", "here", "opencage", "sec_edgar", "govinfo", "sam_entity", "twitter_bio", "irs_bmf", "fcc_uls", "npi_registry", "nsf_awards", "nih_reporter", "grants_gov", "epa_frs", "fda_registration", "usaspending_poc", "uspto_assignee", "impressum", "security_txt", "humans_txt", "well_known_contact", "jsonld_org", "meta_og", "rss_feed", "vcard", "api_about", "robots_txt", "manta", "superpages", "merchantcircle", "houzz_pro", "thomasnet", "angi", "homeadvisor", "thumbtack", "porch", "nextdoor_biz", "bbb_profile", "chamber_of_commerce", "zoominfo_free", "us_chamber", "dnb", "corporation_wiki", "opengovus", "govwin", "fbo311", "michigan_lara", "michigan_business", "yellowbook", "localedge", "cylex", "brownbook", "tupalo", "ezlocal", "cybo", "tradeford", "exporters_india"] as const;
 
 /**
  * runFieldWaterfall — wrapper around runEmailWaterfall that reports which
