@@ -502,6 +502,10 @@ export default function MySiteRadar() {
               <div style={{ marginTop: 8 }}>
                 <ManageBillingButton email={client.email} />
               </div>
+
+              <div style={{ marginTop: 24 }}>
+                <LeadGuaranteeBar productName="SiteRadar" />
+              </div>
             </div>
           )}
         </div>
