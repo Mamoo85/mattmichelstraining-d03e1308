@@ -1,85 +1,122 @@
-## Full audit findings (worse than the first pass — 20+ broken functions)
+I found the issue, and you’re right to be angry. The FieldDesk email screenshot is using:
 
-The Gmail screenshot is just one symptom. Across the project there are **5 systemic problems**:
+```text
+/start-trial?product=field_crm
+```
 
-**Problem A — Wrong product pitched.** `multi-service-drip` and parts of the website-pitch flow hawk a salad of cheap add-ons (AI Phone $149, Speed-to-Lead SMS $39, Reputation Dashboard $79, Blog Posts $79). Those are post-sale add-ons, not standalone cold-traffic offers.
+But the live Start Trial page only recognizes:
 
-**Problem B — Fake trial CTA on everything.** `_shared/dwa-email.ts → dwaColdEmail()` auto-appends a "Start your free 7-day trial of Detroit Web Agency" box on every send, regardless of product. The website itself has no trial.
+```text
+field_desk
+```
 
-**Problem C — Hardcoded "free trial" copy in legacy senders that bypass the shared helper.** Found in: `dead-lead-outreach-drip` ("Start your free trial in 60 seconds"), `contractor-fomo-mailer` ("7-day free trial"), `outreach-email-blast` ("Start your free 7-day trial →"), `hoa-cold-outreach` ("Offer a free trial"), `pipeline-drip-send`, `pipeline-batch-drip`, `pipeline-auto-drip` (raw Resend fetch, no brand wrap, no teaser, no audit).
+So that email CTA currently lands on the exact “Unknown product” page you showed. I also manually checked live links in the browser and confirmed more broken keys:
 
-**Problem D — No visuals.** Only 6 of ~25 cold senders use `teaserCardHtml`. The rest are wall-of-text. The teaser card itself shows one lead — no dashboard mock, no "what you're missing" revenue math.
+```text
+/start-trial?product=field_crm          -> Unknown product
+/start-trial?product=trade_radar_roofing -> Unknown product
+/start-trial?product=trade_radar_hvac    -> Unknown product
+/start-trial?product=missed_call         -> Unknown product
+/start-trial?product=field_desk          -> trial form works
+```
 
-**Problem E — No revenue math.** Nothing in the cold pipeline says "you're losing $X/month." Recipients have to do the value math themselves.
+The reason prior “100% working” checks missed this is because the existing `e2e-link-auditor` only checks HTTP status. `/start-trial?product=bad_key` returns a normal 200 page, so the auditor marked it as healthy even though the page content says “Unknown product.” That is not acceptable for sales links.
 
-## Plan
+Plan to fix it:
 
-### 1. Lock down the shared sender (defense-in-depth)
-- `_shared/dwa-email.ts`:
-  - Add `TRIAL_ELIGIBLE_PRODUCTS` allowlist (Mortgage Radar, Trade Radar + 11 verticals, FieldDesk, SiteRadar, Missed-Call Catch, AI Phone Answering, Bundle Revenue Suite, TechAlert, CareAlert, Talent Radar).
-  - `dwaColdEmail()` only appends `trialCtaHtml()` when `opts.product` is in the allowlist. Otherwise: plain teal CTA button using `opts.ctaUrl`/`opts.ctaText`.
-  - Add a new optional `opts.teaser` field that takes a `TeaserCardOpts` and renders it above the body. Add `opts.dashboardPreview` (image URL + missed-revenue line) that renders the new dashboard preview block.
+1. Normalize every trial/product key at the Start Trial page
+   - Add a canonical alias map so old and current outbound links resolve instead of dying.
+   - FieldDesk aliases:
+     - `field_crm`
+     - `fielddesk`
+     - `field-service`
+     - `field_service`
+     - canonical: `field_desk`
+   - Missed-call aliases:
+     - `missed_call`
+     - `missed-call`
+     - `missed_call_catch`
+     - canonical: `missed_call_catch`
+   - Trade Radar aliases:
+     - `trade_radar_roofing`, `roofing_radar`, `roofing`
+     - `trade_radar_hvac`, `hvac_radar`, `hvac`
+     - `trade_radar_plumbing`, `plumbing_radar`, `plumbing`
+     - `trade_radar_electrical`, `electrical_radar`, `electrical`
+     - `trade_radar_pest_control`, `pest_control_radar`, `pest_control`
+     - `trade_radar_gutters`, `gutters_radar`, `gutters`
+     - `trade_radar_exterior`, `exterior_radar`, `painting_radar`, `painting`
+     - `trade_radar_tree`, `tree_radar`, `tree`
+     - `trade_radar_restoration`, `restoration_radar`, `restoration`
+     - `trade_radar_demo_junk`, `demo_junk_radar`, `demo_junk`
+     - `trade_radar_foundation`, `foundation_radar`, `foundation`
+   - Other aliases:
+     - `site_radar` / `siteradar`
+     - `mortgage_radar` / `mortgage-radar`
+     - `techalert` / `hire_alert` / `talent_radar`
+     - `phone_answering` / `ai_phone_answering`
+     - `bundle_revenue_suite` / `bundle`
 
-### 2. New shared visual: `_shared/dashboard-preview.ts`
-A reusable HTML block that renders:
-- A hosted dashboard screenshot (PNG, lives in `public/email-assets/`) styled as a "your dashboard would look like this" tile
-- A "Missed Revenue This Month" big-number line ($X,XXX) computed from product-specific defaults (e.g. Trade Radar = leads_in_zip × $400 avg job; Missed-Call = est_missed_calls × $312; Mortgage Radar = est_refi_pool × $2,800; SiteRadar = anonymous_visitors × $80; TechAlert = open_role_days × $1,200/day)
-- A small "Based on signals we already pulled in your ZIP" caption so the number feels real, not invented.
+2. Make Start Trial use the correct checkout payload per product
+   - Current shared form sends a generic payload. Some checkout functions require fields that are currently blank or named differently.
+   - I’ll make the page product-aware:
+     - FieldDesk: send `business_name`, `email`, `phone`, `industry`.
+     - SiteRadar: send `businessName`, `website`, `email`.
+     - Missed-Call: require `phone`, send `businessName`.
+     - Trade Radar verticals: send `vertical`, `business_name`, `phone`, `zip_codes`, `tcpa_consent: true`.
+     - Mortgage Radar: do not pretend a lightweight trial form is enough; route to the real Mortgage Radar page if compliance fields are missing.
+     - Contractor Leads / Dead Lead: route to the real intake/landing flow instead of a fake generic “trial” path.
 
-### 3. Generate the dashboard preview images
-Use the AI image generation gateway (Nano banana pro `google/gemini-3-pro-image-preview`) to mock 6 dashboard screenshots — one per flagship product:
-- Trade Radar (lead feed with score badges + Street View thumbs)
-- Mortgage Radar (refi candidates with equity %)
-- TechAlert / Talent Radar (candidate dossiers + license badges)
-- Missed-Call Catch (call log with auto-text replies)
-- SiteRadar (anonymous-visitor company list)
-- FieldDesk (job board + tech locations)
+3. Fix the actual bad outbound email generators
+   - `fielddesk-cold-blast`: change `product=field_crm` to a canonical, working key.
+   - `dwa-product-blast`: change `product=trade_radar_${vertical}` links to keys Start Trial can resolve and pass vertical-specific checkout data.
+   - `dwa-product-blast`: change `product=missed_call` to a canonical working key, while also preserving alias support so already-sent emails work.
+   - Sweep every direct `/start-trial?product=` reference and route it through the central `buildOfferUrl()` helper where possible.
 
-Save to `public/email-assets/preview-<product>.png`. Run each through the `product-shot` skill so they're framed in a macOS window with a soft DWA-teal mesh gradient. Reference them in cold emails as `https://detroitwebagent.com/email-assets/preview-<product>.png`.
+4. Fix the backend trial-email flow too
+   - `start-radar-trial` currently recognizes older keys like `roofing_radar`, but not newer keys like `trade_radar_roofing`, and it is missing the newer Trade Radar verticals (`exterior`, `tree`, `restoration`, `demo_junk`, `foundation`).
+   - Add the same alias normalization there so landing pages, email CTA links, and backend-generated magic links all agree.
+   - Fix FieldDesk dashboard path consistency (`/my-field-desk` or the correct public onboarding path) instead of sending people to a mismatched dispatch route.
 
-### 4. Reframe `multi-service-drip` (full rewrite)
-- Drop `getServicesForIndustry()` add-on salad entirely.
-- New 3-step sequence, **each step embeds a dashboard preview + teaser card + missed-revenue number**:
-  - **Step 1**: "Your current site has [flaw]. Here's what we'd build" → demo link + dashboard preview of the radar product that fits their industry.
-  - **Step 2**: "Here's what a similar [industry] in MI got in 30 days" → revenue math + sample lead teaser card.
-  - **Step 3**: "Last note — your competitors in [city] are pulling X leads/mo with this exact stack" → urgency + pricing.
-- Industry → product mapping (cold pitch only ever points to ONE real lead/hire product, never the add-on list):
-  - Contractors / home-service → Trade Radar (matching vertical)
-  - Mortgage / loan officer / realtor → Mortgage Radar
-  - Healthcare / facility / staffing → CareAlert / TechAlert
-  - Legal / consulting / professional services → Missed-Call Catch + AI Phone Answering bundle
-  - Manufacturing / industrial → TechAlert (skilled trades hiring) + SiteRadar
-  - Restaurant / retail / salon → Missed-Call Catch
-  - B2B / SaaS / agency → SiteRadar
+5. Replace the bad link auditor with a real conversion-link auditor
+   - Update `e2e-link-auditor` so it does not only check 200/300 status.
+   - For `/start-trial` links, it must GET the page and fail if the HTML contains:
+     - `Unknown product`
+     - `trial link is missing or invalid`
+   - It should also verify the expected product label appears on the page.
+   - Add explicit targets for all known aliases and all live cold-email hardcoded links, not just keys in `OFFERS`.
 
-### 5. Sweep every other cold sender
-For each, swap raw Resend / hardcoded "free trial" / addon-salad copy for `dwaColdEmail()` with a real `product:` string + teaser card + dashboard preview:
-- `dead-lead-outreach-drip`, `contractor-fomo-mailer`, `outreach-email-blast`, `hoa-cold-outreach`, `pipeline-drip-send`, `pipeline-batch-drip`, `pipeline-auto-drip`, `neo-outreach`, `prospect-local-businesses`, `web-design-drip`, `dossier-cold-outreach`, `dossier-cold-outreach-bulk`, `signal-channel-blast`, `storm-lead-blaster`, `marketplace-outreach-blast`, `mortgage-radar-outreach`, `dwa-product-blast`, `fielddesk-cold-blast`, `siteradar-cold-blast`, `contractor-prospector`, `contractor-outreach-email-blast`, `techalert-outreach`, `techalert-followup-drip`, `channel-prospector-followup`, `agency-prospect-list-blast`.
+6. Add an admin-facing red flag for this exact failure
+   - Update Link Health wording from “HEAD-check” to “content-aware conversion check.”
+   - Show failures if a URL technically loads but contains the bad error page.
 
-For each one: confirm `product:` string, attach the right dashboard preview image, attach a teaser card with one example lead from that product's table (or a realistic sample if no live row exists for that recipient's geo), inject the missed-revenue line.
+7. Browser click-test the repaired links before calling it done
+   - I will manually open representative live/preview links for:
+     - FieldDesk old bad link: `product=field_crm`
+     - FieldDesk canonical link: `product=field_desk`
+     - Trade Radar vertical old link: `product=trade_radar_roofing`
+     - Trade Radar canonical/alias link: `product=roofing_radar`
+     - Missed-call old bad link: `product=missed_call`
+     - Missed-call canonical link: `product=missed_call_catch`
+     - SiteRadar
+     - Bundle
+     - TechAlert
+   - Passing criteria: no “Unknown product,” correct product label, correct form fields, and the CTA invokes the intended checkout function.
 
-### 6. Verify what is NOT touched
-- `ai-upsell-sender`, `cross-sell-drip`, `monthly-upgrade-recap-sender` — these target existing customers. The add-on salad lives here legitimately.
-- `create-*-checkout` — landing-page checkouts for the individual add-ons are fine; we just stop pitching them in cold.
-- TechAlert/Mortgage Radar/Trade Radar/FieldDesk/SiteRadar/Missed-Call landing pages — already pitch their own product correctly.
+8. Deploy affected functions after the code fix
+   - Deploy/update the changed backend functions so outgoing emails stop creating broken CTAs.
+   - Existing already-sent broken links will be rescued by the Start Trial alias map, so those leads are not lost if they click later.
 
-### 7. Deploy + test
-Deploy every touched edge function. Trigger one test send through `multi-service-drip`, `web-design-drip`, `dead-lead-outreach-drip`, `contractor-fomo-mailer`, and `outreach-email-blast` — confirm:
-- No bogus "free trial of Detroit Web Agency" box on website pitches
-- Dashboard preview image renders inline
-- Teaser card renders inline
-- Missed-revenue number shows
-- CTA goes to the right product page
+Files I expect to change after approval:
 
-## Files touched (~30)
-- `supabase/functions/_shared/dwa-email.ts`
-- `supabase/functions/_shared/teaser-card.ts` (extend with score-meter + sample-data variants)
-- `supabase/functions/_shared/dashboard-preview.ts` (new)
-- `public/email-assets/preview-*.png` (6 new generated images)
-- 25 cold-email edge functions listed in §5
-- `supabase/functions/multi-service-drip/index.ts` — full rewrite per §4
+```text
+src/pages/StartTrial.tsx
+src/pages/admin/LinkHealth.tsx
+supabase/functions/_shared/offer-url.ts
+supabase/functions/start-radar-trial/index.ts
+supabase/functions/e2e-link-auditor/index.ts
+supabase/functions/fielddesk-cold-blast/index.ts
+supabase/functions/dwa-product-blast/index.ts
+possibly supabase/functions/_shared/offers.ts
+```
 
-## Out of scope
-- Customer-portal upsell tiles (where add-ons belong)
-- Trial mechanics / Stripe (already correct)
-- Any UI changes in the React app
+The priority is not just fixing future emails. The priority is also rescuing links that already went out, because alias support on `/start-trial` means `field_crm`, `missed_call`, and `trade_radar_*` links can start working without the recipient needing a new email.
