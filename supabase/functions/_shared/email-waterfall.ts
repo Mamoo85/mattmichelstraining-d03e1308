@@ -601,10 +601,67 @@ export async function runEmailWaterfall(
     }
   } catch (e) { miss("email_extras", String(e)); }
 
+  // 20-29. Second-wave free extras: Hunter Finder, Yellowpages, Yelp, Foursquare,
+  // OSM, DuckDuckGo, Yandex, GitHub Events, Wayback CDX, Crunchbase.
+  try {
+    const ex2 = await import("./email-extras-2.ts");
+
+    if (domain && input.contact_first_name && input.contact_last_name) {
+      const e = await ex2.hunterFinder(domain, input.contact_first_name, input.contact_last_name);
+      if (e && looksValidEmail(e)) { await bump(sb, "hunter_finder", true); return hit("hunter_finder", e, 70); }
+      miss("hunter_finder");
+    }
+    if (input.business_name && input.city) {
+      const e = await ex2.yellowpagesEmail(input.business_name, input.city);
+      if (e && looksValidEmail(e)) { await bump(sb, "yellowpages", true); return hit("yellowpages", e, 50); }
+      miss("yellowpages");
+    }
+    if (input.business_name && input.city) {
+      const e = await ex2.yelpFusionEmail(input.business_name, input.city);
+      if (e && looksValidEmail(e)) { await bump(sb, "yelp_fusion", true); return hit("yelp_fusion", e, 55); }
+      miss("yelp_fusion");
+    }
+    if (input.business_name && input.city) {
+      const e = await ex2.foursquareEmail(input.business_name, input.city);
+      if (e && looksValidEmail(e)) { await bump(sb, "foursquare", true); return hit("foursquare", e, 55); }
+      miss("foursquare");
+    }
+    if (input.business_name && input.city) {
+      const e = await ex2.osmContactEmail(input.business_name, input.city);
+      if (e && looksValidEmail(e)) { await bump(sb, "osm", true); return hit("osm", e, 55); }
+      miss("osm");
+    }
+    if (domain) {
+      const e = await ex2.duckduckgoEmail(domain);
+      if (e && looksValidEmail(e)) { await bump(sb, "duckduckgo", true); return hit("duckduckgo", e, 45); }
+      miss("duckduckgo");
+    }
+    if (domain) {
+      const e = await ex2.yandexEmail(domain);
+      if (e && looksValidEmail(e)) { await bump(sb, "yandex", true); return hit("yandex", e, 45); }
+      miss("yandex");
+    }
+    if (domain) {
+      const e = await ex2.githubEventsEmail(domain);
+      if (e && looksValidEmail(e)) { await bump(sb, "github_events", true); return hit("github_events", e, 55); }
+      miss("github_events");
+    }
+    if (domain) {
+      const e = await ex2.waybackCdxEmail(domain);
+      if (e && looksValidEmail(e)) { await bump(sb, "wayback_cdx", true); return hit("wayback_cdx", e, 50); }
+      miss("wayback_cdx");
+    }
+    if (input.business_name) {
+      const e = await ex2.crunchbaseEmail(input.business_name);
+      if (e && looksValidEmail(e)) { await bump(sb, "crunchbase", true); return hit("crunchbase", e, 60); }
+      miss("crunchbase");
+    }
+  } catch (e) { miss("email_extras_2", String(e)); }
+
   return { email: null, source: null, confidence: 0, trace };
 }
 
-export const WATERFALL_PROVIDERS = ["site_scrape", "snov", "apollo", "pattern_verify", "firecrawl_deep", "hunter", "pdl", "pdl_name", "crtsh", "rdap_whois", "opencorporates", "wayback", "bbb", "detroit_open_biz", "google_places", "github_commits", "dns_mx_pattern", "bing_serp", "reddit", "common_crawl"] as const;
+export const WATERFALL_PROVIDERS = ["site_scrape", "snov", "apollo", "pattern_verify", "firecrawl_deep", "hunter", "pdl", "pdl_name", "crtsh", "rdap_whois", "opencorporates", "wayback", "bbb", "detroit_open_biz", "google_places", "github_commits", "dns_mx_pattern", "bing_serp", "reddit", "common_crawl", "hunter_finder", "yellowpages", "yelp_fusion", "foursquare", "osm", "duckduckgo", "yandex", "github_events", "wayback_cdx", "crunchbase"] as const;
 
 /**
  * runFieldWaterfall — wrapper around runEmailWaterfall that reports which
