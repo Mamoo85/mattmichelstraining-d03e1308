@@ -168,6 +168,9 @@ serve(async (req) => {
         })
         .eq("id", t.id);
 
+      // D0: fire-and-forget LinkedIn connection request (secondary touch)
+      fireLinkedInConnect(t.company_name, t.owner_name, t.id, sb).catch(() => {});
+
       sent++;
       await new Promise((r) => setTimeout(r, 200));
     }
