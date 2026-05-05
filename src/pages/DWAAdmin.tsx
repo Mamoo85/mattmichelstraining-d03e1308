@@ -55,6 +55,8 @@ const DJConleyCommandPanel = lazy(() => import("@/components/admin/DJConleyComma
 const AdminManualOnboardingQueue = lazy(() => import("@/components/dwa-admin/AdminManualOnboardingQueue"));
 const AdminSuppressionLists = lazy(() => import("@/components/dwa-admin/AdminSuppressionLists"));
 const AdminSystemAudit = lazy(() => import("@/components/dwa-admin/AdminSystemAudit"));
+const AdminEnrichmentHealth = lazy(() => import("@/components/admin/AdminEnrichmentHealth"));
+const AdminReplyInbox = lazy(() => import("@/components/admin/AdminReplyInbox"));
 
 type Tab =
   | "ai-command"
@@ -63,7 +65,7 @@ type Tab =
   | "contractor-leads" | "contractor-onboarding" | "contractor-market" | "fielddesk" | "techalert" | "missed-call" | "missed-call-leads" | "clients-all"
   | "lead-marketplace" | "demand-radar" | "hvb" | "growth-signals" | "visitor-intel" | "the-wire" | "coverage-map" | "trade-radar"
   | "health" | "simulation" | "playbook-hub" | "field-ops" | "command"
-  | "sales-hub" | "buyer-radar-qa" | "mortgage-radar" | "strategy-mode" | "enrichment-audit" | "marketing-tools" | "djconley" | "manual-onboarding" | "suppression-lists" | "system-audit";
+  | "sales-hub" | "buyer-radar-qa" | "mortgage-radar" | "strategy-mode" | "enrichment-audit" | "enrichment-health" | "reply-inbox" | "marketing-tools" | "djconley" | "manual-onboarding" | "suppression-lists" | "system-audit";
 
 const GROUPS: SidebarGroup[] = [
   {
