@@ -954,7 +954,39 @@ Two purposes in one codebase:
   - `apollo.ts` — `apolloPeopleSearch`, `apolloOrganizationSearch`, `apolloOrganizationEnrich` (canonical; use this, not raw fetch)
   - `firecrawl.ts` — `firecrawlScrape`, `extractFaxNumber`, `extractPhoneNumbers`, `extractContactInfo`
   - `hunter.ts` — `hunterFindEmail(domain)`, `hunterVerifyEmail(email)`
-  - `email-waterfall.ts` — multi-source email enrichment waterfall (Apollo → Hunter → Firecrawl)
+  - `email-waterfall.ts` — multi-source email enrichment waterfall (Apollo → Hunter → Firecrawl → Snov)
+  - `address-validation.ts` — Google Address Validation wrapper
+  - `alert-rules.ts` — configurable alert thresholds
+  - `budget-gate.ts` — per-function spend gate (abort if budget exceeded)
+  - `cheap-extract.ts` — lightweight LLM extraction (skip full Opus call)
+  - `compliance-waterfall.ts` — TCPA/FCRA compliance check chain
+  - `crm-webhook.ts` — HubSpot contact upsert; used by visitor-identify + voicemail handler
+  - `demand-radar-log.ts` — structured logging for Demand Radar scans
+  - `dlq.ts` — dead-letter queue helpers for failed function invocations
+  - `domain-resolver.ts` — domain → company resolution
+  - `dwa-email.ts` — DWA-branded Resend wrapper
+  - `email-suppression.ts` — email suppression list (complements `outreach-blocklist.ts`)
+  - `engine-log.ts` — scanner engine run logging
+  - `enrichment-breaker.ts` — circuit breaker for enrichment APIs
+  - `enrichment-budget.ts` — per-lead enrichment cost tracking
+  - `enrichment-pipeline.ts` — orchestrates Apollo → Hunter → Firecrawl → Snov pipeline
+  - `error-log.ts` — writes to `error_logs` (feeds fixer watchdog)
+  - `firecrawl-scrape.ts` — lower-level Firecrawl fetch (use `firecrawl.ts` for higher-level helpers)
+  - `founder-seats.ts` — founder seat quota enforcement
+  - `intake-throttle.ts` — rate limiter for scanner ingestion
+  - `kpi-math.ts` — KPI calculation helpers (conversion rates, velocity)
+  - `license-waterfall.ts` — LARA license lookup chain
+  - `llm-cache.ts` — prompt/response cache to avoid duplicate LLM calls
+  - `market-waterfall.ts` — market signal aggregation chain
+  - `marketing-kill-switch.ts` — global outreach kill switch (DB flag check before any send)
+  - `offer-ad-prompt.ts`, `offer-url.ts`, `offers.ts` — offer copy + URL helpers
+  - `provenance.ts` — tracks data source provenance on leads
+  - `request-id.ts` — generates/propagates `X-Request-ID` headers
+  - `signal-waterfall.ts` — multi-source signal aggregation pipeline
+  - `source-probes.ts` + `sources/` — source health-check registry
+  - `tech-session.ts` — TechAlert session state helpers
+  - `telemetry.ts` — lightweight event telemetry
+  - `trade-canonical.ts` — canonical trade vertical name normalization
   - `circuit-breaker.ts`, `fetch-with-retry.ts`, `retry-policy.ts` — resilience utilities
   - `enrichment-audit.ts` — enrichment cost + result logging
   - `anti-hallucination.ts`, `llm-contradiction-check.ts`, `event-corroboration.ts` — LLM output validation
