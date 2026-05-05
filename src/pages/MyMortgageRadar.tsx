@@ -647,6 +647,9 @@ export default function MyMortgageRadar() {
           </Card>
         </div>
       )}
+      <div className="max-w-5xl mx-auto px-4 pb-10">
+        <LeadGuaranteeBar productName="Mortgage Radar" />
+      </div>
     </div>
   );
 }
