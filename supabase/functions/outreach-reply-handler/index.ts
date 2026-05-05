@@ -9,6 +9,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { verifyTwilioSignature } from "../_shared/webhook-verify.ts";
 import { generateWithHaiku } from "../_shared/opus.ts";
 import { sendSMS, ADMIN_PHONE } from "../_shared/twilio.ts";
+import { dwaEmail } from "../_shared/dwa-email.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
