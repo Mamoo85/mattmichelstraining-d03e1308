@@ -1304,7 +1304,7 @@ serve(async (req) => {
         const email = meta.email || customerEmail;
         try {
           if (email) {
-            await (sb.from as any)("agency_whitelabel_clients").upsert({
+            const { data: agencyRow } = await (sb.from as any)("agency_whitelabel_clients").upsert({
               agency_name: meta.agency_name || email,
               contact_name: meta.contact_name || null,
               email,
@@ -1312,11 +1312,24 @@ serve(async (req) => {
               stripe_customer_id: session.customer as string || null,
               stripe_subscription_id: session.subscription as string || null,
               active: true,
-            }, { onConflict: "email" }).catch(() => {});
+            }, { onConflict: "email" }).select("id").maybeSingle().catch(() => ({ data: null }));
+
+            // Auto-provision Trade Radar white-label access for all 11 verticals
+            if (agencyRow?.id && meta.trade_verticals) {
+              const verticals = String(meta.trade_verticals).split(",").map((v: string) => v.trim()).filter(Boolean);
+              for (const vertical of verticals) {
+                await sb.from("trade_radar_clients").update({
+                  is_whitelabel: true,
+                  whitelabel_brand: meta.agency_name || email,
+                  whitelabel_from_email: email,
+                  whitelabel_agency_id: String(agencyRow.id),
+                }).eq("email", email).eq("vertical", vertical).catch(() => {});
+              }
+            }
           }
           await notifyMatt(
             `🏢 New Agency White-Label: ${meta.agency_name || email}`,
-            `<p>$999/mo white-label access activated. They can now blast candidates under their own brand.</p><p>Email: ${email}</p><p>Agency: ${meta.agency_name || "—"}</p>`
+            `<p>$25,000/yr white-label access activated. Trade Radar digests now branded under their agency name.</p><p>Email: ${email}</p><p>Agency: ${meta.agency_name || "—"}</p>`
           ).catch(() => {});
         } catch (e) {
           console.error("[WEBHOOK] agency_whitelabel_subscription error:", e);
