@@ -77,7 +77,7 @@ function buildEmailBody(ownerName: string | null, companyName: string, role: str
       "Direct contact info — call them before your competitor sees the resume",
     ],
     ctaText: "See sample alerts →",
-    ctaUrl: "https://detroitwebagent.com/talent-radar?utm_source=cold&utm_campaign=techalert",
+    ctaUrl: "https://detroitwebagent.com/start-trial?product=techalert",
     blurContact: true,
   });
 
@@ -103,7 +103,7 @@ async function sendEmail(sb: ReturnType<typeof createClient>, to: string, ownerN
     subject,
     bodyHtml: buildEmailBody(ownerName, companyName, role, isBoiler, score),
     product: "TechAlert",
-    ctaUrl: "https://detroitwebagent.com/talent-radar?utm_source=cold&utm_campaign=techalert",
+    ctaUrl: "https://detroitwebagent.com/start-trial?product=techalert",
     templateName: "techalert_cold_d0",
   }, sb);
   return { ok: r.ok, err: r.error };
