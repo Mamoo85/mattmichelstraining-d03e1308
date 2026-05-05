@@ -236,6 +236,24 @@ serve(async (req) => {
           ).catch(() => {});
         }
       }
+
+      // Auto-feed into outreach_leads so the enrichment cron picks them up
+      // Skip if this company is already in the outreach pipeline
+      const { data: existingOutreach } = await sb
+        .from("outreach_leads")
+        .select("id")
+        .ilike("business_name", companyName)
+        .maybeSingle();
+
+      if (!existingOutreach) {
+        await sb.from("outreach_leads").insert({
+          business_name: companyName,
+          city: city || null,
+          industry: "Other",
+          source: "site_radar",
+          notes: `SiteRadar: visited ${page || "homepage"} from ${city || "unknown"}, ${region || ""}. Identified via IP enrichment.`,
+        }).then(() => {}, () => {});
+      }
     }
 
     // High-intent SMS: page contains /pricing or /contact → alert client immediately
