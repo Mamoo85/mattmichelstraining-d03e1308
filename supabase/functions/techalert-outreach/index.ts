@@ -21,6 +21,47 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Fire-and-forget: look up LinkedIn profile via Apollo, then send connection request.
+// Fails silently — email is the primary channel, LinkedIn is secondary touch.
+async function fireLinkedInConnect(companyName: string, ownerName: string | null, prospectId: string, sb: ReturnType<typeof createClient>) {
+  if (!LINKEDIN_ACCESS_TOKEN || !APOLLO_API_KEY) return;
+  try {
+    // Apollo people search to find LinkedIn URL
+    const apolloRes = await fetch("https://api.apollo.io/api/v1/people/search", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Api-Key": APOLLO_API_KEY },
+      body: JSON.stringify({ api_key: APOLLO_API_KEY, q_organization_name: companyName, person_titles: ["owner", "president", "ceo", "general manager"], page: 1, per_page: 1 }),
+      signal: AbortSignal.timeout(8_000),
+    }).then(r => r.json()).catch(() => null);
+    const liUrl = apolloRes?.people?.[0]?.linkedin_url as string | undefined;
+    if (!liUrl) return;
+
+    // Store the URL regardless of connection outcome
+    await sb.from("techalert_prospect_targets").update({ owner_linkedin_url: liUrl }).eq("id", prospectId);
+
+    // Extract LinkedIn member ID from URL (e.g. /in/john-doe → need URN)
+    // LinkedIn invitation API requires member URN — use profile lookup first
+    const profileRes = await fetch(`https://api.linkedin.com/v2/people/(url=${encodeURIComponent(liUrl)})`, {
+      headers: { Authorization: `Bearer ${LINKEDIN_ACCESS_TOKEN}` },
+      signal: AbortSignal.timeout(5_000),
+    }).then(r => r.json()).catch(() => null);
+    const memberUrn = profileRes?.id ? `urn:li:member:${profileRes.id}` : null;
+    if (!memberUrn) return;
+
+    const firstName = ownerName?.split(" ")[0] || "";
+    const note = `Hi ${firstName} — noticed ${companyName} is hiring skilled tradespeople. I run TechAlert, a hiring signal monitor for Michigan contractors. Happy to connect!`.slice(0, 300);
+
+    await fetch("https://api.linkedin.com/v2/invitations", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${LINKEDIN_ACCESS_TOKEN}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ invitee: { "com.linkedin.voyager.growth.invitation.InviteeProfile": { profileId: profileRes.id } }, message: note }),
+      signal: AbortSignal.timeout(5_000),
+    });
+
+    await sb.from("techalert_prospect_targets").update({ li_connect_sent_at: new Date().toISOString() }).eq("id", prospectId);
+  } catch (_) { /* fire-and-forget */ }
+}
+
 function buildEmailBody(ownerName: string | null, companyName: string, role: string, isBoiler: boolean, score: number): string {
   const greeting = ownerName ? ownerName.split(" ")[0] : "there";
   const tradeLabel = isBoiler ? "boiler/stationary engineer" : role.replace(/_/g, " ");
