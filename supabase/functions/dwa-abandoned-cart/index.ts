@@ -78,16 +78,7 @@ Deno.serve(async () => {
   <p style="color:#64748b;font-size:13px;margin-top:24px">— Matt Michels · Detroit Web Agency<br>(313) 992-1219</p>
 </div>`;
 
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        from: "Matt @ Detroit Web Agency <matt@detroitwebagency.com>",
-        to: [row.email],
-        subject: `You left ${label} behind — here's 10% off`,
-        html,
-      }),
-    }).catch(() => null);
+    const res = await dwaEmail({ to: row.email, subject: `You left ${label} behind — here's 10% off`, html }).catch(() => null);
 
     if (res?.ok) {
       await sb.from("cart_abandonments")
