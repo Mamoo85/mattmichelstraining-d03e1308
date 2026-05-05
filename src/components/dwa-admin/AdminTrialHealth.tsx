@@ -52,10 +52,10 @@ const ChannelIcon = ({ ch }: { ch: string }) => {
 };
 
 const TOUCH_LABELS: Record<string, string> = {
-  welcome_pulse: "Day 0 — Welcome",
-  day2_pulse: "Day 2 — Check-in",
-  day5_pulse: "Day 5 — Mid-trial value",
-  day6_pulse: "Day 6 — Convert ask",
+  welcome: "Day 0 — Welcome",
+  day2: "Day 2 — Check-in",
+  day5: "Day 5 — Mid-trial value",
+  day6: "Day 6 — Convert ask",
   at_risk_alert: "At-Risk admin alert",
   breach_alert: "Breach admin alert",
 };
