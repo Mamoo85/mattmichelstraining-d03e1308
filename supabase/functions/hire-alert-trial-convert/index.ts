@@ -27,16 +27,107 @@ serve(async (req) => {
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
   try {
-    // Find trials that have just expired
+    const now = new Date();
+
+    // ── Mid-trial drip: Day 1 / Day 3 / Day 6 nurture emails ─────────────────
+    // Runs alongside the expiry check every hour. Uses trial_started_at windows.
+    const dripResults = { d1: 0, d3: 0, d6: 0 };
+    if (RESEND_API_KEY) {
+      const activeTrials = await sb
+        .from("hire_alert_clients")
+        .select("id, owner_email, owner_name, company_name, phone, trial_started_at, trial_drip_d1_sent_at, trial_drip_d3_sent_at, trial_drip_d6_sent_at")
+        .eq("trial_status", "active")
+        .not("trial_started_at", "is", null);
+
+      for (const client of (activeTrials.data || [])) {
+        if (!client.owner_email || !client.trial_started_at) continue;
+        const started = new Date(client.trial_started_at);
+        const hoursIn = (now.getTime() - started.getTime()) / 3600000;
+        const firstName = client.owner_name?.split(" ")[0] || client.company_name || "there";
+        const checkoutUrl = `${SITE_URL}/hire-alert?prefilled_email=${encodeURIComponent(client.owner_email)}`;
+
+        // Count candidates found so far
+        const { count: candidateSoFar } = await sb
+          .from("hire_alert_candidates")
+          .select("id", { count: "exact", head: true })
+          .gte("created_at", client.trial_started_at);
+        const found = candidateSoFar || 0;
+
+        // Day 1 (20-28h window): "Welcome + first signal"
+        if (hoursIn >= 20 && hoursIn < 28 && !client.trial_drip_d1_sent_at) {
+          await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              from: FROM_EMAIL, to: [client.owner_email],
+              subject: `You're in — here's what TechAlert found on Day 1`,
+              html: `<div style="font-family:sans-serif;max-width:600px;color:#1a1a1a;line-height:1.7">
+<p>Hey ${firstName},</p>
+<p>Welcome to TechAlert. Your scanner has been running for 24 hours — and it's already found <strong>${found} candidate signal${found !== 1 ? "s" : ""}</strong> matching your criteria.</p>
+<p>These are real companies actively hiring tradespeople in your market. The signal score tells you how urgent their need is.</p>
+<p>We'll keep scanning every day. Reply here if you have questions — I read every one.</p>
+<p>— Matt @ Detroit Web Agency</p>
+</div>`,
+            }),
+          });
+          await sb.from("hire_alert_clients").update({ trial_drip_d1_sent_at: now.toISOString() }).eq("id", client.id);
+          dripResults.d1++;
+        }
+
+        // Day 3 (68-76h window): "Here's what we've found so far"
+        if (hoursIn >= 68 && hoursIn < 76 && !client.trial_drip_d3_sent_at) {
+          await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              from: FROM_EMAIL, to: [client.owner_email],
+              subject: `TechAlert Day 3 update — ${found} signal${found !== 1 ? "s" : ""} found`,
+              html: `<div style="font-family:sans-serif;max-width:600px;color:#1a1a1a;line-height:1.7">
+<p>Hey ${firstName},</p>
+<p>Halfway through your trial — TechAlert has identified <strong>${found} candidate signal${found !== 1 ? "s" : ""}</strong> in your market so far.</p>
+<p>${found > 0 ? "Each one represents a company that's actively looking for tradespeople like you. The window to reach out first is short." : "The market's been quiet this week, but that changes fast — and when it does, you'll want to be first in line."}</p>
+<p>Your trial ends in 3 more days. <a href="${checkoutUrl}">Upgrade to keep the alerts coming →</a></p>
+<p>— Matt</p>
+</div>`,
+            }),
+          });
+          await sb.from("hire_alert_clients").update({ trial_drip_d3_sent_at: now.toISOString() }).eq("id", client.id);
+          dripResults.d3++;
+        }
+
+        // Day 6 (140-148h window): "Trial ends tomorrow"
+        if (hoursIn >= 140 && hoursIn < 148 && !client.trial_drip_d6_sent_at) {
+          await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              from: FROM_EMAIL, to: [client.owner_email],
+              subject: `Your TechAlert trial ends tomorrow`,
+              html: `<div style="font-family:sans-serif;max-width:600px;color:#1a1a1a;line-height:1.7">
+<p>Hey ${firstName},</p>
+<p>Your trial wraps up tomorrow. In 7 days, TechAlert found <strong>${found} candidate signal${found !== 1 ? "s" : ""}</strong> in your market.</p>
+<p>After your trial ends, the scanner stops and you'll miss new signals as they come in. At $149/mo that's about $5/day to know exactly which companies in your area are actively searching for your trade.</p>
+<p><a href="${checkoutUrl}" style="display:inline-block;background:#0a1628;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;font-weight:600">Keep My Alerts Running →</a></p>
+<p>— Matt</p>
+</div>`,
+            }),
+          });
+          await sb.from("hire_alert_clients").update({ trial_drip_d6_sent_at: now.toISOString() }).eq("id", client.id);
+          dripResults.d6++;
+        }
+      }
+    }
+
+    // ── Find trials that have just expired ────────────────────────────────────
     const { data: expiredTrials } = await sb
       .from("hire_alert_clients")
       .select("*")
       .eq("trial_status", "active")
-      .lte("trial_ends_at", new Date().toISOString())
+      .lte("trial_ends_at", now.toISOString())
       .limit(20);
 
     if (!expiredTrials?.length) {
-      return new Response(JSON.stringify({ ok: true, converted: 0 }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ ok: true, converted: 0, drip: dripResults }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     console.log(`[hire-alert-trial-convert] Processing ${expiredTrials.length} expired trials`);
