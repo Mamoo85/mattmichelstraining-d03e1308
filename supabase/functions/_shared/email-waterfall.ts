@@ -444,21 +444,6 @@ export async function runEmailWaterfall(
     miss("pattern_verify");
   }
 
-  // 4.5 firecrawl deep — multi-subpage scrape with mailto + deobfuscation.
-  // Free relative to Firecrawl budget; runs before paid Hunter/PDL tiers.
-  if (url) {
-    try {
-      const { deepExtractContact } = await import("./firecrawl.ts");
-      const { result: r, ms } = await timeStage(() => deepExtractContact(url, { maxPages: 5 }));
-      if (r?.email && looksValidEmail(r.email)) {
-        await bump(sb, "firecrawl_deep", true, { latency_ms: ms });
-        return hit("firecrawl_deep", r.email, 60);
-      }
-      await bump(sb, "firecrawl_deep", false, { latency_ms: ms });
-      miss("firecrawl_deep");
-    } catch { miss("firecrawl_deep"); }
-  }
-
   // 5. hunter
   if (domain && !(await isProviderRateLimited(sb, "hunter"))) {
     const { result: r, ms } = await timeStage(() => hunterDomainSearch(sb, domain));
@@ -530,222 +515,94 @@ export async function runEmailWaterfall(
     } catch { miss("opencorporates"); }
   }
 
-  // 10. wayback_contact — historical Archive.org snapshot of /contact (free, fail-open)
-  if (url) {
-    try {
-      const { dispatchFetch } = await import("./sources/index.ts");
-      const wb = await dispatchFetch("wayback_contact", { website: url }) as Array<{ email?: string }>;
-      const e = (wb ?? []).map((r) => r?.email).find((x) => x && looksValidEmail(x!));
-      if (e) { await bump(sb, "wayback", true); return hit("wayback", e!, 45); }
-      miss("wayback");
-    } catch { miss("wayback"); }
-  }
-
-  // 11. bbb_profile — Better Business Bureau owner + emails (free scrape, fail-open)
-  if (input.business_name) {
-    try {
-      const { dispatchFetch } = await import("./sources/index.ts");
-      const bbb = await dispatchFetch("bbb_profile", {
-        business_name: input.business_name,
-        state: input.state || "MI",
-      }) as Array<{ emails?: string[] }>;
-      const emails = (bbb?.[0]?.emails || []).filter(looksValidEmail);
-      if (emails.length) { await bump(sb, "bbb", true); return hit("bbb", emails[0], 50); }
-      miss("bbb");
-    } catch { miss("bbb"); }
-  }
-
-  // 12-19. Free email-extras: Detroit Open Biz, Google Places, GitHub commits,
-  // DNS-MX pattern, Bing SERP, Reddit mentions, Common Crawl, NPI registry.
+  // 10–24. Search engines, open registries, DNS, social (email-extras-1)
   try {
-    const ex = await import("./email-extras.ts");
+    const ex1 = await import("./email-extras-1.ts");
+    const tries1: [string, number, () => Promise<string | null>][] = [
+      ["wayback",           55, () => domain ? ex1.waybackEmail(domain) : Promise.resolve(null)],
+      ["bbb_scrape",        55, () => input.business_name ? ex1.bbbEmail(input.business_name, input.city ?? undefined) : Promise.resolve(null)],
+      ["detroit_openbiz",   65, () => input.business_name ? ex1.detroitOpenBizEmail(input.business_name) : Promise.resolve(null)],
+      ["google_places",     70, () => input.business_name ? ex1.googlePlacesEmail(input.business_name, input.city ?? undefined) : Promise.resolve(null)],
+      ["github_commits",    55, () => input.business_name ? ex1.githubCommitsEmail(input.business_name) : Promise.resolve(null)],
+      ["dns_mx_pattern",    50, () => domain ? ex1.dnsMxPatternEmail(domain) : Promise.resolve(null)],
+      ["bing_serp",         55, () => input.business_name ? ex1.bingSerpEmail(input.business_name, domain ?? undefined) : Promise.resolve(null)],
+      ["reddit",            50, () => input.business_name ? ex1.redditEmail(input.business_name) : Promise.resolve(null)],
+      ["common_crawl",      55, () => domain ? ex1.commonCrawlEmail(domain) : Promise.resolve(null)],
+      ["hunter_finder",     65, () => domain ? ex1.hunterFinderEmail(domain, input.contact_first_name ?? undefined, input.contact_last_name ?? undefined) : Promise.resolve(null)],
+      ["yellowpages",       50, () => input.business_name ? ex1.yellowpagesEmail(input.business_name, input.city ?? undefined) : Promise.resolve(null)],
+      ["yelp_fusion",       60, () => input.business_name ? ex1.yelpFusionEmail(input.business_name, input.city ?? undefined) : Promise.resolve(null)],
+      ["foursquare",        60, () => input.business_name ? ex1.foursquareEmail(input.business_name, input.city ?? undefined) : Promise.resolve(null)],
+      ["osm",               50, () => input.business_name ? ex1.osmEmail(input.business_name, input.city ?? undefined) : Promise.resolve(null)],
+      ["duckduckgo",        50, () => input.business_name ? ex1.duckduckgoEmail(input.business_name) : Promise.resolve(null)],
+    ];
+    for (const [name, conf, fn] of tries1) {
+      try {
+        const e = await fn();
+        if (e && looksValidEmail(e)) { await bump(sb, name, true); return hit(name, e, conf); }
+        miss(name);
+      } catch (err) { miss(name, String(err)); }
+    }
+  } catch (e) { miss("email_extras_1", String(e)); }
 
-    if (input.business_name) {
-      const e = await ex.detroitOpenBizEmail(input.business_name);
-      if (e && looksValidEmail(e)) { await bump(sb, "detroit_open_biz", true); return hit("detroit_open_biz", e, 65); }
-      miss("detroit_open_biz");
-    }
-    if (input.business_name && input.city) {
-      const e = await ex.googlePlacesEmail(input.business_name, input.city);
-      if (e && looksValidEmail(e)) { await bump(sb, "google_places", true); return hit("google_places", e, 55); }
-      miss("google_places");
-    }
-    if (domain) {
-      const e = await ex.githubCommitEmail(domain);
-      if (e && looksValidEmail(e)) { await bump(sb, "github_commits", true); return hit("github_commits", e, 60); }
-      miss("github_commits");
-    }
-    if (domain) {
-      const e = await ex.dnsMxPatternGuess(domain, input.contact_first_name, input.contact_last_name);
-      if (e && looksValidEmail(e)) {
-        // Verify via Snov (cheap, already in budget). Fall through if no token.
-        const ok = await snovVerify(sb, e);
-        if (ok) { await bump(sb, "dns_mx_pattern", true); return hit("dns_mx_pattern", e, 50); }
-      }
-      miss("dns_mx_pattern");
-    }
-    if (domain) {
-      const e = await ex.bingDomainEmail(domain);
-      if (e && looksValidEmail(e)) { await bump(sb, "bing_serp", true); return hit("bing_serp", e, 45); }
-      miss("bing_serp");
-    }
-    if (input.business_name) {
-      const e = await ex.redditMentionEmail(input.business_name);
-      if (e && looksValidEmail(e)) { await bump(sb, "reddit", true); return hit("reddit", e, 40); }
-      miss("reddit");
-    }
-    if (domain) {
-      const e = await ex.commonCrawlEmail(domain);
-      if (e && looksValidEmail(e)) { await bump(sb, "common_crawl", true); return hit("common_crawl", e, 50); }
-      miss("common_crawl");
-    }
-  } catch (e) { miss("email_extras", String(e)); }
-
-  // 20-29. Second-wave free extras: Hunter Finder, Yellowpages, Yelp, Foursquare,
-  // OSM, DuckDuckGo, Yandex, GitHub Events, Wayback CDX, Crunchbase.
+  // 25–38. Search engines, social, geocoders, gov registries (email-extras-2)
   try {
     const ex2 = await import("./email-extras-2.ts");
-
-    if (domain && input.contact_first_name && input.contact_last_name) {
-      const e = await ex2.hunterFinder(domain, input.contact_first_name, input.contact_last_name);
-      if (e && looksValidEmail(e)) { await bump(sb, "hunter_finder", true); return hit("hunter_finder", e, 70); }
-      miss("hunter_finder");
-    }
-    if (input.business_name && input.city) {
-      const e = await ex2.yellowpagesEmail(input.business_name, input.city);
-      if (e && looksValidEmail(e)) { await bump(sb, "yellowpages", true); return hit("yellowpages", e, 50); }
-      miss("yellowpages");
-    }
-    if (input.business_name && input.city) {
-      const e = await ex2.yelpFusionEmail(input.business_name, input.city);
-      if (e && looksValidEmail(e)) { await bump(sb, "yelp_fusion", true); return hit("yelp_fusion", e, 55); }
-      miss("yelp_fusion");
-    }
-    if (input.business_name && input.city) {
-      const e = await ex2.foursquareEmail(input.business_name, input.city);
-      if (e && looksValidEmail(e)) { await bump(sb, "foursquare", true); return hit("foursquare", e, 55); }
-      miss("foursquare");
-    }
-    if (input.business_name && input.city) {
-      const e = await ex2.osmContactEmail(input.business_name, input.city);
-      if (e && looksValidEmail(e)) { await bump(sb, "osm", true); return hit("osm", e, 55); }
-      miss("osm");
-    }
-    if (domain) {
-      const e = await ex2.duckduckgoEmail(domain);
-      if (e && looksValidEmail(e)) { await bump(sb, "duckduckgo", true); return hit("duckduckgo", e, 45); }
-      miss("duckduckgo");
-    }
-    if (domain) {
-      const e = await ex2.yandexEmail(domain);
-      if (e && looksValidEmail(e)) { await bump(sb, "yandex", true); return hit("yandex", e, 45); }
-      miss("yandex");
-    }
-    if (domain) {
-      const e = await ex2.githubEventsEmail(domain);
-      if (e && looksValidEmail(e)) { await bump(sb, "github_events", true); return hit("github_events", e, 55); }
-      miss("github_events");
-    }
-    if (domain) {
-      const e = await ex2.waybackCdxEmail(domain);
-      if (e && looksValidEmail(e)) { await bump(sb, "wayback_cdx", true); return hit("wayback_cdx", e, 50); }
-      miss("wayback_cdx");
-    }
-    if (input.business_name) {
-      const e = await ex2.crunchbaseEmail(input.business_name);
-      if (e && looksValidEmail(e)) { await bump(sb, "crunchbase", true); return hit("crunchbase", e, 60); }
-      miss("crunchbase");
+    const tries2: [string, number, () => Promise<string | null>][] = [
+      ["yandex",            50, () => input.business_name ? ex2.yandexEmail(input.business_name, domain ?? undefined) : Promise.resolve(null)],
+      ["github_events",     50, () => input.business_name ? ex2.githubEventsEmail(input.business_name) : Promise.resolve(null)],
+      ["wayback_cdx",       55, () => domain ? ex2.waybackCdxEmail(domain) : Promise.resolve(null)],
+      ["crunchbase",        55, () => input.business_name ? ex2.crunchbaseEmail(input.business_name) : Promise.resolve(null)],
+      ["sitemap_crawl",     60, () => domain ? ex2.sitemapCrawlEmail(domain) : Promise.resolve(null)],
+      ["linkedin_slug",     55, () => input.business_name ? ex2.linkedinSlugEmail(input.business_name) : Promise.resolve(null)],
+      ["facebook_page",     50, () => input.business_name ? ex2.facebookPageEmail(input.business_name) : Promise.resolve(null)],
+      ["mapquest",          45, () => input.business_name ? ex2.mapquestEmail(input.business_name, input.city ?? undefined) : Promise.resolve(null)],
+      ["here",              50, () => input.business_name ? ex2.hereEmail(input.business_name, input.city ?? undefined) : Promise.resolve(null)],
+      ["opencage",          50, () => input.business_name ? ex2.opencageEmail(input.business_name, input.city ?? undefined) : Promise.resolve(null)],
+      ["sec_edgar",         60, () => input.business_name ? ex2.secEdgarEmail(input.business_name) : Promise.resolve(null)],
+      ["govinfo",           55, () => input.business_name ? ex2.govinfoEmail(input.business_name) : Promise.resolve(null)],
+      ["sam_entity",        60, () => input.business_name ? ex2.samEntityEmail(input.business_name) : Promise.resolve(null)],
+      ["twitter_bio",       45, () => input.business_name ? ex2.twitterBioEmail(input.business_name) : Promise.resolve(null)],
+    ];
+    for (const [name, conf, fn] of tries2) {
+      try {
+        const e = await fn();
+        if (e && looksValidEmail(e)) { await bump(sb, name, true); return hit(name, e, conf); }
+        miss(name);
+      } catch (err) { miss(name, String(err)); }
     }
   } catch (e) { miss("email_extras_2", String(e)); }
 
-  // 30-39. Third-wave free extras: sitemap, LinkedIn slug, Facebook, MapQuest,
-  // HERE, OpenCage, SEC EDGAR, GovInfo, SAM.gov, Twitter/X bio.
-  try {
-    const ex3 = await import("./email-extras-3.ts");
-
-    if (domain) {
-      const e = await ex3.sitemapCrawl(domain);
-      if (e && looksValidEmail(e)) { await bump(sb, "sitemap_crawl", true); return hit("sitemap_crawl", e, 60); }
-      miss("sitemap_crawl");
-    }
-    if (input.business_name) {
-      const e = await ex3.linkedinSlugEmail(input.business_name);
-      if (e && looksValidEmail(e)) { await bump(sb, "linkedin_slug", true); return hit("linkedin_slug", e, 55); }
-      miss("linkedin_slug");
-    }
-    if (input.business_name) {
-      const e = await ex3.facebookPageEmail(input.business_name);
-      if (e && looksValidEmail(e)) { await bump(sb, "facebook_page", true); return hit("facebook_page", e, 55); }
-      miss("facebook_page");
-    }
-    if (input.business_name && input.city) {
-      const e = await ex3.mapquestEmail(input.business_name, input.city);
-      if (e && looksValidEmail(e)) { await bump(sb, "mapquest", true); return hit("mapquest", e, 50); }
-      miss("mapquest");
-    }
-    if (input.business_name && input.city) {
-      const e = await ex3.hereEmail(input.business_name, input.city);
-      if (e && looksValidEmail(e)) { await bump(sb, "here", true); return hit("here", e, 50); }
-      miss("here");
-    }
-    if (input.business_name && input.city) {
-      const e = await ex3.opencageEmail(input.business_name, input.city);
-      if (e && looksValidEmail(e)) { await bump(sb, "opencage", true); return hit("opencage", e, 45); }
-      miss("opencage");
-    }
-    if (input.business_name) {
-      const e = await ex3.secEdgarEmail(input.business_name);
-      if (e && looksValidEmail(e)) { await bump(sb, "sec_edgar", true); return hit("sec_edgar", e, 60); }
-      miss("sec_edgar");
-    }
-    if (input.business_name) {
-      const e = await ex3.govinfoEmail(input.business_name);
-      if (e && looksValidEmail(e)) { await bump(sb, "govinfo", true); return hit("govinfo", e, 50); }
-      miss("govinfo");
-    }
-    if (input.business_name) {
-      const e = await ex3.samEntityEmail(input.business_name);
-      if (e && looksValidEmail(e)) { await bump(sb, "sam_entity", true); return hit("sam_entity", e, 65); }
-      miss("sam_entity");
-    }
-    if (input.business_name) {
-      const e = await ex3.twitterBioEmail(input.business_name);
-      if (e && looksValidEmail(e)) { await bump(sb, "twitter_bio", true); return hit("twitter_bio", e, 45); }
-      miss("twitter_bio");
-    }
-  } catch (e) { miss("email_extras_3", String(e)); }
-
-  // 40-64. Fourth-wave free extras: gov registries, well-known files, directories.
+  // 40–64. Gov registries + well-known web files + trade directories (email-extras-4)
   try {
     const ex4 = await import("./email-extras-4.ts");
-    const tries: [string, number, () => Promise<string | null>][] = [
-      ["irs_bmf", 60, () => input.business_name ? ex4.irsBmfEmail(input.business_name) : Promise.resolve(null)],
-      ["fcc_uls", 50, () => input.business_name ? ex4.fccUlsEmail(input.business_name) : Promise.resolve(null)],
-      ["npi_registry", 60, () => input.business_name ? ex4.npiRegistryEmail(input.business_name, input.city || undefined) : Promise.resolve(null)],
-      ["nsf_awards", 55, () => input.business_name ? ex4.nsfAwardsEmail(input.business_name) : Promise.resolve(null)],
-      ["nih_reporter", 55, () => input.business_name ? ex4.nihReporterEmail(input.business_name) : Promise.resolve(null)],
-      ["grants_gov", 50, () => input.business_name ? ex4.grantsGovEmail(input.business_name) : Promise.resolve(null)],
-      ["epa_frs", 55, () => input.business_name ? ex4.epaFrsEmail(input.business_name) : Promise.resolve(null)],
-      ["fda_registration", 55, () => input.business_name ? ex4.fdaRegistrationEmail(input.business_name) : Promise.resolve(null)],
-      ["usaspending_poc", 55, () => input.business_name ? ex4.usaspendingPocEmail(input.business_name) : Promise.resolve(null)],
-      ["uspto_assignee", 50, () => input.business_name ? ex4.usptoAssigneeEmail(input.business_name) : Promise.resolve(null)],
-      ["impressum", 65, () => domain ? ex4.impressumEmail(domain) : Promise.resolve(null)],
-      ["security_txt", 70, () => domain ? ex4.securityTxtEmail(domain) : Promise.resolve(null)],
-      ["humans_txt", 55, () => domain ? ex4.humansTxtEmail(domain) : Promise.resolve(null)],
-      ["well_known_contact", 65, () => domain ? ex4.wellKnownContactEmail(domain) : Promise.resolve(null)],
-      ["jsonld_org", 70, () => domain ? ex4.jsonLdOrgEmail(domain) : Promise.resolve(null)],
-      ["meta_og", 60, () => domain ? ex4.metaOgEmail(domain) : Promise.resolve(null)],
-      ["rss_feed", 55, () => domain ? ex4.rssFeedEmail(domain) : Promise.resolve(null)],
-      ["vcard", 75, () => domain ? ex4.vcardEmail(domain) : Promise.resolve(null)],
-      ["api_about", 55, () => domain ? ex4.apiAboutEmail(domain) : Promise.resolve(null)],
-      ["robots_txt", 45, () => domain ? ex4.robotsTxtEmail(domain) : Promise.resolve(null)],
-      ["manta", 50, () => input.business_name ? ex4.mantaEmail(input.business_name, input.city || undefined) : Promise.resolve(null)],
-      ["superpages", 50, () => input.business_name ? ex4.superpagesEmail(input.business_name, input.city || undefined) : Promise.resolve(null)],
-      ["merchantcircle", 50, () => input.business_name ? ex4.merchantcircleEmail(input.business_name, input.city || undefined) : Promise.resolve(null)],
-      ["houzz_pro", 55, () => input.business_name ? ex4.houzzProEmail(input.business_name) : Promise.resolve(null)],
-      ["thomasnet", 55, () => input.business_name ? ex4.thomasnetEmail(input.business_name) : Promise.resolve(null)],
+    const tries4: [string, number, () => Promise<string | null>][] = [
+      ["irs_bmf",           60, () => input.business_name ? ex4.irsBmfEmail(input.business_name) : Promise.resolve(null)],
+      ["fcc_uls",           50, () => input.business_name ? ex4.fccUlsEmail(input.business_name) : Promise.resolve(null)],
+      ["npi_registry",      60, () => input.business_name ? ex4.npiRegistryEmail(input.business_name, input.city ?? undefined) : Promise.resolve(null)],
+      ["nsf_awards",        55, () => input.business_name ? ex4.nsfAwardsEmail(input.business_name) : Promise.resolve(null)],
+      ["nih_reporter",      55, () => input.business_name ? ex4.nihReporterEmail(input.business_name) : Promise.resolve(null)],
+      ["grants_gov",        50, () => input.business_name ? ex4.grantsGovEmail(input.business_name) : Promise.resolve(null)],
+      ["epa_frs",           55, () => input.business_name ? ex4.epaFrsEmail(input.business_name) : Promise.resolve(null)],
+      ["fda_registration",  55, () => input.business_name ? ex4.fdaRegistrationEmail(input.business_name) : Promise.resolve(null)],
+      ["usaspending_poc",   55, () => input.business_name ? ex4.usaspendingPocEmail(input.business_name) : Promise.resolve(null)],
+      ["uspto_assignee",    50, () => input.business_name ? ex4.usptoAssigneeEmail(input.business_name) : Promise.resolve(null)],
+      ["impressum",         65, () => domain ? ex4.impressumEmail(domain) : Promise.resolve(null)],
+      ["security_txt",      70, () => domain ? ex4.securityTxtEmail(domain) : Promise.resolve(null)],
+      ["humans_txt",        55, () => domain ? ex4.humansTxtEmail(domain) : Promise.resolve(null)],
+      ["well_known_contact",65, () => domain ? ex4.wellKnownContactEmail(domain) : Promise.resolve(null)],
+      ["jsonld_org",        70, () => domain ? ex4.jsonLdOrgEmail(domain) : Promise.resolve(null)],
+      ["meta_og",           60, () => domain ? ex4.metaOgEmail(domain) : Promise.resolve(null)],
+      ["rss_feed",          55, () => domain ? ex4.rssFeedEmail(domain) : Promise.resolve(null)],
+      ["vcard",             75, () => domain ? ex4.vcardEmail(domain) : Promise.resolve(null)],
+      ["api_about",         55, () => domain ? ex4.apiAboutEmail(domain) : Promise.resolve(null)],
+      ["robots_txt",        45, () => domain ? ex4.robotsTxtEmail(domain) : Promise.resolve(null)],
+      ["manta",             50, () => input.business_name ? ex4.mantaEmail(input.business_name, input.city ?? undefined) : Promise.resolve(null)],
+      ["superpages",        50, () => input.business_name ? ex4.superpagesEmail(input.business_name, input.city ?? undefined) : Promise.resolve(null)],
+      ["merchantcircle",    50, () => input.business_name ? ex4.merchantcircleEmail(input.business_name, input.city ?? undefined) : Promise.resolve(null)],
+      ["houzz_pro",         55, () => input.business_name ? ex4.houzzProEmail(input.business_name) : Promise.resolve(null)],
+      ["thomasnet",         55, () => input.business_name ? ex4.thomasnetEmail(input.business_name) : Promise.resolve(null)],
     ];
-    for (const [name, conf, fn] of tries) {
+    for (const [name, conf, fn] of tries4) {
       try {
         const e = await fn();
         if (e && looksValidEmail(e)) { await bump(sb, name, true); return hit(name, e, conf); }
@@ -754,37 +611,37 @@ export async function runEmailWaterfall(
     }
   } catch (e) { miss("email_extras_4", String(e)); }
 
-  // 65-89. Fifth-wave free extras: trade directories, gov license search, B2B.
+  // 65–89. Home service dirs + B2B dirs + Michigan registries + local dirs (email-extras-5)
   try {
     const ex5 = await import("./email-extras-5.ts");
-    const tries: [string, number, () => Promise<string | null>][] = [
-      ["angi", 50, () => input.business_name ? ex5.angiEmail(input.business_name, input.city || undefined) : Promise.resolve(null)],
-      ["homeadvisor", 50, () => input.business_name ? ex5.homeadvisorEmail(input.business_name, input.city || undefined) : Promise.resolve(null)],
-      ["thumbtack", 50, () => input.business_name ? ex5.thumbtackEmail(input.business_name, input.city || undefined) : Promise.resolve(null)],
-      ["porch", 45, () => input.business_name ? ex5.porchEmail(input.business_name) : Promise.resolve(null)],
-      ["nextdoor_biz", 50, () => input.business_name ? ex5.nextdoorBizEmail(input.business_name) : Promise.resolve(null)],
-      ["bbb_profile", 60, () => input.business_name ? ex5.bbbProfileEmail(input.business_name, input.city || undefined) : Promise.resolve(null)],
-      ["chamber_of_commerce", 55, () => input.business_name ? ex5.chamberOfCommerceEmail(input.business_name, input.city || undefined) : Promise.resolve(null)],
-      ["zoominfo_free", 55, () => input.business_name ? ex5.zoomInfoFreeEmail(input.business_name) : Promise.resolve(null)],
-      ["us_chamber", 50, () => input.business_name ? ex5.usChamberEmail(input.business_name) : Promise.resolve(null)],
-      ["dnb", 55, () => input.business_name ? ex5.dnbEmail(input.business_name) : Promise.resolve(null)],
-      ["corporation_wiki", 50, () => input.business_name ? ex5.corporationWikiEmail(input.business_name) : Promise.resolve(null)],
-      ["opengovus", 55, () => input.business_name ? ex5.opengovusEmail(input.business_name) : Promise.resolve(null)],
-      ["govwin", 50, () => input.business_name ? ex5.govWinEmail(input.business_name) : Promise.resolve(null)],
-      ["fbo311", 55, () => input.business_name ? ex5.fbo311Email(input.business_name) : Promise.resolve(null)],
-      ["michigan_lara", 65, () => input.business_name ? ex5.michiganLaraEmail(input.business_name) : Promise.resolve(null)],
-      ["michigan_business", 65, () => input.business_name ? ex5.michiganBusinessEmail(input.business_name) : Promise.resolve(null)],
-      ["yellowbook", 45, () => input.business_name ? ex5.yellowBookEmail(input.business_name, input.city || undefined) : Promise.resolve(null)],
-      ["localedge", 45, () => input.business_name ? ex5.localEdgeEmail(input.business_name, input.city || undefined) : Promise.resolve(null)],
-      ["cylex", 45, () => input.business_name ? ex5.cylexEmail(input.business_name, input.city || undefined) : Promise.resolve(null)],
-      ["brownbook", 45, () => input.business_name ? ex5.brownbookEmail(input.business_name) : Promise.resolve(null)],
-      ["tupalo", 45, () => input.business_name ? ex5.tupaloEmail(input.business_name, input.city || undefined) : Promise.resolve(null)],
-      ["ezlocal", 45, () => input.business_name ? ex5.ezlocalEmail(input.business_name, input.city || undefined) : Promise.resolve(null)],
-      ["cybo", 45, () => input.business_name ? ex5.cybolEmail(input.business_name, input.city || undefined) : Promise.resolve(null)],
-      ["tradeford", 45, () => input.business_name ? ex5.tradeFordEmail(input.business_name) : Promise.resolve(null)],
-      ["exporters_india", 40, () => input.business_name ? ex5.exportersIndiaEmail(input.business_name) : Promise.resolve(null)],
+    const tries5: [string, number, () => Promise<string | null>][] = [
+      ["angi",               50, () => input.business_name ? ex5.angiEmail(input.business_name, input.city ?? undefined) : Promise.resolve(null)],
+      ["homeadvisor",        50, () => input.business_name ? ex5.homeadvisorEmail(input.business_name, input.city ?? undefined) : Promise.resolve(null)],
+      ["thumbtack",          50, () => input.business_name ? ex5.thumbtackEmail(input.business_name, input.city ?? undefined) : Promise.resolve(null)],
+      ["porch",              45, () => input.business_name ? ex5.porchEmail(input.business_name) : Promise.resolve(null)],
+      ["nextdoor_biz",       50, () => input.business_name ? ex5.nextdoorBizEmail(input.business_name) : Promise.resolve(null)],
+      ["bbb_profile",        60, () => input.business_name ? ex5.bbbProfileEmail(input.business_name, input.city ?? undefined) : Promise.resolve(null)],
+      ["chamber_of_commerce",55, () => input.business_name ? ex5.chamberOfCommerceEmail(input.business_name, input.city ?? undefined) : Promise.resolve(null)],
+      ["zoominfo_free",      55, () => input.business_name ? ex5.zoomInfoFreeEmail(input.business_name) : Promise.resolve(null)],
+      ["us_chamber",         50, () => input.business_name ? ex5.usChamberEmail(input.business_name) : Promise.resolve(null)],
+      ["dnb",                55, () => input.business_name ? ex5.dnbEmail(input.business_name) : Promise.resolve(null)],
+      ["corporation_wiki",   50, () => input.business_name ? ex5.corporationWikiEmail(input.business_name) : Promise.resolve(null)],
+      ["opengovus",          55, () => input.business_name ? ex5.opengovusEmail(input.business_name) : Promise.resolve(null)],
+      ["govwin",             50, () => input.business_name ? ex5.govWinEmail(input.business_name) : Promise.resolve(null)],
+      ["fbo311",             55, () => input.business_name ? ex5.fbo311Email(input.business_name) : Promise.resolve(null)],
+      ["michigan_lara",      65, () => input.business_name ? ex5.michiganLaraEmail(input.business_name) : Promise.resolve(null)],
+      ["michigan_business",  65, () => input.business_name ? ex5.michiganBusinessEmail(input.business_name) : Promise.resolve(null)],
+      ["yellowbook",         45, () => input.business_name ? ex5.yellowBookEmail(input.business_name, input.city ?? undefined) : Promise.resolve(null)],
+      ["localedge",          45, () => input.business_name ? ex5.localEdgeEmail(input.business_name, input.city ?? undefined) : Promise.resolve(null)],
+      ["cylex",              45, () => input.business_name ? ex5.cylexEmail(input.business_name, input.city ?? undefined) : Promise.resolve(null)],
+      ["brownbook",          45, () => input.business_name ? ex5.brownbookEmail(input.business_name) : Promise.resolve(null)],
+      ["tupalo",             45, () => input.business_name ? ex5.tupaloEmail(input.business_name, input.city ?? undefined) : Promise.resolve(null)],
+      ["ezlocal",            45, () => input.business_name ? ex5.ezlocalEmail(input.business_name, input.city ?? undefined) : Promise.resolve(null)],
+      ["cybo",               45, () => input.business_name ? ex5.cyboEmail(input.business_name, input.city ?? undefined) : Promise.resolve(null)],
+      ["tradeford",          45, () => input.business_name ? ex5.tradeFordEmail(input.business_name) : Promise.resolve(null)],
+      ["exporters_india",    40, () => input.business_name ? ex5.exportersIndiaEmail(input.business_name) : Promise.resolve(null)],
     ];
-    for (const [name, conf, fn] of tries) {
+    for (const [name, conf, fn] of tries5) {
       try {
         const e = await fn();
         if (e && looksValidEmail(e)) { await bump(sb, name, true); return hit(name, e, conf); }
@@ -796,7 +653,31 @@ export async function runEmailWaterfall(
   return { email: null, source: null, confidence: 0, trace };
 }
 
-export const WATERFALL_PROVIDERS = ["site_scrape", "snov", "apollo", "pattern_verify", "firecrawl_deep", "hunter", "pdl", "pdl_name", "crtsh", "rdap_whois", "opencorporates", "wayback", "bbb", "detroit_open_biz", "google_places", "github_commits", "dns_mx_pattern", "bing_serp", "reddit", "common_crawl", "hunter_finder", "yellowpages", "yelp_fusion", "foursquare", "osm", "duckduckgo", "yandex", "github_events", "wayback_cdx", "crunchbase", "sitemap_crawl", "linkedin_slug", "facebook_page", "mapquest", "here", "opencage", "sec_edgar", "govinfo", "sam_entity", "twitter_bio", "irs_bmf", "fcc_uls", "npi_registry", "nsf_awards", "nih_reporter", "grants_gov", "epa_frs", "fda_registration", "usaspending_poc", "uspto_assignee", "impressum", "security_txt", "humans_txt", "well_known_contact", "jsonld_org", "meta_og", "rss_feed", "vcard", "api_about", "robots_txt", "manta", "superpages", "merchantcircle", "houzz_pro", "thomasnet", "angi", "homeadvisor", "thumbtack", "porch", "nextdoor_biz", "bbb_profile", "chamber_of_commerce", "zoominfo_free", "us_chamber", "dnb", "corporation_wiki", "opengovus", "govwin", "fbo311", "michigan_lara", "michigan_business", "yellowbook", "localedge", "cylex", "brownbook", "tupalo", "ezlocal", "cybo", "tradeford", "exporters_india"] as const;
+export const WATERFALL_PROVIDERS = [
+  "site_scrape", "snov", "apollo", "pattern_verify", "hunter",
+  "pdl", "pdl_name", "crtsh", "rdap_whois", "opencorporates",
+  // Tiers 10–24 (email-extras-1)
+  "wayback", "bbb_scrape", "detroit_openbiz", "google_places", "github_commits",
+  "dns_mx_pattern", "bing_serp", "reddit", "common_crawl", "hunter_finder",
+  "yellowpages", "yelp_fusion", "foursquare", "osm", "duckduckgo",
+  // Tiers 25–38 (email-extras-2)
+  "yandex", "github_events", "wayback_cdx", "crunchbase", "sitemap_crawl",
+  "linkedin_slug", "facebook_page", "mapquest", "here", "opencage",
+  "sec_edgar", "govinfo", "sam_entity", "twitter_bio",
+  // Tiers 40–64 (email-extras-4)
+  "irs_bmf", "fcc_uls", "npi_registry", "nsf_awards", "nih_reporter",
+  "grants_gov", "epa_frs", "fda_registration", "usaspending_poc", "uspto_assignee",
+  "impressum", "security_txt", "humans_txt", "well_known_contact", "jsonld_org",
+  "meta_og", "rss_feed", "vcard", "api_about", "robots_txt",
+  "manta", "superpages", "merchantcircle", "houzz_pro", "thomasnet",
+  // Tiers 65–89 (email-extras-5)
+  "angi", "homeadvisor", "thumbtack", "porch", "nextdoor_biz",
+  "bbb_profile", "chamber_of_commerce", "zoominfo_free", "us_chamber", "dnb",
+  "corporation_wiki", "opengovus", "govwin", "fbo311",
+  "michigan_lara", "michigan_business",
+  "yellowbook", "localedge", "cylex", "brownbook", "tupalo",
+  "ezlocal", "cybo", "tradeford", "exporters_india",
+] as const;
 
 /**
  * runFieldWaterfall — wrapper around runEmailWaterfall that reports which

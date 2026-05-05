@@ -1,182 +1,243 @@
-// Second wave of free / low-cost email-extraction helpers.
-// Wired into the waterfall after email-extras (tiers 20-29).
-// Every helper fails open (returns null) — never throws.
-
-const UA = { "User-Agent": "Mozilla/5.0 (compatible; DWA-Discovery/1.0)" };
-
-function looksLikeBizEmail(e: string): boolean {
-  const l = e.toLowerCase();
-  if (!/^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$/i.test(l)) return false;
-  if (/\.(png|jpg|svg|gif|webp|js|css)$/.test(l)) return false;
-  if (/(example|sentry|wixpress|gstatic|googleapis|cloudflare|gravatar|schema\.org|w3\.org|sentry\.io|wordpress\.com)/.test(l)) return false;
-  if (/^(user|admin|test|noreply|no-reply|webmaster|postmaster|name|email|someone|nobody|null|root|daemon)@/.test(l)) return false;
-  return true;
-}
+// email-extras-2.ts — Free email enrichment sources, Tiers 25–38.
+// Additional free/semi-free sources: search engines, public registries,
+// social graphs, geocoders, and government data APIs.
+// All fail-open (null on any error). Imported lazily by email-waterfall.ts.
 
 const EMAIL_RE = /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g;
 
-async function safeJson(url: string, headers: Record<string, string> = {}, timeoutMs = 7000): Promise<any | null> {
+function pickEmail(text: string, domain?: string): string | null {
+  const all = (text.match(EMAIL_RE) || []).filter(
+    (e) =>
+      !/\.(png|jpg|svg|gif|webp|woff|ttf|js|css)$/i.test(e) &&
+      !e.toLowerCase().startsWith("noreply@") &&
+      !e.toLowerCase().startsWith("no-reply@") &&
+      !e.toLowerCase().startsWith("postmaster@") &&
+      e.length < 80,
+  );
+  if (!all.length) return null;
+  if (domain) {
+    const m = all.find((e) => e.toLowerCase().endsWith(`@${domain}`));
+    if (m) return m;
+  }
+  return all[0];
+}
+
+async function safeText(
+  url: string,
+  init?: RequestInit,
+  timeoutMs = 6000,
+): Promise<string | null> {
   try {
-    const r = await fetch(url, { headers: { ...UA, ...headers }, signal: AbortSignal.timeout(timeoutMs) });
-    if (!r.ok) { await r.body?.cancel(); return null; }
-    return await r.json();
-  } catch { return null; }
+    const res = await fetch(url, {
+      ...init,
+      signal: AbortSignal.timeout(timeoutMs),
+      headers: {
+        "User-Agent": "Mozilla/5.0 (compatible; EnrichBot/1.0)",
+        ...((init?.headers as Record<string, string>) || {}),
+      },
+    });
+    if (!res.ok) {
+      await res.body?.cancel();
+      return null;
+    }
+    return await res.text();
+  } catch {
+    return null;
+  }
 }
-async function safeText(url: string, headers: Record<string, string> = {}, timeoutMs = 7000): Promise<string | null> {
+
+async function safeJson(
+  url: string,
+  init?: RequestInit,
+  timeoutMs = 6000,
+): Promise<unknown> {
+  const t = await safeText(url, init, timeoutMs);
+  if (!t) return null;
   try {
-    const r = await fetch(url, { headers: { ...UA, ...headers }, signal: AbortSignal.timeout(timeoutMs) });
-    if (!r.ok) { await r.body?.cancel(); return null; }
-    return await r.text();
-  } catch { return null; }
+    return JSON.parse(t);
+  } catch {
+    return null;
+  }
 }
 
-// 20. Hunter Email Finder — needs first/last + domain. Uses HUNTER_IO_API_KEY (Hunter sometimes 'HUNTER_API_KEY').
-export async function hunterFinder(domain: string, first: string, last: string): Promise<string | null> {
-  const key = Deno.env.get("HUNTER_IO_API_KEY") || Deno.env.get("HUNTER_API_KEY");
-  if (!key) return null;
-  const j = await safeJson(
-    `https://api.hunter.io/v2/email-finder?domain=${encodeURIComponent(domain)}&first_name=${encodeURIComponent(first)}&last_name=${encodeURIComponent(last)}&api_key=${key}`,
+const enc = (s: string) => encodeURIComponent(s);
+
+// 25. Yandex search scrape (works without API key)
+export async function yandexEmail(
+  name: string,
+  domain?: string,
+): Promise<string | null> {
+  const query = domain ? `${name} site:${domain} email` : `${name} email contact`;
+  const t = await safeText(
+    `https://yandex.com/search/xml?text=${enc(query)}&lr=84`,
   );
-  const e = j?.data?.email;
-  return e && looksLikeBizEmail(e) ? e : null;
+  return t ? pickEmail(t, domain) : null;
 }
 
-// 21. Yellowpages.com — scrape directory result page for emails.
-export async function yellowpagesEmail(businessName: string, city: string): Promise<string | null> {
-  const html = await safeText(
-    `https://www.yellowpages.com/search?search_terms=${encodeURIComponent(businessName)}&geo_location_terms=${encodeURIComponent(city)}`,
+// 26. GitHub org events (public, no key needed)
+export async function githubEventsEmail(name: string): Promise<string | null> {
+  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  // Try org events first, then search for org
+  const t = await safeText(
+    `https://api.github.com/orgs/${enc(slug)}/events?per_page=10`,
+    { headers: { Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" } },
   );
-  if (!html) return null;
-  const emails = (html.match(EMAIL_RE) || []).filter(looksLikeBizEmail);
-  return emails[0] || null;
+  if (t) {
+    const e = pickEmail(t);
+    if (e) return e;
+  }
+  // Try org members endpoint
+  const m = await safeText(
+    `https://api.github.com/orgs/${enc(slug)}/public_members?per_page=5`,
+    { headers: { Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" } },
+  );
+  return m ? pickEmail(m) : null;
 }
 
-// 22. Yelp Fusion — needs YELP_API_KEY. Returns business URL → scrape for email.
-export async function yelpFusionEmail(businessName: string, city: string): Promise<string | null> {
-  const key = Deno.env.get("YELP_API_KEY");
-  if (!key) return null;
-  const j = await safeJson(
-    `https://api.yelp.com/v3/businesses/search?term=${encodeURIComponent(businessName)}&location=${encodeURIComponent(city)}&limit=1`,
-    { Authorization: `Bearer ${key}` },
-  );
-  const url = j?.businesses?.[0]?.url;
-  if (!url) return null;
-  const html = await safeText(url);
-  if (!html) return null;
-  const emails = (html.match(EMAIL_RE) || []).filter(looksLikeBizEmail);
-  return emails[0] || null;
-}
-
-// 23. Foursquare Places — needs FOURSQUARE_API_KEY.
-export async function foursquareEmail(businessName: string, city: string): Promise<string | null> {
-  const key = Deno.env.get("FOURSQUARE_API_KEY");
-  if (!key) return null;
-  const j = await safeJson(
-    `https://api.foursquare.com/v3/places/search?query=${encodeURIComponent(businessName)}&near=${encodeURIComponent(city)}&limit=1&fields=email,website`,
-    { Authorization: key, Accept: "application/json" },
-  );
-  const place = j?.results?.[0];
-  if (place?.email && looksLikeBizEmail(place.email)) return place.email;
-  if (place?.website) {
-    const html = await safeText(place.website);
-    const emails = (html?.match(EMAIL_RE) || []).filter(looksLikeBizEmail);
-    return emails[0] || null;
+// 27. Wayback CDX multi-url scan (broader than homepage)
+export async function waybackCdxEmail(domain: string): Promise<string | null> {
+  const paths = ["/contact", "/about", "/team", "/staff", "/contact-us"];
+  for (const p of paths) {
+    const cdx = (await safeJson(
+      `http://web.archive.org/cdx/search/cdx?url=${enc(domain + p)}&output=json&limit=1&fl=timestamp,original&filter=statuscode:200`,
+    )) as string[][] | null;
+    const ts = cdx?.[1]?.[0];
+    const orig = cdx?.[1]?.[1];
+    if (!ts || !orig) continue;
+    const archived = await safeText(`https://web.archive.org/web/${ts}/${orig}`);
+    if (archived) {
+      const e = pickEmail(archived, domain);
+      if (e) return e;
+    }
   }
   return null;
 }
 
-// 24. OpenStreetMap Overpass — searches for business by name, reads contact:email tag.
-export async function osmContactEmail(businessName: string, city: string): Promise<string | null> {
-  const q = `[out:json][timeout:10];area[name="${city.replace(/"/g, "")}"]->.a;(node["name"~"${businessName.replace(/"/g, "").slice(0, 40)}",i](area.a);way["name"~"${businessName.replace(/"/g, "").slice(0, 40)}",i](area.a););out tags 5;`;
-  const j = await safeJson(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(q)}`);
-  for (const el of (j?.elements || [])) {
-    const e = el?.tags?.["contact:email"] || el?.tags?.email;
-    if (e && looksLikeBizEmail(e)) return e;
-  }
-  return null;
+// 28. Crunchbase public organization search (unauthenticated, HTML)
+export async function crunchbaseEmail(name: string): Promise<string | null> {
+  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const t = await safeText(`https://www.crunchbase.com/organization/${enc(slug)}`);
+  return t ? pickEmail(t) : null;
 }
 
-// 25. DuckDuckGo HTML — `"@domain"` SERP.
-export async function duckduckgoEmail(domain: string): Promise<string | null> {
-  const html = await safeText(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(`"@${domain}"`)}`);
-  if (!html) return null;
-  const emails = (html.match(EMAIL_RE) || [])
-    .filter((e) => e.toLowerCase().endsWith(`@${domain}`))
-    .filter(looksLikeBizEmail);
-  return emails[0] || null;
-}
-
-// 26. Yandex search — alt-engine SERP for `"@domain"`.
-export async function yandexEmail(domain: string): Promise<string | null> {
-  const html = await safeText(`https://yandex.com/search/?text=${encodeURIComponent(`"@${domain}"`)}`);
-  if (!html) return null;
-  const emails = (html.match(EMAIL_RE) || [])
-    .filter((e) => e.toLowerCase().endsWith(`@${domain}`))
-    .filter(looksLikeBizEmail);
-  return emails[0] || null;
-}
-
-// 27. GitHub Events — recent public events by org members may leak commit author emails.
-export async function githubEventsEmail(domain: string): Promise<string | null> {
-  const tok = Deno.env.get("GITHUB_TOKEN");
-  if (!tok) return null;
-  // Find users whose public profile shows the domain, then read their events.
-  const search = await safeJson(
-    `https://api.github.com/search/users?q=${encodeURIComponent(domain + " in:email")}&per_page=3`,
-    { Authorization: `Bearer ${tok}`, Accept: "application/vnd.github+json" },
-  );
-  for (const u of (search?.items || []).slice(0, 3)) {
-    const events = await safeJson(
-      `https://api.github.com/users/${u.login}/events/public?per_page=10`,
-      { Authorization: `Bearer ${tok}`, Accept: "application/vnd.github+json" },
-    );
-    for (const ev of (events || [])) {
-      for (const c of (ev?.payload?.commits || [])) {
-        const e = c?.author?.email;
-        if (e && looksLikeBizEmail(e) && e.toLowerCase().endsWith(`@${domain}`)) return e;
+// 29. Sitemap.xml crawl — finds contact/about pages, scrapes for email
+export async function sitemapCrawlEmail(domain: string): Promise<string | null> {
+  for (const smap of ["/sitemap.xml", "/sitemap_index.xml", "/sitemap-0.xml"]) {
+    const t = await safeText(`https://${domain}${smap}`);
+    if (!t) continue;
+    // Extract URLs containing 'contact' or 'about'
+    const urls = [...t.matchAll(/<loc>([^<]+)<\/loc>/g)]
+      .map((m) => m[1])
+      .filter((u) => /contact|about|team|staff|reach/i.test(u))
+      .slice(0, 5);
+    for (const u of urls) {
+      const page = await safeText(u);
+      if (page) {
+        const e = pickEmail(page, domain);
+        if (e) return e;
       }
     }
   }
   return null;
 }
 
-// 28. Wayback CDX — find any archived contact pages, then scrape one.
-export async function waybackCdxEmail(domain: string): Promise<string | null> {
-  const txt = await safeText(
-    `https://web.archive.org/cdx/search/cdx?url=${encodeURIComponent(domain + "/*")}&filter=statuscode:200&filter=mimetype:text/html&limit=5&output=json&fl=timestamp,original&filter=urlkey:.*contact.*`,
+// 30. LinkedIn company page slug (public HTML, no auth)
+export async function linkedinSlugEmail(name: string): Promise<string | null> {
+  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const t = await safeText(
+    `https://www.linkedin.com/company/${enc(slug)}/about/`,
   );
-  if (!txt) return null;
-  let rows: string[][] = [];
-  try { rows = JSON.parse(txt); } catch { return null; }
-  for (const r of rows.slice(1, 4)) {
-    const [ts, original] = r;
-    if (!ts || !original) continue;
-    const html = await safeText(`https://web.archive.org/web/${ts}id_/${original}`);
-    if (!html) continue;
-    const emails = (html.match(EMAIL_RE) || []).filter(looksLikeBizEmail);
-    if (emails[0]) return emails[0];
-  }
-  return null;
+  return t ? pickEmail(t) : null;
 }
 
-// 29. Crunchbase basic — needs CRUNCHBASE_API_KEY. Returns org contact_email when present.
-export async function crunchbaseEmail(businessName: string): Promise<string | null> {
-  const key = Deno.env.get("CRUNCHBASE_API_KEY");
-  if (!key) return null;
+// 31. Facebook page info (public graph, no key for basic fields)
+export async function facebookPageEmail(name: string): Promise<string | null> {
+  const slug = name.toLowerCase().replace(/\s+/g, ".").replace(/[^a-z0-9.]+/g, "");
+  const t = await safeText(`https://www.facebook.com/${enc(slug)}/about`);
+  return t ? pickEmail(t) : null;
+}
+
+// 32. MapQuest public search (no API key for basic HTML)
+export async function mapquestEmail(
+  name: string,
+  city?: string,
+): Promise<string | null> {
+  const query = city ? `${name} ${city}` : name;
+  const t = await safeText(
+    `https://www.mapquest.com/search/results?query=${enc(query)}`,
+  );
+  return t ? pickEmail(t) : null;
+}
+
+// 33. HERE Places (free tier — uses app_id/app_code or API key)
+export async function hereEmail(
+  name: string,
+  city?: string,
+): Promise<string | null> {
+  const apiKey = Deno.env.get("HERE_API_KEY");
+  if (!apiKey) return null;
+  const q = city ? `${name} in ${city}` : name;
   const j = await safeJson(
-    `https://api.crunchbase.com/api/v4/searches/organizations?user_key=${key}`,
-    { "Content-Type": "application/json" },
+    `https://discover.search.hereapi.com/v1/discover?q=${enc(q)}&in=countryCode:USA&limit=3&apiKey=${apiKey}`,
+  );
+  return pickEmail(JSON.stringify(j || {}));
+}
+
+// 34. OpenCage geocoder — returns contact email in result extras
+export async function opencageEmail(
+  name: string,
+  city?: string,
+): Promise<string | null> {
+  const apiKey = Deno.env.get("OPENCAGE_API_KEY");
+  if (!apiKey) return null;
+  const q = city ? `${name}, ${city}` : name;
+  const j = await safeJson(
+    `https://api.opencagedata.com/geocode/v1/json?q=${enc(q)}&key=${apiKey}&limit=3&no_annotations=0`,
+  );
+  return pickEmail(JSON.stringify(j || {}));
+}
+
+// 35. SEC EDGAR full-text search — finds email in filings
+export async function secEdgarEmail(name: string): Promise<string | null> {
+  // EDGAR full-text search API (free, no auth)
+  const j = await safeJson(
+    `https://efts.sec.gov/LATEST/search-index?q="${enc(name)}"&dateRange=custom&startdt=2022-01-01&forms=DEF+14A,10-K,ARS`,
+  );
+  if (j) {
+    const e = pickEmail(JSON.stringify(j));
+    if (e) return e;
+  }
+  // Also try company search
+  const co = await safeJson(
+    `https://efts.sec.gov/LATEST/search-index?q=${enc(name)}&forms=10-K&dateRange=custom&startdt=2023-01-01`,
+  );
+  return co ? pickEmail(JSON.stringify(co)) : null;
+}
+
+// 36. GovInfo.gov (GPO) — federal publications, often list contacts
+export async function govinfoEmail(name: string): Promise<string | null> {
+  const j = await safeJson(
+    `https://api.govinfo.gov/search?query=${enc(name)}&pageSize=5&offsetMark=*&sorts=relevance%3ADESC`,
+  );
+  return j ? pickEmail(JSON.stringify(j)) : null;
+}
+
+// 37. SAM.gov entity search (free, no key needed for basic search)
+export async function samEntityEmail(name: string): Promise<string | null> {
+  const j = await safeJson(
+    `https://api.sam.gov/entity-information/v3/entities?legalBusinessName=${enc(name)}&includeSections=entityRegistration,pointsOfContact&format=json`,
+    {},
     8000,
   );
-  // Crunchbase v4 search requires POST body — fall back: try autocomplete GET.
-  const ac = j ?? await safeJson(
-    `https://api.crunchbase.com/api/v4/autocompletes?query=${encodeURIComponent(businessName)}&collection_ids=organizations&limit=1&user_key=${key}`,
+  return j ? pickEmail(JSON.stringify(j)) : null;
+}
+
+// 38. Twitter/X bio scrape (public embed endpoint)
+export async function twitterBioEmail(name: string): Promise<string | null> {
+  // Try Twitter widget / oembed for company handle
+  const slug = name.toLowerCase().replace(/\s+/g, "").replace(/[^a-z0-9]+/g, "").slice(0, 20);
+  const t = await safeText(
+    `https://publish.twitter.com/oembed?url=https://twitter.com/${enc(slug)}&omit_script=true`,
   );
-  const e = ac?.entities?.[0]?.identifier?.permalink;
-  if (!e) return null;
-  const detail = await safeJson(
-    `https://api.crunchbase.com/api/v4/entities/organizations/${e}?field_ids=contact_email&user_key=${key}`,
-  );
-  const em = detail?.properties?.contact_email;
-  return em && looksLikeBizEmail(em) ? em : null;
+  return t ? pickEmail(t) : null;
 }

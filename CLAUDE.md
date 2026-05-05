@@ -14,31 +14,38 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Current Session State
 *Last updated: 2026-05-05 (Phase 44)*
 
-### Phase 44 — Enrichment Hardening + HubSpot Bridge + Trial SLA Guarantee COMPLETE ✅
+### Phase 44 — Trial Delivery Guarantee + Enrichment Fixes + HubSpot CRM Bridge + Email Waterfall Expansion COMPLETE ✅
 
-**This session deliverables:**
+**Trial Delivery Guarantee (E1–E10):**
+- `supabase/migrations/20260506000000_trial_signups_delivery_columns.sql` — adds `first_lead_delivered_at`, `sla_status` (green/amber/red), `compensation_applied`, `compensation_reason` to `trial_signups`
+- `trial-drip-runner` edge function — drip sequence for trial clients; writes `first_lead_delivered_at` on first qualified lead delivery
+- Auto-compensation: amber = no lead by day 2, red = no lead by day 4 → auto-extends trial
+- `mortgage-radar-scanner` updated to write `first_lead_delivered_at` on lead delivery (commit `e74733c`)
+- `techalert-weekly-digest` proof-of-work zero-signal fallback (E10) — sends non-empty digest even on 0-signal weeks (commit `45c0a9e`)
 
-**Fix 1 — Hunter.io header bug + Snov.io fallback** (commit `8b0dfd9`)
-- Fixed Hunter.io API key header bug in `outreach-leads-enrich`
-- Added Snov.io as Tier 5 fallback enrichment source. Full waterfall is now: Apollo → Hunter → Firecrawl → Snov (+ pattern_verify, PDL, crtsh, rdap, opencorporates as cheap fallbacks)
-- Snov uses OAuth client_credentials (`SNOV_USER_ID` + `SNOV_API_KEY` env vars; token cached)
-- Implemented in `_shared/email-waterfall.ts` (`snovDomainSearch`, `snovVerify`)
+**Enrichment: Hunter key fix + Snov.io added:**
+- `_shared/hunter.ts` — fixed API key header bug (Hunter requires lowercase `api-key` header)
+- `outreach-leads-enrich/index.ts` — Snov.io added as tertiary fallback in Apollo → Hunter → Snov → Firecrawl chain (commit `8b0dfd9`)
 
-**Fix 2 — HubSpot CRM bridge** (commit `a703ff6`)
-- New `_shared/crm-webhook.ts`: pushes identified SiteRadar visitors + voicemail leads to HubSpot contacts
-- Wired into `visitor-identify` (after Clearbit/ipinfo enrichment) and voicemail transcription handler
-- Idempotent contact upsert by email/phone
+**HubSpot CRM Bridge:**
+- `visitor-identify/index.ts` + `voicemail-transcription-handler/index.ts` — push identified visitors and voicemail leads to HubSpot contacts
+- `_shared/crm-webhook.ts` — new shared outbound CRM webhook helper (HubSpot contact upsert with HMAC signing; Salesforce/Jobber/Zapier/Make/n8n compatible) (commit `a703ff6`)
 
-**Fix 3 — Demand/Buyer/Dead-Lead enrollment + missing crons** (commit `1970c18`)
-- Matt enrolled in Demand Radar, Buyer Radar, Dead Lead Reactivation
-- Added missing cron: `demand-radar-enhanced-scan` daily at 12:00 UTC (8am ET)
-- Added missing cron: `field-service-daily-summary` daily at 13:00 UTC (9am ET)
+**Email Waterfall Expansion (Tiers 40–89):**
+- `_shared/email-extras-4.ts` — 25 new free sources (Tiers 40–64): gov registries (IRS BMF via ProPublica, FCC ULS, NPI Registry, NSF Awards, NIH RePORTER, Grants.gov, EPA FRS, FDA, USAspending, USPTO assignee), well-known web files (impressum, security.txt, humans.txt, /.well-known/contact, JSON-LD schema.org, og:email meta, RSS managingEditor, vCard, /api/about, robots.txt), trade directories (Manta, Superpages, MerchantCircle, Houzz Pro, ThomasNet)
+- `_shared/email-extras-5.ts` — 25 new free sources (Tiers 65–89): home service directories (Angi, HomeAdvisor, Thumbtack, Porch, Nextdoor Biz, BBB, Chamber of Commerce), B2B directories (ZoomInfo free, US Chamber, D&B, CorporationWiki, OpenGovUS, GovWin, SAM.gov/FBO), Michigan-specific (LARA license search, Michigan business entity), local directories (YellowBook, LocalEdge, Cylex, Brownbook, Tupalo, eZlocal, Cybo, TradeFord, ExportersIndia)
+- `_shared/email-waterfall.ts` — wired in Tiers 40–89 after opencorporates; `WATERFALL_PROVIDERS` updated with all new source names
 
-**Fix 4 — Trial Delivery Guarantee E1–E10** (commits `75e0df5`–`e163745`)
-- New SLA columns on `trial_signups`: `first_lead_delivered_at`, `sla_status` (`pending|met|breached|compensated`), `compensation_applied`
-- New `trial-drip-runner` edge function: runs hourly, checks each active trial against SLA, sends drip emails (D0/D1/D3/D7/D14)
-- Auto-compensation logic: if no lead delivered within SLA window, automatically issues credit/extension and notifies Matt + customer
-- Covers all radar trials (Trade Radar 11 verticals, Mortgage Radar, Demand Radar, Buyer Radar, TechAlert)
+**Missing crons added (migration `20260506010001`):**
+- `demand-radar-enhanced-scan` — daily 12:00 UTC (was built but never scheduled)
+- `field-service-daily-summary` — daily 13:00 UTC (was built but never scheduled)
+
+**Matt full enrollment (migration `20260506010000`):**
+- Demand Radar: `industry_pulse_clients` row (`buyer_type='contractor'`), token `matt-test-demand-radar-0001`
+- Buyer Radar: `industry_pulse_clients` row (`buyer_type='supplier'`), token `matt-test-buyer-radar-00001`
+- Dead Lead Reactivation: `dead_lead_campaigns` linked to Matt's HVAC `contractor_client`
+
+---
 
 ### Phase 43 — SMS Noise Fixes + Dead Lead Pool External Sources + Cron Repair COMPLETE ✅
 
@@ -954,7 +961,11 @@ Two purposes in one codebase:
   - `apollo.ts` — `apolloPeopleSearch`, `apolloOrganizationSearch`, `apolloOrganizationEnrich` (canonical; use this, not raw fetch)
   - `firecrawl.ts` — `firecrawlScrape`, `extractFaxNumber`, `extractPhoneNumbers`, `extractContactInfo`
   - `hunter.ts` — `hunterFindEmail(domain)`, `hunterVerifyEmail(email)`
-  - `email-waterfall.ts` — multi-source email enrichment waterfall (Apollo → Hunter → Firecrawl → Snov)
+  - `email-waterfall.ts` — multi-source email enrichment waterfall (site scrape → Snov → Apollo → pattern verify → Hunter → PDL → free sources Tiers 7–89); `runEmailWaterfall()` + `runFieldWaterfall()`
+  - `email-extras-1.ts` — Tiers 10–24: wayback, BBB scrape, Detroit Open Biz, Google Places, GitHub commits, DNS-MX pattern, Bing SERP, Reddit, Common Crawl, Hunter finder, YellowPages, Yelp, Foursquare, OSM, DuckDuckGo
+  - `email-extras-2.ts` — Tiers 25–38: Yandex, GitHub events, Wayback CDX, Crunchbase, sitemap crawl, LinkedIn, Facebook, MapQuest, HERE, OpenCage, SEC EDGAR, GovInfo, SAM entity, Twitter bio
+  - `email-extras-4.ts` — Tiers 40–64: gov registries (IRS BMF/ProPublica, FCC ULS, NPI, NSF, NIH, Grants.gov, EPA FRS, FDA, USAspending, USPTO), well-known web files (impressum, security.txt, humans.txt, JSON-LD, og:email, RSS, vCard, robots.txt), trade directories (Manta, Superpages, MerchantCircle, Houzz, ThomasNet)
+  - `email-extras-5.ts` — Tiers 65–89: home service dirs (Angi, HomeAdvisor, Thumbtack, Porch, Nextdoor, BBB, Chamber), B2B dirs (ZoomInfo free, US Chamber, D&B, CorporationWiki, OpenGovUS, GovWin, SAM.gov), Michigan (LARA, business entity), local dirs (YellowBook, LocalEdge, Cylex, Brownbook, Tupalo, eZlocal, Cybo, TradeFord, ExportersIndia)
   - `address-validation.ts` — Google Address Validation wrapper
   - `alert-rules.ts` — configurable alert thresholds
   - `budget-gate.ts` — per-function spend gate (abort if budget exceeded)
@@ -989,9 +1000,11 @@ Two purposes in one codebase:
   - `trade-canonical.ts` — canonical trade vertical name normalization
   - `circuit-breaker.ts`, `fetch-with-retry.ts`, `retry-policy.ts` — resilience utilities
   - `enrichment-audit.ts` — enrichment cost + result logging
+  - `enrichment-breaker.ts`, `enrichment-budget.ts`, `enrichment-pipeline.ts` — enrichment circuit breaker, per-lead cost gate, full Apollo→Hunter→Snov→Firecrawl pipeline orchestrator
   - `anti-hallucination.ts`, `llm-contradiction-check.ts`, `event-corroboration.ts` — LLM output validation
   - `cron-window.ts` — time-window helpers for ET-aligned cron guards
   - `outreach-blocklist.ts` — suppression list checks before any outreach
+  - `email-suppression.ts` — email-level suppression list check (complements outreach-blocklist)
   - `safe-parse.ts`, `strict-json.ts` — JSON parsing with graceful fallbacks
   - `stealth-scrape.ts`, `scraper.ts`, `scrape-fallback.ts` — browser/HTTP scraping stack
   - `flight-risk.ts`, `intent-score.ts`, `recency-decay.ts` — lead scoring signals
@@ -1009,6 +1022,33 @@ Two purposes in one codebase:
   - `sanitize-candidate.ts` — candidate data normalizer
   - `signup-classifier.ts` — signup intent classification
   - `dead-lead-emails.ts` — dead lead re-engagement email copy
+  - `crm-webhook.ts` — outbound CRM push (HubSpot contact upsert, HMAC-signed; Salesforce/Jobber/Zapier compatible)
+  - `budget-gate.ts` — per-function spend gate (abort run if budget exceeded)
+  - `compliance-waterfall.ts` — TCPA/FCRA compliance check chain
+  - `demand-radar-log.ts` — structured logging for Demand Radar scanner runs
+  - `dlq.ts` — dead-letter queue helpers for failed function invocations
+  - `domain-resolver.ts` — domain → company name resolution
+  - `dwa-email.ts` — DWA-branded Resend email sender (wrapper around Resend for DWA HTML templates)
+  - `engine-log.ts` — scanner engine run logging
+  - `error-log.ts` — writes structured errors to `error_logs` table (feeds fixer watchdog)
+  - `founder-seats.ts` — founder seat quota enforcement
+  - `intake-throttle.ts` — rate-limiter for scanner ingestion (prevents DB flood on bulk runs)
+  - `kpi-math.ts` — KPI calculation helpers (conversion rates, velocity, averages)
+  - `license-waterfall.ts` — LARA license lookup chain
+  - `llm-cache.ts` — prompt/response cache to avoid duplicate LLM calls within a run
+  - `market-waterfall.ts` — multi-source market signal aggregation chain
+  - `marketing-kill-switch.ts` — global outreach kill switch (checks DB flag before any send)
+  - `offer-ad-prompt.ts`, `offer-url.ts`, `offers.ts` — offer copy generation and URL helpers
+  - `provenance.ts` — tracks data source provenance on every lead record
+  - `request-id.ts` — generates/propagates X-Request-ID headers for tracing
+  - `signal-waterfall.ts` — multi-source signal aggregation pipeline
+  - `source-probes.ts` + `sources/` dir — source health-check registry (`registry.json`, `dispatchFetch`)
+  - `tech-session.ts` — TechAlert session state helpers
+  - `telemetry.ts` — lightweight event telemetry (fire-and-forget)
+  - `trade-canonical.ts` — canonical trade vertical name normalization (hvac → HVAC etc.)
+  - `cheap-extract.ts` — lightweight LLM extraction without full Opus call
+  - `address-validation.ts` — address validation wrapper
+  - `alert-rules.ts` — configurable alert thresholds per product
 - Checkout functions named `create-<product>-checkout/index.ts`
 - Stripe: always inline `price_data`, always set `metadata.type` for webhook routing
 - **SMS**: ALWAYS `import { sendSMS } from "../_shared/twilio.ts"` — never define a local sendSMS. The shared version checks `sms_opt_outs` (TCPA).
