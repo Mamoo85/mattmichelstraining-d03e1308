@@ -369,14 +369,88 @@ export const fetchSecEdgar = async (ein: string) => {
   } catch { return []; }
 };
 
-// 46. OpenCorporates Free Tier
-export const fetchOpenCorporates = (q: string, jurisdiction = "us") => {
+// 46. OpenCorporates Free Tier — search → company detail (for registered agent)
+export const fetchOpenCorporates = async (q: string, jurisdiction = "us") => {
   const key = Deno.env.get("OPENCORPORATES_API_KEY");
   const k = key ? `&api_token=${key}` : "";
-  return jsonGet(
-    `https://api.opencorporates.com/v0.4/companies/search?q=${encodeURIComponent(q)}&jurisdiction_code=${jurisdiction}${k}`,
-  ).then((d) => d?.results?.companies ?? []).catch(() => []);
+  try {
+    const search = await jsonGet(
+      `https://api.opencorporates.com/v0.4/companies/search?q=${encodeURIComponent(q)}&jurisdiction_code=${jurisdiction}${k}`,
+    );
+    const companies = search?.results?.companies ?? [];
+    if (!companies.length) return [];
+    // Hydrate top 3 with detail call to get registered_agent_address (email is rare but address often has one)
+    const detailed = await Promise.all(
+      companies.slice(0, 3).map(async (c: { company?: { jurisdiction_code?: string; company_number?: string } }) => {
+        try {
+          const jc = c.company?.jurisdiction_code; const cn = c.company?.company_number;
+          if (!jc || !cn) return c;
+          const det = await jsonGet(`https://api.opencorporates.com/v0.4/companies/${jc}/${cn}${key ? `?api_token=${key}` : ""}`);
+          const detail = det?.results?.company || {};
+          // Pull email from registered_agent_address or officers
+          const agentAddr = detail.registered_agent_address || "";
+          const officerEmail = (detail.officers || []).map((o: { officer?: { email?: string } }) => o.officer?.email).find(Boolean);
+          const emailMatch = String(agentAddr).match(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/);
+          return { ...c, registered_agent_email: officerEmail || emailMatch?.[0] || null, detail };
+        } catch { return c; }
+      }),
+    );
+    return detailed;
+  } catch { return []; }
 };
+
+// 47. State Secretary-of-State free business lookups (no API — returns search URL for Firecrawl handoff)
+const SOS_LOOKUPS: Record<string, string> = {
+  MI: "https://cofs.lara.state.mi.us/SearchApi/Search/EntitySearch?SearchType=Common&Term=",
+  OH: "https://businesssearch.ohiosos.gov/?=businessName%3D",
+  IN: "https://bsd.sos.in.gov/publicbusinesssearch?BusinessName=",
+  IL: "https://apps.ilsos.gov/businessentitysearch/?type=N&keyword=",
+  TX: "https://mycpa.cpa.state.tx.us/coa/search.do?searchType=2&value=",
+};
+export const fetchStateSosLookup = (state: string, businessName: string) => {
+  const base = SOS_LOOKUPS[state.toUpperCase()];
+  if (!base) return Promise.resolve([]);
+  return Promise.resolve([{ state, business_name: businessName, search_url: base + encodeURIComponent(businessName) }]);
+};
+
+// 48. Wayback Machine — historical snapshot of contact pages (for sites that removed emails)
+export const fetchWaybackContact = async (websiteUrl: string) => {
+  try {
+    const u = websiteUrl.replace(/\/$/, "") + "/contact";
+    const avail = await jsonGet(`https://archive.org/wayback/available?url=${encodeURIComponent(u)}`);
+    const snap = avail?.archived_snapshots?.closest;
+    if (!snap?.url) return [];
+    const html = await textGet(snap.url);
+    const emails = (html.match(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g) || []).slice(0, 5);
+    return emails.map((email) => ({ email, snapshot_url: snap.url, snapshot_ts: snap.timestamp }));
+  } catch { return []; }
+};
+
+// 49. BBB Business Profile scrape — owner names + sometimes email
+export const fetchBbbProfile = async (businessName: string, state = "MI") => {
+  try {
+    const search = `https://www.bbb.org/search?find_text=${encodeURIComponent(businessName)}&find_loc=${state}`;
+    const html = await textGet(search);
+    const profileMatch = html.match(/href="(\/us\/[a-z]{2}\/[^"]+\/profile\/[^"]+)"/);
+    if (!profileMatch) return [];
+    const profileUrl = `https://www.bbb.org${profileMatch[1]}`;
+    const profile = await textGet(profileUrl);
+    const emails = (profile.match(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g) || []).slice(0, 3);
+    const ownerMatch = profile.match(/(?:Owner|Principal|President)[:\s,]+([A-Z][a-z]+\s+[A-Z][a-z]+)/);
+    return [{ profile_url: profileUrl, emails, owner_name: ownerMatch?.[1] || null }];
+  } catch { return []; }
+};
+
+// 50. Yelp business page scrape — public profile, sometimes lists website + owner replies
+export const fetchYelpBusiness = async (slug: string) => {
+  try {
+    const html = await textGet(`https://www.yelp.com/biz/${slug}`);
+    const websiteMatch = html.match(/biz_redir\?url=([^&"]+)/);
+    const phoneMatch = html.match(/\(?(\d{3})\)?[\s.\-]?(\d{3})[\s.\-]?(\d{4})/);
+    return [{ website: websiteMatch ? decodeURIComponent(websiteMatch[1]) : null, phone: phoneMatch?.[0] || null }];
+  } catch { return []; }
+};
+
 
 // 4. FEMA Disaster Declarations
 export const fetchFemaDisasters = (state: string, days = 30) => {
@@ -547,6 +621,10 @@ export async function dispatchFetch(sourceId: string, params: Record<string, str
     case "state_corp_filings_rss": return fetchStateCorpRss(params.feed_url ?? "");
     case "sec_edgar_ein": return fetchSecEdgar(params.ein ?? "");
     case "opencorporates_free": return fetchOpenCorporates(params.q ?? "", params.jurisdiction ?? "us");
+    case "state_sos_lookup": return fetchStateSosLookup(params.state ?? "MI", params.business_name ?? "");
+    case "wayback_contact": return fetchWaybackContact(params.website ?? "");
+    case "bbb_profile": return fetchBbbProfile(params.business_name ?? "", params.state ?? "MI");
+    case "yelp_business": return fetchYelpBusiness(params.slug ?? "");
     default: return [];
   }
 }

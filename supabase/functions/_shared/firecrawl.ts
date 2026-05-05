@@ -64,7 +64,6 @@ export async function extractFaxNumber(websiteUrl: string): Promise<string | nul
     const text = (result?.markdown || "") + " " + (result?.html || "");
     if (!text.trim()) continue;
 
-    // Fax-specific patterns (prioritize labeled fax numbers)
     const faxPatterns = [
       /fax[:\s#]*\(?(\d{3})\)?[\s.\-]?(\d{3})[\s.\-]?(\d{4})/i,
       /f[:\s]*\(?(\d{3})\)?[\s.\-]?(\d{3})[\s.\-]?(\d{4})/i,
@@ -92,27 +91,98 @@ export async function extractPhoneNumbers(websiteUrl: string): Promise<string[]>
   return [...phones].slice(0, 5);
 }
 
-/** Extract owner/contact name and email from a website's about/contact page. */
-export async function extractContactInfo(websiteUrl: string): Promise<{ name?: string; email?: string } | null> {
+/** Standard subpaths most small-trade sites use to bury contact info. */
+const CONTACT_SUBPATHS = [
+  "", "/contact", "/contact-us", "/contactus", "/about", "/about-us",
+  "/team", "/our-team", "/staff", "/leadership", "/owner", "/meet-the-owner",
+  "/info", "/get-in-touch", "/reach-us", "/locations",
+];
+
+/** Deobfuscate common email cloaking patterns: name [at] domain [dot] com, name (at) domain, etc. */
+function deobfuscateEmails(text: string): string[] {
+  if (!text) return [];
+  const cleaned = text
+    .replace(/\s*\[\s*at\s*\]\s*/gi, "@")
+    .replace(/\s*\(\s*at\s*\)\s*/gi, "@")
+    .replace(/\s+at\s+(?=[a-z0-9-]+\.(com|net|org|io|co|biz|us|info|email))/gi, "@")
+    .replace(/\s*\[\s*dot\s*\]\s*/gi, ".")
+    .replace(/\s*\(\s*dot\s*\)\s*/gi, ".")
+    .replace(/\s+dot\s+(?=[a-z]{2,4}\b)/gi, ".")
+    .replace(/&#64;/gi, "@")
+    .replace(/%40/gi, "@");
+  const matches = cleaned.match(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g) || [];
+  return [...new Set(matches.map((m) => m.toLowerCase()))];
+}
+
+/** Pull mailto: hrefs from raw HTML (often present even when text is JS-rendered). */
+function extractMailtoHrefs(html: string): string[] {
+  if (!html) return [];
+  const matches = [...html.matchAll(/mailto:([^"'?\s>]+)/gi)];
+  return [...new Set(matches.map((m) => m[1].toLowerCase()))];
+}
+
+/**
+ * Deep contact extraction across multiple subpages.
+ * Tries CONTACT_SUBPATHS in parallel, deobfuscates "name [at] domain [dot] com",
+ * scans mailto: hrefs in raw HTML, prefers domain-matching emails.
+ * Returns first valid email + name found.
+ */
+export async function deepExtractContact(
+  websiteUrl: string,
+  opts?: { maxPages?: number },
+): Promise<{ name?: string; email?: string; emails?: string[]; source_url?: string } | null> {
   if (!websiteUrl) return null;
-  const urlsToTry = [
-    websiteUrl.replace(/\/$/, "") + "/about",
-    websiteUrl.replace(/\/$/, "") + "/contact",
-    websiteUrl,
-  ];
-  for (const url of urlsToTry) {
-    const result = await firecrawlScrape(url);
-    const text = result?.markdown || "";
-    if (!text) continue;
+  let domain = "";
+  try { domain = new URL(websiteUrl).hostname.replace(/^www\./, "").toLowerCase(); } catch { return null; }
+  const base = websiteUrl.replace(/\/$/, "");
+  const max = opts?.maxPages ?? 6;
 
-    const emailMatch = text.match(/([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})/);
-    const email = emailMatch?.[1] || undefined;
+  const urls = CONTACT_SUBPATHS.slice(0, max).map((p) => base + p);
+  const results = await Promise.allSettled(
+    urls.map((u) => firecrawlScrape(u, { onlyMainContent: false, includeHtml: true })),
+  );
 
-    // Look for "Owner:", "President:", "Founder:", etc.
-    const nameMatch = text.match(/(?:owner|president|founder|principal|proprietor)[:\s]+([A-Z][a-z]+ [A-Z][a-z]+)/i);
-    const name = nameMatch?.[1] || undefined;
+  const emailHits: { email: string; url: string }[] = [];
+  let foundName: string | undefined;
 
-    if (email || name) return { name, email };
+  for (let i = 0; i < results.length; i++) {
+    const r = results[i];
+    if (r.status !== "fulfilled" || !r.value) continue;
+    const md = r.value.markdown || "";
+    const html = r.value.html || "";
+    const text = md + " " + html;
+
+    for (const e of deobfuscateEmails(text)) emailHits.push({ email: e, url: urls[i] });
+    for (const e of extractMailtoHrefs(html)) emailHits.push({ email: e, url: urls[i] });
+
+    if (!foundName) {
+      const nameMatch = md.match(
+        /(?:owner|president|founder|principal|proprietor|ceo|gm|general manager)[:\s,\-–]+([A-Z][a-z]+(?:\s+[A-Z]\.)?\s+[A-Z][a-z]+)/i,
+      );
+      if (nameMatch) foundName = nameMatch[1];
+    }
   }
-  return null;
+
+  if (!emailHits.length && !foundName) return null;
+
+  // Prefer domain-matching emails, then info@/contact@, then anything not generic.
+  const blocked = /^(?:noreply|no-reply|webmaster|postmaster|name|email|test|user|admin|example)@/i;
+  const valid = emailHits.filter((h) => !blocked.test(h.email) && /\.(com|net|org|biz|us|co|io|info|email)$/i.test(h.email));
+  const onDomain = valid.find((h) => h.email.endsWith(`@${domain}`));
+  const biz = valid.find((h) => /^(info|contact|office|hello|sales|service|mail|owner)@/i.test(h.email));
+  const pick = onDomain || biz || valid[0];
+
+  return {
+    name: foundName,
+    email: pick?.email,
+    emails: [...new Set(valid.map((v) => v.email))].slice(0, 5),
+    source_url: pick?.url,
+  };
+}
+
+/** Backwards-compatible wrapper that uses the deep extractor under the hood. */
+export async function extractContactInfo(websiteUrl: string): Promise<{ name?: string; email?: string } | null> {
+  const r = await deepExtractContact(websiteUrl, { maxPages: 4 });
+  if (!r) return null;
+  return { name: r.name, email: r.email };
 }

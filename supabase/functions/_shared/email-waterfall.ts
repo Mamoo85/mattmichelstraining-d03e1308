@@ -444,6 +444,21 @@ export async function runEmailWaterfall(
     miss("pattern_verify");
   }
 
+  // 4.5 firecrawl deep — multi-subpage scrape with mailto + deobfuscation.
+  // Free relative to Firecrawl budget; runs before paid Hunter/PDL tiers.
+  if (url) {
+    try {
+      const { deepExtractContact } = await import("./firecrawl.ts");
+      const { result: r, ms } = await timeStage(() => deepExtractContact(url, { maxPages: 5 }));
+      if (r?.email && looksValidEmail(r.email)) {
+        await bump(sb, "firecrawl_deep", true, { latency_ms: ms });
+        return hit("firecrawl_deep", r.email, 60);
+      }
+      await bump(sb, "firecrawl_deep", false, { latency_ms: ms });
+      miss("firecrawl_deep");
+    } catch { miss("firecrawl_deep"); }
+  }
+
   // 5. hunter
   if (domain && !(await isProviderRateLimited(sb, "hunter"))) {
     const { result: r, ms } = await timeStage(() => hunterDomainSearch(sb, domain));
@@ -515,10 +530,35 @@ export async function runEmailWaterfall(
     } catch { miss("opencorporates"); }
   }
 
+  // 10. wayback_contact — historical Archive.org snapshot of /contact (free, fail-open)
+  if (url) {
+    try {
+      const { dispatchFetch } = await import("./sources/index.ts");
+      const wb = await dispatchFetch("wayback_contact", { website: url }) as Array<{ email?: string }>;
+      const e = (wb ?? []).map((r) => r?.email).find((x) => x && looksValidEmail(x!));
+      if (e) { await bump(sb, "wayback", true); return hit("wayback", e!, 45); }
+      miss("wayback");
+    } catch { miss("wayback"); }
+  }
+
+  // 11. bbb_profile — Better Business Bureau owner + emails (free scrape, fail-open)
+  if (input.business_name) {
+    try {
+      const { dispatchFetch } = await import("./sources/index.ts");
+      const bbb = await dispatchFetch("bbb_profile", {
+        business_name: input.business_name,
+        state: input.state || "MI",
+      }) as Array<{ emails?: string[] }>;
+      const emails = (bbb?.[0]?.emails || []).filter(looksValidEmail);
+      if (emails.length) { await bump(sb, "bbb", true); return hit("bbb", emails[0], 50); }
+      miss("bbb");
+    } catch { miss("bbb"); }
+  }
+
   return { email: null, source: null, confidence: 0, trace };
 }
 
-export const WATERFALL_PROVIDERS = ["site_scrape", "snov", "apollo", "pattern_verify", "hunter", "pdl", "pdl_name", "crtsh", "rdap_whois", "opencorporates"] as const;
+export const WATERFALL_PROVIDERS = ["site_scrape", "snov", "apollo", "pattern_verify", "firecrawl_deep", "hunter", "pdl", "pdl_name", "crtsh", "rdap_whois", "opencorporates", "wayback", "bbb"] as const;
 
 /**
  * runFieldWaterfall — wrapper around runEmailWaterfall that reports which
