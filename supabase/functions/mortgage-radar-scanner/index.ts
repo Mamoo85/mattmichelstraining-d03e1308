@@ -1456,6 +1456,23 @@ serve(async (req) => {
         .eq("id", res.id);
       alertsQueued += matchedClientIds.length;
 
+      // E3: Mark first lead delivered for trial clients (proof-of-delivery for SLA watchdog)
+      if (res.created) {
+        sb.from("mortgage_radar_clients" as any)
+          .select("email")
+          .in("id", matchedClientIds)
+          .then(({ data: mClients }: any) => {
+            for (const mc of (mClients || [])) {
+              if (mc.email) {
+                (sb.from as any)("trial_signups")
+                  .update({ first_lead_delivered_at: new Date().toISOString(), sla_status: "green" })
+                  .eq("email", mc.email).eq("status", "active").is("first_lead_delivered_at", null)
+                  .then(() => {}).catch(() => {});
+              }
+            }
+          }).catch(() => {});
+      }
+
       // Trial gating: decrement trial_leads_remaining; skip delivery when exhausted
       if (matchedClientIds.length > 0) {
         const { data: trialClients } = await (sb.from as any)("mortgage_radar_clients")
