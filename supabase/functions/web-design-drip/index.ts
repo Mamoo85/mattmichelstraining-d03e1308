@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { dwaColdEmail } from "../_shared/dwa-email.ts";
+import { dashboardPreviewHtml, pickProductForIndustry, missedRevenue } from "../_shared/dashboard-preview.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -236,13 +237,21 @@ serve(async (req) => {
         const page = getIndustryPage(industry);
         const ctaUrl = `https://detroitwebagent.com${page.path}`;
 
+        const productKey = pickProductForIndustry(industry);
+        const revenueUsd = "$" + missedRevenue(productKey).toLocaleString("en-US");
+        const previewHtml = dashboardPreviewHtml({ product: productKey, industry });
+        const bodyWithRevenue = bodyText + `\n\nP.S. Based on signals we already pulled for ${industry} businesses in your area, you're leaving roughly ${revenueUsd}/mo on the table. The dashboard above is what we'd hand you on day one.`;
+
         const r = await dwaColdEmail({
           to: email,
           subject,
-          bodyHtml: bodyText.replace(/\n/g, "<br>"),
-          product: "Detroit Web Agency Website Build",
+          bodyHtml: bodyWithRevenue.replace(/\n/g, "<br>"),
+          // Web design has no trial — gated CTA picks "See it live →" automatically.
+          product: "Web Design Build",
           ctaUrl,
+          ctaText: "See what I'd build for you →",
           templateName: nextStep.templateName,
+          previewHtml,
         }, sb);
 
         if (!r.ok) {

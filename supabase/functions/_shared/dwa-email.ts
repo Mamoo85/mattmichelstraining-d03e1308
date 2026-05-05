@@ -59,12 +59,44 @@ export async function dwaEmail(opts: DwaEmailOpts): Promise<{ ok: boolean; error
 }
 
 /**
- * Trial CTA block — 7 days for all DWA products EXCEPT TechAlert / Hire Alert
- * (hiring radars stay at 30 days because hiring cycles are slower).
+ * Products that legitimately offer a free trial. Cold pitches for ANYTHING
+ * else (web design, generic agency services, add-ons) MUST NOT advertise a
+ * "7-day trial of Detroit Web Agency" — there isn't one. Web design has no
+ * trial; we sell builds. Add-ons are sold post-purchase, not cold.
  *
- * Use:
- *   trialCtaHtml({ product: "Mortgage Radar", url: "https://..." })
- *   trialCtaHtml({ product: "TechAlert",      url: "https://..." })  // → 30 days
+ * Keep this list tight. If you're unsure, don't add it.
+ */
+export const TRIAL_ELIGIBLE_PRODUCTS = new Set<string>([
+  "trade radar", "mortgage radar", "techalert", "hire alert", "talent radar",
+  "carealert", "fielddesk", "siteradar", "missed-call catch", "missed call catch",
+  "ai phone answering", "bundle revenue suite", "contractor leads",
+]);
+
+export function isTrialEligible(product: string): boolean {
+  const p = (product || "").toLowerCase();
+  for (const slug of TRIAL_ELIGIBLE_PRODUCTS) {
+    if (p.includes(slug)) return true;
+  }
+  return false;
+}
+
+/**
+ * Plain teal CTA button — used when a cold email is for a non-trial product
+ * (web design build, generic outreach). Replaces the old "free 7-day trial"
+ * box that was being injected into every send.
+ */
+export function plainCtaHtml(opts: { url: string; text: string }): string {
+  return `
+<div style="margin:28px 0;text-align:center;">
+  <a href="${opts.url}" style="background:${DWA_TEAL};color:${DWA_BG};padding:13px 26px;border-radius:6px;text-decoration:none;font-weight:700;display:inline-block;font-size:15px;">
+    ${opts.text}
+  </a>
+</div>`;
+}
+
+/**
+ * Trial CTA block — only for products in TRIAL_ELIGIBLE_PRODUCTS. Hiring
+ * radars (TechAlert/Hire Alert) get 30 days, everything else 7 days.
  */
 export function trialCtaHtml(opts: { product: string; url: string }): string {
   const hiring = isHiringProduct(opts.product);
@@ -92,24 +124,32 @@ export function isHiringProduct(product: string): boolean {
 }
 
 /**
- * Canonical cold-email sender. Wraps body in DWA branded shell, auto-injects
- * the correct trial CTA (7 or 30 days), and logs to email_send_log.
+ * Canonical cold-email sender. Wraps body in DWA branded shell, gates the
+ * trial CTA via TRIAL_ELIGIBLE_PRODUCTS, and logs to email_send_log.
  */
 export interface DwaColdEmailOpts {
   to: string;
   subject: string;
-  bodyHtml: string;       // inner copy (greeting + pitch). NO trial CTA — added automatically.
-  product: string;        // e.g. "TechAlert", "Mortgage Radar", "Contractor Leads"
+  bodyHtml: string;       // inner copy (greeting + pitch). NO CTA — added automatically.
+  product: string;        // e.g. "TechAlert", "Mortgage Radar", "Web Design Build"
   ctaUrl: string;         // landing page / trial start URL
+  ctaText?: string;       // CTA button label for non-trial products. Default: "See it live →"
   templateName: string;   // for email_send_log audit
   bcc?: string;
+  // Visual blocks — render BEFORE the body for max impact (humans are visual).
+  teaserHtml?: string;    // pre-rendered teaserCardHtml() output
+  previewHtml?: string;   // pre-rendered dashboardPreviewHtml() output
 }
 
 export async function dwaColdEmail(
   opts: DwaColdEmailOpts,
   sb?: { from: (t: string) => any },
 ): Promise<{ ok: boolean; error?: string; messageId?: string }> {
-  const inner = `${opts.bodyHtml}\n${trialCtaHtml({ product: opts.product, url: opts.ctaUrl })}`;
+  const ctaBlock = isTrialEligible(opts.product)
+    ? trialCtaHtml({ product: opts.product, url: opts.ctaUrl })
+    : plainCtaHtml({ url: opts.ctaUrl, text: opts.ctaText || "See it live →" });
+  const visuals = `${opts.previewHtml || ""}${opts.teaserHtml || ""}`;
+  const inner = `${visuals}${opts.bodyHtml}\n${ctaBlock}`;
   const html = dwaWrap(inner);
   const messageId = `cold-${opts.templateName}-${crypto.randomUUID()}`;
 

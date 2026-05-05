@@ -1,93 +1,85 @@
-## Goal
-Turn on aggressive cold-email sending across every DWA product, fix the silence on TechAlert/Talent Radar, confirm trials are wired, weight volume toward products with the deepest lead inventory, and attach an Angie's-List–style teaser card to every send.
+## Full audit findings (worse than the first pass — 20+ broken functions)
 
-## What I found (current state)
+The Gmail screenshot is just one symptom. Across the project there are **5 systemic problems**:
 
-**Sending today:**
-- `techalert-outreach` — 8am ET, capped 30/day. `techalert-followup-drip` 9am+2pm, 50/day.
-- `channel-prospector-followup` — 10am ET, 40/day (fax/postcard/SMS, not email).
-- `dead-lead-drip` — D1 SMS only.
-- `mortgage-radar-outreach` — runs but volume small.
-- `marketplace-outreach-blast` — manual only.
-- Trade Radar (11 verticals), FieldDesk, SiteRadar, Missed-Call, Buyer Radar, Demand Radar, Contractor Leads, Bundle Suite — **no cold-email cron at all**.
+**Problem A — Wrong product pitched.** `multi-service-drip` and parts of the website-pitch flow hawk a salad of cheap add-ons (AI Phone $149, Speed-to-Lead SMS $39, Reputation Dashboard $79, Blog Posts $79). Those are post-sale add-ons, not standalone cold-traffic offers.
 
-**Why TechAlert/Talent Radar feels silent:**
-- 30/day cap + drip cap 50/day, but `techalert-enrich` only drains 25 prospects/run → top of funnel starves the outreach function.
-- No teaser/lead-card asset in the email body — just plain pitch copy.
-- Cron deploy needs verifying after Phase 43 token issue.
+**Problem B — Fake trial CTA on everything.** `_shared/dwa-email.ts → dwaColdEmail()` auto-appends a "Start your free 7-day trial of Detroit Web Agency" box on every send, regardless of product. The website itself has no trial.
 
-**Trials:** Phase 44 shipped `trial-drip-runner` + SLA columns on `trial_signups` (D0/D1/D3/D7/D14, auto-compensation). Coupon `INTRO50_3MO` exists. Trial-eligible products per `pricing-matrix.md`: Mortgage Radar, Trade Radar, FieldDesk, SiteRadar, Missed-Call, AI Phone, Bundle Suite. TechAlert / Contractor Leads / Dead Lead = no trial by directive.
+**Problem C — Hardcoded "free trial" copy in legacy senders that bypass the shared helper.** Found in: `dead-lead-outreach-drip` ("Start your free trial in 60 seconds"), `contractor-fomo-mailer` ("7-day free trial"), `outreach-email-blast` ("Start your free 7-day trial →"), `hoa-cold-outreach` ("Offer a free trial"), `pipeline-drip-send`, `pipeline-batch-drip`, `pipeline-auto-drip` (raw Resend fetch, no brand wrap, no teaser, no audit).
 
-**Angie's-List parity:** `TradeRadarLeadCard.tsx` (Street View, score meter, signal badge, opener, job value) already beats Angie's basic listing on signal freshness + intent score. We do NOT yet beat them on: review aggregation, before/after photos, multi-quote UI. For email teasers we have the components — just not embedded in outbound.
+**Problem D — No visuals.** Only 6 of ~25 cold senders use `teaserCardHtml`. The rest are wall-of-text. The teaser card itself shows one lead — no dashboard mock, no "what you're missing" revenue math.
+
+**Problem E — No revenue math.** Nothing in the cold pipeline says "you're losing $X/month." Recipients have to do the value math themselves.
 
 ## Plan
 
-### 1. Unstarve TechAlert/Talent Radar (highest priority)
-- Raise `techalert-enrich` drain: 25 → 100/run, add a second cron at 1pm ET.
-- Raise `techalert-outreach` daily cap: 30 → 150, add second send window at 1pm ET.
-- Raise `techalert-followup-drip` cap 50 → 150.
-- Verify deploy of all 3 functions on primary project; trigger manual run; confirm `email_send_log` rows.
+### 1. Lock down the shared sender (defense-in-depth)
+- `_shared/dwa-email.ts`:
+  - Add `TRIAL_ELIGIBLE_PRODUCTS` allowlist (Mortgage Radar, Trade Radar + 11 verticals, FieldDesk, SiteRadar, Missed-Call Catch, AI Phone Answering, Bundle Revenue Suite, TechAlert, CareAlert, Talent Radar).
+  - `dwaColdEmail()` only appends `trialCtaHtml()` when `opts.product` is in the allowlist. Otherwise: plain teal CTA button using `opts.ctaUrl`/`opts.ctaText`.
+  - Add a new optional `opts.teaser` field that takes a `TeaserCardOpts` and renders it above the body. Add `opts.dashboardPreview` (image URL + missed-revenue line) that renders the new dashboard preview block.
 
-### 2. Turn on cold email for every product that has lead inventory
-Create one new edge function per product (or extend existing scanner) that drains the product's lead/prospect table → sends branded cold email → logs to `email_send_log`. Daily caps weighted by inventory:
+### 2. New shared visual: `_shared/dashboard-preview.ts`
+A reusable HTML block that renders:
+- A hosted dashboard screenshot (PNG, lives in `public/email-assets/`) styled as a "your dashboard would look like this" tile
+- A "Missed Revenue This Month" big-number line ($X,XXX) computed from product-specific defaults (e.g. Trade Radar = leads_in_zip × $400 avg job; Missed-Call = est_missed_calls × $312; Mortgage Radar = est_refi_pool × $2,800; SiteRadar = anonymous_visitors × $80; TechAlert = open_role_days × $1,200/day)
+- A small "Based on signals we already pulled in your ZIP" caption so the number feels real, not invented.
 
-| Product | Source table | Daily cap | Why |
-|---|---|---|---|
-| Trade Radar (11 verticals) | `trade_radar_leads` (claimed=false) | 200/day pooled | Largest inventory |
-| Mortgage Radar | `mortgage_radar_leads` | 100/day | Strong intent signals |
-| Contractor Leads | `marketplace_prospects` | 100/day | PPL marketplace |
-| TechAlert | `hire_alert_candidates` | 150/day | Per #1 |
-| FieldDesk | `field_service_jobs` (uncovered metros) | 50/day | Smaller TAM |
-| SiteRadar | identified visitors w/o owner | 50/day | Warm signal |
-| Missed-Call | `missed_call_clients` prospects | 40/day | Cold list |
-| Buyer Radar / Demand Radar | radar signals | 40/day each | Newer products |
-| Dead Lead Reactivation | (already SMS-only — add email D2) | 60/day | Channel diversification |
+### 3. Generate the dashboard preview images
+Use the AI image generation gateway (Nano banana pro `google/gemini-3-pro-image-preview`) to mock 6 dashboard screenshots — one per flagship product:
+- Trade Radar (lead feed with score badges + Street View thumbs)
+- Mortgage Radar (refi candidates with equity %)
+- TechAlert / Talent Radar (candidate dossiers + license badges)
+- Missed-Call Catch (call log with auto-text replies)
+- SiteRadar (anonymous-visitor company list)
+- FieldDesk (job board + tech locations)
 
-All sends gated by:
-- `marketing-kill-switch.ts` global flag
-- `outreach-blocklist.ts` suppression
-- `cold-email-ramp-scheduler` deliverability throttle (already exists from Phase 37)
-- `_shared/twilio.ts` quiet-hours rules don't apply to email but TCPA/CAN-SPAM unsubscribe footer required
+Save to `public/email-assets/preview-<product>.png`. Run each through the `product-shot` skill so they're framed in a macOS window with a soft DWA-teal mesh gradient. Reference them in cold emails as `https://detroitwebagent.com/email-assets/preview-<product>.png`.
 
-### 3. Angie's-List–style teaser card in every email
-- New shared template `_shared/email-templates/lead-teaser-card.tsx` — React Email component rendering: hero image (Street View or product mock), score badge, signal type, "Open in your dashboard →" CTA, blurred-out PII for non-customers (per `TradeRadarTeaserAd.tsx` pattern).
-- Every product's outreach function imports and embeds this card. Card data pulled from product's lead row.
-- For trial-eligible products: card CTA = `/start-trial?product=<key>` (uses existing `offers.ts` + `INTRO50_3MO` coupon).
-- For non-trial products (TechAlert, Contractor Leads, Dead Lead): CTA = direct checkout.
+### 4. Reframe `multi-service-drip` (full rewrite)
+- Drop `getServicesForIndustry()` add-on salad entirely.
+- New 3-step sequence, **each step embeds a dashboard preview + teaser card + missed-revenue number**:
+  - **Step 1**: "Your current site has [flaw]. Here's what we'd build" → demo link + dashboard preview of the radar product that fits their industry.
+  - **Step 2**: "Here's what a similar [industry] in MI got in 30 days" → revenue math + sample lead teaser card.
+  - **Step 3**: "Last note — your competitors in [city] are pulling X leads/mo with this exact stack" → urgency + pricing.
+- Industry → product mapping (cold pitch only ever points to ONE real lead/hire product, never the add-on list):
+  - Contractors / home-service → Trade Radar (matching vertical)
+  - Mortgage / loan officer / realtor → Mortgage Radar
+  - Healthcare / facility / staffing → CareAlert / TechAlert
+  - Legal / consulting / professional services → Missed-Call Catch + AI Phone Answering bundle
+  - Manufacturing / industrial → TechAlert (skilled trades hiring) + SiteRadar
+  - Restaurant / retail / salon → Missed-Call Catch
+  - B2B / SaaS / agency → SiteRadar
 
-### 4. Confirm trials end-to-end
-- Verify `trial-drip-runner` cron is firing (query `cron.job`).
-- Spot-check `trial_signups` SLA columns populated.
-- Confirm 7 trial-eligible checkout functions still pass `trial_period_days=7` + `INTRO50_3MO`.
-- Add a test trial signup, watch SLA flip from `pending` → `met`.
+### 5. Sweep every other cold sender
+For each, swap raw Resend / hardcoded "free trial" / addon-salad copy for `dwaColdEmail()` with a real `product:` string + teaser card + dashboard preview:
+- `dead-lead-outreach-drip`, `contractor-fomo-mailer`, `outreach-email-blast`, `hoa-cold-outreach`, `pipeline-drip-send`, `pipeline-batch-drip`, `pipeline-auto-drip`, `neo-outreach`, `prospect-local-businesses`, `web-design-drip`, `dossier-cold-outreach`, `dossier-cold-outreach-bulk`, `signal-channel-blast`, `storm-lead-blaster`, `marketplace-outreach-blast`, `mortgage-radar-outreach`, `dwa-product-blast`, `fielddesk-cold-blast`, `siteradar-cold-blast`, `contractor-prospector`, `contractor-outreach-email-blast`, `techalert-outreach`, `techalert-followup-drip`, `channel-prospector-followup`, `agency-prospect-list-blast`.
 
-### 5. New unified pg_cron schedule (ET)
-| Time | Function |
-|---|---|
-| 8am | trade-radar-cold-email-blast (200) |
-| 8am | techalert-outreach (150) |
-| 9am | mortgage-radar-cold-email-blast (100) |
-| 9am | contractor-leads-cold-email-blast (100) |
-| 10am | fielddesk + siteradar + missedcall blasts |
-| 11am | buyer-radar + demand-radar blasts |
-| 1pm | techalert-outreach round 2 |
-| 2pm | techalert-followup-drip |
-| 3pm | dead-lead-email-touch (D2) |
+For each one: confirm `product:` string, attach the right dashboard preview image, attach a teaser card with one example lead from that product's table (or a realistic sample if no live row exists for that recipient's geo), inject the missed-revenue line.
 
-All caps governed by `cold_email_ramp_state` so we don't burn the domain.
+### 6. Verify what is NOT touched
+- `ai-upsell-sender`, `cross-sell-drip`, `monthly-upgrade-recap-sender` — these target existing customers. The add-on salad lives here legitimately.
+- `create-*-checkout` — landing-page checkouts for the individual add-ons are fine; we just stop pitching them in cold.
+- TechAlert/Mortgage Radar/Trade Radar/FieldDesk/SiteRadar/Missed-Call landing pages — already pitch their own product correctly.
 
-### 6. Are we beating Angie's List?
-**Yes on signal & intent, no on UX depth.** We win on: (a) live permit/storm/foreclosure signals Angie doesn't have, (b) score+suggested opener per lead, (c) Street View context, (d) one-channel-per-lead claim model vs their multi-quote spam. We lose on: (a) review aggregation, (b) before/after gallery, (c) consumer-facing brand recall. Email teaser card closes the visual gap; full UX parity is a separate roadmap item.
+### 7. Deploy + test
+Deploy every touched edge function. Trigger one test send through `multi-service-drip`, `web-design-drip`, `dead-lead-outreach-drip`, `contractor-fomo-mailer`, and `outreach-email-blast` — confirm:
+- No bogus "free trial of Detroit Web Agency" box on website pitches
+- Dashboard preview image renders inline
+- Teaser card renders inline
+- Missed-revenue number shows
+- CTA goes to the right product page
 
-## Technical specifics
-- New functions: `<product>-cold-email-blast/index.ts` × 8, plus shared `_shared/email-templates/lead-teaser-card.tsx`.
-- New migration: `cold_email_send_state` extension columns for per-product cap overrides + `last_blast_at` on each product's prospect/lead table.
-- Cron migration: `<date>_unified_cold_email_crons.sql` — uses hardcoded URL + `SUPABASE_SERVICE_ROLE_KEY_VAULT` per Phase 43 fix.
-- All functions: `verify_jwt = false` in config.toml.
-- All sends write `email_send_log` with `template_name='<product>-cold-blast'` for the dashboard.
-- DWA-branded via `dwaEmail()`.
+## Files touched (~30)
+- `supabase/functions/_shared/dwa-email.ts`
+- `supabase/functions/_shared/teaser-card.ts` (extend with score-meter + sample-data variants)
+- `supabase/functions/_shared/dashboard-preview.ts` (new)
+- `public/email-assets/preview-*.png` (6 new generated images)
+- 25 cold-email edge functions listed in §5
+- `supabase/functions/multi-service-drip/index.ts` — full rewrite per §4
 
-## Verification after build
-- Curl each blast function manually, confirm 200 + non-zero `sent_count`.
-- Query `email_send_log` last 1h grouped by template_name.
-- Send Matt a single SMS summary with per-product send counts after the first full daily cycle.
+## Out of scope
+- Customer-portal upsell tiles (where add-ons belong)
+- Trial mechanics / Stripe (already correct)
+- Any UI changes in the React app

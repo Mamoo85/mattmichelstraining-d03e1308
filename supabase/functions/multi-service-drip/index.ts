@@ -2,6 +2,8 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { generateText } from "../_shared/ai.ts";
 import { dwaColdEmail } from "../_shared/dwa-email.ts";
+import { dashboardPreviewHtml, pickProductForIndustry, missedRevenue } from "../_shared/dashboard-preview.ts";
+import { teaserCardHtml } from "../_shared/teaser-card.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -333,36 +335,56 @@ serve(async (req) => {
 
         processed++;
 
-        const services = getServicesForIndustry(industry);
-        const serviceList = services
-          .map((s) => `• ${s.name} — ${s.price}`)
-          .join("\n");
+        // Pick the ONE radar product that fits this industry — never the
+        // add-on salad. Cold pitch = website + one real lead/hire product.
+        const productKey = pickProductForIndustry(industry);
+        const productLabel = ({
+          trade_radar: "Trade Radar",
+          mortgage_radar: "Mortgage Radar",
+          techalert: "TechAlert",
+          missed_call: "Missed-Call Catch",
+          siteradar: "SiteRadar",
+          fielddesk: "FieldDesk",
+        } as Record<string, string>)[productKey];
+        const revenue = missedRevenue(productKey);
+        const revenueUsd = "$" + revenue.toLocaleString("en-US");
 
         const promptFn = STEP_PROMPTS[stepIndex];
         const demo = getDemoLink(industry);
         const demoInfo = demo ? `${demo.url} (built for a ${demo.label})` : undefined;
-        const prompt = promptFn(businessName, industry, city, serviceList, demoInfo);
+        // Pivot prompt: pitch the WEBSITE + one radar add-on, with revenue math.
+        const pitchContext = `\n\nIMPORTANT — pitch only TWO things:\n1) A new website built specifically for ${industry || "this industry"} businesses (the lead).\n2) ${productLabel} as the one add-on that pairs with it (worth ~${revenueUsd}/mo in missed revenue based on signals we already pulled).\nDO NOT list multiple add-ons. DO NOT mention any other services.`;
+        const prompt = promptFn(businessName, industry, city, `Website + ${productLabel}`, demoInfo) + pitchContext;
 
         const generatedBody = await generateText(prompt, 800);
         const emailBody: string =
           generatedBody ||
-          `Hey —\n\nI wanted to reach out about a few tools that might help ${businessName} get more calls and grow.\n\nHere's what I offer:\n${serviceList}\n\nAll automated — no extra work on your end.\n\ndetroitwebagent.com/get-started\n\n— Matt, Detroit Web Agency`;
+          `Hey —\n\nI build websites for ${industry || "local"} businesses like ${businessName}, and I pair every site with ${productLabel} so you actually see the leads it's bringing in.\n\nBased on signals I already pulled in ${city}, you're leaving ~${revenueUsd}/mo on the table.\n\n— Matt, Detroit Web Agency`;
 
         const subjectLines = [
-          `A few tools that could help ${businessName}`,
+          `${businessName} — ~${revenueUsd}/mo we'd help you capture`,
           `Quick follow-up for ${businessName}`,
           `Last note from me, ${businessName}`,
         ];
         const subject = subjectLines[stepIndex];
         const ctaUrl = demo?.url || "https://detroitwebagent.com/get-started";
 
+        const previewHtml = dashboardPreviewHtml({
+          product: productKey,
+          city: city,
+          industry: industry,
+        });
+
         const r = await dwaColdEmail({
           to: email,
           subject,
           bodyHtml: emailBody.replace(/\n/g, "<br>"),
-          product: "Detroit Web Agency",
+          // Web design has no trial — gated CTA in dwaColdEmail picks "See it live →"
+          product: "Web Design Build",
           ctaUrl,
+          ctaText: "See what I'd build for you →",
           templateName: DRIP_TEMPLATES[stepIndex],
+          previewHtml,
         }, serviceClient);
 
         if (!r.ok) {
