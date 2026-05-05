@@ -63,7 +63,7 @@ serve(async (req) => {
       .is("enriched_at", null)
       .eq("status", "new")
       .order("score", { ascending: false })
-      .limit(25);
+      .limit(150);
 
     if (error) throw error;
     if (!targets?.length) {
