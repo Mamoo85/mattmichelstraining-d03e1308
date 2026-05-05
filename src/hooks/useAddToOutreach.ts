@@ -19,21 +19,18 @@ export function useAddToOutreach() {
     mutationFn: async (params: AddToOutreachParams) => {
       const { businessName, domain, city, phone, industry, sourceProduct } = params;
 
-      // Upsert into outreach_leads — skip if already exists by business_name
+      // Insert into outreach_leads — ignore if already exists (no unique constraint on business_name)
       const { data, error } = await (supabase as any)
         .from("outreach_leads")
-        .upsert(
-          {
-            business_name: businessName,
-            website: domain ? `https://${domain.replace(/^https?:\/\//, "")}` : null,
-            city: city || null,
-            phone: phone || null,
-            industry: industry || null,
-            source: sourceProduct || "admin_manual",
-            pipeline_stage: "new",
-          },
-          { onConflict: "business_name", ignoreDuplicates: true },
-        )
+        .insert({
+          business_name: businessName,
+          website: domain ? `https://${domain.replace(/^https?:\/\//, "")}` : null,
+          city: city || null,
+          phone: phone || null,
+          industry: industry || null,
+          source: sourceProduct || "admin_manual",
+          pipeline_stage: "new",
+        })
         .select("id")
         .single();
 
