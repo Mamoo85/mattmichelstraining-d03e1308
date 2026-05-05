@@ -35,7 +35,7 @@ function emailHtml(lead: any): string {
       "Built for 2–20 tech shops · no per-seat ripoff",
     ],
     ctaText: "Start free 7-day trial →",
-    ctaUrl: `${SITE}/start-trial?product=field_crm`,
+    ctaUrl: `${SITE}/start-trial?product=field_desk`,
     badge: "FIELDDESK · TRIAL",
   });
   return `<div style="max-width:600px;margin:0 auto;padding:24px 16px;background:#fff;">
