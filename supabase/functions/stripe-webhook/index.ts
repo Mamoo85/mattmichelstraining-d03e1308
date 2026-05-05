@@ -1271,15 +1271,16 @@ serve(async (req) => {
         try {
           if (email) {
             await (sb.from as any)("hire_alert_clients").upsert({
-              email,
-              phone: meta.phone || null,
+              owner_email: email,
+              owner_phone: meta.phone || null,
               city: meta.city || null,
               state: meta.state || "MI",
               tier: "sms_only",
+              notify_sms: true,
               active: true,
               stripe_customer_id: session.customer as string || null,
               stripe_subscription_id: session.subscription as string || null,
-            }, { onConflict: "email" });
+            }, { onConflict: "owner_email" });
           }
           await notifyMatt(
             `📱 TechAlert SMS Tier: ${email}`,
