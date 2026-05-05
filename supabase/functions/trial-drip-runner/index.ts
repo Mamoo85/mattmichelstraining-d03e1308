@@ -93,7 +93,7 @@ async function sendDay2(sb: any, t: Trial) {
       await recordTouch(sb, t.id, "day2", "sms", "failed", String(e));
     }
   } else {
-    await dwaEmail(t.email, "Day 2 of your trial — how's it going?", `<p>Hey,</p><p>Matt here. Day 2 of your trial. You've got <strong>${totalLeads}</strong> lead${totalLeads === 1 ? "" : "s"} so far.</p><p>Reply with anything you're seeing — I read every reply personally.</p><p>— Matt · (313) 992-1219</p>`);
+    await dwaEmail({ to: t.email, subject: "Day 2 of your trial — how's it going?", html: `<p>Hey,</p><p>Matt here. Day 2 of your trial. You've got <strong>${totalLeads}</strong> lead${totalLeads === 1 ? "" : "s"} so far.</p><p>Reply with anything you're seeing — I read every reply personally.</p><p>— Matt · (313) 992-1219</p>` });
     await recordTouch(sb, t.id, "day2", "email", "sent");
   }
 }
