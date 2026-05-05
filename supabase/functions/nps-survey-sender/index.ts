@@ -12,6 +12,8 @@ const PRODUCTS = [
   { table: "field_crm_clients", emailCol: "email", product: "FieldDesk", question: "How likely are you to recommend FieldDesk to another field service business? Reply 1–10." },
   { table: "missed_call_clients", emailCol: "email", product: "Missed-Call Catch", question: "How likely are you to recommend Missed-Call Catch to another local business? Reply 1–10." },
   { table: "mortgage_radar_clients", emailCol: "email", product: "Mortgage Radar", question: "How likely are you to recommend Mortgage Radar to another loan officer? Reply 1–10." },
+  { table: "trade_radar_clients", emailCol: "email", product: "Trade Radar", question: "Are you getting quality leads from Trade Radar? Reply YES, NO, or a score 1–10 — I read every reply." },
+  { table: "contractor_clients", emailCol: "email", product: "Contractor Leads", question: "How likely are you to recommend our contractor lead service to a peer? Reply 1–10." },
 ];
 
 const MILESTONES = [30, 60, 90];
