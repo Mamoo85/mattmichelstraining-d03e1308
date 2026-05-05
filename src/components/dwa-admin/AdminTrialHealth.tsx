@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Activity, AlertTriangle, CheckCircle2, ChevronDown, ChevronRight, Mail, MessageSquare } from "lucide-react";
+import { Loader2, Activity, AlertTriangle, CheckCircle2, ChevronDown, ChevronRight, Mail, MessageSquare, Download } from "lucide-react";
 
 interface TrialRow {
   id: string;
