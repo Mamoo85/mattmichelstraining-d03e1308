@@ -33,14 +33,22 @@ import { generateText } from "../_shared/ai.ts";
 import { isBlocked, recordOutreach } from "../_shared/outreach-blocklist.ts";
 import { canonicalizeTrade, getSearchQueries } from "../_shared/trade-canonical.ts";
 import { cleanWebsite } from "../_shared/enrichment-pipeline.ts";
-import { dwaWrap, trialCtaHtml } from "../_shared/dwa-email.ts";
+import { dwaWrap, trialCtaHtml, plainCtaHtml, isTrialEligible } from "../_shared/dwa-email.ts";
 
 /**
- * Standard DWA cold-email shell + auto-injected trial CTA (7-day or 30-day
- * by product). All cold-outreach builders in this file should call this.
+ * Standard DWA cold-email shell + auto-injected CTA. Trial-eligible products
+ * get the "free trial" box; non-trial products (e.g. Dead Lead Reactivation,
+ * pay-per-reply) get a plain teal "See it live" button so we don't falsely
+ * advertise a trial.
  */
-function wrapDwaShell(innerHtml: string, opts: { product: string; ctaUrl: string }): string {
-  return dwaWrap(`${innerHtml}\n${trialCtaHtml({ product: opts.product, url: opts.ctaUrl })}`);
+function wrapDwaShell(
+  innerHtml: string,
+  opts: { product: string; ctaUrl: string; ctaText?: string },
+): string {
+  const cta = isTrialEligible(opts.product)
+    ? trialCtaHtml({ product: opts.product, url: opts.ctaUrl })
+    : plainCtaHtml({ url: opts.ctaUrl, text: opts.ctaText || "See it live →" });
+  return dwaWrap(`${innerHtml}\n${cta}`);
 }
 
 function extractCityState(city: string): [string, string] {

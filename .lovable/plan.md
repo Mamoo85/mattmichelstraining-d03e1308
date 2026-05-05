@@ -1,95 +1,47 @@
-I checked the current state before proposing this. I cannot honestly say “100% every cold-email link works” until I run a broader content-aware audit across every outbound email generator and not just the central trial aliases. What I can confirm right now:
+## Audit of Claude's plan
+All bugs claimed are confirmed in the current repo — nothing has been fixed yet:
+- `contractor-prospector/index.ts:43` — `trialCtaHtml(opts)` is called with `{ product, ctaUrl }`, but `trialCtaHtml` expects `{ product, url }`. The href in every cold-email CTA renders as `undefined`.
+- 5 `ctaUrl` values in `contractor-prospector` point to landing pages instead of `/start-trial`.
+- 2 `ctaUrl` values in `techalert-outreach/index.ts` (lines 80, 106) point to `/talent-radar` instead of `/start-trial?product=techalert`.
+- 3 AI prompts hardcode `https://www.detroitwebagent.com/hire-alert` and `/missed-call-catch` inside the email body text, so the LLM repeats the wrong URL even after we fix the button.
 
-- The latest D.J. Conley proposal sent to Pat was `djconley_pitch_v2` on 2026-05-05 01:33 UTC to `pmichels@djconley.com`; the send log shows status `sent` and the provider returned HTTP 200 with resend id `6cb6b482-ea71-453d-bac4-33870f291e4a`.
-- The older short proposal sender still exists in the admin panel and is weaker than the v2 proposal. It also still says “navy + orange” in spots, while the newer v2 says the corrected teal + red brand palette.
-- I ran the deployed conversion-link auditor: 99 URLs checked, 0 failures.
-- I also browser-tested the links that previously failed:
-  - `product=field_crm` now opens FieldDesk trial form.
-  - `product=trade_radar_roofing` now opens Roofing Radar trial form.
-  - `product=missed_call` now opens Missed-Call Catch trial form.
-- I browser-tested D.J. Conley demo links in the current proposal:
-  - `https://detroitwebagent.com/demo-djconley-v4/index.html` loads with the D.J. Conley headline and CTA.
-  - `https://detroitwebagent.com/demo-djconley-v2/index.html` loads with the D.J. Conley headline and CTA.
+One correction to Claude's plan: routing `contractor_leads` and `dead_lead` through `/start-trial` is fine (the page auto-redirects them to their landing pages), but `wrapDwaShell` always injects a "Start your 7-day free trial" CTA box via `trialCtaHtml`. Neither product is actually trial-eligible. So we should use `plainCtaHtml` for those two, not `trialCtaHtml`.
 
-Plan:
+## What I will change
 
-1. Make the D.J. Conley proposal sender use one upgraded canonical proposal
-   - Replace the older short `send-djconley-proposal` email body with the stronger `djconley_pitch_v2` structure so the admin “Send D.J. Conley proposal” button cannot send the weaker/older version by accident.
-   - Keep the same offer and pricing:
-     - Option A: $499/mo, zero upfront.
-     - Option B: $499 one-time + $199/mo.
-     - Forever Pricing promise.
-     - eWay and FieldServio stay; we add the website/admin/intelligence layer on top.
-   - Keep the same proposal substance, but upgrade presentation and proof.
+### 1. `supabase/functions/contractor-prospector/index.ts`
 
-2. Upgrade the proposal visually
-   - Add stronger email-safe visual preview sections for:
-     - New website homepage concept.
-     - Owner dashboard.
-     - Command Center tiles.
-     - SiteRadar visitor/company intel.
-     - Predictive Sales Fusion alert.
-     - FieldDesk running next to eWay.
-     - Missed-call text-back/review automation.
-     - Email campaign controls with master kill switch.
-   - Use D.J. Conley’s corrected palette from the latest demo: teal/red/white, with DWA teal as the sender accent.
-   - Remove confusing “navy + orange” references from the active proposal unless they are explicitly describing the older alternate demo.
+**Fix the prop-name bug (line 43)**
+- Change `trialCtaHtml(opts)` → `trialCtaHtml({ product: opts.product, url: opts.ctaUrl })` so the button gets a real href.
 
-3. Upgrade the proposal’s numbers
-   - Add a concise ROI section with concrete, conservative math:
-     - One recovered boiler/service opportunity can cover the monthly fee many times over.
-     - Missed-call recovery example.
-     - SiteRadar/fusion pipeline example using the existing Stellantis/MITN example.
-     - Review/request and seasonal email value framed as retained service work, not random add-ons.
-   - Make clear the website is the lead offer; SiteRadar, fusion alerts, FieldDesk, missed-call, reviews, and email tools are add-ons inside the managed website stack.
+**Split trial vs non-trial CTA helpers**
+- Extend `wrapDwaShell` to accept an `isTrial` flag (default true) and use `plainCtaHtml` when false, so non-trial products get an honest CTA instead of a fake "free trial" box.
 
-4. Harden links inside the D.J. Conley proposal before resending
-   - Use only fully-qualified production URLs for every proposal link.
-   - Include only links I can verify:
-     - `https://detroitwebagent.com/demo-djconley-v4/index.html`
-     - `https://detroitwebagent.com/demo-djconley-v2/index.html`
-     - `https://detroitwebagent.com`
-     - `mailto:matt@detroitwebagent.com`
-     - `tel:+13139921219`
-   - Avoid any trial/start-trial links in the D.J. Conley proposal because this is a custom website/proposal sale, not a self-serve trial.
+**Fix the 5 cold-email CTA URLs**
+- `buildEmailHtml` (Contractor Leads, line 351): non-trial — keep landing page `/contractor-leads`, switch to `plainCtaHtml`.
+- `buildDeadLeadEmailHtml` (Dead Lead, line 400): non-trial — keep landing page `/dead-lead-intake`, switch to `plainCtaHtml`.
+- `buildTechAlertEmailHtml` (line 505): trial — point to `/start-trial?product=techalert`.
+- `buildMissedCallEmailHtml` (line 552): trial — point to `/start-trial?product=missed_call_catch`.
+- `buildCareAlertEmailHtml` (line 606): trial — point to `/start-trial?product=techalert` (CareAlert is a TechAlert variant).
 
-5. Improve the cold-email link audit so “200 OK but bad page” can’t pass
-   - The current auditor is better than before, but it still relies mostly on HTTP/content fingerprints from static HTML. It does not execute the React page the way a human click does.
-   - I will add/extend a backend audit manifest for active cold email generators and their links, then make it fail on:
-     - `Unknown product`
-     - invalid/missing trial text
-     - wrong product label
-     - 404/5xx
-     - redirects to irrelevant pages
-   - I will also update the admin Link Health copy so it no longer claims only “HEAD-check”; it will accurately say “content-aware conversion check.”
-   - For the most sensitive trial links, I will browser click-test representative live links after the code changes, not just rely on HTTP status.
+**Fix the URLs the AI is told to embed in the email body**
+- TechAlert prompt (~line 481): `https://www.detroitwebagent.com/hire-alert` → `https://detroitwebagent.com/start-trial?product=techalert`
+- Missed-Call prompt (~line 528): `https://www.detroitwebagent.com/missed-call-catch` → `https://detroitwebagent.com/start-trial?product=missed_call_catch`
+- CareAlert prompt (~line 583): `https://www.detroitwebagent.com/hire-alert` → `https://detroitwebagent.com/start-trial?product=techalert`
+- Dead Lead prompt: keep `/dead-lead-intake` (correct — it is a real intake page, not a trial).
+- Contractor prompt: keep `/contractor-leads` (correct landing page).
 
-6. Send only after end-to-end verification
-   - Deploy the changed proposal function(s).
-   - Test the proposal send to Matt first, using the same function and same links.
-   - Check the function response, provider response, and email/audit log.
-   - Browser-open every proposal link from the final HTML.
-   - After it passes, send the upgraded proposal to:
-     - `pmichels@djconley.com`
-   - Also send Matt a copy. I will use the DWA/Matt copy address already used in the existing proposal BCC unless you want a different address.
+### 2. `supabase/functions/techalert-outreach/index.ts`
+- Line 80 (`teaserCardHtml.ctaUrl`) → `https://detroitwebagent.com/start-trial?product=techalert&utm_source=cold&utm_campaign=techalert`
+- Line 106 (`dwaColdEmail.ctaUrl`) → same.
 
-Files/functions I expect to change:
+### 3. Deploy edge functions
+After the edits, deploy:
+- `contractor-prospector`
+- `techalert-outreach`
 
-```text
-supabase/functions/send-djconley-proposal/index.ts
-supabase/functions/send-djconley-pitch-v2/index.ts
-src/components/admin/SendDJConleyProposalCard.tsx
-src/pages/admin/LinkHealth.tsx
-supabase/functions/e2e-link-auditor/index.ts
-possibly supabase/functions/_shared/offer-url.ts
-```
+### 4. Verify
+Run the existing `e2e-link-auditor` from `/dwa-admin/link-health` to confirm every `/start-trial?product=...` URL we just introduced resolves cleanly (it already audits `techalert`, `missed_call_catch`, `contractor_leads`, `dead_lead`).
 
-Acceptance criteria before I tell you it is done:
-
-- Final D.J. Conley proposal sends successfully to Matt test inbox first.
-- Final D.J. Conley proposal has no self-serve trial CTA.
-- Every proposal link opens a correct live page or client action.
-- Pat receives the upgraded proposal.
-- Matt receives a copy.
-- The send logs show successful provider responses.
-- The cold-email link audit has run and reports 0 failures for the audited trial/offer links.
+## Out of scope for this fix
+- The bigger end-to-end "every email → every signup → every drip → revert" audit system you also asked about. This plan only addresses the immediate broken-link bug. Once approved I can do the larger lifecycle audit as a follow-up.
