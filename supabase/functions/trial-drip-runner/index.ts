@@ -100,7 +100,7 @@ async function sendDay2(sb: any, t: Trial) {
 
 async function sendDay5(sb: any, t: Trial) {
   const total = t.lead_count_d1 + t.lead_count_d2 + t.lead_count_d3 + (t as any).lead_count_d4 + (t as any).lead_count_d5;
-  await dwaEmail(t.email, `Mid-trial recap — ${total} leads delivered so far`, `<p>Hey,</p><p>Quick mid-trial check-in. So far you've received <strong>${total} leads</strong> across the first 5 days of your trial.</p><p>You've got 2 more days of trial leads coming. After that, your subscription auto-converts unless you cancel.</p><p>Reply if anything's off, or just keep watching the dashboard.</p><p>— Matt · (313) 992-1219</p>`);
+  await dwaEmail({ to: t.email, subject: `Mid-trial recap — ${total} leads delivered so far`, html: `<p>Hey,</p><p>Quick mid-trial check-in. So far you've received <strong>${total} leads</strong> across the first 5 days of your trial.</p><p>You've got 2 more days of trial leads coming. After that, your subscription auto-converts unless you cancel.</p><p>Reply if anything's off, or just keep watching the dashboard.</p><p>— Matt · (313) 992-1219</p>` });
   await recordTouch(sb, t.id, "day5", "email", "sent", undefined, { total_leads: total });
 }
 
