@@ -31,19 +31,24 @@ function dwaEmailWrap(bodyHtml: string, unsubUrl: string): string {
 
 function buildBody(opts: { businessName: string; trade: string; city: string; projectType: string; price: number; claimUrl: string }) {
   const greeting = opts.businessName ? `Hi ${opts.businessName} team,` : "Hi there,";
+  const card = teaserCardHtml({
+    headline: `🔥 ${opts.city} homeowner — ${opts.projectType || opts.trade + " work"}`,
+    scoreLabel: `Exclusive · $${opts.price} flat`,
+    bullets: [
+      `Verified ${opts.trade.toLowerCase()} project in ${opts.city}, MI`,
+      `Phone + email confirmed · refunded if duplicate or junk`,
+      `Sold to one contractor only — no bidding war`,
+    ],
+    ctaText: `Claim for $${opts.price} →`,
+    ctaUrl: opts.claimUrl,
+    badge: "EXCLUSIVE LEAD",
+    blurContact: true,
+  });
   return `
     <p style="margin:0 0 16px"><strong style="color:#00d4ff">${greeting}</strong></p>
-    <p style="margin:0 0 16px">A homeowner in <strong>${opts.city}, MI</strong> just submitted a lead for:</p>
-    <div style="background:#0f2540;border-left:3px solid #00d4ff;padding:14px 18px;margin:0 0 18px;border-radius:4px">
-      <div style="color:#00d4ff;font-size:11px;letter-spacing:2px;font-weight:700;margin-bottom:6px">JOB</div>
-      <div style="color:#ffffff;font-size:16px;font-weight:600;line-height:1.4">${opts.projectType || opts.trade + " work"}</div>
-    </div>
-    <p style="margin:0 0 16px">First contractor to claim gets the homeowner's name, phone, email, and full project details — exclusive, not shared.</p>
-    <p style="margin:0 0 22px"><strong style="color:#ffffff">$${opts.price}</strong> · One-time · No subscription · Refunded if it's a duplicate or junk</p>
-    <div style="text-align:center;margin:24px 0">
-      <a href="${opts.claimUrl}" style="display:inline-block;background:#00d4ff;color:#0a1628;padding:14px 32px;border-radius:6px;font-weight:800;text-decoration:none;letter-spacing:1px;font-size:14px">CLAIM THIS LEAD →</a>
-    </div>
-    <p style="margin:18px 0 0;font-size:13px;color:#94a3b8">Reply "INTERESTED" if you want first dibs on future ${opts.trade} leads in ${opts.city} (no obligation, just gets you on my shortlist).</p>
+    <p style="margin:0 0 8px">A homeowner in <strong>${opts.city}, MI</strong> just submitted a lead. First contractor to claim gets the homeowner's name, phone, email, and full project details — exclusive, not shared.</p>
+    ${card}
+    <p style="margin:18px 0 0;font-size:13px;color:#94a3b8">Reply "INTERESTED" if you want first dibs on future ${opts.trade} leads in ${opts.city} (no obligation).</p>
     <p style="margin:14px 0 0;font-size:12px;color:#64748b">— Matt Michels<br>Detroit Web Agency</p>
   `;
 }
