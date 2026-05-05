@@ -16,6 +16,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { sendSMS, ADMIN_PHONE } from "../_shared/twilio.ts";
+import { teaserCardHtml } from "../_shared/teaser-card.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -50,31 +51,33 @@ function buildEmail(prospect: any, lead: any): { subject: string; html: string }
 
   const subject = `Exclusive ${city} lead — ${sigLabel} (score ${score}/10)`;
 
-  const html = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/>
-<style>
-  body{font-family:Arial,sans-serif;max-width:540px;margin:0 auto;padding:28px 24px;color:#1a1a2e;font-size:14px;line-height:1.65;}
-  a{color:#00d4ff;}
-  .cta{display:inline-block;background:#0a1628;color:#00d4ff!important;padding:10px 22px;border-radius:4px;font-weight:bold;text-decoration:none;margin:14px 0;}
-  .footer{border-top:1px solid #e5e7eb;margin-top:24px;padding-top:14px;font-size:11px;color:#9ca3af;}
-</style></head>
-<body>
+  const card = teaserCardHtml({
+    headline: `🔥 ${sigLabel} — ${city}, MI`,
+    scoreLabel: `Score ${score}/10 · Est. loan ${estLoan}`,
+    bullets: [
+      `Signal: ${sigLabel}`,
+      `Estimated commission at 1%: ${commission}`,
+      "Exclusive — sold to ONE loan officer only",
+    ],
+    ctaText: "Claim This Lead →",
+    ctaUrl: "https://detroitwebagent.com/mortgage-radar",
+    badge: "EXCLUSIVE · FIRST LOOK",
+    blurContact: true,
+  });
+
+  const html = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/></head>
+<body style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;color:#1a1a2e;font-size:14px;line-height:1.6;background:#ffffff;">
 <p>Hi ${firstName},</p>
-<p>I run Detroit Web Agency. We monitor BSEED permits, Wayne County court filings, and public
-records across Metro Detroit 24/7 — surfacing high-intent homeowner signals <em>before</em>
-they hit the public market.</p>
-<p>We just flagged a <strong>${sigLabel}</strong> in <strong>${city}, MI</strong>
-(score: ${score}/10, est. loan: ${estLoan}). Only one loan officer gets exclusive access
-including full contact info.</p>
-<p>That's potentially <strong>${commission}</strong> in your pocket at 1% commission.</p>
-<p>If this matches your market, grab it before it posts:</p>
-<a class="cta" href="https://detroitwebagent.com/mortgage-radar">Claim This Lead →</a>
+<p>I run Detroit Web Agency. We monitor BSEED permits, Wayne County court filings, and public records across Metro Detroit 24/7 — surfacing high-intent homeowner signals <em>before</em> they hit the public market.</p>
+<p>One just lit up that fits your book:</p>
+${card}
 <p style="font-size:13px;">Or just reply and I'll send you the details directly.</p>
 <p style="margin-top:18px;font-size:13px;">Matt Michels<br/>
 Detroit Web Agency<br/>
-(313) 992-1219 · <a href="mailto:matt@detroitwebagent.com">matt@detroitwebagent.com</a></p>
-<div class="footer">
+(313) 992-1219 · <a href="mailto:matt@detroitwebagent.com" style="color:#00d4ff;">matt@detroitwebagent.com</a></p>
+<div style="border-top:1px solid #e5e7eb;margin-top:24px;padding-top:14px;font-size:11px;color:#9ca3af;">
   Detroit Web Agency · Detroit, MI ·
-  <a href="https://detroitwebagent.com/unsubscribe">Unsubscribe</a>
+  <a href="https://detroitwebagent.com/unsubscribe" style="color:#9ca3af;">Unsubscribe</a>
 </div>
 </body></html>`;
 
