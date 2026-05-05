@@ -131,14 +131,9 @@ export default function Marketplace() {
     localStorage.setItem("mp_last_seen", String(now));
     const email = localStorage.getItem("mp_buyer_email");
     if (email) {
-      (supabase as any)
-        .from("marketplace_buyer_visits")
-        .upsert(
-          { buyer_email: email.toLowerCase().trim(), last_seen_at: new Date().toISOString() },
-          { onConflict: "buyer_email" },
-        )
-        .then(() => {})
-        .catch?.(() => {});
+      supabase.functions
+        .invoke("marketplace-visit-track", { body: { buyer_email: email } })
+        .catch(() => {});
     }
   }, [product]);
 
