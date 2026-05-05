@@ -28,6 +28,7 @@ type CanonicalKey =
   | "trade_radar_foundation";
 
 type StartTrialProductKey = CanonicalKey | "trade_radar";
+type ResolvedProductKey = CanonicalKey;
 
 interface ProductDef {
   fn: string;
@@ -127,7 +128,7 @@ const ALIASES: Record<string, CanonicalKey> = {
   trade_radar_foundation: "trade_radar_foundation", foundation_radar: "trade_radar_foundation", foundation: "trade_radar_foundation",
 };
 
-function normalizeKey(raw: string): StartTrialProductKey | null {
+function normalizeKey(raw: string): ResolvedProductKey | null {
   if (!raw) return null;
   const k = raw.trim().toLowerCase().replace(/-/g, "_");
   return ALIASES[k] ?? GENERIC_PRODUCT_DEFAULTS[k] ?? null;
