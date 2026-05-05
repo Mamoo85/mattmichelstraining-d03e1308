@@ -739,6 +739,22 @@ serve(async (req) => {
         console.error("[WEBHOOK] checkout_receipts upsert failed:", e);
       }
 
+      // 🔔 Universal Matt ping — every paid checkout (fire-and-forget).
+      try {
+        const cust = session.customer_details;
+        const dollars = ((session.amount_total ?? 0) / 100).toFixed(2);
+        sendSMS(
+          ADMIN_PHONE,
+          Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219",
+          `💰 NEW SALE — ${meta.type || "purchase"}\n$${dollars} ${(session.currency || "usd").toUpperCase()}\n${cust?.email || meta.email || "no-email"}${cust?.name ? `\n${cust.name}` : ""}${cust?.phone ? `\n${cust.phone}` : ""}`,
+          "checkout_sale_alert",
+          false,
+          { bypassQuietHours: true },
+        ).catch((e) => console.error("[WEBHOOK] admin sale SMS failed", e));
+      } catch (e) {
+        console.error("[WEBHOOK] admin sale SMS error:", e);
+      }
+
       // ── HUBSPOT CRM SYNC (fire-and-forget; never blocks fulfillment) ──
       try {
         const email = session.customer_details?.email || meta.email;
