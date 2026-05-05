@@ -19,22 +19,31 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-function buildEmailBody(ownerName: string | null, companyName: string, role: string, isBoiler: boolean): string {
+function buildEmailBody(ownerName: string | null, companyName: string, role: string, isBoiler: boolean, score: number): string {
   const greeting = ownerName ? ownerName.split(" ")[0] : "there";
   const tradeLabel = isBoiler ? "boiler/stationary engineer" : role.replace(/_/g, " ");
   const jobType = isBoiler ? "licensed boiler operators" : `qualified ${tradeLabel}s`;
 
+  const card = teaserCardHtml({
+    badge: "TALENT RADAR · LIVE SIGNAL",
+    headline: `${companyName} is hiring — ${jobType} are entering the market this week`,
+    scoreLabel: `Score ${score}/10 · Active hiring signal`,
+    bullets: [
+      `Live job postings detected on Indeed/ZipRecruiter for ${tradeLabel}`,
+      "Same-day candidate alerts the moment a licensed tech goes on the market",
+      "Direct contact info — call them before your competitor sees the resume",
+    ],
+    ctaText: "See sample alerts →",
+    ctaUrl: "https://detroitwebagent.com/talent-radar?utm_source=cold&utm_campaign=techalert",
+    blurContact: true,
+  });
+
   return `
 <p style="color:#e6f1ff;">Hi ${greeting},</p>
-<p style="color:#e6f1ff;">I noticed <strong>${companyName}</strong> is actively hiring ${jobType} — the market's tight right now and the best candidates get picked up fast.</p>
-<p style="color:#e6f1ff;">I run <strong>TechAlert</strong>, a Detroit-area hiring intelligence service. We monitor job boards, licensing databases, and contractor networks 24/7 and alert you the moment a qualified candidate becomes available in your area.</p>
-<p style="color:#e6f1ff;"><strong>What you get:</strong></p>
-<ul style="margin:8px 0;padding-left:20px;color:#e6f1ff;">
-  <li>Same-day alerts when a licensed ${tradeLabel} enters the job market near you</li>
-  <li>Candidate profile: license status, years of experience, trade specialties</li>
-  <li>Direct contact info so you reach them before anyone else</li>
-</ul>
-<p style="color:#e6f1ff;">Most clients fill their open role within 3 weeks. Want me to send over a sample alert for ${companyName}'s area?</p>
+<p style="color:#e6f1ff;">I noticed <strong>${companyName}</strong> is actively hiring ${jobType} — Detroit's labor market is the tightest it's been in 5 years and the best candidates get picked up in 48 hours.</p>
+<p style="color:#e6f1ff;">I run <strong>Talent Radar</strong> (formerly TechAlert). We monitor job boards, MI licensing databases, and contractor networks 24/7 and ping you the moment a qualified candidate enters the market within 30 miles of you.</p>
+${card}
+<p style="color:#e6f1ff;">Most clients fill their open role within 3 weeks. Want me to send a free sample alert for ${companyName}'s area?</p>
 <p style="color:#e6f1ff;">Just reply or call/text (313) 992-1219.</p>
 <p style="color:#e6f1ff;">— Matt Michels<br>Detroit Web Agency</p>
 `;
