@@ -5,6 +5,8 @@
 // Inbound SMS: configure Twilio Messaging webhook to POST here with form-encoded { From, Body }.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { verifyTwilioSignature } from "../_shared/webhook-verify.ts";
+import { generateWithHaiku } from "../_shared/opus.ts";
+import { sendSMS, ADMIN_PHONE } from "../_shared/twilio.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -14,6 +16,10 @@ const corsHeaders = {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN");
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
+const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
+// Matt's Calendly — auto-appended to every positive reply auto-response
+const CALENDLY_URL = "https://calendly.com/mattmichels/30min";
 
 const UNSUB_KEYWORDS = ["unsubscribe", "stop", "remove me", "opt out", "opt-out", "no thanks", "do not email"];
 const POSITIVE_KEYWORDS = ["interested", "yes", "send me", "tell me more", "sounds good", "let's talk", "lets talk", "more info", "pricing", "demo", "call me", "claim"];
