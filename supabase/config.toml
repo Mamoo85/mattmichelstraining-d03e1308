@@ -2239,3 +2239,15 @@ verify_jwt = false
 
 [functions.siteradar-cold-blast]
 verify_jwt = false
+
+[functions.trade-radar-outreach]
+verify_jwt = false
+
+[functions.trade-radar-urgency-alert]
+verify_jwt = false
+
+[functions.data-retention-cleanup]
+verify_jwt = false
+
+[functions.email-deliverability-check]
+verify_jwt = false
