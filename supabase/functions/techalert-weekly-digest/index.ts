@@ -129,6 +129,14 @@ serve(async (req) => {
     <p style="color:${scoreColor};font-size:14px;font-weight:700;margin:12px 0 0;">${scoreLabel}</p>
   </div>
 
+  <!-- Quiet Week Proof-of-Work (shown only when 0 new candidates) -->
+  ${alerted === 0 ? `
+  <div style="margin:0 24px 24px;padding:20px;background:rgba(0,212,255,0.03);border:1px solid rgba(0,212,255,0.1);border-radius:12px;text-align:center;">
+    <p style="font-size:22px;margin:0;">📡</p>
+    <p style="color:white;font-weight:700;font-size:15px;margin:8px 0 4px;">Quiet week — scanner is live</p>
+    <p style="color:#94a3b8;font-size:13px;margin:0;line-height:1.6;">We scanned 8 talent sources this week watching for ${Array.isArray(client.target_roles) && client.target_roles.length ? client.target_roles.slice(0, 3).join(", ") : "your target roles"}. No new candidates crossed the quality threshold this week. We'd rather send you 1 real match than 20 noise.</p>
+  </div>` : ""}
+
   <!-- Top 5 Candidate Spotlight -->
   ${topCandidates.length > 0 ? `
   <div style="padding:0 24px 24px;">
