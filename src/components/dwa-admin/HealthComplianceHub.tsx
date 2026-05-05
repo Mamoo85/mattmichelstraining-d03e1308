@@ -8,6 +8,7 @@ const AdminCronStatus = lazy(() => import("@/components/dwa-admin/AdminCronStatu
 const AdminComplianceMonitor = lazy(() => import("@/components/dwa-admin/AdminComplianceMonitor"));
 const AdminLaraHealth = lazy(() => import("@/components/admin/AdminLaraHealth"));
 const AdminErrorLogs = lazy(() => import("@/components/dwa-admin/AdminErrorLogs"));
+const AdminTrialHealth = lazy(() => import("@/components/dwa-admin/AdminTrialHealth"));
 
 const safe = (label: string, node: ReactNode) => (
   <ErrorBoundary>
@@ -15,7 +16,7 @@ const safe = (label: string, node: ReactNode) => (
   </ErrorBoundary>
 );
 
-type Sub = "resilience" | "cron" | "tcpa" | "lara" | "errors";
+type Sub = "resilience" | "cron" | "tcpa" | "lara" | "errors" | "trials";
 
 const TABS: { id: Sub; label: string }[] = [
   { id: "resilience", label: "🛡️ Service Resilience" },
@@ -23,6 +24,7 @@ const TABS: { id: Sub; label: string }[] = [
   { id: "tcpa",       label: "📵 TCPA Compliance" },
   { id: "lara",       label: "🏛️ LARA Health" },
   { id: "errors",     label: "🚨 Error Logs" },
+  { id: "trials",     label: "🎯 Trial Health" },
 ];
 
 export default function HealthComplianceHub() {
@@ -55,6 +57,7 @@ export default function HealthComplianceHub() {
       {sub === "tcpa"   && safe("TCPA", <AdminComplianceMonitor />)}
       {sub === "lara"   && safe("LARA", <AdminLaraHealth />)}
       {sub === "errors" && safe("error logs", <AdminErrorLogs />)}
+      {sub === "trials" && safe("trial health", <AdminTrialHealth />)}
     </div>
   );
 }

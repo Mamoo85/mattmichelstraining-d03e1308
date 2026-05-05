@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import SEOHead from "@/components/layout/SEOHead";
+import LeadGuaranteeBar from "@/components/shared/LeadGuaranteeBar";
 import {
   Phone, CheckCircle2, XCircle, Loader2, MapPin,
   Wrench, TrendingUp, RefreshCw, AlertTriangle, Star,
@@ -574,6 +575,9 @@ export default function MyContractorLeads() {
               )}
             </div>
           )}
+          <div className="mt-8">
+            <LeadGuaranteeBar productName="Contractor Leads" />
+          </div>
         </main>
 
         <footer className="py-8 border-t border-white/5 text-center space-y-3">

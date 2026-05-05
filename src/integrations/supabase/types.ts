@@ -5892,6 +5892,36 @@ export type Database = {
         }
         Relationships: []
       }
+      deployment_drift_log: {
+        Row: {
+          checked_at: string
+          deployed_hash: string | null
+          drift_detected: boolean
+          function_name: string
+          id: string
+          notes: string | null
+          repo_hash: string | null
+        }
+        Insert: {
+          checked_at?: string
+          deployed_hash?: string | null
+          drift_detected?: boolean
+          function_name: string
+          id?: string
+          notes?: string | null
+          repo_hash?: string | null
+        }
+        Update: {
+          checked_at?: string
+          deployed_hash?: string | null
+          drift_detected?: boolean
+          function_name?: string
+          id?: string
+          notes?: string | null
+          repo_hash?: string | null
+        }
+        Relationships: []
+      }
       direct_mail_clients: {
         Row: {
           active: boolean | null
@@ -14331,6 +14361,8 @@ export type Database = {
           enrichment_reset_at: string | null
           enrichment_trace: Json | null
           first_name: string | null
+          followup_d14_sent_at: string | null
+          followup_d7_sent_at: string | null
           gmail_message_id: string | null
           gmail_sent_at: string | null
           id: string
@@ -14346,6 +14378,7 @@ export type Database = {
           owner_name: string | null
           owner_phone: string | null
           phone: string | null
+          replied_at: string | null
           sms_2_sent: boolean
           sms_2_sent_at: string | null
           sms_sent: boolean
@@ -14376,6 +14409,8 @@ export type Database = {
           enrichment_reset_at?: string | null
           enrichment_trace?: Json | null
           first_name?: string | null
+          followup_d14_sent_at?: string | null
+          followup_d7_sent_at?: string | null
           gmail_message_id?: string | null
           gmail_sent_at?: string | null
           id?: string
@@ -14391,6 +14426,7 @@ export type Database = {
           owner_name?: string | null
           owner_phone?: string | null
           phone?: string | null
+          replied_at?: string | null
           sms_2_sent?: boolean
           sms_2_sent_at?: string | null
           sms_sent?: boolean
@@ -14421,6 +14457,8 @@ export type Database = {
           enrichment_reset_at?: string | null
           enrichment_trace?: Json | null
           first_name?: string | null
+          followup_d14_sent_at?: string | null
+          followup_d7_sent_at?: string | null
           gmail_message_id?: string | null
           gmail_sent_at?: string | null
           id?: string
@@ -14436,6 +14474,7 @@ export type Database = {
           owner_name?: string | null
           owner_phone?: string | null
           phone?: string | null
+          replied_at?: string | null
           sms_2_sent?: boolean
           sms_2_sent_at?: string | null
           sms_sent?: boolean
@@ -20549,6 +20588,51 @@ export type Database = {
         }
         Relationships: []
       }
+      source_run_results: {
+        Row: {
+          attempted: boolean
+          created_at: string
+          duration_ms: number | null
+          error_message: string | null
+          id: string
+          rows_fetched: number | null
+          rows_inserted: number | null
+          rows_quarantined: number | null
+          run_meta: Json | null
+          scanner_function: string | null
+          source_name: string
+          vertical: string | null
+        }
+        Insert: {
+          attempted?: boolean
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          id?: string
+          rows_fetched?: number | null
+          rows_inserted?: number | null
+          rows_quarantined?: number | null
+          run_meta?: Json | null
+          scanner_function?: string | null
+          source_name: string
+          vertical?: string | null
+        }
+        Update: {
+          attempted?: boolean
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          id?: string
+          rows_fetched?: number | null
+          rows_inserted?: number | null
+          rows_quarantined?: number | null
+          run_meta?: Json | null
+          scanner_function?: string | null
+          source_name?: string
+          vertical?: string | null
+        }
+        Relationships: []
+      }
       speed_lead_clients: {
         Row: {
           active: boolean | null
@@ -21041,6 +21125,51 @@ export type Database = {
         }
         Relationships: []
       }
+      system_telemetry: {
+        Row: {
+          created_at: string
+          duration_ms: number | null
+          error_message: string | null
+          error_stack: string | null
+          finished_at: string | null
+          id: string
+          job_name: string
+          job_type: string
+          metadata: Json | null
+          result: Json | null
+          started_at: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          error_stack?: string | null
+          finished_at?: string | null
+          id?: string
+          job_name: string
+          job_type?: string
+          metadata?: Json | null
+          result?: Json | null
+          started_at?: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          error_stack?: string | null
+          finished_at?: string | null
+          id?: string
+          job_name?: string
+          job_type?: string
+          metadata?: Json | null
+          result?: Json | null
+          started_at?: string
+          status?: string
+        }
+        Relationships: []
+      }
       team_feed: {
         Row: {
           content: string
@@ -21450,6 +21579,9 @@ export type Database = {
           employee_count: number | null
           enriched_at: string | null
           enrichment_reset_at: string | null
+          followup_d14_sent_at: string | null
+          followup_d3_sent_at: string | null
+          followup_d7_sent_at: string | null
           id: string
           is_boiler: boolean | null
           last_contacted_at: string | null
@@ -21462,6 +21594,8 @@ export type Database = {
           owner_name: string | null
           owner_phone: string | null
           phone: string | null
+          replied_at: string | null
+          reply_positive: boolean | null
           repost_count: number | null
           role: string | null
           score: number | null
@@ -21481,6 +21615,9 @@ export type Database = {
           employee_count?: number | null
           enriched_at?: string | null
           enrichment_reset_at?: string | null
+          followup_d14_sent_at?: string | null
+          followup_d3_sent_at?: string | null
+          followup_d7_sent_at?: string | null
           id?: string
           is_boiler?: boolean | null
           last_contacted_at?: string | null
@@ -21493,6 +21630,8 @@ export type Database = {
           owner_name?: string | null
           owner_phone?: string | null
           phone?: string | null
+          replied_at?: string | null
+          reply_positive?: boolean | null
           repost_count?: number | null
           role?: string | null
           score?: number | null
@@ -21512,6 +21651,9 @@ export type Database = {
           employee_count?: number | null
           enriched_at?: string | null
           enrichment_reset_at?: string | null
+          followup_d14_sent_at?: string | null
+          followup_d3_sent_at?: string | null
+          followup_d7_sent_at?: string | null
           id?: string
           is_boiler?: boolean | null
           last_contacted_at?: string | null
@@ -21524,6 +21666,8 @@ export type Database = {
           owner_name?: string | null
           owner_phone?: string | null
           phone?: string | null
+          replied_at?: string | null
+          reply_positive?: boolean | null
           repost_count?: number | null
           role?: string | null
           score?: number | null
@@ -22632,12 +22776,24 @@ export type Database = {
       trial_signups: {
         Row: {
           cancelled_at: string | null
+          compensation_amount_cents: number | null
+          compensation_applied_at: string | null
           converted_at: string | null
           created_at: string
           email: string
+          first_lead_delivered_at: string | null
           id: string
+          last_concierge_touch_at: string | null
+          lead_count_d1: number
+          lead_count_d2: number
+          lead_count_d3: number
+          lead_count_d4: number
+          lead_count_d5: number
+          lead_count_d6: number
+          lead_count_d7: number
           phone: string | null
           product_key: string
+          sla_status: string
           status: string
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
@@ -22649,12 +22805,24 @@ export type Database = {
         }
         Insert: {
           cancelled_at?: string | null
+          compensation_amount_cents?: number | null
+          compensation_applied_at?: string | null
           converted_at?: string | null
           created_at?: string
           email: string
+          first_lead_delivered_at?: string | null
           id?: string
+          last_concierge_touch_at?: string | null
+          lead_count_d1?: number
+          lead_count_d2?: number
+          lead_count_d3?: number
+          lead_count_d4?: number
+          lead_count_d5?: number
+          lead_count_d6?: number
+          lead_count_d7?: number
           phone?: string | null
           product_key: string
+          sla_status?: string
           status?: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
@@ -22666,12 +22834,24 @@ export type Database = {
         }
         Update: {
           cancelled_at?: string | null
+          compensation_amount_cents?: number | null
+          compensation_applied_at?: string | null
           converted_at?: string | null
           created_at?: string
           email?: string
+          first_lead_delivered_at?: string | null
           id?: string
+          last_concierge_touch_at?: string | null
+          lead_count_d1?: number
+          lead_count_d2?: number
+          lead_count_d3?: number
+          lead_count_d4?: number
+          lead_count_d5?: number
+          lead_count_d6?: number
+          lead_count_d7?: number
           phone?: string | null
           product_key?: string
+          sla_status?: string
           status?: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null

@@ -1,206 +1,198 @@
-// Trial → Paid Recovery Drip + SLA Watchdog
-// Runs daily 9am ET. Sends day 3, 5, 6, 8, 14 touches per active trial.
-// Also checks day-4 SLA: if < MIN_LEADS delivered, auto-extends trial 7 days via Stripe.
-// Uses centralized offers.ts for pricing/copy.
-
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
-import { OFFERS, offerCopy, INTRO_DISCOUNT_PCT, INTRO_DISCOUNT_MONTHS, TRIAL_DAYS } from "../_shared/offers.ts";
+// Trial Drip Runner — single function handles all day-touches
+// Runs daily at 11am ET (15:00 UTC).
+// For each active trial in trial_signups:
+//   - Calculates days_elapsed
+//   - Fires day2 / day5 / day6 concierge touches (idempotent via trial_drip_state)
+//   - On day 4: checks SLA status, auto-extends Stripe trial +7d if under-delivered
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import Stripe from "https://esm.sh/stripe@18.5.0";
 import { sendSMS } from "../_shared/twilio.ts";
-
-const TWILIO_FROM = Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219";
-const STRIPE_SECRET_KEY = Deno.env.get("STRIPE_SECRET_KEY") || "";
-
-// Minimum qualified leads expected by day 4 per product.
-const MIN_LEADS: Record<string, number> = {
-  trade_radar_roofing: 5, trade_radar_hvac: 5, trade_radar_plumbing: 5,
-  trade_radar_electrical: 5, trade_radar_pest_control: 5, trade_radar_gutters: 5,
-  trade_radar_exterior: 5, trade_radar_tree: 5, trade_radar_restoration: 5,
-  trade_radar_demo_junk: 5, trade_radar_foundation: 5,
-  mortgage_radar: 3, techalert: 2, contractor_leads: 2,
-};
+import { dwaEmail } from "../_shared/dwa-email.ts";
+import { wrapServe } from "../_shared/telemetry.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
-const FROM_EMAIL = "Detroit Web Agency <matt@detroitwebagent.com>";
+const STRIPE_KEY = Deno.env.get("STRIPE_SECRET_KEY")!;
+const ADMIN_PHONE = Deno.env.get("ADMIN_PHONE") || "+13138064952";
+const TWILIO_FROM = Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219";
 
-interface DripTouch {
-  key: "day3" | "day5" | "day6" | "day8" | "day14";
-  daysAfterStart: number;
-  subject: (productName: string) => string;
-  body: (productName: string, ctaUrl: string) => string;
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+// Per-product minimum lead expectations by day-3
+const PRODUCT_MIN_LEADS_D3: Record<string, number> = {
+  trade_radar: 3,
+  mortgage_radar: 2,
+  contractor: 2,
+  talent_radar: 1,
+  hire_alert: 1,
+};
+
+function productFamily(product_key: string): string {
+  if (product_key?.startsWith("trade_radar")) return "trade_radar";
+  if (product_key?.startsWith("mortgage_radar")) return "mortgage_radar";
+  if (product_key?.includes("contractor")) return "contractor";
+  if (product_key?.includes("talent") || product_key?.includes("hire_alert")) return "talent_radar";
+  return product_key;
 }
 
-const TOUCHES: DripTouch[] = [
-  {
-    key: "day3",
-    daysAfterStart: 3,
-    subject: (p) => `Quick check-in on your ${p} trial`,
-    body: (p, url) => `<p>Hi — Matt here from Detroit Web Agency.</p>
-<p>You're 3 days into your ${p} trial. Have you seen your first signal yet? Most accounts surface their first qualified lead within 48 hours.</p>
-<p>If you haven't logged in yet, here's the fastest path:</p>
-<p><a href="${url}" style="background:#00d4ff;color:#0a1628;padding:12px 24px;text-decoration:none;font-weight:bold;border-radius:4px">Open ${p}</a></p>
-<p>Reply to this email if anything looks off — I read every one.</p>
-<p>— Matt</p>`,
-  },
-  {
-    key: "day5",
-    daysAfterStart: 5,
-    subject: (p) => `Your ${p} trial ends in 48 hours`,
-    body: (p, url) => `<p>Heads up — your ${TRIAL_DAYS}-day ${p} trial wraps up in 48 hours.</p>
-<p>If you'd like to keep your data, signals, and dashboard live, you'll get <strong>${INTRO_DISCOUNT_PCT}% off your first ${INTRO_DISCOUNT_MONTHS} months</strong> automatically applied at checkout — no extra code needed.</p>
-<p><a href="${url}" style="background:#00d4ff;color:#0a1628;padding:12px 24px;text-decoration:none;font-weight:bold;border-radius:4px">Continue with ${INTRO_DISCOUNT_PCT}% off</a></p>
-<p>Questions? Just reply.</p>
-<p>— Matt</p>`,
-  },
-  {
-    key: "day6",
-    daysAfterStart: 6,
-    subject: (_p) => `A note from Matt — and 3 extra trial days if you need them`,
-    body: (p, url) => `<p>Hey,</p>
-<p>I noticed your ${p} trial ends tomorrow and you haven't converted yet. No pressure — I've been on the other side of this email a hundred times.</p>
-<p>If you need more time to evaluate, just reply with "extend" and I'll add 3 more days to your trial personally. No catch.</p>
-<p>Or if you're ready: <a href="${url}">${INTRO_DISCOUNT_PCT}% off your first ${INTRO_DISCOUNT_MONTHS} months still applies</a>.</p>
-<p>Either way — thanks for trying us out.</p>
-<p>— Matt Michels<br/>Detroit Web Agency<br/>(313) 992-1219</p>`,
-  },
-  {
-    key: "day8",
-    daysAfterStart: 8,
-    subject: (p) => `Miss us? Reactivate ${p} at 50% off`,
-    body: (p, url) => `<p>Your ${p} trial expired yesterday. We're saving your data for 14 more days in case you change your mind.</p>
-<p>If you'd like to come back, the <strong>${INTRO_DISCOUNT_PCT}% off ${INTRO_DISCOUNT_MONTHS}-month</strong> intro is still good for you:</p>
-<p><a href="${url}" style="background:#00d4ff;color:#0a1628;padding:12px 24px;text-decoration:none;font-weight:bold;border-radius:4px">Reactivate ${p}</a></p>
-<p>— Matt</p>`,
-  },
-  {
-    key: "day14",
-    daysAfterStart: 14,
-    subject: (p) => `Last call: your ${p} data archives tomorrow`,
-    body: (p, url) => `<p>This is the last note — your ${p} account and historical signals will be archived tomorrow.</p>
-<p>If you want to keep everything live, this is your last chance to claim ${INTRO_DISCOUNT_PCT}% off:</p>
-<p><a href="${url}" style="background:#00d4ff;color:#0a1628;padding:12px 24px;text-decoration:none;font-weight:bold;border-radius:4px">Reactivate before archive</a></p>
-<p>If not, no hard feelings — best of luck.</p>
-<p>— Matt</p>`,
-  },
-];
+function daysElapsed(startISO: string): number {
+  return Math.floor((Date.now() - new Date(startISO).getTime()) / 86_400_000);
+}
 
-async function sendEmail(to: string, subject: string, html: string): Promise<{ ok: boolean; error?: string }> {
-  try {
-    const r = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from: FROM_EMAIL, to, subject, html }),
-    });
-    if (!r.ok) return { ok: false, error: `${r.status} ${await r.text()}` };
-    return { ok: true };
-  } catch (e) {
-    return { ok: false, error: String(e) };
+interface Trial {
+  id: string;
+  email: string;
+  phone: string | null;
+  product_key: string;
+  stripe_subscription_id: string | null;
+  trial_started_at: string;
+  trial_ends_at: string;
+  first_lead_delivered_at: string | null;
+  lead_count_d1: number;
+  lead_count_d2: number;
+  lead_count_d3: number;
+  sla_status: string;
+  compensation_applied_at: string | null;
+}
+
+async function alreadySent(sb: any, trial_id: string, touch_key: string): Promise<boolean> {
+  const { data } = await sb
+    .from("trial_drip_state")
+    .select("id")
+    .eq("trial_signup_id", trial_id)
+    .eq("touch_key", touch_key)
+    .maybeSingle();
+  return !!data;
+}
+
+async function recordTouch(sb: any, trial_id: string, touch_key: string, channel: string, status: string, error?: string, meta?: any) {
+  await sb.from("trial_drip_state").insert({
+    trial_signup_id: trial_id,
+    touch_key,
+    channel,
+    status,
+    error: error || null,
+    meta: meta || {},
+  });
+  await sb.from("trial_signups")
+    .update({ last_concierge_touch_at: new Date().toISOString() })
+    .eq("id", trial_id);
+}
+
+async function sendDay2(sb: any, t: Trial) {
+  const totalLeads = t.lead_count_d1 + t.lead_count_d2;
+  if (t.phone) {
+    const body = `Hey — Matt here. Day 2 of your trial. You've got ${totalLeads} lead${totalLeads === 1 ? "" : "s"} so far. Reply 1=great 2=mixed 3=need help — I read every reply personally.`;
+    try {
+      await sendSMS(t.phone, TWILIO_FROM, body, "trial_day2_checkin");
+      await recordTouch(sb, t.id, "day2", "sms", "sent", undefined, { lead_count: totalLeads });
+    } catch (e) {
+      await recordTouch(sb, t.id, "day2", "sms", "failed", String(e));
+    }
+  } else {
+    await dwaEmail(t.email, "Day 2 of your trial — how's it going?", `<p>Hey,</p><p>Matt here. Day 2 of your trial. You've got <strong>${totalLeads}</strong> lead${totalLeads === 1 ? "" : "s"} so far.</p><p>Reply with anything you're seeing — I read every reply personally.</p><p>— Matt · (313) 992-1219</p>`);
+    await recordTouch(sb, t.id, "day2", "email", "sent");
   }
 }
 
-Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+async function sendDay5(sb: any, t: Trial) {
+  const total = t.lead_count_d1 + t.lead_count_d2 + t.lead_count_d3 + (t as any).lead_count_d4 + (t as any).lead_count_d5;
+  await dwaEmail(t.email, `Mid-trial recap — ${total} leads delivered so far`, `<p>Hey,</p><p>Quick mid-trial check-in. So far you've received <strong>${total} leads</strong> across the first 5 days of your trial.</p><p>You've got 2 more days of trial leads coming. After that, your subscription auto-converts unless you cancel.</p><p>Reply if anything's off, or just keep watching the dashboard.</p><p>— Matt · (313) 992-1219</p>`);
+  await recordTouch(sb, t.id, "day5", "email", "sent", undefined, { total_leads: total });
+}
 
-  const sb = createClient(SUPABASE_URL, SERVICE_KEY);
-  const url = new URL(req.url);
-  const dryRun = url.searchParams.get("dry_run") === "1";
+async function sendDay6(sb: any, t: Trial) {
+  // Alert Matt — conversion happens tomorrow
+  const total = t.lead_count_d1 + t.lead_count_d2 + t.lead_count_d3 + (t as any).lead_count_d4 + (t as any).lead_count_d5 + (t as any).lead_count_d6;
+  await sendSMS(ADMIN_PHONE, TWILIO_FROM, `📅 Trial converts tomorrow: ${t.email} (${t.product_key}). ${total} leads delivered. Send a personal thanks?`, "trial_day6_admin_alert", false, { bypassQuietHours: true });
+  await recordTouch(sb, t.id, "day6", "sms", "sent", undefined, { admin_alerted: true, total_leads: total });
+}
 
-  const { data: signups, error } = await sb
+async function checkAndCompensate(sb: any, t: Trial): Promise<boolean> {
+  if (t.compensation_applied_at) return false;
+  const fam = productFamily(t.product_key);
+  const minD3 = PRODUCT_MIN_LEADS_D3[fam] ?? 2;
+  const sumD123 = t.lead_count_d1 + t.lead_count_d2 + t.lead_count_d3;
+  if (sumD123 >= minD3) {
+    // SLA met — mark green
+    await sb.from("trial_signups").update({ sla_status: "green" }).eq("id", t.id);
+    return false;
+  }
+  // Under-delivered → red status + auto-extend Stripe trial + comp email/SMS
+  await sb.from("trial_signups").update({ sla_status: "red" }).eq("id", t.id);
+
+  let extendedTo: string | null = null;
+  if (t.stripe_subscription_id && STRIPE_KEY) {
+    try {
+      const stripe = new Stripe(STRIPE_KEY, { apiVersion: "2025-08-27.basil" });
+      const sub = await stripe.subscriptions.retrieve(t.stripe_subscription_id);
+      const currentEnd = sub.trial_end || Math.floor(Date.now() / 1000);
+      const newEnd = currentEnd + 7 * 86400;
+      await stripe.subscriptions.update(t.stripe_subscription_id, { trial_end: newEnd, proration_behavior: "none" });
+      extendedTo = new Date(newEnd * 1000).toISOString();
+    } catch (e) {
+      console.error("[trial-drip] Stripe extend failed:", e);
+    }
+  }
+
+  await sb.from("trial_signups")
+    .update({
+      compensation_applied_at: new Date().toISOString(),
+      compensation_amount_cents: 0,
+      trial_ends_at: extendedTo || t.trial_ends_at,
+    })
+    .eq("id", t.id);
+
+  await dwaEmail(t.email, "We owe you — your trial is extended +7 days", `<p>Hey,</p><p>Heads up: your first 3 trial days delivered fewer leads than we promised (${sumD123} delivered, ${minD3} expected).</p><p>We've automatically extended your trial by 7 more days at no charge. No action needed from you.</p><p>If you want to talk through what happened, reply or text me at (313) 992-1219.</p><p>— Matt</p>`);
+
+  await sendSMS(ADMIN_PHONE, TWILIO_FROM, `⚠️ Auto-comp: ${t.email} (${t.product_key}) under-delivered (${sumD123}/${minD3} by D3). Trial extended +7d.`, "trial_auto_comp", false, { bypassQuietHours: true });
+
+  await recordTouch(sb, t.id, "day4_comp", "email+sms", "sent", undefined, { sumD123, minD3, extendedTo });
+  return true;
+}
+
+export default wrapServe("trial-drip-runner", async (req: Request) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const sb = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
+
+  const { data: trials, error } = await sb
     .from("trial_signups")
-    .select("id, email, phone, product_key, trial_started_at, status, converted_at, stripe_subscription_id, first_lead_delivered_at, compensation_applied, sla_status")
-    .in("status", ["active", "expired"])
-    .is("converted_at", null);
+    .select("*")
+    .eq("status", "active")
+    .gte("trial_ends_at", new Date(Date.now() - 14 * 86400000).toISOString())
+    .limit(500);
 
-  if (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+  if (error) throw error;
+
+  const results = { day2: 0, day5: 0, day6: 0, comp: 0, skipped: 0, errors: 0 };
+
+  for (const t of (trials || []) as Trial[]) {
+    try {
+      const days = daysElapsed(t.trial_started_at);
+
+      if (days === 2 && !(await alreadySent(sb, t.id, "day2"))) {
+        await sendDay2(sb, t); results.day2++;
+      }
+      if (days === 4 && !(await alreadySent(sb, t.id, "day4_comp"))) {
+        if (await checkAndCompensate(sb, t)) results.comp++;
+      }
+      if (days === 5 && !(await alreadySent(sb, t.id, "day5"))) {
+        await sendDay5(sb, t); results.day5++;
+      }
+      if (days === 6 && !(await alreadySent(sb, t.id, "day6"))) {
+        await sendDay6(sb, t); results.day6++;
+      }
+      if (![2, 4, 5, 6].includes(days)) results.skipped++;
+    } catch (e) {
+      console.error("[trial-drip] trial error:", t.id, e);
+      results.errors++;
+    }
   }
 
-  const now = Date.now();
-  const results: Array<Record<string, unknown>> = [];
-
-  for (const s of signups ?? []) {
-    const offer = OFFERS[s.product_key as keyof typeof OFFERS];
-    if (!offer) continue;
-    const startMs = new Date(s.trial_started_at).getTime();
-    const daysSince = Math.floor((now - startMs) / 86400000);
-
-    // E5: Day-4 SLA check — auto-compensate if no leads delivered yet
-    if (daysSince === 4 && !s.compensation_applied && !s.first_lead_delivered_at && s.status === "active") {
-      const minLeads = MIN_LEADS[s.product_key] ?? 2;
-      // Extend trial 7 days via Stripe if we have a subscription ID
-      if (s.stripe_subscription_id && STRIPE_SECRET_KEY) {
-        try {
-          const newTrialEnd = Math.floor((Date.now() + 7 * 86400 * 1000) / 1000);
-          await fetch(`https://api.stripe.com/v1/subscriptions/${s.stripe_subscription_id}`, {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${STRIPE_SECRET_KEY}`,
-              "Content-Type": "application/x-www-form-urlencoded",
-            },
-            body: `trial_end=${newTrialEnd}`,
-          });
-        } catch (e) {
-          console.error(`[trial-drip-runner] Stripe trial extend failed for ${s.email}:`, e);
-        }
-      }
-      // Apology SMS if client has a phone
-      if (s.phone) {
-        await sendSMS(s.phone, TWILIO_FROM,
-          `Hey — we didn't hit our lead promise this week. Extending your ${offer.displayName} trial 7 more days free, no charge. — Matt (313) 992-1219`,
-          "trial_compensation"
-        ).catch(() => {});
-      }
-      await sb.from("trial_signups").update({
-        compensation_applied: true,
-        compensation_reason: `0 leads delivered by day 4 (minimum: ${minLeads})`,
-        sla_status: "red",
-      }).eq("id", s.id);
-      results.push({ email: s.email, product: s.product_key, action: "compensation_extended" });
-    }
-
-    // Update SLA status (amber if no lead by day 2)
-    if (daysSince >= 2 && !s.first_lead_delivered_at && s.sla_status === "green") {
-      await sb.from("trial_signups").update({ sla_status: "amber" }).eq("id", s.id);
-    }
-
-    const due = TOUCHES.find((t) => t.daysAfterStart === daysSince);
-    if (!due) continue;
-
-    const { data: existing } = await sb
-      .from("trial_drip_state")
-      .select("id")
-      .eq("trial_signup_id", s.id)
-      .eq("touch_key", due.key)
-      .maybeSingle();
-    if (existing) continue;
-
-    const copy = offerCopy(s.product_key as keyof typeof OFFERS);
-    const ctaUrl = `https://detroitwebagent.com${copy.ctaPath}&utm_source=trial_drip&utm_medium=email&utm_campaign=${due.key}`;
-
-    if (dryRun) {
-      results.push({ email: s.email, product: s.product_key, touch: due.key, dryRun: true });
-      continue;
-    }
-
-    const sendResult = await sendEmail(s.email, due.subject(offer.displayName), due.body(offer.displayName, ctaUrl));
-
-    await sb.from("trial_drip_state").insert({
-      trial_signup_id: s.id,
-      touch_key: due.key,
-      channel: "email",
-      status: sendResult.ok ? "sent" : "failed",
-      error: sendResult.error ?? null,
-    });
-
-    results.push({ email: s.email, product: s.product_key, touch: due.key, ok: sendResult.ok, error: sendResult.error });
-  }
-
-  return new Response(JSON.stringify({ processed: results.length, results }), {
+  return new Response(JSON.stringify({ ok: true, scanned: trials?.length || 0, ...results }), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 });

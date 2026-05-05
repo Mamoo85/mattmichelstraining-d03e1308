@@ -1486,8 +1486,9 @@ serve(async (req) => {
             );
           }
           if (meta.phone) {
+            const firstName = ((meta.contact_name as string) || "").trim().split(/\s+/)[0] || "there";
             await sendSMS(meta.phone, "+13139921219",
-              `Mortgage Radar is live. Dashboard: ${dashLink} — Reply STOP to opt out.`,
+              `Hey ${firstName} — it's Matt at DWA. Your Mortgage Radar trial is live. First in-market signals land within 24h. Dashboard: ${dashLink} — Reply STOP to opt out.`,
               "mortgage_radar_welcome");
           }
         } catch (e) {
@@ -3141,8 +3142,8 @@ serve(async (req) => {
         await dwaEmail(clientEmail, `Welcome to ${verticalLabel} Radar — your 7-day trial has started`, `<!DOCTYPE html><html><body style="margin:0;background:#0a1628;font-family:-apple-system,sans-serif;color:#e6f1ff;"><div style="max-width:560px;margin:0 auto;padding:32px 24px;"><span style="color:#00d4ff;font-weight:800;font-size:13px;letter-spacing:1px;text-transform:uppercase;">Detroit Web Agency</span><h1 style="color:#fff;font-size:22px;margin:24px 0 12px;">Your ${verticalLabel} Radar trial is live.</h1><p style="color:#94a3b8;line-height:1.6;">Hi ${clientName}, your 7-day free trial has started. You'll receive your first lead digest by tomorrow morning — exclusive homeowner signals in your ZIPs that nobody else is sending to ${verticalLabel.toLowerCase()} contractors.</p><p style="color:#94a3b8;margin:16px 0;"><strong style="color:#e6f1ff;">What happens next:</strong><br>• Daily email with scored leads (1–10)<br>• SMS alert when a 9+/10 lead drops<br>• No charge for 7 days, then 50% off for 3 months</p><p style="margin:28px 0 8px;"><a href="https://detroitwebagent.com${dashPath}" style="background:#00d4ff;color:#0a1628;padding:12px 22px;border-radius:6px;text-decoration:none;font-weight:700;display:inline-block;">View Your Dashboard</a></p><hr style="border:0;border-top:1px solid #1e3a5f;margin:32px 0 16px;"/><p style="font-size:11px;color:#7a8aa0;">Detroit Web Agency · (313) 992-1219 · <a href="mailto:matt@detroitwebagent.com" style="color:#7a8aa0;">matt@detroitwebagent.com</a></p></div></body></html>`);
 
         if (meta.phone) {
-          const firstName = ((meta.contact_name as string) || "").split(" ")[0] || "there";
-          await sendSMS(meta.phone as string, `Hey ${firstName} — it's Matt at Detroit Web Agency. Your ${verticalLabel} Radar trial just kicked off. First leads hit your inbox by tomorrow morning. Text me back if you need anything. — Matt (313) 992-1219`);
+          const firstName = ((meta.contact_name as string) || "").trim().split(/\s+/)[0] || "there";
+          await sendSMS(meta.phone as string, `Hey ${firstName} — it's Matt at DWA. Your ${verticalLabel} Radar trial just started. First leads land tomorrow AM. Reply here or call (313) 992-1219 anytime — I read every text personally.`);
         }
 
         await notifyMatt(

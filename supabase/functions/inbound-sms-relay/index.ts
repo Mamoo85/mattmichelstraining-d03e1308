@@ -181,6 +181,22 @@ serve(async (req) => {
     if (sb && fromNormalized === MATT_PERSONAL) {
       const cmd = trimmed.toUpperCase();
 
+      if (cmd === "HELP" || cmd === "COMMANDS" || cmd === "?") {
+        await sendSMS(
+          MATT_PERSONAL, TWILIO_PHONE_NUMBER,
+          [
+            "DWA SMS commands:",
+            "• FIX — run code-fixer on recent errors",
+            "• ERRORS (or STATUS) — last 5 error logs",
+            "• FIXED? — last fixer run summary",
+            "• DEPLOY <fn-name> — deploy edge fn (e.g. DEPLOY pipeline-health-monitor)",
+            "• HELP — this message",
+          ].join("\n"),
+          "help", false, { bypassQuietHours: true }
+        );
+        return new Response(twimlEmpty, { headers: { "Content-Type": "text/xml" } });
+      }
+
       if (cmd === "FIX") {
         // Trigger watchdog immediately
         fetch(`${SUPABASE_URL}/functions/v1/code-fixer-watchdog`, {
@@ -257,6 +273,39 @@ serve(async (req) => {
           "fixer",
           false,
           { bypassQuietHours: true }
+        );
+        return new Response(twimlEmpty, { headers: { "Content-Type": "text/xml" } });
+      }
+
+      if (cmd.startsWith("DEPLOY ")) {
+        const fnName = trimmed.slice(7).trim();
+        const safe = /^[a-z0-9-]{2,80}$/.test(fnName);
+        if (!safe) {
+          await sendSMS(MATT_PERSONAL, TWILIO_PHONE_NUMBER, `❌ Invalid function name: "${fnName}". Use lowercase letters, digits, dashes only.`, "deploy", false, { bypassQuietHours: true });
+          return new Response(twimlEmpty, { headers: { "Content-Type": "text/xml" } });
+        }
+        const ghToken = Deno.env.get("GITHUB_PAT") || Deno.env.get("GITHUB_TOKEN");
+        if (!ghToken) {
+          await sendSMS(MATT_PERSONAL, TWILIO_PHONE_NUMBER, `❌ GITHUB_PAT secret not set. Add it in Lovable Cloud secrets to enable DEPLOY SMS.`, "deploy", false, { bypassQuietHours: true });
+          return new Response(twimlEmpty, { headers: { "Content-Type": "text/xml" } });
+        }
+        const dispatchRes = await fetch("https://api.github.com/repos/mamoo85/m2training/actions/workflows/deploy-supabase.yml/dispatches", {
+          method: "POST",
+          headers: {
+            "Accept": "application/vnd.github+json",
+            "Authorization": `Bearer ${ghToken}`,
+            "X-GitHub-Api-Version": "2022-11-28",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ ref: "main", inputs: { function_name: fnName } }),
+        });
+        const ok = dispatchRes.status === 204;
+        await sendSMS(
+          MATT_PERSONAL, TWILIO_PHONE_NUMBER,
+          ok
+            ? `🚀 Deploying ${fnName}. Watch: github.com/mamoo85/m2training/actions`
+            : `❌ Deploy failed (HTTP ${dispatchRes.status}). Check GITHUB_PAT scopes (repo + workflow).`,
+          "deploy", false, { bypassQuietHours: true }
         );
         return new Response(twimlEmpty, { headers: { "Content-Type": "text/xml" } });
       }
