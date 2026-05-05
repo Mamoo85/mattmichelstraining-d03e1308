@@ -905,9 +905,9 @@ Single test: `npx vitest run src/path/to/file.test.ts`
 
 ## Codebase Scale
 
-- **328** frontend pages in `src/pages/`
-- **859** Supabase Edge Functions in `supabase/functions/`
-- **707** migration files
+- **382** frontend pages in `src/pages/`
+- **918** Supabase Edge Functions in `supabase/functions/`
+- **791** migration files
 - **33** AI agents in `.claude/agents/`
 - **67+** product lines across 5 waves + DWA suite
 
