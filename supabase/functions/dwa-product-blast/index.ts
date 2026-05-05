@@ -166,8 +166,9 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    if (await isMarketingKilled()) {
-      return new Response(JSON.stringify({ ok: true, sent: 0, reason: "marketing_kill_switch" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    const ks = await isMarketingBlocked(sb);
+    if (ks.blocked) {
+      return new Response(JSON.stringify({ ok: true, sent: 0, reason: "marketing_kill_switch", detail: ks.reason }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
   } catch (_) { /* fail open */ }
 
