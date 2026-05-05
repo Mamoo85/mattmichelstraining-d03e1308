@@ -76,6 +76,26 @@ const AdminEmailLog = () => {
     refetchInterval: 30000,
   });
 
+  const [resendingId, setResendingId] = useState<string | null>(null);
+  const handleResend = async (messageId: string, currentRecipient: string) => {
+    const to = window.prompt("Send to (leave as-is to resend to original recipient):", currentRecipient);
+    if (!to) return;
+    setResendingId(messageId);
+    try {
+      const { data, error } = await supabase.functions.invoke("resend-email-by-message", {
+        body: { message_id: messageId, recipient_email: to },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error + ": " + ((data as any).details || ""));
+      toast.success(`Re-queued to ${to}`);
+      refetch();
+    } catch (e: any) {
+      toast.error(`Resend failed: ${e?.message || e}`);
+    } finally {
+      setResendingId(null);
+    }
+  };
+
   const templates = [...new Set(emails.map((e: any) => e.template_name))].sort();
   const filtered = templateFilter === "all" ? emails : emails.filter((e: any) => e.template_name === templateFilter);
 
