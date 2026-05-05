@@ -515,6 +515,63 @@ export async function runEmailWaterfall(
     } catch { miss("opencorporates"); }
   }
 
+  // 10–24. Search engines, open registries, DNS, social (email-extras-1)
+  try {
+    const ex1 = await import("./email-extras-1.ts");
+    const tries1: [string, number, () => Promise<string | null>][] = [
+      ["wayback",           55, () => domain ? ex1.waybackEmail(domain) : Promise.resolve(null)],
+      ["bbb_scrape",        55, () => input.business_name ? ex1.bbbEmail(input.business_name, input.city ?? undefined) : Promise.resolve(null)],
+      ["detroit_openbiz",   65, () => input.business_name ? ex1.detroitOpenBizEmail(input.business_name) : Promise.resolve(null)],
+      ["google_places",     70, () => input.business_name ? ex1.googlePlacesEmail(input.business_name, input.city ?? undefined) : Promise.resolve(null)],
+      ["github_commits",    55, () => input.business_name ? ex1.githubCommitsEmail(input.business_name) : Promise.resolve(null)],
+      ["dns_mx_pattern",    50, () => domain ? ex1.dnsMxPatternEmail(domain) : Promise.resolve(null)],
+      ["bing_serp",         55, () => input.business_name ? ex1.bingSerpEmail(input.business_name, domain ?? undefined) : Promise.resolve(null)],
+      ["reddit",            50, () => input.business_name ? ex1.redditEmail(input.business_name) : Promise.resolve(null)],
+      ["common_crawl",      55, () => domain ? ex1.commonCrawlEmail(domain) : Promise.resolve(null)],
+      ["hunter_finder",     65, () => domain ? ex1.hunterFinderEmail(domain, input.contact_first_name ?? undefined, input.contact_last_name ?? undefined) : Promise.resolve(null)],
+      ["yellowpages",       50, () => input.business_name ? ex1.yellowpagesEmail(input.business_name, input.city ?? undefined) : Promise.resolve(null)],
+      ["yelp_fusion",       60, () => input.business_name ? ex1.yelpFusionEmail(input.business_name, input.city ?? undefined) : Promise.resolve(null)],
+      ["foursquare",        60, () => input.business_name ? ex1.foursquareEmail(input.business_name, input.city ?? undefined) : Promise.resolve(null)],
+      ["osm",               50, () => input.business_name ? ex1.osmEmail(input.business_name, input.city ?? undefined) : Promise.resolve(null)],
+      ["duckduckgo",        50, () => input.business_name ? ex1.duckduckgoEmail(input.business_name) : Promise.resolve(null)],
+    ];
+    for (const [name, conf, fn] of tries1) {
+      try {
+        const e = await fn();
+        if (e && looksValidEmail(e)) { await bump(sb, name, true); return hit(name, e, conf); }
+        miss(name);
+      } catch (err) { miss(name, String(err)); }
+    }
+  } catch (e) { miss("email_extras_1", String(e)); }
+
+  // 25–38. Search engines, social, geocoders, gov registries (email-extras-2)
+  try {
+    const ex2 = await import("./email-extras-2.ts");
+    const tries2: [string, number, () => Promise<string | null>][] = [
+      ["yandex",            50, () => input.business_name ? ex2.yandexEmail(input.business_name, domain ?? undefined) : Promise.resolve(null)],
+      ["github_events",     50, () => input.business_name ? ex2.githubEventsEmail(input.business_name) : Promise.resolve(null)],
+      ["wayback_cdx",       55, () => domain ? ex2.waybackCdxEmail(domain) : Promise.resolve(null)],
+      ["crunchbase",        55, () => input.business_name ? ex2.crunchbaseEmail(input.business_name) : Promise.resolve(null)],
+      ["sitemap_crawl",     60, () => domain ? ex2.sitemapCrawlEmail(domain) : Promise.resolve(null)],
+      ["linkedin_slug",     55, () => input.business_name ? ex2.linkedinSlugEmail(input.business_name) : Promise.resolve(null)],
+      ["facebook_page",     50, () => input.business_name ? ex2.facebookPageEmail(input.business_name) : Promise.resolve(null)],
+      ["mapquest",          45, () => input.business_name ? ex2.mapquestEmail(input.business_name, input.city ?? undefined) : Promise.resolve(null)],
+      ["here",              50, () => input.business_name ? ex2.hereEmail(input.business_name, input.city ?? undefined) : Promise.resolve(null)],
+      ["opencage",          50, () => input.business_name ? ex2.opencageEmail(input.business_name, input.city ?? undefined) : Promise.resolve(null)],
+      ["sec_edgar",         60, () => input.business_name ? ex2.secEdgarEmail(input.business_name) : Promise.resolve(null)],
+      ["govinfo",           55, () => input.business_name ? ex2.govinfoEmail(input.business_name) : Promise.resolve(null)],
+      ["sam_entity",        60, () => input.business_name ? ex2.samEntityEmail(input.business_name) : Promise.resolve(null)],
+      ["twitter_bio",       45, () => input.business_name ? ex2.twitterBioEmail(input.business_name) : Promise.resolve(null)],
+    ];
+    for (const [name, conf, fn] of tries2) {
+      try {
+        const e = await fn();
+        if (e && looksValidEmail(e)) { await bump(sb, name, true); return hit(name, e, conf); }
+        miss(name);
+      } catch (err) { miss(name, String(err)); }
+    }
+  } catch (e) { miss("email_extras_2", String(e)); }
+
   // 40–64. Gov registries + well-known web files + trade directories (email-extras-4)
   try {
     const ex4 = await import("./email-extras-4.ts");
@@ -599,6 +656,14 @@ export async function runEmailWaterfall(
 export const WATERFALL_PROVIDERS = [
   "site_scrape", "snov", "apollo", "pattern_verify", "hunter",
   "pdl", "pdl_name", "crtsh", "rdap_whois", "opencorporates",
+  // Tiers 10–24 (email-extras-1)
+  "wayback", "bbb_scrape", "detroit_openbiz", "google_places", "github_commits",
+  "dns_mx_pattern", "bing_serp", "reddit", "common_crawl", "hunter_finder",
+  "yellowpages", "yelp_fusion", "foursquare", "osm", "duckduckgo",
+  // Tiers 25–38 (email-extras-2)
+  "yandex", "github_events", "wayback_cdx", "crunchbase", "sitemap_crawl",
+  "linkedin_slug", "facebook_page", "mapquest", "here", "opencage",
+  "sec_edgar", "govinfo", "sam_entity", "twitter_bio",
   // Tiers 40–64 (email-extras-4)
   "irs_bmf", "fcc_uls", "npi_registry", "nsf_awards", "nih_reporter",
   "grants_gov", "epa_frs", "fda_registration", "usaspending_poc", "uspto_assignee",
