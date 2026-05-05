@@ -7,6 +7,7 @@
 // POST { action: "generate", email }   → generates/returns code for a client
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { dwaEmail } from "../_shared/dwa-email.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
