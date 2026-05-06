@@ -1,7 +1,7 @@
 // Buyer Radar checkout — industrial supplier intelligence ($399 / $599 / $799)
 // Reuses industry_pulse_clients table with buyer_type='supplier' + vertical
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@18.5.0";
+import Stripe from "npm:stripe@18.5.0";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { apiVersion: "2025-08-27.basil" });
 

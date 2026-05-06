@@ -2,7 +2,7 @@
 // $49/mo developer API tier for Trade Radar.
 // POST { email, vertical }
 
-import Stripe from "https://esm.sh/stripe@14";
+import Stripe from "npm:stripe@14";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {

@@ -3,7 +3,7 @@
 // Pricing: free setup, billed $50/reply (metered) OR flat $199 prepay for first 5 replies.
 // POST { email, list_size, industry, campaign_name?, phone? }
 
-import Stripe from "https://esm.sh/stripe@14";
+import Stripe from "npm:stripe@14";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {

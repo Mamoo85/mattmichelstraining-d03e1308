@@ -3,7 +3,7 @@
 // POST { email, vertical, contact_name?, business_name?, phone?, zip_codes?, tcpa_consent }
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import Stripe from "https://esm.sh/stripe@14";
+import Stripe from "npm:stripe@14";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

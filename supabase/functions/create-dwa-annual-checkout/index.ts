@@ -3,7 +3,7 @@
 // 2 months free = 10 months billed annually (saves ~16%).
 // POST { email, product, vertical? (for trade_radar), contact_name?, business_name?, phone? }
 
-import Stripe from "https://esm.sh/stripe@14";
+import Stripe from "npm:stripe@14";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

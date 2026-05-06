@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@18.5.0";
+import Stripe from "npm:stripe@18.5.0";
 import { getStripeSecretKey } from "../_shared/stripe-key.ts";
 
 const stripe = new Stripe(getStripeSecretKey(), { apiVersion: "2025-08-27.basil" });

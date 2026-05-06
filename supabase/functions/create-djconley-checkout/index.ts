@@ -7,7 +7,7 @@
 // metadata.tier, metadata.locked_price_cents, metadata.client_email
 // Inline price_data per CLAUDE.md rule.
 
-import Stripe from "https://esm.sh/stripe@18.5.0";
+import Stripe from "npm:stripe@18.5.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
