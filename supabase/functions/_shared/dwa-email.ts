@@ -25,7 +25,7 @@ export interface DwaEmailOpts {
   hubspotContactId?: string;
 }
 
-export async function dwaEmail(opts: DwaEmailOpts): Promise<{ ok: boolean; error?: string }> {
+export async function dwaEmail(opts: DwaEmailOpts): Promise<{ ok: boolean; error?: string; resendId?: string }> {
   if (!RESEND_API_KEY) return { ok: false, error: "RESEND_API_KEY missing" };
   const fromAddress = "matt@detroitwebagency.com";
   const fromField = opts.fromName
@@ -52,6 +52,8 @@ export async function dwaEmail(opts: DwaEmailOpts): Promise<{ ok: boolean; error
       const txt = await r.text().catch(() => "");
       return { ok: false, error: `Resend ${r.status}: ${txt}` };
     }
+    const body = await r.json().catch(() => ({} as any));
+    const resendId: string | undefined = body?.id;
     if (opts.hubspotContactId) {
       // Lazy import to avoid edge-function cold-start cost when HubSpot isn't used
       try {
@@ -61,7 +63,7 @@ export async function dwaEmail(opts: DwaEmailOpts): Promise<{ ok: boolean; error
         console.warn("[dwaEmail→hubspot]", e instanceof Error ? e.message : e);
       }
     }
-    return { ok: true };
+    return { ok: true, resendId };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : String(e) };
   }
