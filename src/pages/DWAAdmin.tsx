@@ -60,6 +60,7 @@ const AdminSystemAudit = lazy(() => import("@/components/dwa-admin/AdminSystemAu
 const AdminEnrichmentHealth = lazy(() => import("@/components/admin/AdminEnrichmentHealth"));
 const AdminReplyInbox = lazy(() => import("@/components/admin/AdminReplyInbox"));
 const AdminClientAttribution = lazy(() => import("@/components/admin/AdminClientAttribution"));
+const TrialFunnelInsights = lazy(() => import("@/components/dwa-admin/TrialFunnelInsights"));
 
 type Tab =
   | "ai-command"
