@@ -126,6 +126,7 @@ export default function MyFieldDesk() {
   }, [jobs]);
 
   if (error) {
+    if (isJustPurchased()) return <JustPurchasedScreen product="FieldDesk" />;
     return (
       <div className="min-h-screen bg-[#030711] text-foreground">
         <SEOHead title="My FieldDesk — Subscriber Dashboard" description="FieldDesk job board" />
