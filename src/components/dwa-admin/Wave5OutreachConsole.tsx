@@ -390,18 +390,23 @@ function NewCampaignDialog({ onClose, onCreated }: { onClose: () => void; onCrea
     if (!name.trim() || !body.trim()) { toast.error("Name and body required"); return; }
     setBusy(true);
     try {
+      const { data: userRes } = await supabase.auth.getUser();
       const { error } = await supabase.from("outreach_campaigns" as any).insert({
         name, channel, product,
         verticals: [vertical], states: [state],
         template_subject: channel === "email" ? subject : null,
         template_body: body, cta_url: cta,
         daily_send_cap: cap, status: "draft",
+        created_by: userRes?.user?.email || userRes?.user?.id || null,
       });
-      if (error) throw error;
+      if (error) {
+        console.error("[create campaign]", error);
+        throw error;
+      }
       toast.success(`Campaign created (draft)`);
       onCreated();
     } catch (e) {
-      toast.error(`Create failed: ${e instanceof Error ? e.message : String(e)}`);
+      toast.error(`Create failed: ${formatSupabaseError(e)}`);
     } finally {
       setBusy(false);
     }
