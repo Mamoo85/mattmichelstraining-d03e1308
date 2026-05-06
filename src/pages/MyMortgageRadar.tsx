@@ -57,8 +57,10 @@ type Outreach = {
 };
 
 export default function MyMortgageRadar() {
-  const clientEmail = new URLSearchParams(window.location.search).get("email") || "";
-  const dashboardToken = new URLSearchParams(window.location.search).get("token") || "";
+  const params = new URLSearchParams(window.location.search);
+  const clientEmail = params.get("email") || "";
+  const dashboardToken = params.get("token") || "";
+  const justPurchased = params.get("trial") === "success" || params.get("success") === "1";
   const [authError, setAuthError] = useState<string | null>(null);
   const [clientId, setClientId] = useState<string | null>(null);
   const [leads, setLeads] = useState<Lead[]>([]);
