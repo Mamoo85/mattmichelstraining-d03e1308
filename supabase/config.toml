@@ -1905,6 +1905,12 @@ verify_jwt = false
 [functions.create-bundle-revenue-suite-checkout]
 verify_jwt = false
 
+[functions.create-bundle-90day-checkout]
+verify_jwt = false
+
+[functions.demo-reminder-dispatcher]
+verify_jwt = false
+
 [functions.marketplace-outreach-blast]
 verify_jwt = false
 

@@ -37,6 +37,8 @@ const BottomTabBar = lazyRetry(() => import("@/components/layout/BottomTabBar"))
 const Index = lazyRetry(() => import("./pages/Index"));
 const BookDemo = lazyRetry(() => import("./pages/BookDemo"));
 const DemoRunner = lazyRetry(() => import("./pages/DemoRunner"));
+const WebsitePlusFieldDesk = lazyRetry(() => import("./pages/WebsitePlusFieldDesk"));
+const BundleSuccess = lazyRetry(() => import("./pages/BundleSuccess"));
 const AgencyHome = lazyRetry(() => import("./pages/AgencyHome"));
 const OwnerLogin = lazyRetry(() => import("./pages/OwnerLogin"));
 const OwnerVerify = lazyRetry(() => import("./pages/OwnerVerify"));
@@ -1012,6 +1014,8 @@ const App = () => (
                     <Route path="/embed/capture/:tenantId" element={<EmbedCapture />} />
                     <Route path="/book-demo" element={<BookDemo />} />
                     <Route path="/demo-runner" element={<DemoRunner />} />
+                    <Route path="/website-plus-fielddesk" element={<WebsitePlusFieldDesk />} />
+                    <Route path="/bundle-success" element={<BundleSuccess />} />
                     <Route path="*" element={<NotFound />} />
                     </Routes>
                   </div>
