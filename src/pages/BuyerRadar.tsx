@@ -72,7 +72,7 @@ export default function BuyerRadar() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (success) toast.success("Welcome to Buyer Radar! Check your email for your dashboard link.");
+    if (success) toast.success("Payment confirmed! Check your email for your one-click login link.");
   }, [success]);
 
   const handleCheckout = async (selected: Tier) => {
