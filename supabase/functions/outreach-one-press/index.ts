@@ -240,15 +240,27 @@ async function runOrchestration(runId: string, input: RunInput) {
       }
 
       if (queueRows.length > 0) {
-        const { data: inserted, error: qErr } = await supabase
+        // Partial unique index can't satisfy ON CONFLICT — pre-filter already-queued rows instead
+        const prospectIds = queueRows.map(r => r.prospect_id);
+        const { data: alreadyQueued } = await supabase
           .from("outreach_send_queue")
-          .upsert(queueRows, { onConflict: "prospect_id,lead_id,channel", ignoreDuplicates: true })
-          .select("id");
-        if (qErr) {
-          sendErrors.push(`enqueue: ${qErr.message}`);
-          failedTotal += queueRows.length;
-        } else {
-          queuedTotal = inserted?.length || 0;
+          .select("prospect_id, channel")
+          .in("prospect_id", prospectIds)
+          .in("status", ["pending", "processing"]);
+        const queuedKeys = new Set((alreadyQueued || []).map((r: any) => `${r.prospect_id}:${r.channel}`));
+        const newRows = queueRows.filter(r => !queuedKeys.has(`${r.prospect_id}:${r.channel}`));
+
+        if (newRows.length > 0) {
+          const { data: inserted, error: qErr } = await supabase
+            .from("outreach_send_queue")
+            .insert(newRows)
+            .select("id");
+          if (qErr) {
+            sendErrors.push(`enqueue: ${qErr.message}`);
+            failedTotal += newRows.length;
+          } else {
+            queuedTotal = inserted?.length || 0;
+          }
         }
 
         // Kick the worker once so the user sees activity quickly
