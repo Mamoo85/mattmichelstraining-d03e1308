@@ -131,6 +131,7 @@ const GROUPS: SidebarGroup[] = [
       { id: "trade-radar",     label: "🔨 Trade Radar (11 Verticals)" },
       { id: "hvb",             label: "📦 High-Volume Buyers" },
       { id: "growth-signals",  label: "📡 Growth Signals" },
+      { id: "trial-funnel",    label: "🎯 Trial Funnel & Email" },
       { id: "visitor-intel",   label: "👁️ Visitor Intel" },
       { id: "the-wire",        label: "📡 The Wire" },
       { id: "coverage-map",    label: "🗺️ Coverage Map" },
