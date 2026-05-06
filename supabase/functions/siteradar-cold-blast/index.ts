@@ -26,7 +26,7 @@ function emailHtml(lead: any): string {
       "Pulls firmographic data — industry, size, location",
     ],
     ctaText: "Start free 7-day trial →",
-    ctaUrl: `${SITE}/start-trial?product=site_radar`,
+    ctaUrl: `${SITE}/start-trial?product=site_radar&email=${encodeURIComponent(lead.email || "")}&utm_source=cold_email&utm_medium=email&utm_campaign=siteradar_blast`,
     badge: "SITERADAR · TRIAL",
   });
   return `<div style="max-width:600px;margin:0 auto;padding:24px 16px;background:#fff;">
