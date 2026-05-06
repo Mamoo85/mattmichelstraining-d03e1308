@@ -140,6 +140,7 @@ export default function MyDemandRadar() {
   }, [signals, client]);
 
   if (error) {
+    if (isJustPurchased()) return <JustPurchasedScreen product="Demand Radar" />;
     return (
       <div className="min-h-screen bg-[#030711] text-foreground">
         <SEOHead title="My Demand Radar — Subscriber Dashboard" description="Demand intel feed" />
