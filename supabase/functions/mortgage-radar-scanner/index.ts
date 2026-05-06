@@ -1206,37 +1206,10 @@ async function scanRegistryWaterfall(sb: any): Promise<RawSignal[]> {
 // Real daily-fresh mortgage application data; new records appear each business day.
 // nature_of_action=1 = loan originated; action_taken=1 = originated.
 async function scanCFPBHMDA(): Promise<RawSignal[]> {
-  const results: RawSignal[] = [];
-  try {
-    const since = new Date(Date.now() - 30 * 86400_000).toISOString().slice(0, 10);
-    // FFIEC HMDA API — free, no auth, returns MI loan originations
-    const res = await fetch(
-      `https://ffiec.cfpb.gov/v2/data-browser-api/view/csv?states=MI&years=2024&actions_taken=1&loan_types=1,2&limit=50`,
-      { headers: { "User-Agent": "DWA-MortgageRadar/1.0 (matt@detroitwebagent.com)" }, signal: AbortSignal.timeout(15_000) },
-    );
-    if (!res.ok) return results;
-    const text = await res.text();
-    const lines = text.split("\n").slice(1, 51); // skip header, take up to 50 rows
-    for (const line of lines) {
-      if (!line.trim()) continue;
-      const cols = line.split(",");
-      // HMDA CSV: lei, state, county, census_tract, action_taken, loan_type, loan_amount, property_value, income
-      const county = cols[2]?.trim() || "";
-      const loanAmount = Number(cols[6]?.trim() || 0) * 1000; // HMDA reports in thousands
-      if (loanAmount < 50000) continue;
-      results.push({
-        address: `HMDA Census Tract ${cols[3]?.trim() || "MI"}`,
-        city: county ? `${county} County` : "Michigan",
-        county: county || undefined,
-        signal_type: "high_equity_renovation",
-        signal_source: "CFPB_HMDA",
-        signal_detail: `HMDA loan origination in ${county || "MI"}: $${Math.round(loanAmount / 1000)}k ${cols[5] === "1" ? "conventional" : "FHA/VA"} mortgage — active buyer in area. Neighbors may be equity-rich or in purchase mode`,
-        signal_date: since,
-        estimated_equity: Math.round(loanAmount * 0.2),
-      });
-    }
-  } catch (e) { console.warn("[scanner] CFPB HMDA:", e instanceof Error ? e.message : e); }
-  return results.slice(0, 20);
+  // HMDA data is census-tract-level (no individual property address) — cannot pass
+  // address validation and poisons quarantine_history. Skip until a
+  // mortgage_radar_area_signals table exists to store area-level market intel.
+  return [];
 }
 
 // Wayne County recent property transfers — new homeowners with fresh purchase mortgages.
