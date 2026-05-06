@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import SEOHead from "@/components/layout/SEOHead";
 import DWASuiteNav from "@/components/shared/DWASuiteNav";
+import JustPurchasedScreen, { isJustPurchased } from "@/components/shared/JustPurchasedScreen";
 import {
   TrendingUp, Zap, Target, Factory, Briefcase,
   RefreshCw, Loader2, ArrowUpRight, BarChart3,
