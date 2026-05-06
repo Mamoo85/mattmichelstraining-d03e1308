@@ -21,15 +21,15 @@ const PRODUCT_LABELS: Record<string, string> = {
 };
 
 const PRODUCT_URLS: Record<string, string> = {
-  hire_alert_subscription: "https://detroitwebagent.com/tech-alert",
-  trade_radar_subscription: "https://detroitwebagent.com/trade-radar",
+  hire_alert_subscription: "https://detroitwebagent.com/talent-radar",
+  trade_radar_subscription: "https://detroitwebagent.com/start-trial?product=trade_radar",
   mortgage_radar_subscription: "https://detroitwebagent.com/mortgage-radar",
-  field_service_subscription: "https://detroitwebagent.com/field-desk",
-  field_crm_subscription: "https://detroitwebagent.com/field-desk",
-  missed_call_subscription: "https://detroitwebagent.com/missed-call",
+  field_service_subscription: "https://detroitwebagent.com/field-service",
+  field_crm_subscription: "https://detroitwebagent.com/field-service",
+  missed_call_subscription: "https://detroitwebagent.com/missed-call-catch",
   site_radar_subscription: "https://detroitwebagent.com/site-radar",
   contractor_lead_subscription: "https://detroitwebagent.com/contractor-leads",
-  dead_lead_billing_setup: "https://detroitwebagent.com/dead-lead-reactivation",
+  dead_lead_billing_setup: "https://detroitwebagent.com/dead-lead-intake",
 };
 
 function generateDiscountCode(email: string, productType: string): string {
