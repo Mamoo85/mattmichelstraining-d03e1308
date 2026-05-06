@@ -9,11 +9,13 @@ const corsHeaders = {
 };
 
 const WATERFALLS = [
-  // (label, table, filter)
+  // (label, table, dateCol) — dateCol defaults to "created_at"
+  // Use "updated_at" for cumulative tables where the scanner UPDATEs existing rows
+  // rather than INSERTing new ones every day (new-rows-today would always be 0).
   { label: "trade_radar_leads", table: "trade_radar_leads" },
   { label: "trade_radar_area_signals", table: "trade_radar_area_signals" },
   { label: "mortgage_radar_leads", table: "mortgage_radar_leads" },
-  { label: "techalert_prospect_targets", table: "techalert_prospect_targets" },
+  { label: "techalert_prospect_targets", table: "techalert_prospect_targets", dateCol: "updated_at" },
   { label: "outreach_targets", table: "outreach_targets" },
   { label: "marketplace_prospects", table: "marketplace_prospects" },
   { label: "contractor_leads", table: "contractor_leads" },
