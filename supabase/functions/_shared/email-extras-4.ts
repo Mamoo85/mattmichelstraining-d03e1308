@@ -163,9 +163,11 @@ export async function usaspendingPocEmail(
 export async function usptoAssigneeEmail(
   name: string,
 ): Promise<string | null> {
+  const usptoKey = (globalThis as any).Deno?.env.get("USPTO_API_KEY") || "";
   const q = enc(JSON.stringify({ assignee_organization: name }));
   const t = await safeText(
     `https://api.patentsview.org/assignees/query?q=${q}&f=["assignee_organization","assignee_id"]`,
+    usptoKey ? { headers: { "X-Api-Key": usptoKey } } : undefined,
   );
   return t ? pickEmail(t) : null;
 }
