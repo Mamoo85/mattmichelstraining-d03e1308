@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Loader2, Mail, Printer, Inbox, Upload, Play, Pause, RefreshCw, Radar, Database } from "lucide-react";
 import TargetDiscoveryPanel from "./TargetDiscoveryPanel";
 import SourceCatalogPanel from "./SourceCatalogPanel";
+import { formatSupabaseError } from "@/lib/formatSupabaseError";
 
 type Channel = "email" | "fax" | "postcard";
 
