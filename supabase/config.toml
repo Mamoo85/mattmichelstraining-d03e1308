@@ -2181,6 +2181,12 @@ verify_jwt = false
 [functions.send-youngblood-proposal]
 verify_jwt = false
 
+[functions.notify-matt-trial-fail]
+verify_jwt = false
+
+[functions.trial-daily-digest]
+verify_jwt = false
+
 [functions.run-migration-once]
 verify_jwt = false
 
