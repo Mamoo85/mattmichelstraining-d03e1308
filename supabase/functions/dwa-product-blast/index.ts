@@ -3,7 +3,7 @@
 // the best-fit product based on industry, and sends a branded teaser-card email
 // with a trial CTA (or direct checkout for non-trial products).
 //
-// Daily cap default: 150 (deliverability-safe; respects cold_email_ramp_state if set).
+// Daily cap default: 200 (deliverability-safe; respects cold_email_ramp_state if set).
 // Routing:
 //   HVAC/Plumber/Roofer/Electrician/Tree/Restoration/Demo/Foundation/Painter/Gutters/Pest
 //                                  → Trade Radar (vertical-matched)
