@@ -496,6 +496,7 @@ export default function MyTechAlert() {
   }
 
   if (error || !data) {
+    if (isJustPurchased()) return <JustPurchasedScreen product="TechAlert" />;
     const isMissingToken = !token;
     return (
       <div className="min-h-screen bg-[#0a1628] flex items-center justify-center p-4">
