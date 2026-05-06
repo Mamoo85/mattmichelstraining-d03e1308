@@ -53,8 +53,10 @@ export default function TradeRadarPortal({
   signalTypes,
   landingPath,
 }: TradeRadarPortalProps) {
-  const clientEmail = new URLSearchParams(window.location.search).get("email") || "";
-  const dashboardToken = new URLSearchParams(window.location.search).get("token") || "";
+  const searchParams = new URLSearchParams(window.location.search);
+  const clientEmail = searchParams.get("email") || "";
+  const dashboardToken = searchParams.get("token") || "";
+  const justPurchased = searchParams.get("trial") === "success";
 
   const [authError, setAuthError] = useState<string | null>(null);
   const [client, setClient] = useState<Client | null>(null);
