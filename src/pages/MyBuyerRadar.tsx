@@ -95,6 +95,7 @@ export default function MyBuyerRadar() {
   }
 
   if (!token) {
+    if (isJustPurchased()) return <JustPurchasedScreen product="Buyer Radar" />;
     return (
       <div className="min-h-screen bg-[#030711] text-white flex items-center justify-center p-6">
         <div className="max-w-sm text-center">
