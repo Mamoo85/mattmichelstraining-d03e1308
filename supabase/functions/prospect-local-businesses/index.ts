@@ -950,13 +950,18 @@ serve(async (req) => {
           subjectLine = emailLines.find(l => l.startsWith("SUBJECT:"))?.replace("SUBJECT:", "").trim()
             || `Quick observation about ${businessName}`;
           emailBody = emailLines.slice(emailLines.findIndex(l => l === "---") + 1).join("\n").trim();
-          const emailBodyHtml = emailBody.replace(/\n/g, "<br>");
-          const ctaUrl = `https://detroitwebagent.com${landingPage.path}`;
+          // Render the observation paragraphs as HTML, then inject the full visual template
+          const observationHtml = emailBody
+            .split(/\n\n+/)
+            .map(para => `<p style="margin:0 0 12px;font-size:15px;line-height:1.7;color:#1e293b;">${para.replace(/\n/g, "<br>")}</p>`)
+            .join("");
+          const richBodyHtml = buildWebDesignEmailHtml(observationHtml, landingPage);
+          const ctaUrl = `https://detroitwebagent.com${landingPage.path}#demo`;
 
           const r = await dwaColdEmail({
             to: contactEmail,
             subject: subjectLine,
-            bodyHtml: emailBodyHtml,
+            bodyHtml: richBodyHtml,
             product: "Detroit Web Agency",
             ctaUrl,
             templateName: "cold_outreach",
