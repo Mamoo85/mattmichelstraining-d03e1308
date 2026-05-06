@@ -291,6 +291,18 @@ Deno.serve(async (req) => {
     // Don't fail the request — the trial is created. The customer can re-request.
   }
 
+  // Also write to trial_signups for SLA/drip pipeline (fire-and-forget).
+  sb.from("trial_signups").upsert({
+    email,
+    product_key: product,
+    status: "active",
+    trial_started_at: new Date().toISOString(),
+    trial_ends_at: expiresAt,
+    utm: { source: body.source || null, utm_source: body.utm_source || null },
+  }, { onConflict: "email,product_key", ignoreDuplicates: false }).then(
+    ({ error: e }) => { if (e) console.error("[start-radar-trial] trial_signups upsert", e); },
+  );
+
   // 🔔 Ping Matt — every trial signup (fire-and-forget, never blocks).
   sendSMS(
     ADMIN_PHONE,
