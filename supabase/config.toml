@@ -2160,6 +2160,9 @@ verify_jwt = false
 [functions.send-djconley-pitch-v2]
 verify_jwt = false
 
+[functions.send-djconley-proposal-v3]
+verify_jwt = false
+
 [functions.send-djconley-followup-sms]
 verify_jwt = false
 
