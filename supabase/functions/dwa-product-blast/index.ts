@@ -14,9 +14,9 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { dwaEmail } from "../_shared/dwa-email.ts";
-import { teaserCardHtml } from "../_shared/teaser-card.ts";
 import { isBlocked } from "../_shared/outreach-blocklist.ts";
 import { isMarketingBlocked } from "../_shared/marketing-kill-switch.ts";
+import { buildPremiumEmailHtml, RADAR_ADDON_BOX } from "../_shared/dwa-premium-email.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
