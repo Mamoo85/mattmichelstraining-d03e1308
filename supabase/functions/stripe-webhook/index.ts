@@ -1282,6 +1282,16 @@ serve(async (req) => {
               stripe_subscription_id: session.subscription as string || null,
             }, { onConflict: "owner_email" });
           }
+          if (meta.phone) {
+            const { sendSMS } = await import("../_shared/twilio.ts");
+            await sendSMS({
+              to: `+1${meta.phone.replace(/\D/g, "")}`,
+              body: `You're enrolled in TechAlert SMS alerts. We'll text you the moment a licensed tradesperson becomes available in your area. First alert usually within 24 hours.\n— Matt, Detroit Web Agency\nReply STOP to opt out`,
+            }).catch(() => {});
+          }
+          if (email) {
+            await dwaEmail(email, "TechAlert SMS Alerts — You're Enrolled", `<!DOCTYPE html><html><body style="margin:0;background:#030711;font-family:-apple-system,sans-serif;"><div style="max-width:600px;margin:0 auto;padding:32px 16px;"><div style="background:#0a1628;border:1px solid #1e3a5f;border-radius:16px;padding:32px;"><p style="color:#00d4ff;font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase;margin:0 0 8px;">⚡ TECHALERT</p><h1 style="color:#fff;font-size:24px;margin:0 0 8px;">You're on the radar.</h1><p style="color:#94a3b8;font-size:14px;margin:0 0 24px;">Your TechAlert SMS plan is active. The moment a licensed tradesperson in your area shows hiring signals, we'll text you directly — no app, no login needed.</p><div style="background:#0d1f3c;border:1px solid #1e3a5f;border-radius:12px;padding:20px;margin:0 0 24px;"><p style="color:#fff;font-weight:700;font-size:13px;margin:0 0 12px;">WHAT HAPPENS NEXT:</p><p style="margin:0 0 8px;color:#e2e8f0;font-size:13px;">📱 Text alerts sent to ${meta.phone || "your phone"} within minutes of a signal</p><p style="margin:0 0 8px;color:#e2e8f0;font-size:13px;">🔍 We monitor LARA licenses, job boards, and hiring signals daily</p><p style="margin:0;color:#e2e8f0;font-size:13px;">⏱ First alert typically within 24 hours — faster on active hiring days</p></div><p style="color:#94a3b8;font-size:13px;margin:0;">Questions? Reply to this email or text Matt at <a href="tel:+13139921219" style="color:#00d4ff;">(313) 992-1219</a>.</p></div><p style="color:#475569;font-size:11px;text-align:center;margin-top:16px;">Matt Michels · Detroit Web Agency · <a href="tel:+13139921219" style="color:#00d4ff;">(313) 992-1219</a></p></div></body></html>`).catch(() => {});
+          }
           await notifyMatt(
             `📱 TechAlert SMS Tier: ${email}`,
             `<p>New $49/mo SMS-only TechAlert subscriber. They get text alerts only — no portal access.</p><p>Phone: ${meta.phone || "—"}</p><p>Email: ${email}</p>`
