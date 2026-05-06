@@ -226,8 +226,13 @@ export async function isPreviouslyQuarantined(
       .maybeSingle();
     if (!data) return { blocked: false };
     if (data.permanent_blocklist) return { blocked: true, reason: "permanent_blocklist" };
-    // Auto-block if hit 3+ times in history (recurring hallucination).
-    if (data.hit_count >= 3) return { blocked: true, reason: `recurring_quarantine(${data.last_reject_code})` };
+    // Auto-block if hit 3+ times — but NOT for infra failures (missing API key, network error).
+    // Those entries were written before INFRA_CODES guard was added and must not permanently
+    // suppress real government-sourced addresses (BSEED, DLBA, Detroit Assessor).
+    const INFRA_CODES = new Set(["validation_unavailable", "validation_api_error", "validation_exception"]);
+    if (data.hit_count >= 3 && !INFRA_CODES.has(data.last_reject_code || "")) {
+      return { blocked: true, reason: `recurring_quarantine(${data.last_reject_code})` };
+    }
     return { blocked: false };
   } catch (_) {
     return { blocked: false };
