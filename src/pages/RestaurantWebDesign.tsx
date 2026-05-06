@@ -8,7 +8,7 @@ const PLANS = [
   {
     key: "standard",
     name: "Standard",
-    setup: "$799",
+    setup: "$499",
     monthly: "$79/mo",
     description: "Fast, clean site for single-location restaurants and bars.",
     includes: [
