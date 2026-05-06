@@ -18027,6 +18027,7 @@ export type Database = {
           last_login_at: string | null
           magic_token: string
           metadata: Json | null
+          notified_at: string | null
           phone: string | null
           product: string
           source: string | null
@@ -18049,6 +18050,7 @@ export type Database = {
           last_login_at?: string | null
           magic_token: string
           metadata?: Json | null
+          notified_at?: string | null
           phone?: string | null
           product: string
           source?: string | null
@@ -18071,6 +18073,7 @@ export type Database = {
           last_login_at?: string | null
           magic_token?: string
           metadata?: Json | null
+          notified_at?: string | null
           phone?: string | null
           product?: string
           source?: string | null
@@ -22925,6 +22928,45 @@ export type Database = {
         }
         Relationships: []
       }
+      trial_funnel_events: {
+        Row: {
+          created_at: string
+          email: string | null
+          event_type: string
+          id: string
+          metadata: Json | null
+          product: string | null
+          referrer: string | null
+          session_id: string | null
+          user_agent: string | null
+          utm: Json | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          product?: string | null
+          referrer?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          utm?: Json | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          product?: string | null
+          referrer?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          utm?: Json | null
+        }
+        Relationships: []
+      }
       trial_settings: {
         Row: {
           auto_charge_tier: string
@@ -22973,6 +23015,7 @@ export type Database = {
           lead_count_d5: number
           lead_count_d6: number
           lead_count_d7: number
+          notified_at: string | null
           phone: string | null
           product_key: string
           sla_status: string
@@ -23002,6 +23045,7 @@ export type Database = {
           lead_count_d5?: number
           lead_count_d6?: number
           lead_count_d7?: number
+          notified_at?: string | null
           phone?: string | null
           product_key: string
           sla_status?: string
@@ -23031,6 +23075,7 @@ export type Database = {
           lead_count_d5?: number
           lead_count_d6?: number
           lead_count_d7?: number
+          notified_at?: string | null
           phone?: string | null
           product_key?: string
           sla_status?: string
@@ -24046,6 +24091,24 @@ export type Database = {
       }
     }
     Views: {
+      admin_all_trials: {
+        Row: {
+          business_name: string | null
+          converted_at: string | null
+          email: string | null
+          expires_at: string | null
+          metadata: Json | null
+          notified_at: string | null
+          phone: string | null
+          product: string | null
+          source: string | null
+          source_id: string | null
+          source_table: string | null
+          started_at: string | null
+          status: string | null
+        }
+        Relationships: []
+      }
       business_listings_public: {
         Row: {
           business_name: string | null
