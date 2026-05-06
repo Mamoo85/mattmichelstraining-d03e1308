@@ -116,6 +116,8 @@ export default function BuyerRadar() {
         </div>
       </header>
 
+      {success && <PostCheckoutClaim product="Buyer Radar" />}
+
       <section className="max-w-6xl mx-auto px-4 py-16 sm:py-24 text-center">
         <p className="text-[#00d4ff] text-xs font-extrabold tracking-[0.4em] uppercase mb-4">For Steel, Fab & Industrial Suppliers</p>
         <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight mb-6 text-white">
