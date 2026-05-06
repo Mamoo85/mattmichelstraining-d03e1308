@@ -57,7 +57,10 @@ export interface AddressValidationResult {
 
 const ACCEPTABLE_GRANULARITY = new Set(["PREMISE", "SUB_PREMISE"]);
 // Softer granularities we accept with score cap + manual_review flag (recovers ~60% of mortgage rejects).
-const SOFT_GRANULARITY = new Set(["PREMISE_PROXIMITY", "ROUTE", "BLOCK", "NEIGHBORHOOD"]);
+// GEOMETRIC_CENTER = Google found the location via geocoder but couldn't confirm a specific building number.
+// This is common for ArcGIS-sourced Detroit addresses (ALL_CAPS format, missing street type abbreviations)
+// and is still accurate enough for mortgage radar outreach targeting.
+const SOFT_GRANULARITY = new Set(["PREMISE_PROXIMITY", "ROUTE", "BLOCK", "NEIGHBORHOOD", "GEOMETRIC_CENTER"]);
 
 function cacheKey(address: string, zip: string | undefined): string {
   return `${(address || "").trim().toLowerCase()}|${(zip || "").trim()}`;
