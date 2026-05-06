@@ -167,6 +167,22 @@ export default function TradeRadarPortal({
   }, [leads, client]);
 
   // Auth / enrollment guards
+  if (justPurchased && authError) {
+    return (
+      <div className="min-h-screen bg-[#030711] text-foreground flex items-center justify-center px-4">
+        <SEOHead title={`${productLabel} — Welcome!`} description={`Your ${productLabel} account is being set up.`} />
+        <div className="bg-[#0a1628] border border-[#00d4ff33] rounded-xl p-10 text-center max-w-md w-full">
+          <div className="text-4xl mb-4">🎉</div>
+          <h2 className="text-white font-bold text-xl mb-3">Payment confirmed!</h2>
+          <p className="text-[#94a3b8] text-sm mb-4">
+            Your <strong className="text-white">{productLabel}</strong> account is being activated. Check your email — we're sending you a one-click login link right now.
+          </p>
+          <p className="text-[#64748b] text-xs">Didn't get it? Text Matt at (313) 992-1219 and we'll sort it out in minutes.</p>
+        </div>
+      </div>
+    );
+  }
+
   if (authError) {
     return (
       <div className="min-h-screen bg-[#030711] text-foreground">
