@@ -101,9 +101,9 @@ async function sendEmail(sb: ReturnType<typeof createClient>, to: string, ownerN
   const r = await dwaColdEmail({
     to,
     subject,
-    bodyHtml: buildEmailBody(ownerName, companyName, role, isBoiler, score),
+    bodyHtml: buildEmailBody(ownerName, companyName, role, isBoiler, score, to),
     product: "TechAlert",
-    ctaUrl: "https://detroitwebagent.com/start-trial?product=techalert",
+    ctaUrl: `https://detroitwebagent.com/start-trial?product=techalert&email=${encodeURIComponent(to)}&utm_source=cold_email&utm_medium=email&utm_campaign=techalert_d0`,
     templateName: "techalert_cold_d0",
   }, sb);
   return { ok: r.ok, err: r.error };
