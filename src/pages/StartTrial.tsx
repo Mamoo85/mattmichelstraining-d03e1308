@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { trackTrialEvent } from "@/lib/trialFunnel";
 
 // ────────────────────────────────────────────────────────────────────
 // Canonical product config
