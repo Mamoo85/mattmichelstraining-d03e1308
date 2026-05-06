@@ -1,75 +1,145 @@
-# Fix 5 Outreach Console Issues
+# Plan: Convert the White Light Electric reply into a closed deal
 
-## 1. "Create failed: [object Object]" on New Campaign
+Anne-Abel Smith (CFO/Integrator at White Light Electric, [info@whitelightelectric.us](mailto:info@whitelightelectric.us), cell 248-330-4031) replied "Let's schedule a demo, please." This is our first real warm reply — we treat it like a $50K LTV opportunity, not a one-off.
 
-**File:** `src/components/dwa-admin/Wave5OutreachConsole.tsx` (NewCampaignDialog, ~line 388)
+Below is a 4-part plan covering: (1) prospect research, (2) the reply + scheduling flow, (3) the demo system / playbook, (4) self-enrolling Matt in FieldDesk for practice.
 
-**Root cause:** Two issues likely:
-- Toast prints `${error.message}` but the supabase error object's `message` is empty when RLS rejects → `[object Object]`. The `outreach_campaigns` table only has a `service_role` policy, so admin inserts from the browser (anon/authenticated JWT) get blocked.
-- No `created_by` set.
+---
 
-**Fix:**
-- Add an RLS policy allowing admins to insert/select/update via `public.has_role(auth.uid(), 'admin')` (migration). Mirror pattern used by `command_center_tiles` ("admin all").
-- In `create()`, stringify the full error (`error.message || JSON.stringify(error)`) and log it for visibility.
-- Set `created_by` from the current session.
+## Part 1 — Research White Light Electric (before anything ships)
 
-## 2. Command Center Tabs — replace paste-URL with searchable dropdown (Lovable Connectors style)
+Before writing copy or building forms, gather facts so the reply doesn't feel templated.
 
-**Files:** `src/components/admin/AdminMarketingTools.tsx` (CommandCenterTabs, ~line 206) — and reuse the same widget in any customer-facing portal that exposes this.
+- Scrape `whitelightelectric.us` with Firecrawl: services offered, service area, team size signals, current website quality (load speed, mobile responsiveness, screenshots).
+- LARA license lookup for "White Light Electric" (Michigan electrical contractor license, status, expiration).
+- Apollo enrich on `info@whitelightelectric.us` and `White Light Electric` — pull owner name, employee count, founded year, LinkedIn.
+- Google Places lookup: review count, star rating, last review date, response rate.
+- Save findings to a new `prospect_research_dossier` row keyed to `info@whitelightelectric.us` so the reply email and Matt's demo prep both pull from one source.
 
-**Plan:**
-- Build a curated catalog `src/lib/commandCenterCatalog.ts` of ~60 common SaaS tools (Gmail, Stripe, QBO, FieldServio, eWay, MITN, Slack, HubSpot, Salesforce, Jobber, ServiceTitan, Housecall Pro, Calendly, Zoom, Notion, Linear, GitHub, Drive, Calendar, LinkedIn, Meta, Twilio, Supabase, Resend, Apollo, Hunter, Lob, Sinch, etc.) — each entry: `{ id, label, url, emoji, category }`.
-- Replace the textarea + sync button with a shadcn `Command` (cmdk) combobox: type-ahead search, grouped by category, multi-select. Keep a "Custom URL…" option that opens a small modal for one-off pastes.
-- On select → insert tile rows the same way `syncPaste` does (label/emoji come from catalog).
-- Keep the inline edit / reorder / delete UI below unchanged.
-- Apply the same component to the customer-facing equivalent (any place where tabs are exposed to clients — search confirms it currently lives only in admin; if a customer surface is added later it reuses this component).
+Output: a one-page dossier Matt sees before the demo (industry, current website grade A–F, employee count, license status, top 3 product fits with reasoning).
 
-## 3. Targeting Engine returns "0 new, 0 total"
+---
 
-**File:** `supabase/functions/targeting-prospect-scraper/index.ts`
+## Part 2 — The Reply + Demo Scheduling Flow
 
-**Root causes:**
-- `fetchNursingHomes` filters CMS rows by `zipPrefixes` for the entered county. "Wayne" maps in `zipsForCounty`, but the CMS query is hardcoded `state=MI` and limited to 500 rows total — Wayne nursing-home ZIPs may not appear in the first 500 alphabetic rows. Result: 0 found.
-- Same issue across other audiences: Sonar prompt phrasing ("supply house", "trades_staffing") often returns 0 from Perplexity.
+**Recommendation:** combine a short personal reply from Matt with a one-click scheduling link. Don't ask them to free-text their availability — that creates a back-and-forth and we lose them. A million-dollar business sends a calendar.
 
-**Plan:**
-- For CMS sources, paginate (offset 0/500/1000) until `limit` collected matches OR query directly with `provider_state=MI` AND `provider_zip_code IN (...)` conditions instead of post-filtering.
-- For NPI calls, raise `limit` per call and fall back to county-wide loop.
-- For Sonar audiences, add structured trade keyword fallbacks (e.g. nursing_home → also query Google Places via existing `GOOGLE_MAPS_API_KEY` channel-prospector code path) and log a `debug.sources` array in the response so admins see which source returned what.
-- Surface the debug info in `FindProspects.runScrape` — show "0 new (CMS: 12, after-zip-filter: 0)" so misnamed audiences/counties are obvious.
+### 2a. New page `/book-demo?prospect=<id>`
 
-## 4. Email Campaign sends 0 / no toast detail
+- Mobile-first, DWA-branded (electric teal #00d4ff on near-black #0a1628).
+- 14-day rolling availability grid (M–F, 9a–5p ET, 30-min slots), reads from a new `demo_slots` table.
+- Pre-filled with prospect's name + company (from `?prospect=` token).
+- Two demo types: "15-min discovery" (default) or "30-min full demo + screenshare".
+- On submit: writes to `demo_bookings`, sends Matt SMS + adds to his Google Calendar via `GOOGLE_SERVICE_ACCOUNT_KEY` (already configured), sends prospect a confirmation email with the join link.
 
-**Files:** `src/components/dwa-admin/OutreachCommandCenter.tsx` (`handleDispatchAction`, ~line 988) + `supabase/functions/send-email-campaign/index.ts`
+### 2b. Reply email (sent from `matt@detroitwebagent.com`)
 
-**Root causes likely:**
-- Campaign was created in "draft" with 0 prospects matched (audience/state filter mismatch). The function returns `{ sent: 0, failed: 0 }` and toast shows `"✅ 0 sent · 0 failed"` — looks like success.
-- "Edge Function returned a non-2xx status code" toast on Mortgage Radar SMS suggests an unrelated 500.
+Sent via `gmail-send-outreach` (already deployed). Structure:
 
-**Plan:**
-- In the edge function: when 0 prospects match, return `{ ok:false, reason:"no_matching_prospects", filter:{audience, states} }` with 200 + a clear message.
-- In `handleDispatchAction`, surface `data.reason` in toast (warn) when sent=0.
-- Add a "Diagnose" pre-flight that already exists — auto-run it before "Send" and refuse to dispatch if `ready === 0`.
-- Investigate the mortgage digest 500 separately (`supabase--edge_function_logs mortgage-radar-am-digest` next session) — it is independent of Email Campaigns.
+1. Personal one-liner referencing their business specifically ("Saw whitelightelectric.us — happy to walk you through what we'd do for an electrical contractor your size").
+2. **One** primary CTA: "Pick a 15-min slot here → /book-demo?prospect=&nbsp;"
+3. A short "While you're here" section listing the 3 products most relevant to electrical contractors:
+  - **TechAlert** — "Michigan publishes every licensed electrician in the state. We text you when one becomes available." ($99/mo)
+  - **FieldDesk** — "Replace eWay. Your techs can use it from a panel." ($199/mo, **free first month** with website)
+  - **Trade Radar (Electrical)** — "We watch BSEED panel-upgrade permits across Wayne/Oakland/Macomb daily and route you the leads." ($149/mo)
+4. **The Bundle Hook**: "$1,499 website + 30-day free FieldDesk trial + 20% off everything else when bundled." This is the wedge — get the website sale, lock in recurring.
+5. Soft P.S. with Matt's cell.
 
-## 5. "Send via Gmail" button greyed out
+### 2c. New offer to formalize: "Website + FieldDesk Free Trial Bundle"
 
-**File:** `src/components/dwa-admin/AdminAgencyOutreach.tsx` (line 468)
+We don't currently package this. Add it:
 
-**Root cause:** `disabled={!enrich?.contact_email || sending === agency.name}`. The button greys out when contact enrichment didn't return an email. Right now Acro Service Corp shows tags `employer` + `phone` but no `email` — Apollo found a phone but no verified email.
+- New Stripe checkout `create-website-fielddesk-trial-checkout` — $1,499 one-time website build, FieldDesk auto-provisions free for 30 days, then $159/mo (bundle price) auto-bills.
+- Webhook handler in `stripe-webhook` for `website_fielddesk_trial` type.
+- New landing page `/website-plus-fielddesk` so the offer is referenceable.
 
-**Plan:**
-- Keep the "needs email" gate but show a tooltip ("Enrich contact to fetch email — Apollo returned phone only") explaining *why* it is disabled.
-- Add an inline "Add email manually" link → small input → stored on the enrichment record so Matt can override when he knows the address.
-- Add a `gmail-send-outreach` health check button that posts a test request and surfaces credential errors (matches the pattern used elsewhere).
+---
 
-## Technical Details
+## Part 3 — The Demo System (so Matt can actually run a great demo)
 
-- **Migration:** add admin RLS to `outreach_campaigns` (insert/select/update via `has_role(auth.uid(),'admin')`), matching `command_center_tiles`.
-- **No new tables.** `commandCenterCatalog.ts` is a static TS file.
-- **No edge-function changes** for #5 beyond a manual-email-override field (added to `agency_enrichments` if that table exists; otherwise stored in component state).
-- Toast helper: a `formatSupabaseError(e)` util that handles Postgrest error shape so we never show `[object Object]` again — drop into `src/lib/`.
+Right now Matt has never used FieldDesk. We fix this in two layers:
 
-## Out of scope this round
-- Mortgage Radar digest 500 (separate investigation).
-- Customer-facing port of Command Center Tabs widget — codebase has no customer surface for it yet; the same component is ready to drop in when one is built.
+### 3a. Demo Prep Pack (auto-generated per booking)
+
+When a `demo_bookings` row is created, an edge function `generate-demo-prep` runs and emails Matt 30 min before the call:
+
+- The dossier from Part 1
+- The 3 recommended products with talking points pulled from `knowledge/field-service-brief.md` and the cold-email angle table
+- A pre-filled FieldDesk demo environment seeded with **their company name** as fake jobs (e.g., "White Light Electric — service call, 1234 Main St")
+- Pricing math specific to their tech count (already in the brief)
+- 3 likely objections with rebuttals
+
+### 3b. Live Demo Script (one shareable URL)
+
+A new `/demo-runner/<booking_id>` page Matt opens during the call. Single-screen, advances through:
+
+1. Their current site → ours (split screen)
+2. FieldDesk dispatch board (live, pre-seeded with their data)
+3. Tech mobile view (large buttons, "your tech in a panel box")
+4. TechAlert pitch: "Here are 3 licensed electricians in Wayne County right now"
+5. Pricing card with bundle math
+6. "Send proposal" button → triggers `send-djconley-proposal-v3` style flow customized for them
+
+This is the "million-dollar" piece — Matt walks in with a personalized environment, not a generic deck.
+
+---
+
+## Part 4 — Enroll Matt in FieldDesk as a real customer
+
+So Matt can practice, learn the product, and dogfood it.
+
+- Insert a `field_crm_clients` row for `matt@detroitwebagent.com` / "Detroit Web Agency Internal" with full subscription (`status='active'`, `plan='founder_internal'`, no Stripe charge).
+- Seed 8 fake jobs across statuses (Open / Assigned / En Route / On Site / Completed) with realistic Detroit addresses.
+- Seed 3 fake techs with GPS coordinates around Metro Detroit so the Tech Map looks alive.
+- Add Matt's phone (313-806-4952) as the dispatcher SMS endpoint so he gets the real notifications.
+- Generate a magic-login link to `/my-field-desk` and SMS it to him.
+- Add a small "Demo Mode" badge to the UI when `plan='founder_internal'` so he knows it's seeded data.
+
+---
+
+## Technical Section
+
+**New files**
+
+- `src/pages/BookDemo.tsx` — booking grid
+- `src/pages/DemoRunner.tsx` — live demo screen for Matt
+- `src/pages/WebsitePlusFieldDesk.tsx` — bundle landing page
+- `supabase/functions/create-demo-booking/index.ts` — writes booking, calendar invite, SMS Matt
+- `supabase/functions/generate-demo-prep/index.ts` — runs 30-min pre-call, emails Matt the dossier
+- `supabase/functions/research-prospect/index.ts` — Firecrawl + LARA + Apollo + Places dossier builder
+- `supabase/functions/create-website-fielddesk-trial-checkout/index.ts`
+- `supabase/functions/seed-fielddesk-internal/index.ts` — one-shot to provision Matt
+
+**New tables (one migration)**
+
+- `demo_slots` (id, slot_date, start_time, is_booked, booking_id)
+- `demo_bookings` (id, prospect_email, prospect_name, company, slot_id, demo_type, status, notes, created_at)
+- `prospect_research_dossier` (id, email, company, website, dossier_json, generated_at)
+
+All with RLS + service_role bypass.
+
+**Stripe webhook**: add `website_fielddesk_trial` type handler that creates client + 30-day trial subscription.
+
+**Edge function deploys needed**: all new functions above, plus a re-deploy of `stripe-webhook`.
+
+---
+
+## Suggested order of execution (after you approve)
+
+1. Run prospect research on White Light Electric — get the dossier first (no code changes needed; uses existing tools).
+2. Provision Matt's FieldDesk so he can play with it tonight.
+3. Build `/book-demo` + booking infrastructure.
+4. Build the website+FieldDesk trial bundle + landing page.
+5. Build demo-prep + demo-runner.
+6. Send the personalized reply to Anne-Abel with the booking link.
+
+Step 1, 2, and 6 can happen in parallel today. Steps 3–5 are the longer build.
+
+---
+
+## Open questions for you
+
+1. Demo length default — **15 min discovery** (low friction, screen later) or **30 min full demo** out of the gate? Im not sure, whats standard? I'll let you recommend.
+2. Bundle pricing — confirm **$1,499 website + 30 days free FieldDesk + then $159/mo** (the brief's bundle price) — or do you want a different trial offer? No its $499 for the website. Remember the website is the Trojan Horse lets not price ppl out.
+3. Calendar — should bookings push to your existing Google Calendar (`GOOGLE_CALENDAR_ID`) or a new dedicated DWA-demos calendar? New demos calendar that texts me when ppl sign up. 
+4. Demo mode — do you want Tom (the autonomous lead-hunter agent) to also auto-research every reply that comes in going forward, so this happens automatically next time? Yes.

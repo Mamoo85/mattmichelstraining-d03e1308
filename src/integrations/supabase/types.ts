@@ -5892,6 +5892,69 @@ export type Database = {
         }
         Relationships: []
       }
+      demo_bookings: {
+        Row: {
+          calendar_event_id: string | null
+          company: string | null
+          created_at: string
+          demo_type: string
+          id: string
+          matt_notified_at: string | null
+          notes: string | null
+          phone: string | null
+          prep_email_sent_at: string | null
+          prospect_email: string
+          prospect_name: string | null
+          prospect_token: string | null
+          slot_date: string
+          slot_time: string
+          source: string | null
+          status: string
+          timezone: string
+          website: string | null
+        }
+        Insert: {
+          calendar_event_id?: string | null
+          company?: string | null
+          created_at?: string
+          demo_type?: string
+          id?: string
+          matt_notified_at?: string | null
+          notes?: string | null
+          phone?: string | null
+          prep_email_sent_at?: string | null
+          prospect_email: string
+          prospect_name?: string | null
+          prospect_token?: string | null
+          slot_date: string
+          slot_time: string
+          source?: string | null
+          status?: string
+          timezone?: string
+          website?: string | null
+        }
+        Update: {
+          calendar_event_id?: string | null
+          company?: string | null
+          created_at?: string
+          demo_type?: string
+          id?: string
+          matt_notified_at?: string | null
+          notes?: string | null
+          phone?: string | null
+          prep_email_sent_at?: string | null
+          prospect_email?: string
+          prospect_name?: string | null
+          prospect_token?: string | null
+          slot_date?: string
+          slot_time?: string
+          source?: string | null
+          status?: string
+          timezone?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       deployment_drift_log: {
         Row: {
           checked_at: string
@@ -17085,6 +17148,51 @@ export type Database = {
           verified_fax?: boolean | null
           website?: string | null
           zip?: string | null
+        }
+        Relationships: []
+      }
+      prospect_research_dossier: {
+        Row: {
+          company: string | null
+          current_site_grade: string | null
+          email: string | null
+          generated_at: string
+          id: string
+          industry: string | null
+          raw: Json | null
+          recommended_products: Json | null
+          service_summary: string | null
+          talking_points: Json | null
+          team_signals: string | null
+          website: string | null
+        }
+        Insert: {
+          company?: string | null
+          current_site_grade?: string | null
+          email?: string | null
+          generated_at?: string
+          id?: string
+          industry?: string | null
+          raw?: Json | null
+          recommended_products?: Json | null
+          service_summary?: string | null
+          talking_points?: Json | null
+          team_signals?: string | null
+          website?: string | null
+        }
+        Update: {
+          company?: string | null
+          current_site_grade?: string | null
+          email?: string | null
+          generated_at?: string
+          id?: string
+          industry?: string | null
+          raw?: Json | null
+          recommended_products?: Json | null
+          service_summary?: string | null
+          talking_points?: Json | null
+          team_signals?: string | null
+          website?: string | null
         }
         Relationships: []
       }
