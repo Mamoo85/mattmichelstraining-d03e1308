@@ -1,7 +1,7 @@
 // v4 §2 — Quarterly Business Review (QBR) PDF Generator
 // Generates a branded PDF per client with last-quarter wins. Queues for Matt's manual review.
 // After 4 successful manual reviews per client, marks status='auto_send_eligible'.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

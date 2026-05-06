@@ -1,7 +1,7 @@
 // Daily registry QA — compares yesterday vs today signal counts per waterfall.
 // Snapshots today's counts and SMS Matt on >40% drops.
 import "https://deno.land/std@0.224.0/dotenv/load.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

@@ -4,7 +4,7 @@
 // Only sends to leads with owner_email set and outreach_sent_at null.
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { generateWithHaiku } from "../_shared/opus.ts";
 import { isRecentlyContacted } from "../_shared/outreach-blocklist.ts";
 import { dwaEmail } from "../_shared/dwa-email.ts";

@@ -8,7 +8,7 @@
 //     { id: "fema_disasters", params: { state: "MI" } },
 //     { id: "noaa_storm_events", params: { state: "MI" } },
 //   ]);
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { cachedFetch, dispatchFetch, getSource, listByRadar, type FetchResult, type SourceMeta } from "./index.ts";
 
 export type SourceCall = { id: string; params?: Record<string, string> };

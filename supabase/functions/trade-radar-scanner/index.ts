@@ -1,7 +1,7 @@
 // Trade Radar daily scanner — 10 trade verticals.
 // POST { vertical?: "roofing"|"hvac"|"plumbing"|"electrical"|"pest_control"|"gutters"|"exterior"|"tree"|"restoration"|"demo_junk"|"foundation"|"all" }
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { validateLead, quarantineRaw } from "../_shared/anti-hallucination.ts";
 import { runEmailWaterfall } from "../_shared/email-waterfall.ts";
 import { sendSMS } from "../_shared/twilio.ts";

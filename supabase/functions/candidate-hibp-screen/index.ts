@@ -2,7 +2,7 @@
 // Looks up the candidate's email in Have I Been Pwned and surfaces a one-line risk note.
 // Marketed as "Free background-data hygiene check on every candidate" for TechAlert clients.
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",

@@ -10,7 +10,7 @@
  * Results are emailed to Matt and returned in the response.
  */
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { generateText } from "../_shared/ai.ts";
 
 const REMOTE_CONTROL_SECRET = Deno.env.get("REMOTE_CONTROL_SECRET") || "";

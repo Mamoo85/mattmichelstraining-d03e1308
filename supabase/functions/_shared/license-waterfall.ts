@@ -1,6 +1,6 @@
 // License waterfall — name + state → all 8 license boards in parallel.
 // Returns License[] with provenance. Used by Talent Radar deep-enrich + outreach compliance.
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { useSourcesParallel, type SourceCall } from "./sources/use.ts";
 
 export type LicenseKind =

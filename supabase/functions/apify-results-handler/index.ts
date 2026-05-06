@@ -2,7 +2,7 @@
 // Validates X-Apify-Webhook-Secret, fetches dataset items, routes by Actor type,
 // updates apify_run_batches, fires scoring + alerts when all 3 sources are complete.
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

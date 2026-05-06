@@ -4,7 +4,7 @@
 // + Stripe CTA + hardcoded FCRA disclaimer. Routes to dwa-closer queue via blind_teaser_dispatches table
 // for Matt's manual approval (TCPA/FCRA compliance — no auto-blast).
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

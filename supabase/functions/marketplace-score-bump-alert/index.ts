@@ -2,7 +2,7 @@
 // Finds watched mortgage leads where score jumped +2 since last alert, notifies buyer.
 // Only mortgage_radar_leads has score_history — non-mortgage watches are skipped.
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

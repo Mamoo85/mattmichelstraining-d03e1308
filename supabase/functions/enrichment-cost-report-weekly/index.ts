@@ -4,7 +4,7 @@
 // Flags providers with hit rate < 5% as "kill candidates".
 // Sends SMS to ADMIN_PHONE + full HTML email digest.
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { sendSMS, ADMIN_PHONE } from "../_shared/twilio.ts";
 
 const corsHeaders = {

@@ -1,7 +1,7 @@
 // add-to-techalert-prospects — universal "convert any intel row to a prospect" endpoint.
 // Called from AdminMedicareIntel, AdminIndustrialIntel, ThomasNet results, etc.
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

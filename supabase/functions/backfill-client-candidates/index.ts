@@ -1,7 +1,7 @@
 // Backfill: assign existing hire_alert_candidates to matching hire_alert_clients
 // Safe to run any time — uses upsert with onConflict ignore.
 // Fixes the "no names in dashboard" bug caused by an empty join table.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

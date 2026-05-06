@@ -1,7 +1,7 @@
 // v4 §10 — Compliance Auto-Audit
 // Weekly sweep of outbound channels for TCPA/CAN-SPAM violations.
 // Auto-disables campaigns with 2+ spam complaints in 24h. SMS Matt on critical flags.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

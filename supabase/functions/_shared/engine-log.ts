@@ -2,7 +2,7 @@
 // Writes start + finish footprints to public.engine_logs. Never throws —
 // telemetry must not break the pipeline it observes.
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? Deno.env.get("VITE_SUPABASE_URL") ?? "";
 const SERVICE_KEY =

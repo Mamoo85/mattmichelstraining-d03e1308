@@ -16,7 +16,7 @@
 // Output: { queued, skipped, results: [{contact_id, status, reason?, draft_id?}] }
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/coldEmailShared.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;

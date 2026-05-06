@@ -1,6 +1,6 @@
 // fielddesk-cold-blast — Cold email pitch for FieldDesk to home-service shops
 // in outreach_leads that haven't received a FieldDesk pitch yet.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { dwaEmail } from "../_shared/dwa-email.ts";
 import { teaserCardHtml } from "../_shared/teaser-card.ts";
 import { isBlocked } from "../_shared/outreach-blocklist.ts";

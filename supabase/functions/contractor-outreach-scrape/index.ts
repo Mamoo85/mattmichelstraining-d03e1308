@@ -7,7 +7,7 @@
 //  - All getPlaceDetails calls in parallel (was serial 20× ~300ms = 6s wall)
 //  - Deduplication by place_id before detail fetches; dedupe key is name+city
 //    (not name+city+trade) so a roofer found via a gutter query isn't duplicated
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { canonicalizeTrade, getSearchQueries } from "../_shared/trade-canonical.ts";
 
 const corsHeaders = {

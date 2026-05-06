@@ -1,7 +1,7 @@
 // One-click unsubscribe endpoint for cold-email recipients (CAN-SPAM compliance).
 // Writes to BOTH the prospect row AND the global suppression list so re-scraping
 // the same business cannot re-add them to a campaign.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

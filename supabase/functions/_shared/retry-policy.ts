@@ -10,7 +10,7 @@
 //     breaker for 30 min. Trip-state stored in module-scope (per-isolate),
 //     plus a DB-backed bump via existing `bump_provider_health` RPC.
 
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
 
 export type RetryResult<T> =
   | { ok: true; value: T; attempts: number }

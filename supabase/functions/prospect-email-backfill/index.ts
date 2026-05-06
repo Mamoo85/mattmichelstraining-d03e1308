@@ -3,7 +3,7 @@
 // pattern_verify → hunter → pdl). Records per-source hit counts and an
 // enrichment_trace into prospect_pipeline.meta.
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { runEmailWaterfall, WATERFALL_PROVIDERS, type WaterfallCounters } from "../_shared/email-waterfall.ts";
 
 const corsHeaders = {

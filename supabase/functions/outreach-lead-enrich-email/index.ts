@@ -2,7 +2,7 @@
 // Looks up the best email for an outreach_leads row using the same waterfall
 // pattern as contractor-outreach-enrich (Hunter → Snov pattern → site guess).
 // Persists enriched_email, source, confidence, trace.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

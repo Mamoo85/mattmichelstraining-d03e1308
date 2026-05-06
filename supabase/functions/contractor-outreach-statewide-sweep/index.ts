@@ -14,7 +14,7 @@
 //   { "trades": ["plumber","HVAC"], "tiers": ["primary"], "limit_per_query": 20,
 //     "max_seconds": 90, "start_index": 0 }
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { MICHIGAN_CITIES, tierToPriority, type MichiganTier } from "../_shared/michigan-cities.ts";
 
 const corsHeaders = {

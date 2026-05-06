@@ -2,7 +2,7 @@
 // Usage:
 //   import { withTelemetry } from "../_shared/telemetry.ts";
 //   await withTelemetry("my-cron-job", async () => { /* work */ return { ok: true }; });
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? Deno.env.get("VITE_SUPABASE_URL") ?? "";
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";

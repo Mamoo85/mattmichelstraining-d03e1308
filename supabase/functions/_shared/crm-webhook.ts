@@ -1,7 +1,7 @@
 // Shared outbound CRM webhook helper
 // Lets customers receive new leads/candidates in their own CRM
 // (Salesforce, Jobber, Greenhouse, Lever, Zapier, Make, n8n, etc.)
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SB = createClient(
   Deno.env.get("SUPABASE_URL")!,

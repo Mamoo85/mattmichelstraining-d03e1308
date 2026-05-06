@@ -3,7 +3,7 @@
 // pilot_mode=true: $1 payment to prove it works; contractor_clients marked pilot_active=true.
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { getStripeSecretKey, isStripeTestMode } from "../_shared/stripe-key.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";

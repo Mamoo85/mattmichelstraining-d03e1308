@@ -14,7 +14,7 @@
  * Every block is logged to compliance_blocks.
  */
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { logError } from "./error-log.ts";
 import { fetchWithRetry } from "./fetch-with-retry.ts";
 

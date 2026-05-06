@@ -7,7 +7,7 @@
 //      no candidates yet.
 // This is what makes the Agency Outreach drawer never silently empty.
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",

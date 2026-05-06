@@ -3,7 +3,7 @@
 // endpoint — no actual eWay data is touched in this function. The "import"
 // happens manually (Matt-led discovery call → custom CSV mapping) once we've
 // confirmed the prospect is real.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

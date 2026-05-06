@@ -5,7 +5,7 @@
 // New: Command Center hub for all his external tabs.
 // All graphics rendered as inline-styled HTML/CSS divs (email-safe, no external images).
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;

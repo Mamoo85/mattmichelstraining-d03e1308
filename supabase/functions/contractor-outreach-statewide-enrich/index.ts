@@ -12,7 +12,7 @@
 //   POST /contractor-outreach-statewide-enrich
 //   { "max_seconds": 90, "batch_size": 5, "limit": 60, "tiers": [1,2,3] }
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

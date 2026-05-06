@@ -1,6 +1,6 @@
 // Compliance waterfall — entity → OFAC + EPA ECHO + OSHA SIR + DOL WARN parallel scrub.
 // Returns { pass, flags[] }. Gate before any outreach insert.
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { useSourcesParallel, type SourceCall } from "./sources/use.ts";
 
 export interface ComplianceContext {

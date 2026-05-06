@@ -3,7 +3,7 @@
 // already-sent (campaign_id+target_id unique). Personalizes via {{first_name}},
 // {{business_name}}, {{vertical}}, {{city}}, {{cta_url}}.
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { dwaEmail, dwaWrap } from "../_shared/dwa-email.ts";
 import { isFounder } from "../_shared/founder-seats.ts";
 

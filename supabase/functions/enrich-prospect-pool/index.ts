@@ -8,7 +8,7 @@
 // hourly via cron. Never modifies existing scoring or scrapers.
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { runEmailWaterfall, WaterfallCounters } from "../_shared/email-waterfall.ts";
 import { isAggregatorDomain, isEnterprise, googlePlacesWebsite, cleanWebsite } from "../_shared/enrichment-pipeline.ts";
 import { apolloPeopleSearch } from "../_shared/apollo.ts";

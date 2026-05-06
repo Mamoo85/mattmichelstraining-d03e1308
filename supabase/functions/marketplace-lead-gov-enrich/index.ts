@@ -2,7 +2,7 @@
 // Adds SAM.gov, USPS, HUD, EPA ECHO, NPI, MI SOS Sonar data into free_enrichment.gov blob.
 // Called per-lead from marketplace-lead-free-enrich-batch.
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { logEnrichment } from "../_shared/enrichment-audit.ts";
 import { fetchMortgageSignals } from "../_shared/signal-waterfall.ts";
 import { fetchMarketSnapshot } from "../_shared/market-waterfall.ts";

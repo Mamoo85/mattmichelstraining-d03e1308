@@ -3,7 +3,7 @@
 // shows "Unknown product". This auditor GETs trial pages and fails them if the
 // rendered HTML contains a known error fingerprint OR if the React app shell
 // later renders one client-side (we also probe known canonical keys directly).
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { OFFERS } from "../_shared/offers.ts";
 
 const corsHeaders = {

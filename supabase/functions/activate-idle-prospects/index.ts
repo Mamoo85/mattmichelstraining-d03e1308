@@ -2,7 +2,7 @@
 // so the existing web-design-drip cron picks them up tomorrow.
 // Eligibility: has email, not yet contacted, industry maps to a landing page (or default).
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

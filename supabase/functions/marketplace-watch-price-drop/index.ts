@@ -2,7 +2,7 @@
 // Compares current marketplace price to last_price_cents on watch row, emails on drop.
 // Works across all products via unified_lead_marketplace_view.
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

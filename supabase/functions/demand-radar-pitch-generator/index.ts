@@ -1,7 +1,7 @@
 // demand-radar-pitch-generator — DR-12
 // Generates a 3-line cold email pitch for a Demand Radar signal using Gemini.
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { generateText } from "../_shared/ai.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";

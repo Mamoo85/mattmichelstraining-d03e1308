@@ -222,7 +222,7 @@ Deno.serve(async (req) => {
   const zeroLeadAlerts: string[] = [];
   if (SUPABASE_URL && SUPABASE_SERVICE_KEY) {
     try {
-      const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
+      const { createClient } = await import("npm:@supabase/supabase-js@2");
       const { sendSMS, ADMIN_PHONE } = await import("../_shared/twilio.ts");
       const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
       const threeDaysAgo = new Date(Date.now() - 3 * 86400000).toISOString();

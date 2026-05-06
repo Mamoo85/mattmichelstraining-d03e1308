@@ -7,7 +7,7 @@
  *  - limit: max prospects to enrich this run (default 20)
  *  - force: re-enrich even if address_line1 already set (default false)
  */
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { cheapExtract, Schemas } from "../_shared/cheap-extract.ts";
 
 const corsHeaders = {

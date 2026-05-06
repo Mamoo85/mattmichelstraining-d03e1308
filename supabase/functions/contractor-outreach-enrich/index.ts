@@ -10,7 +10,7 @@
 //
 // Previously only ran Hunter → PDL. Bug: read HUNTER_API_KEY instead of HUNTER_IO_API_KEY
 // (always null). Now uses _shared/hunter.ts which reads the correct env var name.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { hunterFindEmail } from "../_shared/hunter.ts";
 import { apolloOrgEnrich, apolloOrgSearch, apolloMixedPeopleSearch } from "../_shared/apollo.ts";
 import { extractContactInfo } from "../_shared/firecrawl.ts";

@@ -7,7 +7,7 @@
 //     return new Response(JSON.stringify({ skipped: true, reason: gate.reason }), ...);
 //   }
 
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
 
 export type ProductKey =
   | "trade_radar"

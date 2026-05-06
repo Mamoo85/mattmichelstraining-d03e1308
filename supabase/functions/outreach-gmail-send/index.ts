@@ -2,7 +2,7 @@
 // Sends an email FROM the operator's connected Gmail account TO the
 // enriched_email of an outreach_leads row, via the Gmail connector gateway.
 // Manual-only: one click per row from the admin UI.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

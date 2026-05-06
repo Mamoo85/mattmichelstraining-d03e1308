@@ -5,7 +5,7 @@
  * Logs results to api_health_checks and SMSes Matt if any fail.
  */
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { sendSMS, ADMIN_PHONE } from "../_shared/twilio.ts";
 import { wrapServe } from "../_shared/telemetry.ts";
 

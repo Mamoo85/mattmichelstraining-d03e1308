@@ -8,7 +8,7 @@
 //
 // The orchestrator runs work in the background after responding, so the client
 // returns immediately and watches the realtime channel.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

@@ -1,6 +1,6 @@
 // Team Seat Manager — invite / list / revoke / accept teammates on an account
 // Pricing model: flat per-account fee, unlimited seats included.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

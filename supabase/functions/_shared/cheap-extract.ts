@@ -10,7 +10,7 @@
  *
  * Always logs to public.ai_call_log for ROI measurement.
  */
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { cachedLLM, type ContentType } from "./llm-cache.ts";
 
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";

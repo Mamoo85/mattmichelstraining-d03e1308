@@ -3,7 +3,7 @@
 // Apollo lookup → Hunter email → personalized 3-sentence email via Haiku → send via Resend.
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { apolloOrganizationSearch } from "../_shared/apollo.ts";
 import { hunterFindEmail } from "../_shared/hunter.ts";
 import { generateWithHaiku } from "../_shared/opus.ts";

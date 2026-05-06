@@ -2,7 +2,7 @@
 // 7-day free trial (no CC required during trial). 50% off first 3 months via coupon LAUNCH50.
 // POST { email, vertical, contact_name?, business_name?, phone?, zip_codes?, tcpa_consent }
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import Stripe from "npm:stripe@14";
 
 const corsHeaders = {

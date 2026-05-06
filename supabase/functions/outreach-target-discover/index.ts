@@ -6,7 +6,7 @@
 //   3. Enrich owner email/fax via existing waterfall
 //   4. Compliance scrub (DNC, founders)
 //   5. Score & insert into outreach_targets
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { runEmailWaterfall } from "../_shared/email-waterfall.ts";
 import { extractFaxNumber } from "../_shared/firecrawl.ts";
 import { isFounder } from "../_shared/founder-seats.ts";

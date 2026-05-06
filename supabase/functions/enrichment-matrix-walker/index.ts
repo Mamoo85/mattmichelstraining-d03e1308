@@ -6,7 +6,7 @@
 //
 // Design intent: this is the "set it and forget it" autonomous revenue layer.
 // Cron runs it every 30 minutes; admin can also trigger manually from UI.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

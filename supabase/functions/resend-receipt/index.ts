@@ -8,7 +8,7 @@
 // - Routes from address by product_type (DWA vs M2)
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import Stripe from "npm:stripe@18.5.0";
 
 const corsHeaders = {

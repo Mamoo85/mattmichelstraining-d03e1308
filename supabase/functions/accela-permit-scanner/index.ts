@@ -6,7 +6,7 @@
 // the app is approved for. Writes signal_type='permit_surge' rows into industry_pulse_signals.
 // Logs every run into demand_radar_runs so the Live Log can see failures.
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

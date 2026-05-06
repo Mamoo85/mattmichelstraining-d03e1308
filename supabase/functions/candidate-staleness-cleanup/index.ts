@@ -1,6 +1,6 @@
 // Nightly cleanup — marks stale candidates so they fall out of the dashboard feed.
 // Does NOT touch enrichment, scanning, or alerts. Pure status update.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

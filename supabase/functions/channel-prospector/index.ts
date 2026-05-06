@@ -3,7 +3,7 @@
 // and admin-only gating. Mirrors contractor-prospector scaling.
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { sendSMS } from "../_shared/twilio.ts";
 import { extractFaxNumber } from "../_shared/firecrawl.ts";
 import { canonicalizeTrade, getSearchQueries } from "../_shared/trade-canonical.ts";
