@@ -839,6 +839,8 @@ const App = () => (
                     <Route path="/talent-radar/dashboard" element={<MyTechAlert />} />
                     <Route path="/talent-radar/trial" element={<HireAlertTrial />} />
                     <Route path="/start-trial" element={<StartTrial />} />
+                    <Route path="/billing" element={<BillingPortal />} />
+                    <Route path="/demand-radar-portal" element={<Navigate to="/my-demand-radar" replace />} />
                     {/* Legacy redirects → Talent Radar */}
                     <Route path="/hire-alert" element={<Navigate to="/talent-radar" replace />} />
                     <Route path="/hire-alert/enterprise" element={<Navigate to="/talent-radar/enterprise" replace />} />
