@@ -4,6 +4,7 @@ import { Helmet } from "react-helmet-async";
 
 import ManageBillingButton from "@/components/billing/ManageBillingButton";
 import OnboardingChecklist from "@/components/shared/OnboardingChecklist";
+import JustPurchasedScreen, { isJustPurchased } from "@/components/shared/JustPurchasedScreen";
 
 type MCClient = {
   business_name: string;
