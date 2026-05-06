@@ -3436,7 +3436,6 @@ serve(async (req) => {
             const customerPhone = haResult.data?.owner_phone || fcResult.data?.owner_phone ||
               mcResult.data?.owner_phone || ccResult.data?.phone || null;
             if (customerPhone) {
-              const portalUrl = `https://billing.stripe.com/p/login/test_00g`;
               await sendSMS(
                 customerPhone,
                 Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219",
