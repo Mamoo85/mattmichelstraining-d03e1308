@@ -89,7 +89,8 @@ ${card}
 <p style="color:#e6f1ff;">Most clients fill their open role within 3 weeks. Want me to send a free sample alert for ${companyName}'s area?</p>
 <p style="color:#e6f1ff;">Just reply or call/text (313) 992-1219.</p>
 <p style="color:#e6f1ff;">— Matt Michels<br>Detroit Web Agency</p>
-<p style="color:#94a3b8;font-size:13px;border-top:1px solid #1e3a5f;padding-top:12px;margin-top:16px;">P.S. — Just published a free Trades Hiring Blueprint: how to find licensed HVAC, electrical, and plumbing techs in SE Michigan before they post their resume. <a href="https://detroitwebagency.com/blueprint/hiring-blueprint.html" style="color:#00d4ff;">Get it free here →</a></p>
+<p style="color:#94a3b8;font-size:13px;border-top:1px solid #1e3a5f;padding-top:12px;margin-top:16px;">P.S. — Just published a free Trades Hiring Blueprint: how to find licensed HVAC, electrical, and plumbing techs in SE Michigan before they post their resume. <a href="https://detroitwebagent.com/blueprint/hiring-blueprint.html" style="color:#00d4ff;">Get it free here →</a></p>
+<p style="color:#94a3b8;font-size:13px;padding-top:8px;margin-top:4px;">P.S. #2 — Also: 27% of contractor calls go unanswered. We built Missed-Call Catch — texts every missed caller back in 60 seconds. <a href="https://detroitwebagent.com/start-trial?product=missed_call" style="color:#00d4ff;">Start free 7-day trial →</a></p>
 `;
 }
 
