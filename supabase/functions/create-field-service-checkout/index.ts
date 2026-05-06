@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import Stripe from "npm:stripe@18.5.0?target=deno";
+import Stripe from "npm:stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { getStripeSecretKey, isStripeTestMode } from "../_shared/stripe-key.ts";
 
