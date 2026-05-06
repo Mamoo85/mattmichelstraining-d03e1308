@@ -114,6 +114,7 @@ const Merch = lazyRetry(() => import("./pages/Merch"));
 const Learn = lazyRetry(() => import("./pages/Learn"));
 const TrialWelcome = lazyRetry(() => import("./pages/TrialWelcome"));
 const StartTrial = lazyRetry(() => import("./pages/StartTrial"));
+const BillingPortal = lazyRetry(() => import("./pages/BillingPortal"));
 const NotFound = lazyRetry(() => import("./pages/NotFound"));
 const Unsubscribe = lazyRetry(() => import("./pages/Unsubscribe"));
 const Changelog = lazyRetry(() => import("./pages/Changelog"));
