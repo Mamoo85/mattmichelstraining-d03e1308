@@ -2,7 +2,7 @@
 // Creates a Stripe checkout session for prepaid lead credits.
 // Packs: 5/$200, 10/$350 (saves $150), 25/$750 (saves $500).
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import Stripe from "npm:stripe@14.21.0?target=deno";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";

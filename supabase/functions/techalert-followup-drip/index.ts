@@ -4,7 +4,7 @@
 // Skips anyone who has replied_at set (positive or negative).
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { dwaColdEmail } from "../_shared/dwa-email.ts";
 import { wrapServe } from "../_shared/telemetry.ts";
 

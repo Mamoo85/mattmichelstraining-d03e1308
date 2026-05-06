@@ -3,7 +3,7 @@
 // PPL contractors (no active subscription): FOMO teaser SMS with $50 claim link.
 // Also releases expired soft locks so leads become available again.
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { sendSMS } from "../_shared/twilio.ts";
 import { logError } from "../_shared/error-log.ts";
 import { generateWithHaiku } from "../_shared/opus.ts";

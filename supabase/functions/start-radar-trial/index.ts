@@ -4,7 +4,7 @@
 // with a one-click magic-link login URL into /my-<product>?trial=<token>.
 // Founders are auto-marked status='founder' and never expire.
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { encode } from "https://deno.land/std@0.190.0/encoding/base64url.ts";
 import { dwaEmail, dwaWrap } from "../_shared/dwa-email.ts";
 import { isFounder } from "../_shared/founder-seats.ts";

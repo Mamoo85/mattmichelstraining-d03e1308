@@ -1,6 +1,6 @@
 // Refreshes marketplace_inventory_status from unified_lead_marketplace_view
 // + sold counts from marketplace_lead_locks. Run via cron every 10 min.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

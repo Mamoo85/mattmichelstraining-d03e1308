@@ -3,7 +3,7 @@
 // creates rows in cross_product_signals for Matt to review. No outbound contact, no automation.
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { normalizeName } from "../_shared/flight-risk.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;

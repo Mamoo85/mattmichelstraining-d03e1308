@@ -15,7 +15,7 @@
 //
 // Invocation:
 //   POST { mode: "dry_run" | "execute", limit?: number, source?: "no_data"|"partial"|"dlq"|"all" }
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

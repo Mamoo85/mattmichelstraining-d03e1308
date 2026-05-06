@@ -1,7 +1,7 @@
 // Generates human_summary, suggested_opener (SMS+email+voicemail), buyer_type chip,
 // and applies deterministic signal_strength_tier from signal_strength_rules table.
 // Backfills existing leads on first run.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

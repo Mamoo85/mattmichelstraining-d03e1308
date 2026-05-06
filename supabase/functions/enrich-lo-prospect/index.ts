@@ -10,7 +10,7 @@
  * Secrets needed: APOLLO_API_KEY (optional), OPENROUTER_API_KEY (already set)
  */
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { logEnrichment } from "../_shared/enrichment-audit.ts";
 import { apolloPeopleSearch, hasApolloKey } from "../_shared/apollo.ts";
 

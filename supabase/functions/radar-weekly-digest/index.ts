@@ -1,6 +1,6 @@
 // Weekly Monday 8am ET digest emails to TechAlert clients.
 // Sends top 5 candidates from the past 7 days per active client.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

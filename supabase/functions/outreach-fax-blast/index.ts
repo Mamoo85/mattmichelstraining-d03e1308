@@ -2,7 +2,7 @@
 // Requires SINCH_KEY_ID + SINCH_KEY_SECRET + SINCH_PROJECT_ID in Supabase secrets.
 // Sends an HTML page rendered to fax by Sinch. Cost ~$0.07/page.
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { isFounder } from "../_shared/founder-seats.ts";
 
 const corsHeaders = {

@@ -11,7 +11,7 @@
 // Skips any provider 429'd in the last 60 minutes.
 // Logs every call into enrichment_provider_health via bump_provider_health RPC.
 
-import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient, SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { fetchWithRetry } from "./fetch-with-retry.ts";
 import {
   safeJson,

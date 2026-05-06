@@ -10,7 +10,7 @@
 //   - Cost-anomaly check: hard-coded extra metric `daily_spend_anomaly` that
 //     SMSes Matt when today's walker spend > 2× the 7-day rolling average
 //     (and absolute spend > $5 to filter noise). Always treated as crit.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { sendSMS, ADMIN_PHONE } from "../_shared/twilio.ts";
 
 const corsHeaders = {

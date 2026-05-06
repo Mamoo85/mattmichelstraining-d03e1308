@@ -3,7 +3,7 @@
 // Upgraded 2026-05-05: visual previews, ROI math, verified links only, NO self-serve trial CTAs.
 // Brand accents: D.J. Conley teal (#27CCC0) + red (#c12a3b), DWA teal (#00d4ff) for sender chrome.
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;

@@ -20,7 +20,7 @@ serve(async (req) => {
 
   if (!isServiceRole) {
     // Check if caller is an authenticated admin via Supabase anon key + JWT
-    const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
+    const { createClient } = await import("npm:@supabase/supabase-js@2");
     const sb = createClient(
       SUPABASE_URL,
       SUPABASE_ANON_KEY,

@@ -2,7 +2,7 @@
 // source in the registry tagged for mortgage/techalert/contractor/marketplace.
 //
 // Used by: mortgage-radar-scanner, techalert-prospect-hunter, outreach-target-discover.
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { useSourcesParallel, type SourceCall } from "./sources/use.ts";
 
 export type SignalKind =

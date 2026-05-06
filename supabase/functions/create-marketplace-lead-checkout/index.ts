@@ -2,7 +2,7 @@
 // Soft-locks the lead for 10 min while buyer completes payment.
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "npm:stripe@18.5.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { getStripeSecretKey, isStripeTestMode } from "../_shared/stripe-key.ts";
 
 const corsHeaders = {

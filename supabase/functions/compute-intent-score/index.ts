@@ -8,7 +8,7 @@
  */
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { computeIntentScore, type SignalRow, type WeightRow } from "../_shared/intent-score.ts";
 
 const corsHeaders = {

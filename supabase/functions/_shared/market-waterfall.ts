@@ -1,6 +1,6 @@
 // Market waterfall — state + metro → FRED + BLS QCEW + Census + HUD FMR.
 // Cached 30 days. Used by "why this market" auto-content (out-of-state credibility).
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { useSourcesParallel, type SourceCall } from "./sources/use.ts";
 
 export interface MarketContext {

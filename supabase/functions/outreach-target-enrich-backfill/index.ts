@@ -1,7 +1,7 @@
 // Backfill missing contact fields on outreach_targets.
 // Runs every 6h via pg_cron. Pulls oldest-stale rows missing email or fax.
 import "https://deno.land/std@0.224.0/dotenv/load.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { runEmailWaterfall } from "../_shared/email-waterfall.ts";
 import { extractFaxNumber } from "../_shared/firecrawl.ts";
 import { resolveDomain } from "../_shared/domain-resolver.ts";

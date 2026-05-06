@@ -2,7 +2,7 @@
 // Triggered after a contractor_lead_subscription Stripe payment.
 // Output is stored in ad_launch_drafts and Matt is texted a notification.
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { sendSMS, ADMIN_PHONE } from "../_shared/twilio.ts";
 
 const corsHeaders = {

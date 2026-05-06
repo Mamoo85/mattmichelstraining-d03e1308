@@ -3,7 +3,7 @@
 // (fax → fax, postcard → postcard, sms → sms). Skips anyone who replied.
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { sendSMS } from "../_shared/twilio.ts";
 import { wrapServe } from "../_shared/telemetry.ts";
 

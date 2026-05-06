@@ -2,7 +2,7 @@
 // Runs hourly via cron. Finds DWA product checkouts abandoned 1+ hour ago
 // with no recovery email sent, then emails a 10%-off discount code.
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { dwaEmail } from "../_shared/dwa-email.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;

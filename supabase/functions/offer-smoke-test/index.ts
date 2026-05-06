@@ -13,7 +13,7 @@
 //   { "products": ["mortgage_radar","field_desk"], "to_email": "matt@…",
 //     "to_phone": "+1313…", "campaign": "phase1-smoke" }
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { OFFERS, type ProductKey, offerCopy } from "../_shared/offers.ts";
 import { buildCta } from "../_shared/offer-url.ts";
 import { offerPromptBlock } from "../_shared/offer-ad-prompt.ts";

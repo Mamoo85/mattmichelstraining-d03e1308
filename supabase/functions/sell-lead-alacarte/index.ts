@@ -15,7 +15,7 @@
  * Stripe webhook (checkout.session.completed) calls claim_alacarte_lead via
  * stripe-webhook routing on metadata.type === "alacarte_lead_purchase".
  */
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import Stripe from "npm:stripe@18.5.0";
 import { sendSMS } from "../_shared/twilio.ts";
 

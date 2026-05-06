@@ -1,7 +1,7 @@
 // marketplace-saved-search-notifier — every 15 min cron.
 // Match new leads to active saved searches, fire SMS within 5 min of match.
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { sendSMS } from "../_shared/twilio.ts";
 
 const corsHeaders = {

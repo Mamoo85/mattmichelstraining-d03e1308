@@ -11,7 +11,7 @@
 //   - Twilio 5xx / network errors → exponential backoff retry (3 attempts)
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { sendSMS, computeBodyHash } from "../_shared/twilio.ts";
 import { renderTemplate } from "../_shared/sms-templates.ts";
 

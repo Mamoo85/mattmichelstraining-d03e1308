@@ -1,7 +1,7 @@
 // TCPA-hardened SMS send to a single contractor prospect.
 // Hard-rejects without consent, suppression check, quiet hours (8am-9pm ET),
 // daily cap, always appends STOP, writes audit row.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

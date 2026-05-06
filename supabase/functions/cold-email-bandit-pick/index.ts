@@ -4,7 +4,7 @@
 // optimistic priors (alpha=1, beta=1) so they always get explored.
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import {
   SUBJECT_ARMS, OPENER_ARMS, CTA_ARMS, betaSample, corsHeaders, armKey,
   type SubjectArm, type OpenerArm, type CtaArm,

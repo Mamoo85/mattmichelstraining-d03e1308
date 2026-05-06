@@ -1,7 +1,7 @@
 // marketplace-reengagement — daily 11am ET cron
 // Emails buyers with last_seen_at > 7d when there are unread leads in their products.
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;

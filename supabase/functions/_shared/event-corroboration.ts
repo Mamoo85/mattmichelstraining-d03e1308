@@ -1,7 +1,7 @@
 // Agent 3 (corroboration helper): Cross-source event corroboration.
 // Records corroborations for a (lead, event) pair. Returns count of distinct sources.
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 type SB = ReturnType<typeof createClient>;
 

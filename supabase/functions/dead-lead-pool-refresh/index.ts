@@ -3,7 +3,7 @@
 // product never goes to 0. Respects per-FieldDesk-customer opt-in.
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { sendSMS, ADMIN_PHONE } from "../_shared/twilio.ts";
 import { shouldScanMore } from "../_shared/intake-throttle.ts";
 import { wrapServe } from "../_shared/telemetry.ts";

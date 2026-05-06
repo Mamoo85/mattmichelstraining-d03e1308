@@ -1,7 +1,7 @@
 // marketplace-hot-zone-notifier — daily 8am ET cron
 // Finds ZIPs with 3+ new mortgage_radar_leads in last 7 days, emails saved-search subscribers.
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

@@ -32,7 +32,7 @@
 // otherwise 'exhausted'.
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { cheapExtract, Schemas } from "../_shared/cheap-extract.ts";
 import { logEnrichment } from "../_shared/enrichment-audit.ts";
 import { isPlausibleHumanName, hasMinimalSignal } from "../_shared/sanitize-candidate.ts";

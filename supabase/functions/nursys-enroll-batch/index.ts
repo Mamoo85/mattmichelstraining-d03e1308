@@ -19,7 +19,7 @@
 //   - Idempotency: nursys_enrolled flag prevents re-submission.
 
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { sendSMS, ADMIN_PHONE } from "../_shared/twilio.ts";
 import { logError } from "../_shared/error-log.ts";
 

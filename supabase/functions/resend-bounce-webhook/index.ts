@@ -2,7 +2,7 @@
 // Captures email.bounced, email.complained, email.opened, email.clicked events
 // from Resend and updates prospects + audit log accordingly.
 // Configure in Resend dashboard: https://resend.com/webhooks → POST to this endpoint.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { verifySvixSignature } from "../_shared/webhook-verify.ts";
 
 const corsHeaders = {

@@ -1,6 +1,6 @@
 // Daily digest (8:15am ET) — emails Matt which secondary postcard offers are converting best.
 // Aggregates postcard_conversions by product_key + audience_type over last 7 / 30 days.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

@@ -6,7 +6,7 @@
 // POST { action: "convert", code }     → called by stripe-webhook on new signup via referral; extends referrer sub
 // POST { action: "generate", email }   → generates/returns code for a client
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { dwaEmail } from "../_shared/dwa-email.ts";
 
 const corsHeaders = {

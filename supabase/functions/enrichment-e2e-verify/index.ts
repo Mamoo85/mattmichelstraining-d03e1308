@@ -5,7 +5,7 @@
 // canaries fail N times in a row.
 //
 // Cron: schedule via pg_cron at 3am ET nightly.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

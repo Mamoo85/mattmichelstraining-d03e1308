@@ -2,7 +2,7 @@
 // Runs daily at 11pm ET. Diffs Stripe's last-48h paid sessions against each product table.
 // Also catches marketplace leads sold but buyer email never delivered (email_sent_at IS NULL).
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import Stripe from "npm:stripe@18.5.0";
 import { sendSMS } from "../_shared/twilio.ts";
 

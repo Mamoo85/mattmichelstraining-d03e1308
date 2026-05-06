@@ -1,6 +1,6 @@
 // Hourly health check for the enrichment waterfall.
 // Returns JSON status + SMSes Matt if anything is critically stuck.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

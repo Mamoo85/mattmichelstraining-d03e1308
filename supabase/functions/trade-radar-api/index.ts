@@ -3,7 +3,7 @@
 // GET /trade-radar-api?vertical=roofing&zip=48201&since=2026-05-01&limit=50
 // Returns leads from trade_radar_leads for the authenticated client's vertical + zips.
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;

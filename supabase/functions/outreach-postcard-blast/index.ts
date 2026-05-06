@@ -2,7 +2,7 @@
 // Requires LOB_API_KEY in Supabase secrets. Sends 6x4 postcard (~$0.85/send).
 // Uses simple HTML front+back templates personalized via {{vars}}.
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { isFounder } from "../_shared/founder-seats.ts";
 
 const corsHeaders = {

@@ -3,7 +3,7 @@
 // Idempotent via anniversary_notices table (unique product+client+year).
 // Runs daily at 9am ET.
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { dwaEmail } from "../_shared/dwa-email.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;

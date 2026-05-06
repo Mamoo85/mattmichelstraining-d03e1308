@@ -2,7 +2,7 @@
 // $49/mo SMS-only TechAlert tier — no portal, no dashboard, just instant SMS alerts.
 // POST { email, phone, city?, state? }
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import Stripe from "npm:stripe@14";
 
 const corsHeaders = {

@@ -1,6 +1,6 @@
 // run-agent — unified one-click invoker for the admin Agent Toolkit
 // Logs every run to agent_run_log for visibility.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

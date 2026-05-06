@@ -13,7 +13,7 @@
 //   - { batch: N }: override batch size (rebalancer scales up under shortfall)
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { apolloOrganizationSearch, apolloPeopleSearch } from "../_shared/apollo.ts";
 import { hunterFindEmail } from "../_shared/hunter.ts";
 import { extractContactInfo } from "../_shared/firecrawl.ts";

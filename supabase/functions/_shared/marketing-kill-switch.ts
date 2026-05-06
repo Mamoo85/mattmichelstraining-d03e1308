@@ -2,7 +2,7 @@
 // When ON, blocks marketing email blasts + outreach campaigns.
 // Does NOT affect: auth emails, transactional receipts, customer-facing SMS.
 
-import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
 
 export async function isMarketingBlocked(sb?: SupabaseClient): Promise<{ blocked: boolean; reason?: string }> {
   const client = sb ?? createClient(

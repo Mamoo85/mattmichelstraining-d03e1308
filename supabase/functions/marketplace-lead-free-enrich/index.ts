@@ -6,7 +6,7 @@
 // 8) US Treasury yield curve, 9) BLS local unemployment, 10) Sunrise/sunset (call-window optimizer)
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { logEnrichment } from "../_shared/enrichment-audit.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";

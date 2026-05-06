@@ -1,6 +1,6 @@
 // cron-health-monitor: detects missing or stalling crons and fires alerts.
 // Runs every 15 minutes via cron-health-monitor-15m.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { shouldSuppressForQuietHours } from "../_shared/alert-rules.ts";
 
 const corsHeaders = {

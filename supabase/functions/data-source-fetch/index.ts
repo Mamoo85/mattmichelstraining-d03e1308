@@ -1,6 +1,6 @@
 // Generic data-source fetcher. Admin calls this to refresh any of the 50 sources.
 // POST { source_id, params: {...}, force_refresh?: boolean }
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { cachedFetch, dispatchFetch, getSource, SOURCES } from "../_shared/sources/index.ts";
 
 const corsHeaders = {

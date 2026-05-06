@@ -8,7 +8,7 @@
 //
 // Idempotent. Safe to run hourly; alarm only fires when threshold breached.
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { cachedLLM } from "../_shared/llm-cache.ts";
 
 const corsHeaders = {

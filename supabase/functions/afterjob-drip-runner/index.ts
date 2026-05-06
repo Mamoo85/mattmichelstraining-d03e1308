@@ -2,7 +2,7 @@
 // 3-step sequence: Day 1 thank you, Day 3 review ask, Day 30 upsell
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { sendSMS } from "../_shared/twilio.ts";
 import { generateText } from "../_shared/ai.ts";
 
