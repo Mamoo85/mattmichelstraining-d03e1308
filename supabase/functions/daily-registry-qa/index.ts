@@ -38,9 +38,10 @@ Deno.serve(async (req) => {
   const anomalies: string[] = [];
 
   for (const w of WATERFALLS) {
-    // today's count (rows created today)
+    const dateCol = (w as any).dateCol ?? "created_at";
+    // today's count — uses updated_at for cumulative tables, created_at for daily-feed tables
     const { count: todayCount } = await sb.from(w.table).select("id", { head: true, count: "exact" })
-      .gte("created_at", today.toISOString()).lt("created_at", tomorrow.toISOString());
+      .gte(dateCol, today.toISOString()).lt(dateCol, tomorrow.toISOString());
     const todayN = todayCount ?? 0;
 
     // upsert today's snapshot
