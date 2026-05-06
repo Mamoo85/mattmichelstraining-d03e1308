@@ -43,6 +43,7 @@ function emailHtml(lead: any): string {
   <p style="font:15px/1.55 -apple-system,Segoe UI,Arial;color:#0f2540;margin:0 0 10px;">Quick one — what's ${biz} using to dispatch jobs and track tech location in ${city}? Most shops your size are stuck on either paper, eWay, or ServiceTitan (which costs $300+ per seat).</p>
   <p style="font:15px/1.55 -apple-system,Segoe UI,Arial;color:#0f2540;margin:0 0 10px;">FieldDesk is the modern alternative built in Michigan for trades shops. One flat $199/mo, unlimited techs.</p>
   ${card}
+  <p style="font:13px/1.5 -apple-system,Segoe UI,Arial;color:#7a8aa0;margin:16px 0 0;">P.S. — Also hiring? We monitor LARA licenses + job boards 24/7 and alert you the moment a licensed HVAC tech enters the market. <a href="${SITE}/start-trial?product=techalert" style="color:#0077b6;">Free trial →</a></p>
   <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0;"/>
   <p style="font:12px/1.5 -apple-system,Segoe UI,Arial;color:#7a8aa0;margin:0;">
     Matt Michels — Detroit Web Agency · (313) 992-1219<br/>
