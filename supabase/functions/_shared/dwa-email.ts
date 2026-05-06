@@ -190,12 +190,16 @@ export async function dwaColdEmail(
         recipient_email: opts.to,
         status: r.ok ? "sent" : "failed",
         error_message: r.error ?? null,
-        metadata: { product: opts.product, cold: true },
+        metadata: {
+          product: opts.product,
+          cold: true,
+          ...(r.resendId ? { resend_email_id: r.resendId } : {}),
+        },
       });
     } catch { /* best-effort */ }
   }
 
-  return { ...r, messageId };
+  return { ok: r.ok, error: r.error, messageId };
 }
 
 /**
