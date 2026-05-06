@@ -27,7 +27,7 @@ export interface DwaEmailOpts {
 
 export async function dwaEmail(opts: DwaEmailOpts): Promise<{ ok: boolean; error?: string; resendId?: string }> {
   if (!RESEND_API_KEY) return { ok: false, error: "RESEND_API_KEY missing" };
-  const fromAddress = "matt@detroitwebagency.com";
+  const fromAddress = "matt@detroitwebagent.com";
   const fromField = opts.fromName
     ? `${opts.fromName} <${fromAddress}>`
     : DWA_FROM;
