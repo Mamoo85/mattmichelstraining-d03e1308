@@ -13,7 +13,7 @@ const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const LINKEDIN_ACCESS_TOKEN = Deno.env.get("LINKEDIN_ACCESS_TOKEN") || "";
 const APOLLO_API_KEY = Deno.env.get("APOLLO_API_KEY") || "";
 
-const DAILY_CAP = 200; // cold emails per day (TechAlert) — raised from 50
+const DAILY_CAP = 300; // cold emails per day (TechAlert)
 const MIN_SCORE = 3;  // skip low-signal prospects
 
 const corsHeaders = {
