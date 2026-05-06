@@ -118,7 +118,7 @@ We track licensed ${ctx.topRole}s coming on the market in MI (MIOSHA + permit + 
     build: (ctx) =>
 `Hi ${name(ctx)} — congrats on the growth (${ctx.permits} permits + ${ctx.hires} hires in 30 days is no joke). At this pace your dispatch board and website become the bottleneck before your truck count does.
 
-We build the ops infrastructure for shops your size — FieldDesk dispatch + a real website, $1,499 setup + $199/mo. Worth 15 min to see if it fits?`,
+We build the ops infrastructure for shops your size — FieldDesk dispatch + a real website, $499 setup + $199/mo. Worth 15 min to see if it fits?`,
   },
   {
     id: "fd_curious",
@@ -171,7 +171,7 @@ export const PLAY_META: Record<Play, { label: string; emoji: string; price: stri
   fielddesk: {
     label: "FieldDesk + Web Design",
     emoji: "🏗️",
-    price: "$1,499 + $199/mo",
+    price: "$499 + $199/mo",
     targetLine: "DM the contractor — they're growing, need ops infrastructure",
     description: "You sell dispatch software + website. Audience = owner at the growing contractor.",
   },

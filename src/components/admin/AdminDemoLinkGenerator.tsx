@@ -26,19 +26,19 @@ const DEMO_GROUPS: { category: string; demos: DemoEntry[] }[] = [
   {
     category: "🦷 Dental & Healthcare",
     demos: [
-      { key: "dental", label: "Dental Practice — Teal/White", path: "/demo-dental", industry: "dental practice", style: "Clean teal, clinical", plan: "Pro", priceRange: "$2,499 + $149/mo" },
-      { key: "dental-alt1", label: "Dental Practice — Prestige (Navy/Gold)", path: "/demo-dental-alt1", industry: "dental/prosthodontic practice", style: "Luxury dark navy & gold", plan: "Pro", priceRange: "$2,499 + $149/mo" },
-      { key: "dental-alt2", label: "Dental Practice — Nordic Wellness", path: "/demo-dental-alt2", industry: "dental practice", style: "Warm ivory/sage, minimal", plan: "Pro", priceRange: "$2,499 + $149/mo" },
-      { key: "clinic", label: "Medical Clinic", path: "/demo-clinic", industry: "medical clinic", style: "Modern medical", plan: "Pro", priceRange: "$2,499 + $149/mo" },
+      { key: "dental", label: "Dental Practice — Teal/White", path: "/demo-dental", industry: "dental practice", style: "Clean teal, clinical", plan: "Pro", priceRange: "$499 + $99/mo" },
+      { key: "dental-alt1", label: "Dental Practice — Prestige (Navy/Gold)", path: "/demo-dental-alt1", industry: "dental/prosthodontic practice", style: "Luxury dark navy & gold", plan: "Pro", priceRange: "$499 + $99/mo" },
+      { key: "dental-alt2", label: "Dental Practice — Nordic Wellness", path: "/demo-dental-alt2", industry: "dental practice", style: "Warm ivory/sage, minimal", plan: "Pro", priceRange: "$499 + $99/mo" },
+      { key: "clinic", label: "Medical Clinic", path: "/demo-clinic", industry: "medical clinic", style: "Modern medical", plan: "Pro", priceRange: "$499 + $99/mo" },
     ],
   },
   {
     category: "🏠 Contractors & Trades",
     demos: [
-      { key: "roofing", label: "Roofing Company", path: "/demo-roofing", industry: "roofing company", style: "Bold dark with orange", plan: "Professional", priceRange: "$1,499 + $99/mo" },
-      { key: "hvac", label: "HVAC Company", path: "/demo-hvac", industry: "HVAC company", style: "Clean blue/white", plan: "Professional", priceRange: "$1,499 + $99/mo" },
-      { key: "plumber", label: "Plumbing Company", path: "/demo-plumber", industry: "plumbing company", style: "Blue & white, trustworthy", plan: "Professional", priceRange: "$1,499 + $99/mo" },
-      { key: "electrician", label: "Electrician", path: "/demo-electrician", industry: "electrical contractor", style: "Dark with yellow accent", plan: "Professional", priceRange: "$1,499 + $99/mo" },
+      { key: "roofing", label: "Roofing Company", path: "/demo-roofing", industry: "roofing company", style: "Bold dark with orange", plan: "Professional", priceRange: "$499 + $99/mo" },
+      { key: "hvac", label: "HVAC Company", path: "/demo-hvac", industry: "HVAC company", style: "Clean blue/white", plan: "Professional", priceRange: "$499 + $99/mo" },
+      { key: "plumber", label: "Plumbing Company", path: "/demo-plumber", industry: "plumbing company", style: "Blue & white, trustworthy", plan: "Professional", priceRange: "$499 + $99/mo" },
+      { key: "electrician", label: "Electrician", path: "/demo-electrician", industry: "electrical contractor", style: "Dark with yellow accent", plan: "Professional", priceRange: "$499 + $99/mo" },
     ],
   },
   {
@@ -50,14 +50,14 @@ const DEMO_GROUPS: { category: string; demos: DemoEntry[] }[] = [
   {
     category: "⚖️ Legal & Professional",
     demos: [
-      { key: "lawyer", label: "Law Firm", path: "/demo-lawyer", industry: "law firm", style: "Dark authoritative", plan: "Pro", priceRange: "$2,499 + $149/mo" },
+      { key: "lawyer", label: "Law Firm", path: "/demo-lawyer", industry: "law firm", style: "Dark authoritative", plan: "Pro", priceRange: "$499 + $99/mo" },
     ],
   },
   {
     category: "🏡 Home Services",
     demos: [
       { key: "landscape", label: "Landscaping Company", path: "/demo-landscape", industry: "landscaping company", style: "Green/earth tones", plan: "Standard", priceRange: "$999 + $79/mo" },
-      { key: "auto-repair", label: "Auto Repair Shop", path: "/demo-auto-repair", industry: "auto repair shop", style: "Dark mechanic style", plan: "Professional", priceRange: "$1,499 + $99/mo" },
+      { key: "auto-repair", label: "Auto Repair Shop", path: "/demo-auto-repair", industry: "auto repair shop", style: "Dark mechanic style", plan: "Professional", priceRange: "$499 + $99/mo" },
       { key: "cleaning", label: "Cleaning Service", path: "/demo-cleaning", industry: "cleaning service", style: "Fresh blue/white", plan: "Standard", priceRange: "$999 + $79/mo" },
       { key: "salon", label: "Salon / Spa", path: "/demo-salon", industry: "salon or spa", style: "Elegant minimal", plan: "Standard", priceRange: "$999 + $79/mo" },
     ],
@@ -65,7 +65,7 @@ const DEMO_GROUPS: { category: string; demos: DemoEntry[] }[] = [
   {
     category: "🏢 Real Estate",
     demos: [
-      { key: "real-estate", label: "Real Estate Agent / Broker", path: "/demo-real-estate", industry: "real estate agent", style: "Clean, listing-focused", plan: "Agent/Broker", priceRange: "$1,499 + $99/mo" },
+      { key: "real-estate", label: "Real Estate Agent / Broker", path: "/demo-real-estate", industry: "real estate agent", style: "Clean, listing-focused", plan: "Agent/Broker", priceRange: "$499 + $99/mo" },
     ],
   },
   {

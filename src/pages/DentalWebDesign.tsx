@@ -8,7 +8,7 @@ const PLANS = [
   {
     key: "standard",
     name: "Standard",
-    setup: "$1,499",
+    setup: "$499",
     monthly: "$99/mo",
     description: "Professional site for solo or small dental practices.",
     includes: [

@@ -28,7 +28,7 @@ const WEB_PACKAGES = [
   },
   {
     name: "Professional",
-    price: "$1,499",
+    price: "$499",
     tag: "Most Popular",
     desc: "For growing businesses ready to convert more visitors into paying customers.",
     features: [

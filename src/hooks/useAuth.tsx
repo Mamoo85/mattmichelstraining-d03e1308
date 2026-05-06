@@ -56,8 +56,8 @@ export const ANNUAL_TIERS: Record<TierKey, { price_id: string; product_id: strin
   pro: {
     product_id: "prod_UC3OvNMcgtPafc",
     price_id: "price_1TELYYD52tPWee46eYgnlcB8",
-    price: "$1,499.99",
-    priceNum: 1499.99,
+    price: "$499",
+    priceNum: 499,
     monthlyEquiv: "$125.00",
   },
   elite: {

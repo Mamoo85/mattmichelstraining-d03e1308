@@ -304,7 +304,7 @@ export default function FieldServiceManagement() {
               </div>
               <div className="text-[#00d4ff] text-xs uppercase tracking-widest mb-2">Website Bundle</div>
               <div className="text-4xl font-black text-[#00d4ff] mb-1">$199<span className="text-lg font-normal text-white/50">/mo</span></div>
-              <p className="text-white/50 text-xs mb-1">+ Website build: $499 / $1,499 / $3,499 (one-time)</p>
+              <p className="text-white/50 text-xs mb-1">+ Website build: $499 (one-time)</p>
               <p className="text-[#00d4ff]/70 text-xs mb-5 font-semibold">Save $100/mo when you bundle with a Detroit Web Agency website</p>
               <ul className="space-y-2 text-xs text-white/70 mb-6 flex-1">
                 {["Everything in Standalone", "Custom website by Detroit Web Agency", "detroitwebagent.com hosting", "SEO-optimized + mobile-first", "Lifetime updates included", "Priority support"].map(f => (

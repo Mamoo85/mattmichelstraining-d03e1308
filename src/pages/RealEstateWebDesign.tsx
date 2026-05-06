@@ -8,7 +8,7 @@ const PLANS = [
   {
     key: "agent",
     name: "Agent / Broker",
-    setup: "$1,499",
+    setup: "$499",
     monthly: "$99/mo",
     description: "Individual agents and small brokerages.",
     includes: [

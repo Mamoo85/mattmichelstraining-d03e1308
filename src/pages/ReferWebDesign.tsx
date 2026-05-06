@@ -161,7 +161,7 @@ const ReferWebDesign = () => {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
               {[
                 { name: "Standard", price: "$499", desc: "5-page professional site" },
-                { name: "Professional", price: "$1,499", desc: "Custom design + SEO" },
+                { name: "Professional", price: "$499", desc: "Custom design + SEO" },
                 { name: "Business", price: "$3,499", desc: "Full-stack web application" },
               ].map((pkg) => (
                 <div key={pkg.name} className="bg-card border border-border p-4 space-y-1">

@@ -22,7 +22,7 @@ const PLANS = [
   {
     key: "professional",
     name: "Professional",
-    setup: "$1,499",
+    setup: "$499",
     monthly: "$99/mo",
     description: "Mid-size manufacturers needing custom lead routing.",
     includes: [
