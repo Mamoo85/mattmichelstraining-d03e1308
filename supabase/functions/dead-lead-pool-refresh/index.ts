@@ -161,7 +161,8 @@ serve(wrapServe("dead-lead-pool-refresh", async (req) => {
     try {
       const url = new URL("https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Detroit_Business_Certification_Register/FeatureServer/0/query");
       url.searchParams.set("where", "1=1");
-      url.searchParams.set("outFields", "contractor_name,business_phone,business_email,nigp_description,certification_type");
+      // field is business_phone_number (not business_phone); no email field in this dataset
+      url.searchParams.set("outFields", "contractor_name,business_phone_number,nigp_description,certification_type");
       url.searchParams.set("resultRecordCount", "305");
       url.searchParams.set("orderByFields", "OBJECTID DESC");
       url.searchParams.set("f", "json");
@@ -179,8 +180,8 @@ serve(wrapServe("dead-lead-pool-refresh", async (req) => {
           candidates.push({
             source: "bseed_contractor_registry",
             business_name: name,
-            phone: a.business_phone ?? null,
-            email: a.business_email ?? null,
+            phone: a.business_phone_number ?? null,
+            email: null,
             trade: trade.toLowerCase().replace(/\s+/g, "_").slice(0, 50),
             signal_age_days: 0,
             source_ref: null,
