@@ -1009,6 +1009,7 @@ const App = () => (
                     <Route path="/client-dash" element={<ProtectedRoute><ClientDashboard /></ProtectedRoute>} />
                     <Route path="/agency-portal" element={<ClientRoute><AgencyClientPortal /></ClientRoute>} />
                     <Route path="/embed/capture/:tenantId" element={<EmbedCapture />} />
+                    <Route path="/book-demo" element={<BookDemo />} />
                     <Route path="*" element={<NotFound />} />
                     </Routes>
                   </div>
