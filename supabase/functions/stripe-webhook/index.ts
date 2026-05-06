@@ -2654,6 +2654,25 @@ serve(async (req) => {
         await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      // ── BUNDLE 90-DAY ($499 one-time: Website + FieldDesk launch) ────────
+      if (meta.type === "bundle_90day_purchase") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) {
+            const bizName = meta.company || meta.business_name || meta.name || "there";
+            await dwaEmail(email, "🚀 Your $499 Bundle is Locked In — Next Steps", `<!DOCTYPE html><html><body style="margin:0;background:#030711;font-family:-apple-system,sans-serif;"><div style="max-width:600px;margin:0 auto;padding:32px 16px;"><div style="background:#0a1628;border:1px solid #1e3a5f;border-radius:16px;padding:32px;"><p style="color:#00d4ff;font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase;margin:0 0 8px;">🚀 BUNDLE LOCKED IN</p><h1 style="color:#fff;font-size:24px;margin:0 0 8px;">Welcome aboard, ${bizName}.</h1><p style="color:#94a3b8;font-size:14px;margin:0 0 24px;">Your $499 launch payment is in. We start building your new website + FieldDesk this week.</p><div style="background:#0d1f3c;border:1px solid #1e3a5f;border-radius:12px;padding:20px;margin-bottom:16px;"><p style="color:#fff;font-weight:700;font-size:13px;margin:0 0 12px;">WHAT HAPPENS NEXT (within 24h):</p><p style="margin:0 0 8px;color:#e2e8f0;font-size:13px;">1️⃣ Matt will call you at ${meta.phone || "your number on file"} to kick off discovery</p><p style="margin:0 0 8px;color:#e2e8f0;font-size:13px;">2️⃣ We'll send you a 5-minute intake form to capture brand assets + tech setup</p><p style="margin:0;color:#e2e8f0;font-size:13px;">3️⃣ Site + FieldDesk live within 7 days, white-glove onboarding included</p></div><p style="color:#94a3b8;font-size:13px;margin:0 0 8px;">Questions? Just reply to this email or text/call <strong style="color:#00d4ff;">(313) 992-1219</strong>.</p></div><p style="color:#475569;font-size:11px;text-align:center;margin-top:16px;">Matt Michels · Detroit Web Agency · <a href="tel:+13139921219" style="color:#00d4ff;">(313) 992-1219</a></p></div></body></html>`);
+            await notifyMatt(
+              `💰💰 NEW BUNDLE SALE — ${bizName} ($499)`,
+              `<p><strong>${bizName}</strong><br>${email} | ${meta.phone || "no phone"}<br>Source: ${meta.source || "bundle-page"}<br><strong>CALL THEM TODAY to kick off discovery.</strong></p>`
+            );
+          }
+        } catch (e) {
+          console.error("[WEBHOOK] bundle_90day_purchase error:", e);
+          return new Response(JSON.stringify({ error: "bundle_90day_purchase failed" }), { status: 500 });
+        }
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
       // ── FIELDDESK — $199/mo field service CRM ────────────────────────────
       if (meta.type === "field_crm_subscription") {
         try {
