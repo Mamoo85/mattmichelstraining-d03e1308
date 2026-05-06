@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import SEOHead from "@/components/layout/SEOHead";
+import PostCheckoutClaim from "@/components/checkout/PostCheckoutClaim";
 import { Factory, Target, Zap, FileText, TrendingUp, Bell, CheckCircle, ArrowRight, Award, Users } from "lucide-react";
 
 type Tier = "core" | "pro" | "enterprise";
