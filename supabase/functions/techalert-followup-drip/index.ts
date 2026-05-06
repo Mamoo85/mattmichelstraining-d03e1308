@@ -69,7 +69,7 @@ async function sendFollowup(
     subject: subjects[touch],
     bodyHtml: buildFollowupBody(touch, ownerName, companyName, role),
     product: "TechAlert", // → 30-day trial CTA auto-injected
-    ctaUrl: "https://detroitwebagent.com/start-trial?product=techalert",
+    ctaUrl: `https://detroitwebagent.com/start-trial?product=techalert&email=${encodeURIComponent(to)}&utm_source=cold_email&utm_medium=email&utm_campaign=techalert_${touch}`,
     templateName: `techalert_followup_${touch}`,
   }, sb);
   return { ok: r.ok, err: r.error };
