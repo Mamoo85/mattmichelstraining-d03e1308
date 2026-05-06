@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import SEOHead from "@/components/layout/SEOHead";
 import OnboardingChecklist from "@/components/shared/OnboardingChecklist";
+import JustPurchasedScreen, { isJustPurchased } from "@/components/shared/JustPurchasedScreen";
 import { Factory, Loader2, ExternalLink, Clock, Zap, TrendingUp, Radar, Download } from "lucide-react";
 
 type Signal = {
@@ -94,6 +95,7 @@ export default function MyBuyerRadar() {
   }
 
   if (!token) {
+    if (isJustPurchased()) return <JustPurchasedScreen product="Buyer Radar" />;
     return (
       <div className="min-h-screen bg-[#030711] text-white flex items-center justify-center p-6">
         <div className="max-w-sm text-center">

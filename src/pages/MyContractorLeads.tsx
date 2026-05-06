@@ -15,6 +15,7 @@ import DWASuiteNav from "@/components/shared/DWASuiteNav";
 import ManageBillingButton from "@/components/billing/ManageBillingButton";
 import EmptyDashboardState from "@/components/shared/EmptyDashboardState";
 import OnboardingChecklist from "@/components/shared/OnboardingChecklist";
+import JustPurchasedScreen, { isJustPurchased } from "@/components/shared/JustPurchasedScreen";
 
 interface Lead {
   id: string;
@@ -156,6 +157,7 @@ export default function MyContractorLeads() {
   }
 
   if (error || !data) {
+    if (isJustPurchased()) return <JustPurchasedScreen product="Contractor Leads" />;
     return (
       <div className="min-h-screen bg-[#030711] flex items-center justify-center px-4">
         <div className="text-center">

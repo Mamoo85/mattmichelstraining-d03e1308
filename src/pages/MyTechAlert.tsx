@@ -27,6 +27,7 @@ import DWASuiteNav from "@/components/shared/DWASuiteNav";
 import ManageBillingButton from "@/components/billing/ManageBillingButton";
 import CrmWebhookSettings from "@/components/shared/CrmWebhookSettings";
 import EmptyDashboardState from "@/components/shared/EmptyDashboardState";
+import JustPurchasedScreen, { isJustPurchased } from "@/components/shared/JustPurchasedScreen";
 
 const HEALTHCARE_ROLES = ["cna", "rn", "lpn", "director_of_nursing", "home_health_aide"];
 
@@ -495,6 +496,7 @@ export default function MyTechAlert() {
   }
 
   if (error || !data) {
+    if (isJustPurchased()) return <JustPurchasedScreen product="TechAlert" />;
     const isMissingToken = !token;
     return (
       <div className="min-h-screen bg-[#0a1628] flex items-center justify-center p-4">

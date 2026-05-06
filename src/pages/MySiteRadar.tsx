@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import ManageBillingButton from "@/components/billing/ManageBillingButton";
 import OnboardingChecklist from "@/components/shared/OnboardingChecklist";
 import LeadGuaranteeBar from "@/components/shared/LeadGuaranteeBar";
+import JustPurchasedScreen, { isJustPurchased } from "@/components/shared/JustPurchasedScreen";
 
 type Client = {
   id: string;
@@ -202,6 +203,8 @@ export default function MySiteRadar() {
       setExporting(false);
     }
   };
+
+  if (!loading && error && isJustPurchased()) return <JustPurchasedScreen product="SiteRadar" />;
 
   return (
     <>

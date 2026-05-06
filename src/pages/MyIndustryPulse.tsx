@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import SEOHead from "@/components/layout/SEOHead";
 import DWASuiteNav from "@/components/shared/DWASuiteNav";
+import JustPurchasedScreen, { isJustPurchased } from "@/components/shared/JustPurchasedScreen";
 import {
   TrendingUp, Zap, Target, Factory, Briefcase,
   RefreshCw, Loader2, ArrowUpRight, BarChart3,
@@ -161,6 +162,7 @@ export default function MyIndustryPulse() {
   }
 
   if (error || !data) {
+    if (isJustPurchased()) return <JustPurchasedScreen product="Demand Radar" />;
     return (
       <div className="min-h-screen bg-[#030711] flex items-center justify-center px-4">
         <div className="text-center">

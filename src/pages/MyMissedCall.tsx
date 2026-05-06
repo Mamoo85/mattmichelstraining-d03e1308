@@ -4,6 +4,7 @@ import { Helmet } from "react-helmet-async";
 
 import ManageBillingButton from "@/components/billing/ManageBillingButton";
 import OnboardingChecklist from "@/components/shared/OnboardingChecklist";
+import JustPurchasedScreen, { isJustPurchased } from "@/components/shared/JustPurchasedScreen";
 
 type MCClient = {
   business_name: string;
@@ -63,6 +64,7 @@ export default function MyMissedCall() {
 
   useEffect(() => {
     if (!token) {
+      if (isJustPurchased()) { setLoading(false); return; }
       setError("Missing dashboard token. Check your welcome email for your dashboard link.");
       setLoading(false);
       return;
@@ -80,6 +82,8 @@ export default function MyMissedCall() {
       .catch(() => setError("Could not load dashboard. Try refreshing."))
       .finally(() => setLoading(false));
   }, [token]);
+
+  if (!loading && !token && isJustPurchased()) return <JustPurchasedScreen product="Missed Call Catch" />;
 
   return (
     <>
