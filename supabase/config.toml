@@ -2281,3 +2281,6 @@ verify_jwt = false
 
 [functions.create-dead-lead-campaign-checkout]
 verify_jwt = false
+
+[functions.admin-daily-clicks-digest]
+verify_jwt = false
