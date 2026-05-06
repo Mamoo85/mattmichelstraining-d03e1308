@@ -60,7 +60,7 @@ const DRIP_SEQUENCE = [
     body: (biz: string, industry: string) => {
       const page = getIndustryPage(industry);
       const siteUrl = `detroitwebagent.com${page.path}`;
-      return `Hey —\n\nI was looking up ${industry.toLowerCase()} businesses in your area and noticed ${biz} doesn't have a website pulling in leads.\n\nI build sites for local businesses — ${page.price} flat, professional design, no agency markup. Just a site that ranks on Google and makes your phone ring.\n\nWant to see what I'd build for you? Check out what I've done: ${siteUrl}\n\nStart here: detroitwebagent.com/get-started — I'll reach out the same day.\n\n— Matt Michels, Grosse Pointe\n(313) 992-1219`;
+      return `Hey —\n\nI was looking up ${industry.toLowerCase()} businesses in your area and noticed ${biz} doesn't have a website pulling in leads.\n\nI build sites for local businesses — ${page.price} flat, professional design, no agency markup. Just a site that ranks on Google and makes your phone ring.\n\nWant to see what I'd build for you? Check out what I've done: ${siteUrl}\n\nStart here: detroitwebagent.com/get-started — I'll reach out the same day.\n\n— Matt Michels, Grosse Pointe\n(313) 992-1219\n\nP.S. — Just published a free Contractor Website Blueprint. No strings: https://detroitwebagent.com/blueprint`;
     },
   },
   {
