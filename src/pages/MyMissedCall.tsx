@@ -64,6 +64,7 @@ export default function MyMissedCall() {
 
   useEffect(() => {
     if (!token) {
+      if (isJustPurchased()) { setLoading(false); return; }
       setError("Missing dashboard token. Check your welcome email for your dashboard link.");
       setLoading(false);
       return;
