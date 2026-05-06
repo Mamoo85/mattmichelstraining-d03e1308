@@ -127,14 +127,15 @@ async function fetchNursingHomes(county: string | undefined, limit: number): Pro
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        conditions: [{ property: "state", value: "MI", operator: "=" }],
-        limit: 500, offset: 0,
+        conditions: [{ property: "provider_state", value: "MI", operator: "=" }],
+        limit: 1000, offset: 0,
       }),
       signal: AbortSignal.timeout(25_000),
     });
     if (!res.ok) return [];
     const data = await res.json();
-    const rows = data?.results || [];
+    // CMS DKAN returns results or data depending on API version
+    const rows = data?.results || data?.data || [];
     return rows
       .filter((r: any) => {
         const zip = (r.zip || r.provider_zip_code || "").toString();
