@@ -240,7 +240,10 @@ serve(async (req) => {
         const productKey = pickProductForIndustry(industry);
         const revenueUsd = "$" + missedRevenue(productKey).toLocaleString("en-US");
         const previewHtml = dashboardPreviewHtml({ product: productKey, industry });
-        const bodyWithRevenue = bodyText + `\n\nP.S. Based on signals we already pulled for ${industry} businesses in your area, you're leaving roughly ${revenueUsd}/mo on the table. The dashboard above is what we'd hand you on day one.`;
+        const missedCallPS = page.path === "/detroit-web-design"
+          ? `\n\nP.S. #2 — Does your business miss calls when you're on a job? 27% of contractor calls go to voicemail. We built Missed-Call Catch — texts every missed caller back in 60 seconds. Free 7-day trial: https://detroitwebagent.com/start-trial?product=missed_call`
+          : "";
+        const bodyWithRevenue = bodyText + `\n\nP.S. Based on signals we already pulled for ${industry} businesses in your area, you're leaving roughly ${revenueUsd}/mo on the table. The dashboard above is what we'd hand you on day one.` + missedCallPS;
 
         const r = await dwaColdEmail({
           to: email,
