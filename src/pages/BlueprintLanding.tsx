@@ -57,7 +57,7 @@ export default function BlueprintLanding() {
     supabase.from("blueprint_signups" as any).upsert(
       { email: email.trim().toLowerCase(), blueprint: "contractor_website", source: "blueprint_landing" },
       { onConflict: "email,blueprint" }
-    ).then(() => {}).catch(() => {});
+    ).then(() => {}, () => {});
     // Open blueprint in new tab
     window.open("/blueprint/index.html", "_blank");
     setDone(true);
