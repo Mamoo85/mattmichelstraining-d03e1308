@@ -108,8 +108,8 @@ export default function RestaurantWebDesign() {
   return (
     <>
       <SEOHead
-        title="Restaurant Website Design — $799 Setup | M2 Web Design"
-        description="Fast, mobile-first websites for restaurants and bars. Menu page, hours, directions, and local SEO that gets you found. From $799 setup + $79/mo."
+        title="Restaurant Website Design — $499 Setup | M2 Web Design"
+        description="Fast, mobile-first websites for restaurants and bars. Menu page, hours, directions, and local SEO that gets you found. From $499 setup + $79/mo."
       />
       <div className="min-h-screen bg-background text-foreground">
         <div className="bg-[#1e293b] text-white px-6 py-14 text-center">
