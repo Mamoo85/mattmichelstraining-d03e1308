@@ -1024,6 +1024,11 @@ const App = () => (
                     <Route path="/demo-runner" element={<DemoRunner />} />
                     <Route path="/website-plus-fielddesk" element={<WebsitePlusFieldDesk />} />
                     <Route path="/bundle-success" element={<BundleSuccess />} />
+                    <Route path="/payment-success" element={<PaymentSuccess />} />
+                    <Route path="/owner/welcome" element={<Navigate to="/owner/dashboard" replace />} />
+                    <Route path="/bedtime-stories" element={<Navigate to="/" replace />} />
+                    <Route path="/tech-alert" element={<Navigate to="/talent-radar" replace />} />
+                    <Route path="/trade-radar" element={<Navigate to="/radars" replace />} />
                     <Route path="*" element={<NotFound />} />
                     </Routes>
                   </div>
