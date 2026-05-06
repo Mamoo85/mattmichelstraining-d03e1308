@@ -25,7 +25,7 @@ const corsHeaders = {
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const DAILY_CAP = parseInt(Deno.env.get("DWA_BLAST_CAP") || "150", 10);
+const DAILY_CAP = parseInt(Deno.env.get("DWA_BLAST_CAP") || "200", 10);
 const SITE = "https://detroitwebagent.com";
 
 interface ProductPitch {
