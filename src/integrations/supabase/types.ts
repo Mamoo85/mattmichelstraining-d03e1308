@@ -13073,6 +13073,8 @@ export type Database = {
           alert_prefs: Json | null
           business_name: string | null
           contact_name: string | null
+          coverage_counties: string[] | null
+          coverage_regions: string[] | null
           created_at: string
           crm_webhook_secret: string | null
           crm_webhook_url: string | null
@@ -13097,6 +13099,8 @@ export type Database = {
           alert_prefs?: Json | null
           business_name?: string | null
           contact_name?: string | null
+          coverage_counties?: string[] | null
+          coverage_regions?: string[] | null
           created_at?: string
           crm_webhook_secret?: string | null
           crm_webhook_url?: string | null
@@ -13121,6 +13125,8 @@ export type Database = {
           alert_prefs?: Json | null
           business_name?: string | null
           contact_name?: string | null
+          coverage_counties?: string[] | null
+          coverage_regions?: string[] | null
           created_at?: string
           crm_webhook_secret?: string | null
           crm_webhook_url?: string | null
@@ -13320,6 +13326,7 @@ export type Database = {
           provenance_source_urls: Json | null
           quarantine_reason: string | null
           raw: Json | null
+          region: string | null
           score: number
           score_history: Json | null
           score_percentile: number | null
@@ -13390,6 +13397,7 @@ export type Database = {
           provenance_source_urls?: Json | null
           quarantine_reason?: string | null
           raw?: Json | null
+          region?: string | null
           score?: number
           score_history?: Json | null
           score_percentile?: number | null
@@ -13460,6 +13468,7 @@ export type Database = {
           provenance_source_urls?: Json | null
           quarantine_reason?: string | null
           raw?: Json | null
+          region?: string | null
           score?: number
           score_history?: Json | null
           score_percentile?: number | null
