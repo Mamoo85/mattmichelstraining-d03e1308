@@ -62,7 +62,7 @@ async function fireLinkedInConnect(companyName: string, ownerName: string | null
   } catch (_) { /* fire-and-forget */ }
 }
 
-function buildEmailBody(ownerName: string | null, companyName: string, role: string, isBoiler: boolean, score: number): string {
+function buildEmailBody(ownerName: string | null, companyName: string, role: string, isBoiler: boolean, score: number, recipientEmail = ""): string {
   const greeting = ownerName ? ownerName.split(" ")[0] : "there";
   const tradeLabel = isBoiler ? "boiler/stationary engineer" : role.replace(/_/g, " ");
   const jobType = isBoiler ? "licensed boiler operators" : `qualified ${tradeLabel}s`;
@@ -77,7 +77,7 @@ function buildEmailBody(ownerName: string | null, companyName: string, role: str
       "Direct contact info — call them before your competitor sees the resume",
     ],
     ctaText: "See sample alerts →",
-    ctaUrl: "https://detroitwebagent.com/start-trial?product=techalert",
+    ctaUrl: `https://detroitwebagent.com/start-trial?product=techalert&email=${encodeURIComponent(recipientEmail)}&utm_source=cold_email&utm_medium=email&utm_campaign=techalert_d0`,
     blurContact: true,
   });
 
