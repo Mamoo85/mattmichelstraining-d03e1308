@@ -992,7 +992,13 @@ async function handleDispatchAction(
       const sent = data?.sent ?? 0;
       const failed = data?.failed ?? 0;
       const cost = data?.cost ?? data?.total_cost ?? 0;
-      toast.success(`✅ ${sent} sent · ${failed} failed · $${Number(cost).toFixed(2)}`);
+      if (data?.success === false || (sent === 0 && data?.error)) {
+        toast.error(`${label} send failed: ${data?.error || data?.last_error || "no prospects matched"}`);
+      } else if (sent === 0) {
+        toast.warning(`${label}: 0 sent — campaign had no eligible prospects.`);
+      } else {
+        toast.success(`✅ ${sent} sent · ${failed} failed · $${Number(cost).toFixed(2)}`);
+      }
       qc.invalidateQueries({ queryKey: [queryKey] });
       return;
     }
