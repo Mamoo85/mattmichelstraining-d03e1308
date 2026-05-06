@@ -112,6 +112,7 @@ const GROUPS: SidebarGroup[] = [
       { id: "clients-all",           label: "👥 All Clients / CRM" },
       { id: "manual-onboarding",     label: "🆕 Manual Onboarding Queue" },
       { id: "djconley",              label: "👑 D.J. Conley · Premium" },
+      { id: "proposals",             label: "📬 Prospect Proposals" },
     ],
   },
   {
