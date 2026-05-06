@@ -24,7 +24,7 @@ export async function scanOshaSignals(state = "MI"): Promise<BuyerRadarSignal[]>
     const since = new Date(Date.now() - 90 * 86400_000).toISOString().slice(0, 10);
     const url = `https://data.dol.gov/api/v1/compliance/osha/inspections?state_plan_code=${enc(state)}&per_page=50&open_date_start=${enc(since)}`;
     const res = await fetch(url, {
-      headers: { "User-Agent": "BuyerRadar matt@detroitwebagency.com" },
+      headers: { "User-Agent": "BuyerRadar matt@detroitwebagent.com" },
       signal: AbortSignal.timeout(10_000),
     });
     if (!res.ok) return results;
@@ -56,7 +56,7 @@ export async function scanSbaSignals(state = "MI"): Promise<BuyerRadarSignal[]> 
   try {
     const url = `https://data.sba.gov/api/3/action/datastore_search?resource_id=aab2e42a-d2a6-4fc5-b2d6-c2d3f9f0c46e&q=${enc(state)}&limit=50`;
     const res = await fetch(url, {
-      headers: { "User-Agent": "BuyerRadar matt@detroitwebagency.com" },
+      headers: { "User-Agent": "BuyerRadar matt@detroitwebagent.com" },
       signal: AbortSignal.timeout(10_000),
     });
     if (!res.ok) return results;
