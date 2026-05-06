@@ -12,7 +12,7 @@ const cors = {
 };
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const DAILY_CAP = parseInt(Deno.env.get("FIELDDESK_BLAST_CAP") || "100", 10);
+const DAILY_CAP = parseInt(Deno.env.get("FIELDDESK_BLAST_CAP") || "175", 10);
 const SITE = "https://detroitwebagent.com";
 
 const FIELD_INDUSTRIES = ["hvac", "plumb", "roof", "electric", "pest", "landscap", "gutter", "garage", "appliance", "handyman", "painter", "lawn"];
