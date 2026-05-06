@@ -28,7 +28,7 @@ const FAX_FROM         = Deno.env.get("SINCH_FAX_FROM") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const ADMIN_EMAIL = "matt@detroitwebagent.com";
 
-const LANDING_BASE = "https://detroitwebagent.com/fax";
+const LANDING_BASE = "https://detroitwebagent.com/get-started";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
