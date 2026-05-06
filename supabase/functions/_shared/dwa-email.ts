@@ -96,11 +96,13 @@ export function isTrialEligible(product: string): boolean {
  */
 export function plainCtaHtml(opts: { url: string; text: string }): string {
   return `
-<div style="margin:28px 0;text-align:center;">
-  <a href="${opts.url}" style="background:${DWA_TEAL};color:${DWA_BG};padding:13px 26px;border-radius:6px;text-decoration:none;font-weight:700;display:inline-block;font-size:15px;">
-    ${opts.text}
-  </a>
-</div>`;
+<table cellpadding="0" cellspacing="0" border="0" style="margin:28px auto;">
+  <tr><td style="background:${DWA_TEAL};border-radius:8px;">
+    <a href="${opts.url}" style="display:inline-block;padding:14px 32px;font-size:16px;font-weight:700;color:${DWA_BG};text-decoration:none;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+      ${opts.text}&nbsp;→
+    </a>
+  </td></tr>
+</table>`;
 }
 
 /**
@@ -111,18 +113,20 @@ export function trialCtaHtml(opts: { product: string; url: string }): string {
   const hiring = isHiringProduct(opts.product);
   const days = hiring ? 30 : 7;
   const offerLine = hiring
-    ? `Start your free ${days}-day trial of ${opts.product} — no credit card required.`
-    : `Start your free ${days}-day trial of ${opts.product} — no credit card required. <strong style="color:${DWA_TEAL};">Plus 50% off your first 3 months</strong> when you continue.`;
+    ? `Free ${days}-day trial of ${opts.product} — no credit card.`
+    : `Free ${days}-day trial — no credit card. <strong style="color:${DWA_TEAL};">Plus 50% off your first 3 months.</strong>`;
   return `
-<div style="margin:28px 0;padding:20px 22px;background:rgba(0,212,255,0.08);border:1px solid ${DWA_TEAL};border-radius:8px;">
-  <p style="margin:0 0 12px;font-size:15px;color:#e6f1ff;font-weight:600;">
+<div style="margin:28px 0;padding:18px 20px;background:rgba(0,212,255,0.08);border:2px solid ${DWA_TEAL};border-radius:10px;text-align:center;">
+  <p style="margin:0 0 14px;font-size:15px;color:#e6f1ff;font-weight:600;line-height:1.5;">
     ${offerLine}
   </p>
-  <p style="margin:0;">
-    <a href="${opts.url}" style="background:${DWA_TEAL};color:${DWA_BG};padding:12px 22px;border-radius:6px;text-decoration:none;font-weight:700;display:inline-block;">
-      Start Free ${days}-Day Trial${hiring ? "" : " + 50% Off"}
-    </a>
-  </p>
+  <table cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">
+    <tr><td style="background:${DWA_TEAL};border-radius:8px;">
+      <a href="${opts.url}" style="display:inline-block;padding:14px 28px;font-size:16px;font-weight:700;color:${DWA_BG};text-decoration:none;">
+        Start ${days}-Day Free Trial${hiring ? "" : " + 50% Off"}&nbsp;→
+      </a>
+    </td></tr>
+  </table>
 </div>`;
 }
 
@@ -195,23 +199,40 @@ export async function dwaColdEmail(
 /**
  * Wraps inner HTML body in the standard DWA branded shell (teal accents, dark bg).
  */
-export function dwaWrap(innerHtml: string, opts?: { ctaText?: string; ctaUrl?: string }): string {
+export function dwaWrap(innerHtml: string, opts?: { ctaText?: string; ctaUrl?: string; preheader?: string; heroBadge?: string }): string {
   const cta = opts?.ctaText && opts?.ctaUrl
-    ? `<p style="margin:28px 0 8px;"><a href="${opts.ctaUrl}" style="background:${DWA_TEAL};color:${DWA_BG};padding:12px 22px;border-radius:6px;text-decoration:none;font-weight:700;display:inline-block;">${opts.ctaText}</a></p>`
+    ? `<table cellpadding="0" cellspacing="0" border="0" style="margin:28px auto;"><tr><td style="background:${DWA_TEAL};border-radius:8px;"><a href="${opts.ctaUrl}" style="display:inline-block;padding:14px 32px;font-size:16px;font-weight:700;color:${DWA_BG};text-decoration:none;">${opts.ctaText}&nbsp;→</a></td></tr></table>`
     : "";
-  return `<!DOCTYPE html><html><head><meta charset="utf-8"></head>
-<body style="margin:0;background:${DWA_BG};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
-  <div style="max-width:560px;margin:0 auto;padding:32px 24px;color:#e6f1ff;">
-    <div style="margin-bottom:24px;">
-      <span style="color:${DWA_TEAL};font-weight:800;font-size:14px;letter-spacing:1px;text-transform:uppercase;">Detroit Web Agency</span>
-    </div>
-    ${innerHtml}
-    ${cta}
-    <hr style="border:0;border-top:1px solid #1e3a5f;margin:32px 0 16px;" />
-    <p style="font-size:11px;color:#7a8aa0;line-height:1.5;margin:0;">
-      Detroit Web Agency · Grosse Pointe, MI · (313) 992-1219<br/>
-      <a href="https://detroitwebagent.com" style="color:#7a8aa0;">detroitwebagent.com</a> · <a href="mailto:matt@detroitwebagent.com" style="color:#7a8aa0;">matt@detroitwebagent.com</a>
-    </p>
-  </div>
+  const preheader = opts?.preheader || "";
+  const badge = opts?.heroBadge || "Detroit Web Agency";
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#020617;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;">
+  <div style="display:none;max-height:0;overflow:hidden;color:transparent;">${preheader}</div>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#020617;"><tr><td align="center" style="padding:24px 12px;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;background:#0f1d33;border:1px solid #1e3354;border-radius:12px;overflow:hidden;">
+      <tr><td style="background:${DWA_TEAL};height:4px;line-height:4px;font-size:0;">&nbsp;</td></tr>
+      <tr><td style="padding:24px 28px 0;">
+        <span style="display:inline-block;background:rgba(0,212,255,0.12);color:${DWA_TEAL};font-size:12px;font-weight:700;letter-spacing:1px;padding:5px 12px;border-radius:999px;text-transform:uppercase;">${badge}</span>
+      </td></tr>
+      <tr><td style="padding:18px 28px 8px;color:#e2e8f0;font-size:16px;line-height:1.6;">
+        ${innerHtml}
+        ${cta}
+        <table cellpadding="0" cellspacing="0" border="0" style="margin-top:24px;">
+          <tr>
+            <td style="vertical-align:middle;padding-right:12px;"><img src="https://www.detroitwebagent.com/images/matt-boat.jpg" width="48" height="48" style="width:48px;height:48px;border-radius:50%;object-fit:cover;display:block;" alt="Matt Michels"></td>
+            <td style="vertical-align:middle;font-size:13px;color:#e2e8f0;line-height:1.5;">
+              <strong style="color:#ffffff;">Matt Michels</strong><br>
+              <span style="color:#94a3b8;">Detroit Web Agency · Grosse Pointe, MI</span><br>
+              <a href="tel:+13139921219" style="color:${DWA_TEAL};text-decoration:none;">(313) 992-1219</a>
+            </td>
+          </tr>
+        </table>
+      </td></tr>
+      <tr><td style="background:${DWA_BG};padding:14px 28px;border-top:1px solid #1e3354;font-size:11px;color:#94a3b8;line-height:1.5;">
+        Detroit Web Agency · Grosse Pointe, MI · (313) 992-1219<br>
+        <a href="https://detroitwebagent.com" style="color:#94a3b8;">detroitwebagent.com</a> · <a href="mailto:matt@detroitwebagent.com" style="color:#94a3b8;">matt@detroitwebagent.com</a>
+      </td></tr>
+    </table>
+  </td></tr></table>
 </body></html>`;
 }

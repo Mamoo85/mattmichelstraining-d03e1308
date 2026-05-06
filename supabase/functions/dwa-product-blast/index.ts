@@ -14,9 +14,9 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { dwaEmail } from "../_shared/dwa-email.ts";
-import { teaserCardHtml } from "../_shared/teaser-card.ts";
 import { isBlocked } from "../_shared/outreach-blocklist.ts";
 import { isMarketingBlocked } from "../_shared/marketing-kill-switch.ts";
+import { buildPremiumEmailHtml, RADAR_ADDON_BOX } from "../_shared/dwa-premium-email.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -136,30 +136,29 @@ function pitchFor(lead: any): ProductPitch {
 
 function emailHtml(lead: any, pitch: ProductPitch): string {
   const fn = lead.first_name || lead.owner_name?.split(" ")[0] || "there";
-  const intro = pitch.intro(fn, lead.business_name || "your shop", lead.city || "Michigan");
-  const introHtml = intro
-    .split("\n")
-    .map((l) => l.trim() === "" ? "<br/>" : `<p style="margin:0 0 10px;font:15px/1.55 -apple-system,Segoe UI,Arial;color:#0f2540;">${l.replace(/</g, "&lt;")}</p>`)
-    .join("");
+  const biz = lead.business_name || "your shop";
+  const city = lead.city || "Michigan";
 
-  const card = teaserCardHtml({
+  // Strip the lead intro into 2-3 short paragraphs
+  const introRaw = pitch.intro(fn, biz, city);
+  const paragraphs = introRaw
+    .split(/\n\s*\n|\n/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .slice(0, 4);
+
+  return buildPremiumEmailHtml({
+    preheader: pitch.headline.replace(/[^\w\s—.,'-]/g, "").slice(0, 110),
+    heroBadge: pitch.product.replace(/_/g, " ").toUpperCase(),
     headline: pitch.headline,
-    scoreLabel: pitch.scoreLabel,
-    bullets: pitch.bullets,
-    ctaText: pitch.ctaText,
+    paragraphs,
+    addOnBox: RADAR_ADDON_BOX,
     ctaUrl: pitch.ctaUrl,
-    badge: pitch.badge,
-    blurContact: true,
+    ctaText: pitch.ctaText.replace(/\s*→\s*$/, ""),
+    signoffLine: "— Matt, (313) 992-1219",
+    unsubscribeUrl: `${SITE}/unsubscribe?email=${encodeURIComponent(lead.email)}`,
+    footerNote: "One-time pitch. Reply STOP to opt out.",
   });
-
-  const footer = `
-<hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0;"/>
-<p style="font:12px/1.5 -apple-system,Segoe UI,Arial;color:#7a8aa0;margin:0;">
-  Matt Michels — Detroit Web Agency · (313) 992-1219<br/>
-  <a href="${SITE}/unsubscribe?email=${encodeURIComponent(lead.email)}" style="color:#7a8aa0;">Unsubscribe</a> · This is a one-time pitch. Reply STOP to opt out.
-</p>`;
-
-  return `<div style="max-width:600px;margin:0 auto;padding:24px 16px;background:#ffffff;">${introHtml}${card}${footer}</div>`;
 }
 
 Deno.serve(async (req) => {
