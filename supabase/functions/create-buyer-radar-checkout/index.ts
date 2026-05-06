@@ -68,7 +68,7 @@ serve(async (req) => {
         phone: phone || "",
         vertical: vertical || "steel",
       },
-      success_url: `${origin}/buyer-radar?success=1&tier=${selectedTier}`,
+      success_url: `${origin}/buyer-radar?success=1&tier=${selectedTier}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/buyer-radar`,
     });
 
