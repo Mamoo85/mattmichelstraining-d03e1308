@@ -11,7 +11,7 @@ const cors = {
 };
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const DAILY_CAP = parseInt(Deno.env.get("SITERADAR_BLAST_CAP") || "120", 10);
+const DAILY_CAP = parseInt(Deno.env.get("SITERADAR_BLAST_CAP") || "175", 10);
 const SITE = "https://detroitwebagent.com";
 
 function emailHtml(lead: any): string {
