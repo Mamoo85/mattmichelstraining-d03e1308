@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,9 +6,12 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { COMMAND_CENTER_CATALOG, CATEGORY_ORDER, type CommandCenterCatalogEntry } from "@/lib/commandCenterCatalog";
 import {
   Mail, MessageSquare, Eye, Star, ShieldAlert, ShieldCheck,
-  RotateCw, Plus, Trash2, ExternalLink, GripVertical, Send,
+  RotateCw, Plus, Trash2, ExternalLink, GripVertical, Send, Search, Check,
 } from "lucide-react";
 
 // --------- Marketing tile config (status pulled live) ---------
