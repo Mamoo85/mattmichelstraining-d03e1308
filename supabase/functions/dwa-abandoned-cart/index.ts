@@ -60,7 +60,7 @@ Deno.serve(async () => {
   let sent = 0;
   for (const row of abandonments) {
     const label = PRODUCT_LABELS[row.product_type] || "Detroit Web Agency Product";
-    const url = PRODUCT_URLS[row.product_type] || "https://detroitwebagency.com";
+    const url = PRODUCT_URLS[row.product_type] || "https://detroitwebagent.com";
     const discountCode = generateDiscountCode(row.email, row.product_type);
     const monthlyPrice = row.cart_value || 0;
 
