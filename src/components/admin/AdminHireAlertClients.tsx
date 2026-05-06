@@ -550,7 +550,7 @@ export default function AdminHireAlertClients() {
 
     <div class="candidates-section">
       ${candidateCards}
-      <div class="page-footer">TechAlert Intelligence Report&nbsp;&nbsp;·&nbsp;&nbsp;Confidential&nbsp;&nbsp;·&nbsp;&nbsp;Prepared exclusively for DJ Conley&nbsp;&nbsp;·&nbsp;&nbsp;detroitwebagency.com</div>
+      <div class="page-footer">TechAlert Intelligence Report&nbsp;&nbsp;·&nbsp;&nbsp;Confidential&nbsp;&nbsp;·&nbsp;&nbsp;Prepared exclusively for DJ Conley&nbsp;&nbsp;·&nbsp;&nbsp;detroitwebagent.com</div>
     </div>
 
     <div class="closing">
@@ -571,7 +571,7 @@ export default function AdminHireAlertClients() {
         <p>$149/month. No contracts. Cancel anytime.</p>
         <p>The candidates in this report were found in the last 30 days.</p>
         <p><span class="em" style="color:white;">Your competitors don't have this list.</span></p>
-        <p class="contact">detroitwebagency.com/hire-alert</p>
+        <p class="contact">detroitwebagent.com/hire-alert</p>
         <p class="contact">Matt Michels&nbsp;&nbsp;·&nbsp;&nbsp;(313) 992-1219&nbsp;&nbsp;·&nbsp;&nbsp;matt@detroitwebagent.com</p>
       </div>
     </div>
