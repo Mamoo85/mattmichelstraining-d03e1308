@@ -273,6 +273,9 @@ Deno.serve(async (req) => {
       Click the button below to log in instantly — no password to remember. The link is unique to your email and works on any device.
     </p>
     ${founder ? `<p style="margin:0 0 14px;font-size:13px;color:#00d4ff;background:#0a1628;padding:10px 14px;border-left:3px solid #00d4ff;">Founder seat — your access never expires.</p>` : ""}
+    <p style="margin:24px 0 0;font-size:13px;color:#a8b8d0;border-top:1px solid #1e3a5f;padding-top:16px;">
+      Can't click right now? Just reply to this email with your business name and phone and I'll set up your account manually. — Matt, (313) 992-1219
+    </p>
   `;
 
   const html = dwaWrap(inner, { ctaText: `Open my ${cfg.label} dashboard →`, ctaUrl: magicUrl });
