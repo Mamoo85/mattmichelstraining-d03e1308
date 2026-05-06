@@ -22,6 +22,19 @@ const BENEFITS = [
 ];
 
 export default function KPIEmail() {
+  if (new URLSearchParams(window.location.search).get("status") === "success") {
+    return (
+      <div className="min-h-screen bg-[#0a1628] flex items-center justify-center px-6">
+        <div className="text-center text-white max-w-md">
+          <CheckCircle size={56} className="text-emerald-400 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold mb-3">Payment confirmed.</h1>
+          <p className="text-slate-400 leading-relaxed">You're all set. Matt will follow up within 24 hours to get everything configured and running for you.</p>
+          <a href="/" className="mt-6 inline-block text-[#00d4ff] text-sm underline">← Back to home</a>
+        </div>
+      </div>
+    );
+  }
+
   const [form, setForm] = useState({ name: "", businessName: "", email: "", industry: "", website: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
