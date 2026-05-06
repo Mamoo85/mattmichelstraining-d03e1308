@@ -169,7 +169,7 @@ function buildHtml(body: string): string {
 </table></td></tr></table></body></html>`;
 }
 
-const DAILY_SEND_CAP = 30;
+const DAILY_SEND_CAP = 60;
 
 serve(async () => {
   try {
