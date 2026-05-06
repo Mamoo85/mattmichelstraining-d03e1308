@@ -96,11 +96,13 @@ export function isTrialEligible(product: string): boolean {
  */
 export function plainCtaHtml(opts: { url: string; text: string }): string {
   return `
-<div style="margin:28px 0;text-align:center;">
-  <a href="${opts.url}" style="background:${DWA_TEAL};color:${DWA_BG};padding:13px 26px;border-radius:6px;text-decoration:none;font-weight:700;display:inline-block;font-size:15px;">
-    ${opts.text}
-  </a>
-</div>`;
+<table cellpadding="0" cellspacing="0" border="0" style="margin:28px auto;">
+  <tr><td style="background:${DWA_TEAL};border-radius:8px;">
+    <a href="${opts.url}" style="display:inline-block;padding:14px 32px;font-size:16px;font-weight:700;color:${DWA_BG};text-decoration:none;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+      ${opts.text}&nbsp;→
+    </a>
+  </td></tr>
+</table>`;
 }
 
 /**
@@ -111,18 +113,20 @@ export function trialCtaHtml(opts: { product: string; url: string }): string {
   const hiring = isHiringProduct(opts.product);
   const days = hiring ? 30 : 7;
   const offerLine = hiring
-    ? `Start your free ${days}-day trial of ${opts.product} — no credit card required.`
-    : `Start your free ${days}-day trial of ${opts.product} — no credit card required. <strong style="color:${DWA_TEAL};">Plus 50% off your first 3 months</strong> when you continue.`;
+    ? `Free ${days}-day trial of ${opts.product} — no credit card.`
+    : `Free ${days}-day trial — no credit card. <strong style="color:${DWA_TEAL};">Plus 50% off your first 3 months.</strong>`;
   return `
-<div style="margin:28px 0;padding:20px 22px;background:rgba(0,212,255,0.08);border:1px solid ${DWA_TEAL};border-radius:8px;">
-  <p style="margin:0 0 12px;font-size:15px;color:#e6f1ff;font-weight:600;">
+<div style="margin:28px 0;padding:18px 20px;background:rgba(0,212,255,0.08);border:2px solid ${DWA_TEAL};border-radius:10px;text-align:center;">
+  <p style="margin:0 0 14px;font-size:15px;color:#e6f1ff;font-weight:600;line-height:1.5;">
     ${offerLine}
   </p>
-  <p style="margin:0;">
-    <a href="${opts.url}" style="background:${DWA_TEAL};color:${DWA_BG};padding:12px 22px;border-radius:6px;text-decoration:none;font-weight:700;display:inline-block;">
-      Start Free ${days}-Day Trial${hiring ? "" : " + 50% Off"}
-    </a>
-  </p>
+  <table cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">
+    <tr><td style="background:${DWA_TEAL};border-radius:8px;">
+      <a href="${opts.url}" style="display:inline-block;padding:14px 28px;font-size:16px;font-weight:700;color:${DWA_BG};text-decoration:none;">
+        Start ${days}-Day Free Trial${hiring ? "" : " + 50% Off"}&nbsp;→
+      </a>
+    </td></tr>
+  </table>
 </div>`;
 }
 
