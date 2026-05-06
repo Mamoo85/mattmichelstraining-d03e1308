@@ -69,8 +69,8 @@ const DRIP_SEQUENCE = [
     subject: (biz: string, industry: string) => `Quick follow-up for ${biz}`,
     body: (biz: string, industry: string) => {
       const page = getIndustryPage(industry);
-      const siteUrl = `detroitwebagent.com${page.path}`;
-      return `Hey —\n\nCircling back from a few days ago. I build websites specifically for ${industry.toLowerCase()} businesses — here's what you get:\n\n- Ranked on Google for "${industry.toLowerCase()} + your city"\n- Click-to-call button front and center\n- Contact form that actually gets filled out\n- ${page.price} flat. ${page.monthly} after. No contract.\n\nSee examples: ${siteUrl}\n\nIf the timing's not right, no hard feelings. But if you're tired of watching competitors get the calls you should be getting — let's talk.\n\n— Matt\n(313) 992-1219`;
+      const siteUrl = `detroitwebagent.com${page.path}#demo`;
+      return `Hey —\n\nCircling back from a few days ago. Here's exactly what you get with a ${industry.toLowerCase()} website from us:\n\n- Ranked on Google for "${industry.toLowerCase()} + your city"\n- Click-to-call button front and center\n- Contact form that actually gets filled out\n- 📱 Free Review Texts — auto-texts every patient asking for a Google review\n- 💳 Free Pay-Me Texts — send payment links by text, get paid same day\n- 🔔 Free Reminder Texts — automated appointment reminders cut no-shows 40%+\n- 👁️ SiteRadar included — see every company that visits your site\n\n${page.price} flat. ${page.monthly} after. No contract.\n\nSee the demo: ${siteUrl}\n\n— Matt\n(313) 992-1219`;
     },
   },
   {
@@ -79,8 +79,8 @@ const DRIP_SEQUENCE = [
     subject: (biz: string, industry: string) => `I ran a quick check on ${biz}'s online presence`,
     body: (biz: string, industry: string) => {
       const page = getIndustryPage(industry);
-      const siteUrl = `detroitwebagent.com${page.path}`;
-      return `Hey —\n\nI did a quick audit of ${biz}'s online presence. Here's what I found:\n\n→ Google ranking for "${industry.toLowerCase()} [your area]": Not in top 10\n→ Website: Missing or not converting\n→ Google Business Profile: Needs optimization\n→ Opportunity: HIGH\n\nThis is fixable. ${page.price} to build. ${page.monthly} to run. That's it.\n\nI'm a local business owner in Grosse Pointe — you get my direct cell, not a support ticket.\n\nSee what I've built for ${industry.toLowerCase()} businesses: ${siteUrl}\n\n— Matt\n(313) 992-1219`;
+      const siteUrl = `detroitwebagent.com${page.path}#demo`;
+      return `Hey —\n\nI did a quick audit of ${biz}'s online presence. Here's what I found:\n\n→ Google ranking for "${industry.toLowerCase()} [your area]": Not in top 10\n→ Website: Missing or not converting\n→ Automated review collection: Not set up\n→ Appointment reminder texts: Not running\n→ Visitor tracking (SiteRadar): Not installed\n→ Opportunity: HIGH\n\nAll of that is fixable. ${page.price} to build. ${page.monthly} to run — and that includes the review texts, payment texts, and reminder system. I'm a local owner in Grosse Pointe — you get my direct cell, not a support ticket.\n\nSee the demo: ${siteUrl}\n\n— Matt\n(313) 992-1219`;
     },
   },
   {
