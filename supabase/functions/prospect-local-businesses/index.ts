@@ -540,36 +540,33 @@ Has Website: ${website ? "Yes" : "No"}`;
 }
 
 // ── Agent 2: THE SNIPER — Outbound Copywriter ──
+// Writes ONLY the personalized hook (observation + stakes). Pricing, add-ons,
+// demo image, and CTA are injected by buildWebDesignEmailHtml() — NOT by the AI.
 async function runSniperAgent(
   business: string, industry: string, city: string,
   customFlaw: string, targetService: string,
   landingPage: { path: string; price: string; monthly: string }
 ): Promise<string> {
-  const siteUrl = `detroitwebagent.com${landingPage.path}`;
-  const prompt = `You are an elite, autonomous B2B Outbound Sales Agent. Your job is to write cold emails that get busy business owners to reply. You will be provided with a business name, industry, and a Custom Flaw Observation from our Recon Agent.
+  const prompt = `You are a B2B cold email copywriter for a web design agency in Grosse Pointe, MI. Write a short, human-sounding email opener — NOT a full email.
 
-Strict Rules:
-- No Corporate Fluff: Never use words like 'synergy,' 'optimize,' or 'innovative solutions.' Speak like a peer.
-- Length Limit: Do not exceed 4 sentences.
-- The Structure:
-  Sentence 1: Direct observation (Use the provided custom_flaw_observation).
-  Sentence 2: The stakes (e.g., 'You are likely losing 3-4 new patients a month because of this.').
-  Sentence 3: The solution — mention a professional website starting at ${landingPage.price} + ${landingPage.monthly} with no contract.
-  Sentence 4: The low-friction CTA — link them to ${siteUrl} and offer to answer any questions.
-- Output ONLY the email subject line and body text in this format:
-  SUBJECT: [subject line]
+Rules:
+- Write exactly 2 short paragraphs. Each paragraph is 1-2 sentences MAX.
+- Paragraph 1: The direct observation (use the provided Custom Flaw Observation word-for-word or very close to it).
+- Paragraph 2: The stakes — what they are losing because of this (be specific: number of patients/clients, calls, bookings).
+- NO pricing. NO solution pitch. NO CTA. NO links. The rest of the email is handled separately.
+- Speak like a real person, not a marketer. No corporate words.
+- Output ONLY in this format (no extra text, no 'Here is your email'):
+  SUBJECT: [subject line — punchy, specific to their business]
   ---
-  [email body]
-- No pleasantries like 'Here is your email:'.
-- Sign off as Matt, (313) 992-1219.
+  [paragraph 1]
+
+  [paragraph 2]
 
 Business: "${business}" (${industry} in ${city})
 Custom Flaw Observation: "${customFlaw}"
-Target Service: ${targetService}
-Landing Page URL: ${siteUrl}
-Price: ${landingPage.price} setup + ${landingPage.monthly}`;
+Target Service: ${targetService}`;
 
-  return await generateText(prompt, 600);
+  return await generateText(prompt, 400);
 }
 
 // ── Check daily volume cap (raised to 60 to support 150/day floor) ──
