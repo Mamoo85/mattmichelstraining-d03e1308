@@ -6832,31 +6832,37 @@ export type Database = {
       }
       email_send_log: {
         Row: {
+          clicked_at: string | null
           created_at: string
           error_message: string | null
           id: string
           message_id: string | null
           metadata: Json | null
+          opened_at: string | null
           recipient_email: string
           status: string
           template_name: string
         }
         Insert: {
+          clicked_at?: string | null
           created_at?: string
           error_message?: string | null
           id?: string
           message_id?: string | null
           metadata?: Json | null
+          opened_at?: string | null
           recipient_email: string
           status: string
           template_name: string
         }
         Update: {
+          clicked_at?: string | null
           created_at?: string
           error_message?: string | null
           id?: string
           message_id?: string | null
           metadata?: Json | null
+          opened_at?: string | null
           recipient_email?: string
           status?: string
           template_name?: string
