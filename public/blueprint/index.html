@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Contractor Website Blueprint — Detroit Web Agency</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --teal: #00d4ff;
+    --dark: #0a1628;
+    --navy: #0d1f3c;
+    --slate: #1e3a5f;
+    --text: #1a2740;
+    --muted: #4a5568;
+    --border: #e2e8f0;
+    --bg: #f8fafc;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--text);
+    background: var(--bg);
+  }
+
+  .page {
+    max-width: 760px;
+    margin: 0 auto;
+    background: #fff;
+    box-shadow: 0 4px 32px rgba(0,0,0,0.08);
+  }
+
+  /* ── COVER ── */
+  .cover {
+    background: var(--dark);
+    color: #fff;
+    padding: 80px 60px 70px;
+    position: relative;
+    overflow: hidden;
+  }
+  .cover::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 320px; height: 320px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0,212,255,0.15) 0%, transparent 70%);
+  }
+  .cover-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin-bottom: 24px;
+  }
+  .cover h1 {
+    font-size: 42px;
+    font-weight: 900;
+    line-height: 1.1;
+    margin-bottom: 20px;
+    letter-spacing: -0.02em;
+  }
+  .cover h1 span { color: var(--teal); }
+  .cover-sub {
+    font-size: 17px;
+    color: rgba(255,255,255,0.7);
+    max-width: 520px;
+    line-height: 1.6;
+    margin-bottom: 40px;
+  }
+  .cover-stats {
+    display: flex;
+    gap: 40px;
+    flex-wrap: wrap;
+  }
+  .cover-stat-num {
+    font-size: 28px;
+    font-weight: 900;
+    color: var(--teal);
+    display: block;
+  }
+  .cover-stat-label {
+    font-size: 12px;
+    color: rgba(255,255,255,0.55);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .cover-footer {
+    margin-top: 50px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    color: rgba(255,255,255,0.4);
+  }
+  .cover-footer strong { color: rgba(255,255,255,0.75); }
+
+  /* ── SECTIONS ── */
+  .section {
+    padding: 52px 60px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section:last-child { border-bottom: none; }
+
+  .section-num {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin-bottom: 8px;
+  }
+  .section h2 {
+    font-size: 26px;
+    font-weight: 900;
+    color: var(--dark);
+    margin-bottom: 20px;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+  }
+  .section p {
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+  .section p:last-child { margin-bottom: 0; }
+
+  /* ── CALLOUT BOXES ── */
+  .callout {
+    background: var(--bg);
+    border-left: 4px solid var(--teal);
+    border-radius: 0 8px 8px 0;
+    padding: 16px 20px;
+    margin: 24px 0;
+    font-size: 14px;
+    color: var(--text);
+  }
+  .callout strong { color: var(--dark); }
+
+  .callout-dark {
+    background: var(--dark);
+    color: #fff;
+    border-left: 4px solid var(--teal);
+    border-radius: 0 8px 8px 0;
+    padding: 20px 24px;
+    margin: 24px 0;
+  }
+  .callout-dark p { color: rgba(255,255,255,0.8); margin-bottom: 8px; }
+  .callout-dark p:last-child { margin-bottom: 0; }
+
+  /* ── LISTS ── */
+  .check-list {
+    list-style: none;
+    margin: 16px 0;
+  }
+  .check-list li {
+    padding: 8px 0 8px 28px;
+    position: relative;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+  }
+  .check-list li:last-child { border-bottom: none; }
+  .check-list li::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    color: var(--teal);
+    font-weight: 700;
+  }
+  .check-list li.todo::before { content: '☐'; color: #94a3b8; }
+
+  .numbered-list {
+    list-style: none;
+    counter-reset: item;
+    margin: 20px 0;
+  }
+  .numbered-list li {
+    counter-increment: item;
+    padding: 12px 0 12px 44px;
+    position: relative;
+    border-bottom: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .numbered-list li:last-child { border-bottom: none; }
+  .numbered-list li::before {
+    content: counter(item);
+    position: absolute;
+    left: 0;
+    top: 10px;
+    width: 28px;
+    height: 28px;
+    background: var(--dark);
+    color: var(--teal);
+    border-radius: 50%;
+    font-weight: 900;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+  .numbered-list li strong { color: var(--dark); display: block; margin-bottom: 2px; }
+
+  /* ── PAIN CARDS ── */
+  .pain-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin: 24px 0;
+  }
+  .pain-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+  }
+  .pain-icon { font-size: 24px; margin-bottom: 10px; }
+  .pain-title { font-weight: 700; font-size: 14px; color: var(--dark); margin-bottom: 6px; }
+  .pain-text { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+  /* ── NON-NEGOTIABLES ── */
+  .non-neg {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin: 12px 0;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  .non-neg-num {
+    background: var(--dark);
+    color: var(--teal);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 14px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .non-neg-body h3 { font-size: 15px; font-weight: 700; color: var(--dark); margin-bottom: 4px; }
+  .non-neg-body p { font-size: 13px; color: var(--muted); line-height: 1.5; margin: 0; }
+
+  /* ── GBP CHECKLIST ── */
+  .gbp-step {
+    display: flex;
+    gap: 16px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border);
+    align-items: flex-start;
+  }
+  .gbp-step:last-child { border-bottom: none; }
+  .gbp-time {
+    background: var(--teal);
+    color: var(--dark);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .gbp-body h4 { font-size: 14px; font-weight: 700; color: var(--dark); margin-bottom: 3px; }
+  .gbp-body p { font-size: 13px; color: var(--muted); margin: 0; }
+
+  /* ── STAT STRIP ── */
+  .stat-strip {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 24px 0;
+  }
+  .stat-cell {
+    background: #fff;
+    padding: 20px;
+    text-align: center;
+  }
+  .stat-num { font-size: 28px; font-weight: 900; color: var(--dark); }
+  .stat-label { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  /* ── 90-DAY TIMELINE ── */
+  .timeline-phase {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin: 16px 0;
+  }
+  .timeline-phase-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .phase-badge {
+    background: var(--dark);
+    color: var(--teal);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 4px;
+  }
+  .phase-title { font-weight: 700; font-size: 15px; color: var(--dark); }
+  .phase-tasks { list-style: none; }
+  .phase-tasks li {
+    padding: 5px 0 5px 20px;
+    position: relative;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .phase-tasks li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--teal);
+    font-weight: 700;
+  }
+
+  /* ── CTA BLOCK ── */
+  .cta-block {
+    background: var(--dark);
+    color: #fff;
+    padding: 48px 60px;
+    text-align: center;
+  }
+  .cta-block h2 {
+    font-size: 28px;
+    font-weight: 900;
+    margin-bottom: 12px;
+    letter-spacing: -0.01em;
+  }
+  .cta-block p {
+    color: rgba(255,255,255,0.65);
+    margin-bottom: 28px;
+    max-width: 480px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .cta-btn {
+    display: inline-block;
+    background: var(--teal);
+    color: var(--dark);
+    font-weight: 900;
+    font-size: 15px;
+    padding: 14px 32px;
+    border-radius: 8px;
+    text-decoration: none;
+    letter-spacing: 0.02em;
+  }
+  .cta-contact {
+    margin-top: 20px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.4);
+  }
+  .cta-contact a { color: var(--teal); text-decoration: none; }
+
+  /* ── WARNING BOX ── */
+  .warning {
+    background: #fff8e6;
+    border: 1px solid #f6d860;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 20px 0;
+    font-size: 14px;
+    color: #7a5c00;
+  }
+  .warning strong { color: #5a4200; }
+
+  /* ── PRINT ── */
+  @media print {
+    body { background: #fff; font-size: 13px; }
+    .page { box-shadow: none; max-width: 100%; }
+    .section { padding: 36px 48px; }
+    .cover { padding: 60px 48px 50px; }
+    .pain-grid { grid-template-columns: 1fr 1fr 1fr; }
+    .cta-block { padding: 36px 48px; }
+    .non-neg, .timeline-phase { break-inside: avoid; }
+    a { color: inherit; text-decoration: none; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ══ COVER ══ -->
+  <div class="cover">
+    <div class="cover-label">Detroit Web Agency · Free Resource</div>
+    <h1>The <span>Contractor</span><br>Website Blueprint</h1>
+    <p class="cover-sub">Everything a Metro Detroit contractor needs to turn their website into a 24/7 lead machine — without wasting money on agencies that don't know the trades.</p>
+    <div class="cover-stats">
+      <div>
+        <span class="cover-stat-num">8</span>
+        <span class="cover-stat-label">Sections</span>
+      </div>
+      <div>
+        <span class="cover-stat-num">90-Day</span>
+        <span class="cover-stat-label">Action Plan</span>
+      </div>
+      <div>
+        <span class="cover-stat-num">$0</span>
+        <span class="cover-stat-label">Fluff</span>
+      </div>
+    </div>
+    <div class="cover-footer">
+      <div>Written by <strong>Matt Michels</strong> · Detroit Web Agency · Grosse Pointe, MI</div>
+      <div><strong>(313) 992-1219</strong></div>
+    </div>
+  </div>
+
+  <!-- ══ SECTION 1: WHY MOST CONTRACTOR SITES FAIL ══ -->
+  <div class="section">
+    <div class="section-num">Section 01</div>
+    <h2>Why Most Contractor Websites<br>Lose You Jobs Every Day</h2>
+
+    <p>You're busy. You're good at what you do. And somewhere along the way someone told you that you needed a website — so you got one. Maybe a cousin built it, maybe you paid a marketing company $3,000, maybe Wix auto-generated one from a template.</p>
+
+    <p>Here's the problem: <strong>most contractor websites are built to look good in a portfolio, not to get your phone ringing.</strong> There's a difference, and it costs you jobs daily.</p>
+
+    <p>After auditing hundreds of contractor websites across Metro Detroit, the same three root causes show up every time:</p>
+
+    <div class="pain-grid">
+      <div class="pain-card">
+        <div class="pain-icon">📵</div>
+        <div class="pain-title">No Clear Call to Action</div>
+        <div class="pain-text">A visitor lands on your site. There's no phone number above the fold, no "Book Now" button, no reason to act. They leave in 8 seconds. You never knew they were there.</div>
+      </div>
+      <div class="pain-card">
+        <div class="pain-icon">👻</div>
+        <div class="pain-title">Google Can't Find You</div>
+        <div class="pain-text">Your site has no local SEO setup. No city pages, no Google Business Profile linked, no schema markup. A homeowner in your ZIP code Googles "HVAC repair near me" and you don't exist.</div>
+      </div>
+      <div class="pain-card">
+        <div class="pain-icon">📞</div>
+        <div class="pain-title">Missed Calls = Lost Jobs</div>
+        <div class="pain-text">The phone rings at 7pm. You're on a job. No voicemail response system. No auto-text back. That homeowner called the next guy on the list. You lost a $4,000 job.</div>
+      </div>
+    </div>
+
+    <div class="callout">
+      <strong>The real cost:</strong> A typical HVAC, roofing, or plumbing job is $2,000–$8,000. If your website is losing you just 2 jobs per month, that's $4,000–$16,000 walking out the door. Monthly.
+    </div>
+  </div>
+
+  <!-- ══ SECTION 2: THE 5 NON-NEGOTIABLES ══ -->
+  <div class="section">
+    <div class="section-num">Section 02</div>
+    <h2>The 5 Non-Negotiables of a<br>High-Converting Contractor Site</h2>
+
+    <p>These aren't nice-to-haves. Every contractor website that consistently generates leads has all five. If yours is missing even one, you're bleeding calls.</p>
+
+    <div class="non-neg">
+      <div class="non-neg-num">1</div>
+      <div class="non-neg-body">
+        <h3>Phone Number in the Top-Right Corner, Always</h3>
+        <p>Not in the footer. Not buried on a contact page. Top-right, every page, click-to-call on mobile. This single change lifts inbound calls 20–40% in the first week. Period.</p>
+      </div>
+    </div>
+
+    <div class="non-neg">
+      <div class="non-neg-num">2</div>
+      <div class="non-neg-body">
+        <h3>A Hero Section That Says What You Do and Where</h3>
+        <p>Within 3 seconds of landing on your site, a stranger should know: what trade you're in, what cities you serve, and how to contact you right now. "Welcome to Joe's HVAC" tells them nothing. "Same-Day HVAC Repair — Detroit, Warren, Dearborn" tells them everything.</p>
+      </div>
+    </div>
+
+    <div class="non-neg">
+      <div class="non-neg-num">3</div>
+      <div class="non-neg-body">
+        <h3>Google Reviews Front and Center</h3>
+        <p>Homeowners don't trust contractors they don't know. Your Google rating is your credibility. Embed your live Google review widget on the homepage. If you have fewer than 20 reviews, that's your first priority — see Section 6 for the automation setup.</p>
+      </div>
+    </div>
+
+    <div class="non-neg">
+      <div class="non-neg-num">4</div>
+      <div class="non-neg-body">
+        <h3>A Fast, Simple Contact Form That Actually Works</h3>
+        <p>Not a 12-field form asking for their mother's maiden name. Name, phone, and "What do you need?" — that's it. Every additional field you add drops conversions by 11%. Test your form quarterly. We've seen contractor sites where the form was broken for 8 months.</p>
+      </div>
+    </div>
+
+    <div class="non-neg">
+      <div class="non-neg-num">5</div>
+      <div class="non-neg-body">
+        <h3>Mobile-First Design (70%+ of Your Traffic Is Phone)</h3>
+        <p>Pull up your website on your phone right now. Can you tap the phone number? Does it load in under 3 seconds? Is the text readable without zooming? If any answer is no, you're losing a majority of your visitors before they ever read a word.</p>
+      </div>
+    </div>
+
+    <div class="callout">
+      <strong>Quick test:</strong> Google "PageSpeed Insights" and run your website URL. A score below 70 on mobile means you're likely ranking below competitors with faster sites. Google uses page speed as a ranking factor.
+    </div>
+  </div>
+
+  <!-- ══ SECTION 3: LOCAL SEO IN 30 MINUTES ══ -->
+  <div class="section">
+    <div class="section-num">Section 03</div>
+    <h2>Local SEO in 30 Minutes:<br>The Google Business Profile Checklist</h2>
+
+    <p>Your Google Business Profile (GBP) is the single highest-ROI thing you can control for free. When someone searches "roofer near me" or "HVAC repair Detroit," the 3-pack of businesses that shows up is driven entirely by GBP signals.</p>
+
+    <p>Here's the 30-minute setup that gets results. Do this once and maintain it monthly:</p>
+
+    <div class="gbp-step">
+      <div class="gbp-time">0–5 min</div>
+      <div class="gbp-body">
+        <h4>Claim and verify your listing</h4>
+        <p>Go to business.google.com. Search for your business. If it exists, claim it. If not, create it. Choose your primary category carefully — "HVAC Contractor" outperforms "Air Conditioning Contractor" in most markets.</p>
+      </div>
+    </div>
+
+    <div class="gbp-step">
+      <div class="gbp-time">5–10 min</div>
+      <div class="gbp-body">
+        <h4>Fill every field completely</h4>
+        <p>Business name (exactly as it appears on your truck), phone, website, hours, service area (list every city you serve — up to 20). Incomplete profiles rank 40% lower than fully complete ones.</p>
+      </div>
+    </div>
+
+    <div class="gbp-step">
+      <div class="gbp-time">10–15 min</div>
+      <div class="gbp-body">
+        <h4>Add real photos of your work</h4>
+        <p>Upload at least 10 job photos — before/after pairs whenever possible. Businesses with photos get 42% more direction requests and 35% more website clicks than those without. Your iPhone is fine. Stop waiting for professional photos.</p>
+      </div>
+    </div>
+
+    <div class="gbp-step">
+      <div class="gbp-time">15–20 min</div>
+      <div class="gbp-body">
+        <h4>Write your business description using keywords</h4>
+        <p>750 characters. Include your trade, your service area cities, and what makes you different. Example: "Family-owned HVAC contractor serving Detroit, Warren, Sterling Heights, and Macomb County since 2009. Same-day emergency service, financing available, licensed and insured."</p>
+      </div>
+    </div>
+
+    <div class="gbp-step">
+      <div class="gbp-time">20–25 min</div>
+      <div class="gbp-body">
+        <h4>Add your services with descriptions</h4>
+        <p>Click "Services" in your GBP dashboard. Add every service you offer with a 100-word description each. This is free keyword real estate Google uses to match you to searches. "Furnace repair," "AC installation," "duct cleaning" — each one is a separate opportunity to rank.</p>
+      </div>
+    </div>
+
+    <div class="gbp-step">
+      <div class="gbp-time">25–30 min</div>
+      <div class="gbp-body">
+        <h4>Post a Google Update (do this weekly after)</h4>
+        <p>Go to "Posts" and add a Google Update — a recent job photo with 2–3 sentences. "Just finished a full furnace replacement in Sterling Heights — homeowner was quoted $4,200 by a competitor, we came in at $2,800 and finished same day." This keeps your profile active and Google rewards it.</p>
+      </div>
+    </div>
+
+    <div class="callout-dark">
+      <p><strong>Ongoing (5 min/week):</strong> Reply to every Google review within 24 hours — positive or negative. Google tracks response rate. Businesses that respond to 100% of reviews rank higher than those who don't respond at all.</p>
+    </div>
+  </div>
+
+  <!-- ══ SECTION 4: THE MISSED-CALL PROBLEM ══ -->
+  <div class="section">
+    <div class="section-num">Section 04</div>
+    <h2>The Missed-Call Problem<br>(And the Fix)</h2>
+
+    <div class="stat-strip">
+      <div class="stat-cell">
+        <div class="stat-num">78%</div>
+        <div class="stat-label">of customers call the first business that responds</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-num">&lt;5 min</div>
+        <div class="stat-label">response window before the lead goes cold</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-num">$4,200</div>
+        <div class="stat-label">average job value you lose per missed call</div>
+      </div>
+    </div>
+
+    <p>Here's what happens when your phone rings and you don't answer: the homeowner waits 90 seconds, hangs up, and calls the next contractor in their Google search results. By the time you call back — even 20 minutes later — they've already booked someone else.</p>
+
+    <p>This isn't a you problem. Every contractor deals with this. You can't answer the phone when you're under a house or on a roof. The question is whether your system handles it for you.</p>
+
+    <p><strong>The fix has two parts:</strong></p>
+
+    <ul class="check-list">
+      <li><strong>Auto-text reply within 60 seconds:</strong> When a call goes unanswered, an automated text fires immediately: "Hey, this is [Your Name] with [Business]. I saw you just called — I'm on a job right now but I'll call you back within the hour. What's the best number to reach you?" This alone recovers 30–40% of missed calls.</li>
+      <li><strong>Voicemail-to-text transcription:</strong> Every voicemail transcribed and texted to your phone in real time. You read it in 10 seconds, decide priority, and either call back immediately or text them. No more "checking voicemail at the end of the day."</li>
+      <li><strong>After-hours routing:</strong> Calls after 8pm route to a recorded message that captures name, number, and job type. Morning response text goes out automatically at 7am.</li>
+    </ul>
+
+    <div class="callout">
+      <strong>Real example:</strong> A Detroit plumber we work with was missing 4–6 calls per week. After setting up auto-text reply, he recovered 3 of those per week on average — that's roughly $9,000–$15,000/month in jobs he was previously losing silently.
+    </div>
+
+    <div class="warning">
+      <strong>Warning:</strong> If you're spending money on Google Ads or HomeAdvisor and not fixing your missed-call problem first, you're paying to generate leads you're then losing. Fix the leak before you turn on the faucet.
+    </div>
+  </div>
+
+  <!-- ══ SECTION 5: REVIEW GENERATION ══ -->
+  <div class="section">
+    <div class="section-num">Section 05</div>
+    <h2>Review Generation on Autopilot</h2>
+
+    <p>Google reviews are the single biggest trust signal for a local contractor. More reviews = higher ranking = more calls. It's that simple. And yet most contractors have 8–12 reviews, while their top competitor has 200+.</p>
+
+    <p>The difference isn't that your competitor has more satisfied customers. It's that they have a system that automatically asks.</p>
+
+    <p><strong>The 3-text review system (set this up today):</strong></p>
+
+    <ol class="numbered-list">
+      <li>
+        <strong>Job completion text (Day 0)</strong>
+        Send within 2 hours of finishing: "Hey [Name], it's [Your Name] — just wanted to make sure everything is working perfectly with the [job]. Any questions at all, text me directly. And if you have a second, a Google review means the world to a small business like mine: [your Google review link]"
+      </li>
+      <li>
+        <strong>Follow-up text (Day 3)</strong>
+        If no review yet: "Hi [Name] — [Your Name] here, just checking in. Everything still good with the [job]? And if you haven't had a chance, I'd really appreciate a quick Google review: [link]. Takes 60 seconds."
+      </li>
+      <li>
+        <strong>Final text (Day 7)</strong>
+        "Last time I'll ask — if you'd be willing to leave us a Google review, it directly helps us compete against the big national companies. Here's the link: [link]. Thank you either way."
+      </li>
+    </ol>
+
+    <div class="callout">
+      <strong>Getting your Google review link:</strong> Search your business name on Google → click your listing → click "Write a review" → copy the URL from the popup. Shorten it with bit.ly for texting.
+    </div>
+
+    <p>This system, on its own, generates 8–15 new reviews per month for an average contractor doing 20 jobs/month. At that rate, you'll have 100+ reviews within a year — which puts you in the Google 3-pack for most local search terms.</p>
+
+    <div class="callout-dark">
+      <p><strong>Responding to bad reviews:</strong> Never ignore them. Never argue. Reply within 24 hours: "Hi [Name], I'm sorry your experience didn't meet our standards. I'd like to make this right — please call me directly at (313) 992-1219." One graceful response to a bad review converts more skeptical readers than five 5-star reviews.</p>
+    </div>
+  </div>
+
+  <!-- ══ SECTION 6: 90-DAY LAUNCH CHECKLIST ══ -->
+  <div class="section">
+    <div class="section-num">Section 06</div>
+    <h2>The 90-Day Launch Checklist</h2>
+
+    <p>This is the exact sequence we walk new clients through. Do these in order — each phase builds on the last.</p>
+
+    <div class="timeline-phase">
+      <div class="timeline-phase-header">
+        <div class="phase-badge">Days 1–30</div>
+        <div class="phase-title">Foundation</div>
+      </div>
+      <ul class="phase-tasks">
+        <li>Claim and fully complete your Google Business Profile (Section 3 checklist)</li>
+        <li>Fix or build your website — phone number top-right, mobile-optimized, contact form working</li>
+        <li>Set up Google Analytics and Google Search Console (free — takes 20 minutes)</li>
+        <li>Start the 3-text review system for every completed job</li>
+        <li>Set up voicemail-to-text (Google Voice is free; dedicated systems start at $29/mo)</li>
+        <li>Add your business to Bing Places, Yelp, and Angi (free listings)</li>
+      </ul>
+    </div>
+
+    <div class="timeline-phase">
+      <div class="timeline-phase-header">
+        <div class="phase-badge">Days 31–60</div>
+        <div class="phase-title">Growth</div>
+      </div>
+      <ul class="phase-tasks">
+        <li>Post one Google Update per week (job photo + 2-sentence description)</li>
+        <li>Add 3–5 city-specific pages to your website (e.g. "HVAC Repair Warren MI")</li>
+        <li>Respond to all reviews within 24 hours — positive and negative</li>
+        <li>Set up auto-text reply for missed calls</li>
+        <li>Build 5–10 citations: same business name/address/phone on directories (BBB, HomeAdvisor, etc.)</li>
+        <li>Ask your 10 best past clients for a review with a personal text</li>
+      </ul>
+    </div>
+
+    <div class="timeline-phase">
+      <div class="timeline-phase-header">
+        <div class="phase-badge">Days 61–90</div>
+        <div class="phase-title">Scale</div>
+      </div>
+      <ul class="phase-tasks">
+        <li>Check Google Search Console — what keywords are getting impressions? Double down on those.</li>
+        <li>Add before/after photos from your best jobs to your website and GBP</li>
+        <li>Run a $5/day Google Local Services Ad (pay-per-call, Google-verified leads)</li>
+        <li>Set up a simple email capture on your website ("Get a Free Estimate") — start building your list</li>
+        <li>Review your Google Analytics: which pages drive the most conversions? Push more traffic there.</li>
+        <li>Ask 5 satisfied clients for a video testimonial (phone video, 30 seconds — it's gold)</li>
+      </ul>
+    </div>
+
+    <div class="callout">
+      <strong>Track one number:</strong> Inbound calls per month. Every initiative above should move that number. If it doesn't, adjust. If it does, double it.
+    </div>
+  </div>
+
+  <!-- ══ SECTION 7: WHAT TO LOOK FOR IN A WEB AGENCY ══ -->
+  <div class="section">
+    <div class="section-num">Section 07</div>
+    <h2>What to Look for When<br>Hiring a Web Agency</h2>
+
+    <p>If you're ready to hand this off to someone who does it professionally, here's how to avoid getting burned. The web design industry is full of people who charge $5,000 for a template they bought for $59.</p>
+
+    <p><strong>Ask these 5 questions before you write a check:</strong></p>
+
+    <ol class="numbered-list">
+      <li>
+        <strong>Can you show me 3 contractor sites you've built that are currently ranking on Google?</strong>
+        Anyone can build a pretty site. You need one that ranks. If they can't show you live examples with Google rankings, walk away.
+      </li>
+      <li>
+        <strong>What do I own after this engagement?</strong>
+        You should own your domain name, your Google account, your website files, and all your logins — period. If an agency owns any of these "on your behalf," that's a hostage situation, not a service.
+      </li>
+      <li>
+        <strong>What's included in the monthly fee, exactly?</strong>
+        Get it in writing. "Maintenance" means nothing. "2 hours of updates per month, hosting, SSL, plugin updates, and weekly backup" means something.
+      </li>
+      <li>
+        <strong>Do you have experience with my specific trade?</strong>
+        HVAC websites need different content and keywords than roofing websites. A generalist agency will give you a generic site. A specialist will give you a site that speaks to your customer's exact problem at 2am when their furnace goes out.
+      </li>
+      <li>
+        <strong>How do you measure success?</strong>
+        If the answer is "traffic" or "rankings," that's not enough. The only metric that matters for a contractor is inbound calls and booked jobs. Make sure your agency is tracking that, not just vanity metrics.
+      </li>
+    </ol>
+
+    <div class="callout-dark">
+      <p><strong>Red flags to avoid:</strong></p>
+      <p>Long-term contracts (12+ months with no performance clause) · Agencies that won't give you your own Google access · "We'll build it on our platform" (you can never leave) · No case studies from your industry · Pricing that requires a salesperson to explain it</p>
+    </div>
+
+    <p style="margin-top: 20px; color: var(--muted);">At Detroit Web Agency, we're contractors ourselves — we built systems for trades businesses before we built websites for them. Every site we build is owned 100% by the client. We don't do contracts. And we measure success in inbound calls, not impressions.</p>
+  </div>
+
+  <!-- ══ CTA ══ -->
+  <div class="cta-block">
+    <h2>Ready to Turn Your Website<br>Into a Lead Machine?</h2>
+    <p>We build contractor websites that rank on Google, look professional on every device, and make your phone ring — starting at $499. No contracts. Local to Grosse Pointe.</p>
+    <a href="https://detroitwebagent.com/get-started" class="cta-btn">Get a Free Site Audit →</a>
+    <div class="cta-contact">
+      Or call/text Matt directly: <a href="tel:+13139921219">(313) 992-1219</a><br>
+      <span style="font-size: 12px;">detroitwebagent.com · matt@detroitwebagent.com</span>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
