@@ -2175,6 +2175,12 @@ verify_jwt = false
 [functions.send-djconley-followup-sms]
 verify_jwt = false
 
+[functions.send-stewart-dental-proposal]
+verify_jwt = false
+
+[functions.send-youngblood-proposal]
+verify_jwt = false
+
 [functions.run-migration-once]
 verify_jwt = false
 
@@ -2292,4 +2298,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.admin-daily-clicks-digest]
+verify_jwt = false
+
+[functions.create-blueprint-checkout]
 verify_jwt = false

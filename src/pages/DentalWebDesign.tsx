@@ -8,7 +8,7 @@ const PLANS = [
   {
     key: "standard",
     name: "Standard",
-    setup: "$1,499",
+    setup: "$499",
     monthly: "$99/mo",
     description: "Professional site for solo or small dental practices.",
     includes: [
@@ -108,8 +108,8 @@ export default function DentalWebDesign() {
   return (
     <>
       <SEOHead
-        title="Dental Practice Website Design — $1,499 Setup | M2 Web Design"
-        description="Modern websites built for dental practices. New patient forms, provider bios, Google SEO, and mobile-first design. From $1,499 setup + $99/mo."
+        title="Dental Practice Website Design — $499 Setup | M2 Web Design"
+        description="Modern websites built for dental practices. New patient forms, provider bios, Google SEO, and mobile-first design. From $499 setup + $99/mo."
       />
       <div className="min-h-screen bg-background text-foreground">
         {/* Hero */}

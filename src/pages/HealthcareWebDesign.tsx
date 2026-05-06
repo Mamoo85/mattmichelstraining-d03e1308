@@ -8,7 +8,7 @@ const PLANS = [
   {
     key: "standard",
     name: "Standard",
-    setup: "$1,499",
+    setup: "$499",
     monthly: "$99/mo",
     description: "Professional site for clinics, PT offices, and solo practices.",
     includes: [
@@ -108,8 +108,8 @@ export default function HealthcareWebDesign() {
   return (
     <>
       <SEOHead
-        title="Healthcare Practice Website Design — $1,499 Setup | M2 Web Design"
-        description="Professional websites for PT clinics, chiropractic offices, and healthcare practices. Appointment forms, provider bios, and local SEO. From $1,499 + $99/mo."
+        title="Healthcare Practice Website Design — $499 Setup | M2 Web Design"
+        description="Professional websites for PT clinics, chiropractic offices, and healthcare practices. Appointment forms, provider bios, and local SEO. From $499 setup + $99/mo."
       />
       <div className="min-h-screen bg-background text-foreground">
         <div className="bg-[#1e293b] text-white px-6 py-14 text-center">

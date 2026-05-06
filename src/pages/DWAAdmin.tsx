@@ -53,6 +53,7 @@ const StrategyModeHub = lazy(() => import("@/components/dwa-admin/StrategyModeHu
 const AdminEnrichmentAudit = lazy(() => import("@/components/admin/AdminEnrichmentAudit"));
 const AdminMarketingTools = lazy(() => import("@/components/admin/AdminMarketingTools"));
 const DJConleyCommandPanel = lazy(() => import("@/components/admin/DJConleyCommandPanel"));
+const ProspectProposalCards = lazy(() => import("@/components/admin/ProspectProposalCards"));
 const AdminManualOnboardingQueue = lazy(() => import("@/components/dwa-admin/AdminManualOnboardingQueue"));
 const AdminSuppressionLists = lazy(() => import("@/components/dwa-admin/AdminSuppressionLists"));
 const AdminSystemAudit = lazy(() => import("@/components/dwa-admin/AdminSystemAudit"));
@@ -67,7 +68,7 @@ type Tab =
   | "contractor-leads" | "contractor-onboarding" | "contractor-market" | "fielddesk" | "techalert" | "missed-call" | "missed-call-leads" | "clients-all"
   | "lead-marketplace" | "demand-radar" | "hvb" | "growth-signals" | "visitor-intel" | "the-wire" | "coverage-map" | "trade-radar"
   | "health" | "simulation" | "playbook-hub" | "field-ops" | "command"
-  | "sales-hub" | "buyer-radar-qa" | "mortgage-radar" | "strategy-mode" | "enrichment-audit" | "enrichment-health" | "reply-inbox" | "client-attribution" | "marketing-tools" | "djconley" | "manual-onboarding" | "suppression-lists" | "system-audit" | "demo-pipeline";
+  | "sales-hub" | "buyer-radar-qa" | "mortgage-radar" | "strategy-mode" | "enrichment-audit" | "enrichment-health" | "reply-inbox" | "client-attribution" | "marketing-tools" | "djconley" | "proposals" | "manual-onboarding" | "suppression-lists" | "system-audit" | "demo-pipeline";
 
 const GROUPS: SidebarGroup[] = [
   {
@@ -116,6 +117,7 @@ const GROUPS: SidebarGroup[] = [
       { id: "manual-onboarding",     label: "🆕 Manual Onboarding Queue" },
       { id: "djconley",              label: "👑 D.J. Conley · Premium" },
       { id: "demo-pipeline",         label: "🎬 Demo Pipeline" },
+      { id: "proposals",             label: "📬 Prospect Proposals" },
     ],
   },
   {
@@ -222,6 +224,7 @@ export default function DWAAdmin() {
 
           {activeTab === "djconley" && <Suspense fallback={lazyFallback("D.J. Conley")}><DJConleyCommandPanel /></Suspense>}
           {activeTab === "demo-pipeline" && <Suspense fallback={lazyFallback("Demo Pipeline")}><DemoPipelineHub /></Suspense>}
+          {activeTab === "proposals" && <Suspense fallback={lazyFallback("Prospect Proposals")}><ProspectProposalCards /></Suspense>}
           {activeTab === "manual-onboarding" && <Suspense fallback={lazyFallback("manual onboarding")}><AdminManualOnboardingQueue /></Suspense>}
           {activeTab === "suppression-lists" && <Suspense fallback={lazyFallback("suppression lists")}><AdminSuppressionLists /></Suspense>}
           {activeTab === "system-audit" && <Suspense fallback={lazyFallback("system audit")}><AdminSystemAudit /></Suspense>}

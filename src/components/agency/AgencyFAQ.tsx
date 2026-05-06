@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 
 const faqs = [
-  { q: "How much does a website cost?", a: "Our standard sites start at $499, professional at $1,499, and full business systems at $3,499. Monthly retainers range from $49-$199/mo depending on services. Every project includes a free diagnostic first so you know exactly what you're paying for.", cat: "Pricing" },
+  { q: "How much does a website cost?", a: "All our websites start at $499 setup + $99/mo. Zero-upfront option at $499/mo all-in. No contracts.", cat: "Pricing" },
   { q: "Are there any contracts or lock-ins?", a: "No. Every service is month-to-month. Cancel anytime with zero penalties. We keep your business by delivering results, not by trapping you in fine print.", cat: "Pricing" },
   { q: "How long until I see results?", a: "Most clients see their first leads within 2-4 weeks of launch. SEO improvements typically show measurable gains within 60-90 days. Our automation products (call routing, SMS, review management) work from day one.", cat: "Timeline" },
   { q: "How long does it take to build my site?", a: "Standard sites: 5-7 business days. Professional sites: 10-14 business days. Full business systems: 2-3 weeks. We move fast because our engineering process is systematized.", cat: "Timeline" },

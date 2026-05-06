@@ -3314,6 +3314,42 @@ serve(async (req) => {
         await markFulfilled(true); return new Response(JSON.stringify({ received: true, annual: true }), { status: 200 });
       }
 
+      // ── BLUEPRINT PURCHASE ────────────────────────────────────────────────
+      if (meta.type === "blueprint_purchase") {
+        try {
+          const blueprintHtml = dwaEmailHtml({
+            greeting: `Hey${email ? " — thanks for grabbing the Blueprint" : ""}!`,
+            headline: "Your Contractor Website Blueprint is Ready",
+            body: `
+              <p style="margin:0 0 16px;">You just made a smart move. The Blueprint covers everything a Metro Detroit contractor needs to turn their website into a 24/7 lead machine — Google Business Profile, missed-call recovery, review automation, and the 90-day launch checklist.</p>
+              <p style="margin:0 0 16px;"><strong>Access your Blueprint here:</strong></p>
+              <p style="margin:0 0 24px;"><a href="https://detroitwebagent.com/blueprint/index.html" style="color:#00d4ff;font-weight:700;">detroitwebagent.com/blueprint/index.html →</a></p>
+              <p style="margin:0 0 16px;">It loads in your browser and prints cleanly to PDF — just hit Ctrl+P (or Cmd+P on Mac) and save as PDF.</p>
+              <p style="margin:0;">If you want someone to build this out for you — <strong>$499 setup, $99/mo, no contract</strong> — reply to this email or text me directly at (313) 992-1219.</p>
+            `,
+            cta: { text: "Open Your Blueprint →", url: "https://detroitwebagent.com/blueprint/index.html" },
+            signature: "Matt Michels · Detroit Web Agency · Grosse Pointe, MI<br>(313) 992-1219 · detroitwebagent.com",
+          });
+          await dwaEmail(email, "Your Contractor Website Blueprint — Detroit Web Agency", blueprintHtml);
+          await sb.from("system_comms_log" as any).insert({
+            recipient_email: email,
+            subject: "Your Contractor Website Blueprint — Detroit Web Agency",
+            product: "blueprint",
+            channel: "email",
+            status: "sent",
+            metadata: { stripe_session_id: session.id, amount_cents: session.amount_total },
+          }).catch(() => {});
+          await notifyMatt(
+            `💰 Blueprint sold — $${((session.amount_total || 0) / 100).toFixed(2)}`,
+            `<p><strong>${email}</strong> purchased the Contractor Website Blueprint. Blueprint delivery email sent.</p>`,
+          ).catch(() => {});
+        } catch (e) {
+          console.error("[WEBHOOK] blueprint_purchase delivery error:", e);
+        }
+        await markFulfilled(true, undefined, "blueprint_purchase");
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
       // Unmatched checkout.session.completed — log and acknowledge
       console.log(`[WEBHOOK] checkout.session.completed with unhandled meta.type: ${meta.type || "none"}`);
       await notifyMatt(

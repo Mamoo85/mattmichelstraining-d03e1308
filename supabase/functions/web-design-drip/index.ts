@@ -12,27 +12,27 @@ const log = (step: string, data?: any) =>
   console.log(`[WEB-DESIGN-DRIP] ${step}${data ? " — " + JSON.stringify(data) : ""}`);
 
 const INDUSTRY_PAGE_MAP: Record<string, { path: string; price: string; monthly: string }> = {
-  "dental practice":        { path: "/dental-web-design",     price: "$1,499", monthly: "$99/mo" },
-  "dentist":                { path: "/dental-web-design",     price: "$1,499", monthly: "$99/mo" },
-  "orthodontist":           { path: "/dental-web-design",     price: "$1,499", monthly: "$99/mo" },
-  "law firm":               { path: "/legal-web-design",      price: "$1,499", monthly: "$99/mo" },
-  "attorney":               { path: "/legal-web-design",      price: "$1,499", monthly: "$99/mo" },
-  "personal injury attorney": { path: "/legal-web-design",   price: "$1,499", monthly: "$99/mo" },
-  "physical therapy clinic":{ path: "/healthcare-web-design", price: "$1,499", monthly: "$99/mo" },
-  "chiropractic office":    { path: "/healthcare-web-design", price: "$1,499", monthly: "$99/mo" },
-  "urgent care clinic":     { path: "/healthcare-web-design", price: "$1,499", monthly: "$99/mo" },
-  "accounting firm":        { path: "/healthcare-web-design", price: "$1,499", monthly: "$99/mo" },
-  "insurance agency":       { path: "/healthcare-web-design", price: "$1,499", monthly: "$99/mo" },
-  "veterinary clinic":      { path: "/healthcare-web-design", price: "$1,499", monthly: "$99/mo" },
-  "restaurant":             { path: "/restaurant-web-design", price: "$799",   monthly: "$79/mo" },
-  "bar and grill":          { path: "/restaurant-web-design", price: "$799",   monthly: "$79/mo" },
-  "pizza restaurant":       { path: "/restaurant-web-design", price: "$799",   monthly: "$79/mo" },
-  "manufacturing company":  { path: "/manufacturing-web-design", price: "$1,499", monthly: "$99/mo" },
-  "machine shop":           { path: "/manufacturing-web-design", price: "$1,499", monthly: "$99/mo" },
-  "fabrication shop":       { path: "/manufacturing-web-design", price: "$1,499", monthly: "$99/mo" },
-  "metal fabrication shop": { path: "/manufacturing-web-design", price: "$1,499", monthly: "$99/mo" },
-  "real estate agent":      { path: "/real-estate-web-design", price: "$1,499", monthly: "$99/mo" },
-  "mortgage broker":        { path: "/real-estate-web-design", price: "$1,499", monthly: "$99/mo" },
+  "dental practice":        { path: "/dental-web-design",     price: "$499", monthly: "$99/mo" },
+  "dentist":                { path: "/dental-web-design",     price: "$499", monthly: "$99/mo" },
+  "orthodontist":           { path: "/dental-web-design",     price: "$499", monthly: "$99/mo" },
+  "law firm":               { path: "/legal-web-design",      price: "$499", monthly: "$99/mo" },
+  "attorney":               { path: "/legal-web-design",      price: "$499", monthly: "$99/mo" },
+  "personal injury attorney": { path: "/legal-web-design",   price: "$499", monthly: "$99/mo" },
+  "physical therapy clinic":{ path: "/healthcare-web-design", price: "$499", monthly: "$99/mo" },
+  "chiropractic office":    { path: "/healthcare-web-design", price: "$499", monthly: "$99/mo" },
+  "urgent care clinic":     { path: "/healthcare-web-design", price: "$499", monthly: "$99/mo" },
+  "accounting firm":        { path: "/healthcare-web-design", price: "$499", monthly: "$99/mo" },
+  "insurance agency":       { path: "/healthcare-web-design", price: "$499", monthly: "$99/mo" },
+  "veterinary clinic":      { path: "/healthcare-web-design", price: "$499", monthly: "$99/mo" },
+  "restaurant":             { path: "/restaurant-web-design", price: "$499",   monthly: "$79/mo" },
+  "bar and grill":          { path: "/restaurant-web-design", price: "$499",   monthly: "$79/mo" },
+  "pizza restaurant":       { path: "/restaurant-web-design", price: "$499",   monthly: "$79/mo" },
+  "manufacturing company":  { path: "/manufacturing-web-design", price: "$499", monthly: "$99/mo" },
+  "machine shop":           { path: "/manufacturing-web-design", price: "$499", monthly: "$99/mo" },
+  "fabrication shop":       { path: "/manufacturing-web-design", price: "$499", monthly: "$99/mo" },
+  "metal fabrication shop": { path: "/manufacturing-web-design", price: "$499", monthly: "$99/mo" },
+  "real estate agent":      { path: "/real-estate-web-design", price: "$499", monthly: "$99/mo" },
+  "mortgage broker":        { path: "/real-estate-web-design", price: "$499", monthly: "$99/mo" },
   "roofer":                 { path: "/detroit-web-design",     price: "$499",   monthly: "$49/mo" },
   "roofing":                { path: "/detroit-web-design",     price: "$499",   monthly: "$49/mo" },
   "plumber":                { path: "/detroit-web-design",     price: "$499",   monthly: "$49/mo" },
@@ -61,7 +61,7 @@ const DRIP_SEQUENCE = [
     body: (biz: string, industry: string) => {
       const page = getIndustryPage(industry);
       const siteUrl = `detroitwebagent.com${page.path}`;
-      return `Hey —\n\nI was looking up ${industry.toLowerCase()} businesses in your area and noticed ${biz} doesn't have a website pulling in leads.\n\nI build sites for local businesses — ${page.price} flat, professional design, no agency markup. Just a site that ranks on Google and makes your phone ring.\n\nWant to see what I'd build for you? Check out what I've done: ${siteUrl}\n\nStart here: detroitwebagent.com/get-started — I'll reach out the same day.\n\n— Matt Michels, Grosse Pointe\n(313) 992-1219`;
+      return `Hey —\n\nI was looking up ${industry.toLowerCase()} businesses in your area and noticed ${biz} doesn't have a website pulling in leads.\n\nI build sites for local businesses — ${page.price} flat, professional design, no agency markup. Just a site that ranks on Google and makes your phone ring.\n\nWant to see what I'd build for you? Check out what I've done: ${siteUrl}\n\nStart here: detroitwebagent.com/get-started — I'll reach out the same day.\n\n— Matt Michels, Grosse Pointe\n(313) 992-1219\n\nP.S. — Just published a free Contractor Website Blueprint. No strings: https://detroitwebagent.com/blueprint`;
     },
   },
   {

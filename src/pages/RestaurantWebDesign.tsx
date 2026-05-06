@@ -25,7 +25,7 @@ const PLANS = [
   {
     key: "professional",
     name: "Pro",
-    setup: "$1,499",
+    setup: "$499",
     monthly: "$99/mo",
     description: "Multiple locations or full catering & events presence.",
     includes: [

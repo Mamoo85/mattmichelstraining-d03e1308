@@ -40,6 +40,8 @@ const DemoRunner = lazyRetry(() => import("./pages/DemoRunner"));
 const WebsitePlusFieldDesk = lazyRetry(() => import("./pages/WebsitePlusFieldDesk"));
 const BundleSuccess = lazyRetry(() => import("./pages/BundleSuccess"));
 const AgencyHome = lazyRetry(() => import("./pages/AgencyHome"));
+const BlueprintLanding = lazyRetry(() => import("./pages/BlueprintLanding"));
+const BlueprintSuccess = lazyRetry(() => import("./pages/BlueprintSuccess"));
 const OwnerLogin = lazyRetry(() => import("./pages/OwnerLogin"));
 const OwnerVerify = lazyRetry(() => import("./pages/OwnerVerify"));
 const OwnerDashboard = lazyRetry(() => import("./pages/OwnerDashboard"));
@@ -731,6 +733,8 @@ const App = () => (
                     <Route path="/social-media-ai" element={<SocialMediaAI />} />
                     <Route path="/trainer-social-ai" element={<TrainerSocialAI />} />
                     <Route path="/get-started" element={<GetStarted />} />
+                    <Route path="/blueprint" element={<BlueprintLanding />} />
+                    <Route path="/blueprint-success" element={<BlueprintSuccess />} />
                     <Route path="/social-connect" element={<SocialConnect />} />
                     <Route path="/review-responder" element={<ReviewResponder />} />
                     <Route path="/seo-reports" element={<SeoAuditService />} />

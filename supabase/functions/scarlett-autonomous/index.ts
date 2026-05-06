@@ -41,7 +41,7 @@ const PRODUCT_TABLES = [
   { table: "blog_post_clients", name: "Blog Writer", price: 99, ltv_months: 10, priority: 2, keywords: [
     "SEO blog service", "automated blog posts", "content marketing for small business"
   ]},
-  { table: "web_design_leads", name: "Web Design Services", price: 1499, ltv_months: 12, priority: 2, keywords: [
+  { table: "web_design_leads", name: "Web Design Services", price: 499, ltv_months: 12, priority: 2, keywords: [
     "small business website", "affordable web design", "local business website"
   ]},
   { table: "gbp_saas_clients", name: "GBP Auto-Poster", price: 74, ltv_months: 10, priority: 2, keywords: [

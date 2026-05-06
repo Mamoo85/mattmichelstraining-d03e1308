@@ -51,7 +51,7 @@ const FAQ_SCHEMA = {
   "@context": "https://schema.org",
   "@type": "FAQPage",
   mainEntity: [
-    { "@type": "Question", name: "How much does a website cost?", acceptedAnswer: { "@type": "Answer", text: "Standard sites start at $499, professional at $1,499, and full business systems at $3,499. Monthly retainers range from $49-$199/mo. Every project includes a free diagnostic first." } },
+    { "@type": "Question", name: "How much does a website cost?", acceptedAnswer: { "@type": "Answer", text: "All websites start at $499 setup + $99/mo. Zero-upfront option at $499/mo all-in. No contracts." } },
     { "@type": "Question", name: "Are there any contracts or lock-ins?", acceptedAnswer: { "@type": "Answer", text: "No. Every service is month-to-month. Cancel anytime with zero penalties. We keep your business by delivering results, not by trapping you in fine print." } },
     { "@type": "Question", name: "How long until I see results?", acceptedAnswer: { "@type": "Answer", text: "Most clients see their first leads within 2-4 weeks of launch. SEO improvements typically show measurable gains within 60-90 days. Call routing and SMS automation work from day one." } },
     { "@type": "Question", name: "What makes Detroit Web Agency different?", acceptedAnswer: { "@type": "Answer", text: "We're full-stack engineers who started fixing hardware — not web designers. We build websites as automated lead systems, not just pretty pages. Plus, we're local to Grosse Pointe, MI — not a faceless overseas agency." } },
