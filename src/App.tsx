@@ -1025,6 +1025,20 @@ const App = () => (
                     <Route path="/website-plus-fielddesk" element={<WebsitePlusFieldDesk />} />
                     <Route path="/bundle-success" element={<BundleSuccess />} />
                     <Route path="/payment-success" element={<PaymentSuccess />} />
+                    {/* Missing wave-product success routes — render generic PaymentSuccess */}
+                    <Route path="/ai-blog-posts" element={<PaymentSuccess />} />
+                    <Route path="/ai-caption-pack" element={<PaymentSuccess />} />
+                    <Route path="/ai-faq-refresh" element={<PaymentSuccess />} />
+                    <Route path="/ai-press-release" element={<PaymentSuccess />} />
+                    <Route path="/ai-property-management" element={<PaymentSuccess />} />
+                    <Route path="/ai-proposal" element={<PaymentSuccess />} />
+                    <Route path="/ai-social-captions" element={<PaymentSuccess />} />
+                    <Route path="/ai-voicemail" element={<PaymentSuccess />} />
+                    <Route path="/childrens-stories" element={<PaymentSuccess />} />
+                    <Route path="/obituary-service" element={<PaymentSuccess />} />
+                    <Route path="/sales-scripts" element={<PaymentSuccess />} />
+                    <Route path="/sermon-prep" element={<PaymentSuccess />} />
+                    <Route path="/trade-show-followup" element={<Navigate to="/trade-show-follow-up" replace />} />
                     <Route path="/owner/welcome" element={<Navigate to="/owner/dashboard" replace />} />
                     <Route path="/bedtime-stories" element={<Navigate to="/" replace />} />
                     <Route path="/tech-alert" element={<Navigate to="/talent-radar" replace />} />
