@@ -153,7 +153,7 @@ function emailHtml(lead: any, pitch: ProductPitch): string {
     headline: pitch.headline,
     paragraphs,
     addOnBox: RADAR_ADDON_BOX,
-    ctaUrl: pitch.ctaUrl,
+    ctaUrl: `${pitch.ctaUrl}&email=${encodeURIComponent(lead.email || "")}&utm_source=product_blast&utm_medium=email`,
     ctaText: pitch.ctaText.replace(/\s*→\s*$/, ""),
     signoffLine: "— Matt, (313) 992-1219",
     unsubscribeUrl: `${SITE}/unsubscribe?email=${encodeURIComponent(lead.email)}`,
