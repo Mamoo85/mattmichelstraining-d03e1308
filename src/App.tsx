@@ -726,6 +726,8 @@ const App = () => (
                     <Route path="/social-media-ai" element={<SocialMediaAI />} />
                     <Route path="/trainer-social-ai" element={<TrainerSocialAI />} />
                     <Route path="/get-started" element={<GetStarted />} />
+                    <Route path="/blueprint" element={<BlueprintLanding />} />
+                    <Route path="/blueprint-success" element={<BlueprintSuccess />} />
                     <Route path="/social-connect" element={<SocialConnect />} />
                     <Route path="/review-responder" element={<ReviewResponder />} />
                     <Route path="/seo-reports" element={<SeoAuditService />} />
