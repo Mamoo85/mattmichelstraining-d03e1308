@@ -41,7 +41,7 @@ Deno.serve(async (req) => {
     .maybeSingle();
 
   if (!client) return jsonResponse({ error: "invalid or inactive api_key" }, 401);
-  if (!client.api_tier) return jsonResponse({ error: "API access not enabled — upgrade at detroitwebagency.com/trade-radar-api" }, 403);
+  if (!client.api_tier) return jsonResponse({ error: "API access not enabled — upgrade at detroitwebagent.com/trade-radar-api" }, 403);
 
   // Query params
   const vertical = url.searchParams.get("vertical") || client.vertical;
