@@ -21,10 +21,17 @@ const cors = {
 
 const PRODUCT_NAMES: Record<string, string> = {
   field_service_subscription: "FieldDesk",
+  field_crm_subscription: "FieldDesk",
   hire_alert_subscription: "TechAlert",
   site_radar_subscription: "SiteRadar",
   missed_call_subscription: "Missed-Call Catch",
   mortgage_radar_subscription: "Mortgage Radar",
+  mortgage_radar_trial: "Mortgage Radar",
+  trade_radar_subscription: "Trade Radar",
+  contractor_lead_subscription: "Contractor Leads",
+  dead_lead_billing_setup: "Dead Lead Reactivation",
+  dead_lead_pilot: "Dead Lead Reactivation",
+  buyer_radar_subscription: "Buyer Radar",
   phone_answering_subscription: "AI Phone Answering",
   bundle_revenue_suite: "Revenue Suite",
   ai_reputation_subscription: "AI Reputation Dashboard",
