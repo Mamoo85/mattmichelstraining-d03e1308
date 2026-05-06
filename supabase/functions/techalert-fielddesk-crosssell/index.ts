@@ -89,7 +89,7 @@ serve(async (req) => {
 
       // Build checkout link with coupon param
       const checkoutUrl = `${SUPABASE_URL}/functions/v1/create-field-crm-checkout`;
-      const ctaUrl = `https://www.detroitwebagent.com/field-crm?coupon=TECHALERT50&email=${encodeURIComponent(client.owner_email)}&biz=${encodeURIComponent(companyName)}`;
+      const ctaUrl = `https://detroitwebagent.com/field-service?coupon=TECHALERT50&email=${encodeURIComponent(client.owner_email)}&biz=${encodeURIComponent(companyName)}`;
 
       // Send email via Resend
       const emailRes = await fetch("https://api.resend.com/emails", {
