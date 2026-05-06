@@ -250,11 +250,17 @@ async function scanUSPTOPatents(): Promise<Posting[]> {
   // CPC subclasses relevant to HVAC/boiler/plumbing/electrical
   const cpcSubclasses = ["F24F", "F22B", "E03C", "H02B"]; // HVAC, boilers, plumbing, electrical panels
 
+  const usptoKey = Deno.env.get("USPTO_API_KEY") || "";
   for (const cpc of cpcSubclasses) {
     try {
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        "User-Agent": "TechAlert matt@detroitwebagent.com",
+      };
+      if (usptoKey) headers["X-Api-Key"] = usptoKey;
       const res = await fetch("https://search.patentsview.org/api/v1/patent/", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "User-Agent": "TechAlert matt@detroitwebagent.com" },
+        headers,
         body: JSON.stringify({
           q: { _and: [{ _gte: { patent_date: ninetyDaysAgo } }, { _begins: { cpc_subgroup_id: cpc } }] },
           f: ["assignee_organization", "patent_date", "patent_title", "patent_number"],
