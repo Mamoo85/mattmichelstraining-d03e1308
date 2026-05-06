@@ -5,6 +5,7 @@
 // later renders one client-side (we also probe known canonical keys directly).
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { OFFERS } from "../_shared/offers.ts";
+import { sendSMS, ADMIN_PHONE } from "../_shared/twilio.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -14,6 +15,7 @@ const corsHeaders = {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const PUBLIC_SITE = Deno.env.get("PUBLIC_SITE_URL") || "https://detroitwebagent.com";
+const TWILIO_FROM = Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219";
 
 interface CheckTarget {
   product_key: string;
@@ -47,6 +49,32 @@ const TRIAL_KEYS: string[] = [
   "exterior_radar", "tree_radar", "restoration_radar",
   "demo_junk_radar", "foundation_radar",
 ];
+
+// Static alias → canonical map (mirrors StartTrial.tsx ALIASES).
+// Used to detect alias keys that would resolve to null client-side.
+const ALIAS_EXPECT: Record<string, string> = {
+  field_desk: "field_desk", fielddesk: "field_desk", field_crm: "field_desk", field_service: "field_desk",
+  missed_call_catch: "missed_call_catch", missed_call: "missed_call_catch", missedcall: "missed_call_catch",
+  missed_call_text: "missed_call_catch", textback: "missed_call_catch",
+  site_radar: "site_radar", siteradar: "site_radar",
+  phone_answering: "phone_answering", ai_phone_answering: "phone_answering", ai_phone: "phone_answering",
+  bundle: "bundle_revenue_suite", bundle_revenue_suite: "bundle_revenue_suite", revenue_suite: "bundle_revenue_suite",
+  techalert: "techalert", hire_alert: "techalert", hirealert: "techalert", talent_radar: "techalert", carealert: "techalert",
+  contractor_leads: "contractor_leads", contractor: "contractor_leads",
+  dead_lead: "dead_lead", dead_leads: "dead_lead", dead_lead_reactivation: "dead_lead",
+  mortgage_radar: "mortgage_radar", mortgageradar: "mortgage_radar",
+  roofing_radar: "trade_radar_roofing", roofing: "trade_radar_roofing", trade_radar_roofing: "trade_radar_roofing",
+  hvac_radar: "trade_radar_hvac", hvac: "trade_radar_hvac", trade_radar_hvac: "trade_radar_hvac",
+  plumbing_radar: "trade_radar_plumbing", plumbing: "trade_radar_plumbing", trade_radar_plumbing: "trade_radar_plumbing",
+  electrical_radar: "trade_radar_electrical", electrical: "trade_radar_electrical", trade_radar_electrical: "trade_radar_electrical",
+  pest_control_radar: "trade_radar_pest_control", pest_control: "trade_radar_pest_control", pest: "trade_radar_pest_control", trade_radar_pest_control: "trade_radar_pest_control",
+  gutters_radar: "trade_radar_gutters", gutters: "trade_radar_gutters", trade_radar_gutters: "trade_radar_gutters",
+  exterior_radar: "trade_radar_exterior", exterior: "trade_radar_exterior", painting_radar: "trade_radar_exterior", painting: "trade_radar_exterior", trade_radar_exterior: "trade_radar_exterior",
+  tree_radar: "trade_radar_tree", tree: "trade_radar_tree", trade_radar_tree: "trade_radar_tree",
+  restoration_radar: "trade_radar_restoration", restoration: "trade_radar_restoration", trade_radar_restoration: "trade_radar_restoration",
+  demo_junk_radar: "trade_radar_demo_junk", demo_junk: "trade_radar_demo_junk", trade_radar_demo_junk: "trade_radar_demo_junk",
+  foundation_radar: "trade_radar_foundation", foundation: "trade_radar_foundation", trade_radar_foundation: "trade_radar_foundation",
+};
 
 const ERROR_FINGERPRINTS = [
   "Unknown product",
@@ -82,6 +110,18 @@ function buildTargets(): CheckTarget[] {
   }
   targets.push({ product_key: "_root", channel: "site", url: PUBLIC_SITE });
   return targets;
+}
+
+// Validate alias keys against the static map — catch broken aliases before HTTP check.
+function getAliasFailures(): string[] {
+  const failed: string[] = [];
+  for (const key of TRIAL_KEYS) {
+    const normalized = key.trim().toLowerCase().replace(/-/g, "_");
+    if (!ALIAS_EXPECT[normalized]) {
+      failed.push(key);
+    }
+  }
+  return failed;
 }
 
 async function checkOne(t: CheckTarget) {
@@ -144,6 +184,9 @@ Deno.serve(async (req) => {
     const sb = createClient(SUPABASE_URL, SERVICE_KEY);
     const targets = buildTargets();
 
+    // Alias validation (no HTTP needed — purely static)
+    const aliasFailures = getAliasFailures();
+
     const results: Awaited<ReturnType<typeof checkOne>>[] = [];
     for (let i = 0; i < targets.length; i += 15) {
       const batch = targets.slice(i, i + 15);
@@ -165,12 +208,32 @@ Deno.serve(async (req) => {
     if (insErr) throw insErr;
 
     const failures = rows.filter((r) => !r.ok);
+    const totalFailures = failures.length + aliasFailures.length;
+
+    // 🔔 SMS Matt immediately if any trial links are broken
+    if (totalFailures > 0) {
+      const failSummary = [
+        failures.length > 0 ? `${failures.length} HTTP fail(s): ${failures.slice(0, 3).map((f) => f.product_key).join(", ")}` : null,
+        aliasFailures.length > 0 ? `${aliasFailures.length} alias fail(s): ${aliasFailures.slice(0, 3).join(", ")}` : null,
+      ].filter(Boolean).join(" | ");
+      sendSMS(
+        ADMIN_PHONE,
+        TWILIO_FROM,
+        `🔴 LINK AUDIT: ${totalFailures} broken trial CTA(s)\n${failSummary}\nFix now — these are losing conversions.`,
+        "link_audit_alert",
+        false,
+        { bypassQuietHours: true },
+      ).catch((e) => console.error("[e2e-link-auditor] SMS failed", e));
+    }
+
     return new Response(
       JSON.stringify({
         ok: true,
         checked: rows.length,
         failures: failures.length,
+        alias_failures: aliasFailures.length,
         failed_urls: failures,
+        failed_aliases: aliasFailures,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
