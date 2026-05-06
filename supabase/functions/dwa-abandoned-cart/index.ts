@@ -21,15 +21,15 @@ const PRODUCT_LABELS: Record<string, string> = {
 };
 
 const PRODUCT_URLS: Record<string, string> = {
-  hire_alert_subscription: "https://detroitwebagency.com/tech-alert",
-  trade_radar_subscription: "https://detroitwebagency.com/trade-radar",
-  mortgage_radar_subscription: "https://detroitwebagency.com/mortgage-radar",
-  field_service_subscription: "https://detroitwebagency.com/field-desk",
-  field_crm_subscription: "https://detroitwebagency.com/field-desk",
-  missed_call_subscription: "https://detroitwebagency.com/missed-call",
-  site_radar_subscription: "https://detroitwebagency.com/site-radar",
-  contractor_lead_subscription: "https://detroitwebagency.com/contractor-leads",
-  dead_lead_billing_setup: "https://detroitwebagency.com/dead-lead-reactivation",
+  hire_alert_subscription: "https://detroitwebagent.com/tech-alert",
+  trade_radar_subscription: "https://detroitwebagent.com/trade-radar",
+  mortgage_radar_subscription: "https://detroitwebagent.com/mortgage-radar",
+  field_service_subscription: "https://detroitwebagent.com/field-desk",
+  field_crm_subscription: "https://detroitwebagent.com/field-desk",
+  missed_call_subscription: "https://detroitwebagent.com/missed-call",
+  site_radar_subscription: "https://detroitwebagent.com/site-radar",
+  contractor_lead_subscription: "https://detroitwebagent.com/contractor-leads",
+  dead_lead_billing_setup: "https://detroitwebagent.com/dead-lead-reactivation",
 };
 
 function generateDiscountCode(email: string, productType: string): string {
