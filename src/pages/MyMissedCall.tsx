@@ -83,6 +83,8 @@ export default function MyMissedCall() {
       .finally(() => setLoading(false));
   }, [token]);
 
+  if (!loading && !token && isJustPurchased()) return <JustPurchasedScreen product="Missed Call Catch" />;
+
   return (
     <>
       <Helmet>
