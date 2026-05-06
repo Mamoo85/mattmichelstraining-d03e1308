@@ -39,6 +39,12 @@ interface ZeroCheck {
   windowHours: number;        // raise alert if 0 rows in last N hours
   description: string;
   critical: boolean;          // critical=SMS, non-critical=email only
+  // Optional: filter the output count by a column equality (e.g. only count
+  // demand_radar_runs rows where source = 'industry-pulse-scanner' so this
+  // job's success isn't masked or confused by a sibling scanner writing to
+  // the same table).
+  sourceFilterColumn?: string;
+  sourceFilterValue?: string;
 }
 
 const WATCHLIST: ZeroCheck[] = [
@@ -68,6 +74,8 @@ const WATCHLIST: ZeroCheck[] = [
     windowHours: 30,
     description: "Demand Radar — commercial",
     critical: true,
+    sourceFilterColumn: "source",
+    sourceFilterValue: "industry-pulse-scanner",
   },
   {
     cron: "contractor-prospector-daily",
@@ -118,15 +126,21 @@ async function checkOne(sb: any, w: ZeroCheck): Promise<ZeroResult> {
     critical: w.critical,
   };
 
-  // Count output rows in window
-  const { count, error } = await sb
+  // Count output rows in window — apply optional source filter so per-cron
+  // checks are not polluted by sibling jobs writing to the same table.
+  let q = sb
     .from(w.outputTable)
     .select("*", { count: "exact", head: true })
     .gte(w.outputColumn, since);
+  if (w.sourceFilterColumn && w.sourceFilterValue) {
+    q = q.eq(w.sourceFilterColumn, w.sourceFilterValue);
+  }
+  const { count, error } = await q;
 
   if (error) {
     out.ok = false;
-    out.lastResponseError = `count query failed: ${error.message}`;
+    const msg = (error.message && error.message.trim()) || error.code || error.details || JSON.stringify(error);
+    out.lastResponseError = `count query failed (${w.outputTable}): ${msg}`;
     return out;
   }
 
@@ -136,21 +150,28 @@ async function checkOne(sb: any, w: ZeroCheck): Promise<ZeroResult> {
     return out;
   }
 
-  // Zero rows — investigate. Pull the cron's stored URL.
-  const { data: hist } = await sb
-    .from("cron_schedule_history")
-    .select("command")
-    .eq("jobname", w.cron)
-    .eq("active", true)
-    .order("replaced_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  out.requestUrl = extractUrlFromCommand((hist as any)?.command);
+  // Zero rows — investigate. Prefer the LIVE cron.job command (source of truth)
+  // via a security-definer RPC, falling back to cron_schedule_history, then to
+  // the known function name. This prevents false "URL missing" alerts when the
+  // history table drifts from the live cron schedule.
+  try {
+    const { data: live } = await sb.rpc("get_cron_job_command", { p_jobname: w.cron });
+    const liveCmd = Array.isArray(live) ? live[0]?.command : (live as any)?.command;
+    out.requestUrl = extractUrlFromCommand(liveCmd);
+  } catch (_) { /* fall through to history */ }
 
-  // Fallback: if the cron wasn't logged in cron_schedule_history (e.g. scheduled
-  // directly via cron.schedule() without history insert), derive the URL from the
-  // known function name so the alert email is actionable instead of saying
-  // "URL missing from cron schedule".
+  if (!out.requestUrl) {
+    const { data: hist } = await sb
+      .from("cron_schedule_history")
+      .select("command")
+      .eq("jobname", w.cron)
+      .eq("active", true)
+      .order("replaced_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    out.requestUrl = extractUrlFromCommand((hist as any)?.command);
+  }
+
   if (!out.requestUrl && w.functionName) {
     out.requestUrl = `${SUPABASE_URL}/functions/v1/${w.functionName}`;
   }
