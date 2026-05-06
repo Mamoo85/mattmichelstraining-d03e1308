@@ -405,6 +405,25 @@ export default function AdminHireAlertClients() {
   };
 
   // ── PDF Generator ──────────────────────────────────────────────────────────
+  function escapeHtml(v: unknown): string {
+    if (v === null || v === undefined) return "";
+    return String(v)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+  function safeHttpsUrl(v: unknown): string | null {
+    if (!v) return null;
+    try {
+      const u = new URL(String(v));
+      if (u.protocol !== "https:" && u.protocol !== "http:") return null;
+      return u.toString();
+    } catch {
+      return null;
+    }
+  }
   function buildPDFHTML(report: any): string {
     const { report_date, summary, candidates: cands } = report;
 
@@ -412,7 +431,7 @@ export default function AdminHireAlertClients() {
       .sort((a, b) => (b[1] as number) - (a[1] as number))
       .map(([trade, count]) => {
         const bars = "█".repeat(Math.min((count as number) * 2, 24));
-        return `<div class="trade-row"><span class="trade-name">${trade}</span><span class="trade-bar">${bars}</span><span class="trade-count">${count}</span></div>`;
+        return `<div class="trade-row"><span class="trade-name">${escapeHtml(trade)}</span><span class="trade-bar">${bars}</span><span class="trade-count">${escapeHtml(count)}</span></div>`;
       }).join("");
 
     const candidateCards = cands.map((c: any) => {
@@ -422,27 +441,28 @@ export default function AdminHireAlertClients() {
       const priorityLabel = isHigh ? "HIGH PRIORITY" : isMed ? "AVAILABLE" : "MONITOR";
       const priorityColor = isHigh ? "#10b981" : isMed ? "#f59e0b" : "#94a3b8";
 
+      const safeLinkedIn = safeHttpsUrl(c.linkedin_url);
       const contactParts = [
-        c.phone ? `📞 ${c.phone}` : null,
-        c.email ? `✉ ${c.email}` : null,
-        c.linkedin_url ? `<a href="${c.linkedin_url}" style="color:#3b82f6;text-decoration:none;">LinkedIn →</a>` : null,
+        c.phone ? `📞 ${escapeHtml(c.phone)}` : null,
+        c.email ? `✉ ${escapeHtml(c.email)}` : null,
+        safeLinkedIn ? `<a href="${escapeHtml(safeLinkedIn)}" style="color:#3b82f6;text-decoration:none;">LinkedIn →</a>` : null,
       ].filter(Boolean);
       const contactLine = contactParts.join("&nbsp;&nbsp;&nbsp;");
 
       return `<div class="candidate-card" style="border-left:4px solid ${borderColor};">
         <div class="card-header">
           <span class="priority-label" style="color:${priorityColor};">${priorityLabel}</span>
-          ${c.city ? `<span class="city">📍 ${c.city}, MI</span>` : ""}
+          ${c.city ? `<span class="city">📍 ${escapeHtml(c.city)}, MI</span>` : ""}
         </div>
-        <div class="candidate-name">${c.full_name}</div>
-        <div class="candidate-trade">${c.license_type}</div>
-        ${c.license_number ? `<div class="license-row">License #: ${c.license_number}${c.license_expiry ? `&nbsp;&nbsp;·&nbsp;&nbsp;Exp: ${c.license_expiry}` : ""}<br/><span class="verify-link">→ Verify at michigan.gov/lara — search by license number</span></div>` : ""}
-        <div class="why-now">WHY NOW: ${c.why_now}</div>
-        ${c.current_employer ? `<div class="detail-row">Currently at: ${c.current_employer}</div>` : ""}
-        ${c.years_experience ? `<div class="detail-row">${c.years_experience}+ years experience</div>` : ""}
+        <div class="candidate-name">${escapeHtml(c.full_name)}</div>
+        <div class="candidate-trade">${escapeHtml(c.license_type)}</div>
+        ${c.license_number ? `<div class="license-row">License #: ${escapeHtml(c.license_number)}${c.license_expiry ? `&nbsp;&nbsp;·&nbsp;&nbsp;Exp: ${escapeHtml(c.license_expiry)}` : ""}<br/><span class="verify-link">→ Verify at michigan.gov/lara — search by license number</span></div>` : ""}
+        <div class="why-now">WHY NOW: ${escapeHtml(c.why_now)}</div>
+        ${c.current_employer ? `<div class="detail-row">Currently at: ${escapeHtml(c.current_employer)}</div>` : ""}
+        ${c.years_experience ? `<div class="detail-row">${escapeHtml(c.years_experience)}+ years experience</div>` : ""}
         <div class="card-footer">
           <span>${contactLine || "Contact info available upon subscription activation"}</span>
-          ${c.first_seen ? `<span class="identified">Identified: ${c.first_seen}</span>` : ""}
+          ${c.first_seen ? `<span class="identified">Identified: ${escapeHtml(c.first_seen)}</span>` : ""}
         </div>
       </div>`;
     }).join("");

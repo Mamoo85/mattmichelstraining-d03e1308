@@ -482,7 +482,16 @@ export default function AdminAgencyOutreach() {
                           if (!v) return;
                           setEnrichments((prev) => ({
                             ...prev,
-                            [agency.name]: { ...(prev[agency.name] || {}), contact_email: v, contact_full_name: prev[agency.name]?.contact_full_name || agency.contact },
+                            [agency.name]: {
+                              contact_first_name: prev[agency.name]?.contact_first_name ?? null,
+                              contact_last_name: prev[agency.name]?.contact_last_name ?? null,
+                              contact_title: prev[agency.name]?.contact_title ?? null,
+                              email_status: prev[agency.name]?.email_status ?? null,
+                              source: prev[agency.name]?.source ?? "manual",
+                              domain: prev[agency.name]?.domain ?? null,
+                              contact_email: v,
+                              contact_full_name: prev[agency.name]?.contact_full_name ?? agency.contact ?? null,
+                            },
                           }));
                           toast.success("Email saved for this session");
                         }}

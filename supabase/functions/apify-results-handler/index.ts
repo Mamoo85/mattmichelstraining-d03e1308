@@ -200,21 +200,25 @@ Deno.serve(async (req) => {
   }
 
   // Validate webhook secret — accept from header OR query param (Apify webhook UI has no header field).
-  // If APIFY_WEBHOOK_SECRET is not configured in env, skip check (allows unauthenticated calls
-  // from the Apify dashboard integration while secret isn't set up yet).
+  // Fail-closed: if secret is not configured, reject all requests.
   const url = new URL(req.url);
-  if (APIFY_WEBHOOK_SECRET) {
-    const providedSecret =
-      req.headers.get("x-apify-webhook-secret") ||
-      req.headers.get("apify-webhook-secret") ||
-      url.searchParams.get("secret");
-    if (!providedSecret || providedSecret !== APIFY_WEBHOOK_SECRET) {
-      console.warn("apify-results-handler: invalid webhook secret");
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+  if (!APIFY_WEBHOOK_SECRET) {
+    console.error("apify-results-handler: APIFY_WEBHOOK_SECRET not configured — rejecting request");
+    return new Response(JSON.stringify({ error: "Server misconfigured" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  const providedSecret =
+    req.headers.get("x-apify-webhook-secret") ||
+    req.headers.get("apify-webhook-secret") ||
+    url.searchParams.get("secret");
+  if (!providedSecret || providedSecret !== APIFY_WEBHOOK_SECRET) {
+    console.warn("apify-results-handler: invalid webhook secret");
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 
   let payload: any;
