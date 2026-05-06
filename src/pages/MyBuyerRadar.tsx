@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import SEOHead from "@/components/layout/SEOHead";
 import OnboardingChecklist from "@/components/shared/OnboardingChecklist";
+import JustPurchasedScreen, { isJustPurchased } from "@/components/shared/JustPurchasedScreen";
 import { Factory, Loader2, ExternalLink, Clock, Zap, TrendingUp, Radar, Download } from "lucide-react";
 
 type Signal = {
