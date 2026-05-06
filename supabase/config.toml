@@ -2233,3 +2233,6 @@ verify_jwt = false
 
 [functions.resend-email-by-message]
 verify_jwt = false
+
+[functions.create-blueprint-checkout]
+verify_jwt = false
