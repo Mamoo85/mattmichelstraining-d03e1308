@@ -242,6 +242,10 @@ export default function StartTrial() {
     } catch (e: any) {
       setError(e?.message || "Something went wrong starting your trial. Text (313) 992-1219 and we'll fix it now.");
       setBusy(false);
+      // Notify Matt so he can manually rescue the lead
+      (supabase.functions as any).invoke("notify-matt-trial-fail", {
+        body: { product: config?.fn ?? rawProduct, email, error: e?.message ?? "unknown" },
+      }).catch(() => {});
     }
   }
 
