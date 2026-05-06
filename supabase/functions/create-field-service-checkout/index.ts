@@ -70,7 +70,7 @@ serve(async (req: Request) => {
         },
       ],
       metadata: {
-        type: "field_service_subscription",
+        type: "field_crm_subscription",
         email,
         name: name ?? "",
         company: company ?? "",
