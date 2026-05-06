@@ -293,40 +293,49 @@ serve(wrapServe("cron-sentinel", async (req) => {
     await emailDigest(failures, results.length);
   }
 
-  // Fix 4: Dead-pipe check — 3 consecutive zero-candidate scanner runs = catastrophic failure.
-  // Guards: (a) order by run_at (the actual column), (b) only fire if the most recent run is < 6h old
-  // (otherwise the scanner is just paused, not dead), (c) restrict to source='all' to avoid mixing
-  // partial source rows that legitimately have 0 candidates, (d) 24h cooldown on the alert itself.
+  // Dead-pipe check — 3 consecutive zero-candidate scanner runs = catastrophic failure.
+  // Guards: (a) order by run_at, (b) only fire if most recent run is < 6h old,
+  // (c) restrict to source='all', (d) 24h cooldown, (e) skip if no active clients
+  // (0 clients → 0 candidates is expected, not a pipe failure).
   try {
-    const { data: recentRuns } = await sb
-      .from('hire_alert_runs')
-      .select('candidates_found, run_at, source')
-      .eq('source', 'all')
-      .order('run_at', { ascending: false })
-      .limit(3);
-    const rows = recentRuns ?? [];
-    const mostRecentAgeHr = rows[0]?.run_at
-      ? (Date.now() - new Date(rows[0].run_at as string).getTime()) / 3_600_000
-      : 9999;
-    const allZero = rows.length >= 3 && rows.every((r: any) => (r.candidates_found ?? 0) === 0);
+    // Guard: if no active TechAlert subscriber clients, 0 candidates is expected
+    const { count: activeClientCount } = await sb
+      .from('hire_alert_clients')
+      .select('id', { head: true, count: 'exact' })
+      .eq('active', true);
+    if ((activeClientCount ?? 0) === 0) {
+      console.log('[cron-sentinel] dead-pipe check skipped — no active hire_alert_clients');
+    } else {
+      const { data: recentRuns } = await sb
+        .from('hire_alert_runs')
+        .select('candidates_found, run_at, source')
+        .eq('source', 'all')
+        .order('run_at', { ascending: false })
+        .limit(3);
+      const rows = recentRuns ?? [];
+      const mostRecentAgeHr = rows[0]?.run_at
+        ? (Date.now() - new Date(rows[0].run_at as string).getTime()) / 3_600_000
+        : 9999;
+      const allZero = rows.length >= 3 && rows.every((r: any) => (r.candidates_found ?? 0) === 0);
 
-    if (allZero && mostRecentAgeHr < 6) {
-      // 24h cooldown — don't spam Matt
-      const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-      const { data: recentAlert } = await sb
-        .from('system_comms_log')
-        .select('id')
-        .eq('product', 'cron_sentinel_zero_pipe')
-        .gte('created_at', since24h)
-        .limit(1)
-        .maybeSingle();
+      if (allZero && mostRecentAgeHr < 6) {
+        // 24h cooldown — don't spam Matt
+        const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+        const { data: recentAlert } = await sb
+          .from('system_comms_log')
+          .select('id')
+          .eq('product', 'cron_sentinel_zero_pipe')
+          .gte('created_at', since24h)
+          .limit(1)
+          .maybeSingle();
 
-      if (!recentAlert) {
-        await sendSMS(
-          ADMIN_PHONE, TWILIO_FROM,
-          '🚨 TechAlert DEAD PIPE: Last 3 scanner runs (source=all) returned 0 candidates within 6h. Investigate.',
-          'cron_sentinel_zero_pipe'
-        ).catch(() => {});
+        if (!recentAlert) {
+          await sendSMS(
+            ADMIN_PHONE, TWILIO_FROM,
+            `🚨 TechAlert DEAD PIPE: Last 3 scanner runs (source=all) returned 0 candidates within 6h. ${activeClientCount} active client(s). Investigate.`,
+            'cron_sentinel_zero_pipe'
+          ).catch(() => {});
+        }
       }
     }
   } catch (e) {
