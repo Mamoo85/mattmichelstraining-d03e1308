@@ -108,8 +108,8 @@ export default function LegalWebDesign() {
   return (
     <>
       <SEOHead
-        title="Law Firm Website Design — $1,499 Setup | M2 Web Design"
-        description="Professional websites built for attorneys and law firms. Practice area pages, free consultation forms, case results, and local SEO. From $1,499 setup + $99/mo."
+        title="Law Firm Website Design — $499 Setup | M2 Web Design"
+        description="Professional websites built for attorneys and law firms. Practice area pages, free consultation forms, case results, and local SEO. From $499 setup + $99/mo."
       />
       <div className="min-h-screen bg-background text-foreground">
         {/* Hero */}
