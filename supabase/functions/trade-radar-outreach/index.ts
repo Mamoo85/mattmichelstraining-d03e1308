@@ -11,7 +11,7 @@ import { dwaEmail } from "../_shared/dwa-email.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-const DAILY_CAP_PER_VERTICAL = 10;
+const DAILY_CAP_PER_VERTICAL = 40;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -52,7 +52,7 @@ serve(async (req) => {
       });
     }
 
-    const since24h = new Date(Date.now() - 86400000).toISOString();
+    const since24h = new Date(Date.now() - 7 * 86400000).toISOString(); // 7-day window — don't abandon enriched leads
 
     for (const client of clients) {
       const verticalLabel = VERTICAL_LABELS[client.vertical] || client.vertical;
