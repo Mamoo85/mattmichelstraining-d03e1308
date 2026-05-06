@@ -44,7 +44,7 @@ const DEMO_GROUPS: { category: string; demos: DemoEntry[] }[] = [
   {
     category: "🍽️ Restaurants & Hospitality",
     demos: [
-      { key: "restaurant", label: "Restaurant / Bar", path: "/demo-restaurant", industry: "restaurant", style: "Warm, food-forward", plan: "Standard", priceRange: "$799 + $79/mo" },
+      { key: "restaurant", label: "Restaurant / Bar", path: "/demo-restaurant", industry: "restaurant", style: "Warm, food-forward", plan: "Standard", priceRange: "$499 + $79/mo" },
     ],
   },
   {
