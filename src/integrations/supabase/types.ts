@@ -5897,15 +5897,23 @@ export type Database = {
           calendar_event_id: string | null
           company: string | null
           created_at: string
+          deal_value_usd: number | null
           demo_type: string
           id: string
           matt_notified_at: string | null
+          next_action_at: string | null
           notes: string | null
+          offer_pitched: string | null
+          outcome: string | null
+          outcome_notes: string | null
+          outcome_set_at: string | null
           phone: string | null
           prep_email_sent_at: string | null
           prospect_email: string
           prospect_name: string | null
           prospect_token: string | null
+          reminder_1h_sent_at: string | null
+          reminder_24h_sent_at: string | null
           slot_date: string
           slot_time: string
           source: string | null
@@ -5917,15 +5925,23 @@ export type Database = {
           calendar_event_id?: string | null
           company?: string | null
           created_at?: string
+          deal_value_usd?: number | null
           demo_type?: string
           id?: string
           matt_notified_at?: string | null
+          next_action_at?: string | null
           notes?: string | null
+          offer_pitched?: string | null
+          outcome?: string | null
+          outcome_notes?: string | null
+          outcome_set_at?: string | null
           phone?: string | null
           prep_email_sent_at?: string | null
           prospect_email: string
           prospect_name?: string | null
           prospect_token?: string | null
+          reminder_1h_sent_at?: string | null
+          reminder_24h_sent_at?: string | null
           slot_date: string
           slot_time: string
           source?: string | null
@@ -5937,15 +5953,23 @@ export type Database = {
           calendar_event_id?: string | null
           company?: string | null
           created_at?: string
+          deal_value_usd?: number | null
           demo_type?: string
           id?: string
           matt_notified_at?: string | null
+          next_action_at?: string | null
           notes?: string | null
+          offer_pitched?: string | null
+          outcome?: string | null
+          outcome_notes?: string | null
+          outcome_set_at?: string | null
           phone?: string | null
           prep_email_sent_at?: string | null
           prospect_email?: string
           prospect_name?: string | null
           prospect_token?: string | null
+          reminder_1h_sent_at?: string | null
+          reminder_24h_sent_at?: string | null
           slot_date?: string
           slot_time?: string
           source?: string | null
@@ -5954,6 +5978,47 @@ export type Database = {
           website?: string | null
         }
         Relationships: []
+      }
+      demo_outcome_log: {
+        Row: {
+          actor: string
+          booking_id: string
+          created_at: string
+          deal_value_usd: number | null
+          id: string
+          notes: string | null
+          offer_pitched: string | null
+          outcome: string | null
+        }
+        Insert: {
+          actor?: string
+          booking_id: string
+          created_at?: string
+          deal_value_usd?: number | null
+          id?: string
+          notes?: string | null
+          offer_pitched?: string | null
+          outcome?: string | null
+        }
+        Update: {
+          actor?: string
+          booking_id?: string
+          created_at?: string
+          deal_value_usd?: number | null
+          id?: string
+          notes?: string | null
+          offer_pitched?: string | null
+          outcome?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demo_outcome_log_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "demo_bookings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       deployment_drift_log: {
         Row: {
