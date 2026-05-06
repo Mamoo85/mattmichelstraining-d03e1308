@@ -57,8 +57,8 @@ Deno.serve(async (req) => {
       email,
       vertical,
     },
-    success_url: `${SITE_URL}/trade-radar?api_subscribed=1&session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${SITE_URL}/trade-radar`,
+    success_url: `${SITE_URL}/radars?api_subscribed=1&session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${SITE_URL}/radars`,
     allow_promotion_codes: true,
   });
 
