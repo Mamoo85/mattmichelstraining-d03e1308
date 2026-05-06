@@ -1,145 +1,121 @@
-# Plan: Convert the White Light Electric reply into a closed deal
+## Recommendations on the open questions
 
-Anne-Abel Smith (CFO/Integrator at White Light Electric, [info@whitelightelectric.us](mailto:info@whitelightelectric.us), cell 248-330-4031) replied "Let's schedule a demo, please." This is our first real warm reply — we treat it like a $50K LTV opportunity, not a one-off.
+**Shop / Stripe Checkout (item 7):** Skip a generic shop. You already have `create-field-crm-checkout` (FieldDesk $199/mo) and 8+ other product checkouts. The bundle CTA on the new landing page should hit a new `create-bundle-90day-checkout` for the **$499 first-90-days** offer. That's the only checkout this email campaign needs. Building a full `/shop` storefront is busywork for a product line you sell 1:1 over demo calls.
 
-Below is a 4-part plan covering: (1) prospect research, (2) the reply + scheduling flow, (3) the demo system / playbook, (4) self-enrolling Matt in FieldDesk for practice.
+**Demo-runner state persistence (item 9):** Not worth building right now. The demo is something *you* drive on a 15-min call — if you refresh, you're 2 clicks from where you left off. localStorage covers the 1% case. Real backend resume would matter only if prospects were self-serving the demo, which isn't the model. **Skip.**
 
----
-
-## Part 1 — Research White Light Electric (before anything ships)
-
-Before writing copy or building forms, gather facts so the reply doesn't feel templated.
-
-- Scrape `whitelightelectric.us` with Firecrawl: services offered, service area, team size signals, current website quality (load speed, mobile responsiveness, screenshots).
-- LARA license lookup for "White Light Electric" (Michigan electrical contractor license, status, expiration).
-- Apollo enrich on `info@whitelightelectric.us` and `White Light Electric` — pull owner name, employee count, founded year, LinkedIn.
-- Google Places lookup: review count, star rating, last review date, response rate.
-- Save findings to a new `prospect_research_dossier` row keyed to `info@whitelightelectric.us` so the reply email and Matt's demo prep both pull from one source.
-
-Output: a one-page dossier Matt sees before the demo (industry, current website grade A–F, employee count, license status, top 3 product fits with reasoning).
+**Scope:** I'm grouping into two waves. Wave 1 = everything that improves the live White Light Electric campaign + future cold outreach. Wave 2 = nice-to-haves you can ship after the first close.
 
 ---
 
-## Part 2 — The Reply + Demo Scheduling Flow
+## Wave 1 — Ship now (revenue-critical)
 
-**Recommendation:** combine a short personal reply from Matt with a one-click scheduling link. Don't ask them to free-text their availability — that creates a back-and-forth and we lose them. A million-dollar business sends a calendar.
+### 1. End-to-end click test of sent emails
+Audit every URL in the two emails sent to `info@whitelightelectric.us`:
+- Original demo invite (with `/book-demo?company=...&email=...` link)
+- Follow-up correction email (phone `tel:` link, mailto reply)
 
-### 2a. New page `/book-demo?prospect=<id>`
+Use the browser tool to:
+- Hit each URL on `detroitwebagent.com` (production)
+- Verify the page loads (200), prefill works, form submits, confirmation fires
+- Test on mobile viewport (399px) since prospects open email on phones
+- Report: URL → status → notes (any mismatches, prefill bugs, layout issues)
 
-- Mobile-first, DWA-branded (electric teal #00d4ff on near-black #0a1628).
-- 14-day rolling availability grid (M–F, 9a–5p ET, 30-min slots), reads from a new `demo_slots` table.
-- Pre-filled with prospect's name + company (from `?prospect=` token).
-- Two demo types: "15-min discovery" (default) or "30-min full demo + screenshare".
-- On submit: writes to `demo_bookings`, sends Matt SMS + adds to his Google Calendar via `GOOGLE_SERVICE_ACCOUNT_KEY` (already configured), sends prospect a confirmation email with the join link.
+### 2. `/website-plus-fielddesk` bundle landing page
+New `src/pages/WebsitePlusFieldDesk.tsx`. DWA dark theme (#0a1628 / #00d4ff). Sections:
+- **Hero:** "$499 launches your new website + FieldDesk in 7 days"
+- **What's included** (5 bullets: site, FieldDesk, missed-call, SiteRadar, white-glove onboarding)
+- **Pricing card:** $499 first 90 days → then $199/mo FieldDesk + $99/mo Missed-Call + $49/mo SiteRadar (cancel anytime)
+- **Comparison table:** DIY vs Hiring agency vs DWA bundle
+- **FAQ** (5 Q&A: timeline, cancellation, who builds, integrations, contracts)
+- **Two CTAs:** "Book a 15-min demo" → `/book-demo?source=bundle-page&company=...` (passes through any `?company=` URL param) + "Lock in $499 now" → `create-bundle-90day-checkout` Stripe Checkout
+- Route registered in `src/App.tsx` with `lazyRetry`
 
-### 2b. Reply email (sent from `matt@detroitwebagent.com`)
+### 3. `create-bundle-90day-checkout` edge function
+- Stripe Checkout, **mode: payment**, $499 one-time
+- Inline `price_data` (per project rules)
+- `metadata.type = "bundle_90day_purchase"` for webhook routing
+- success_url: `/bundle-success?session_id={CHECKOUT_SESSION_ID}`
+- cancel_url: `/website-plus-fielddesk?canceled=1`
+- `verify_jwt = false` in `config.toml` (public endpoint)
 
-Sent via `gmail-send-outreach` (already deployed). Structure:
+### 4. Demo outcome tracking in Supabase
+Migration adds two pieces:
 
-1. Personal one-liner referencing their business specifically ("Saw whitelightelectric.us — happy to walk you through what we'd do for an electrical contractor your size").
-2. **One** primary CTA: "Pick a 15-min slot here → /book-demo?prospect=&nbsp;"
-3. A short "While you're here" section listing the 3 products most relevant to electrical contractors:
-  - **TechAlert** — "Michigan publishes every licensed electrician in the state. We text you when one becomes available." ($99/mo)
-  - **FieldDesk** — "Replace eWay. Your techs can use it from a panel." ($199/mo, **free first month** with website)
-  - **Trade Radar (Electrical)** — "We watch BSEED panel-upgrade permits across Wayne/Oakland/Macomb daily and route you the leads." ($149/mo)
-4. **The Bundle Hook**: "$1,499 website + 30-day free FieldDesk trial + 20% off everything else when bundled." This is the wedge — get the website sale, lock in recurring.
-5. Soft P.S. with Matt's cell.
+**a. Extend `demo_bookings`:**
+- `outcome` text (`scheduled` | `showed` | `no_show` | `won` | `lost` | `follow_up`)
+- `outcome_notes` text (Matt's free-form notes)
+- `offer_pitched` text (`bundle_499` | `fielddesk_only` | `missed_call_only` | `custom`)
+- `deal_value_usd` numeric
+- `outcome_set_at` timestamptz
+- `next_action_at` timestamptz (when to follow up)
 
-### 2c. New offer to formalize: "Website + FieldDesk Free Trial Bundle"
+**b. New `demo_outcome_log` table** (append-only audit trail so you can see how a deal evolved):
+- `booking_id` FK → demo_bookings
+- `outcome`, `notes`, `actor` (defaults to "matt"), `created_at`
+- RLS: service_role + admin read/write
 
-We don't currently package this. Add it:
+**c. Tiny admin UI:** add a "Demo Pipeline" tab to existing `DWAAdmin.tsx` listing bookings with inline outcome dropdown + notes textarea + "save" button (calls a new `update-demo-outcome` edge function). Shows conversion stats per `offer_pitched`.
 
-- New Stripe checkout `create-website-fielddesk-trial-checkout` — $1,499 one-time website build, FieldDesk auto-provisions free for 30 days, then $159/mo (bundle price) auto-bills.
-- Webhook handler in `stripe-webhook` for `website_fielddesk_trial` type.
-- New landing page `/website-plus-fielddesk` so the offer is referenceable.
+### 5. SMS reminders (24h + 1h before slot)
+- New edge function `demo-reminder-dispatcher` runs every 15 min via pg_cron
+- Queries `demo_bookings` where `slot_at` (computed from `slot_date + slot_time` in America/Detroit) is in the next 24h±15min OR 1h±15min window
+- Skips bookings already reminded (uses two new columns: `reminder_24h_sent_at`, `reminder_1h_sent_at`)
+- Uses `_shared/twilio.ts` `sendSMS()` (TCPA scrub + quiet hours built in)
+- 24h template: "Hey {first}, Matt from Detroit Web Agency — quick reminder we're on tomorrow at {time} ET for your {company} demo. Reply YES to confirm or RESCHEDULE if you need a new time."
+- 1h template: "60 min until our demo, {first}! Meeting link: {link if added later, else phone fallback (313) 992-1219}"
+- Also SMS **Matt** at the 1h mark so he knows a call is coming
 
----
+### 6. Polish `/demo-runner` for mobile + DWA aesthetic
+Current implementation uses inline styles and a 260px sidebar that breaks below 768px. Refactor:
+- Migrate to Tailwind classes using existing semantic tokens (`bg-background`, `text-foreground`, `border-border`, `text-primary` mapped to teal)
+- Sidebar collapses to a horizontal scrollable step pill row on mobile
+- Add **two new comparison views** for sales calls:
+  - **"Before / After" split** — side-by-side: their current process (missed calls, voicemail black hole, no visitor data) vs DWA stack (instant SMS reply, FieldDesk dispatch, SiteRadar visitor feed)
+  - **"Live dispatch" mock** — animated FieldDesk view with a fake incoming job auto-assigning to nearest tech, used live during calls to show the dashboard
+- Keyboard arrow nav stays
+- Prospect card in sidebar becomes a sticky bottom sheet on mobile
 
-## Part 3 — The Demo System (so Matt can actually run a great demo)
-
-Right now Matt has never used FieldDesk. We fix this in two layers:
-
-### 3a. Demo Prep Pack (auto-generated per booking)
-
-When a `demo_bookings` row is created, an edge function `generate-demo-prep` runs and emails Matt 30 min before the call:
-
-- The dossier from Part 1
-- The 3 recommended products with talking points pulled from `knowledge/field-service-brief.md` and the cold-email angle table
-- A pre-filled FieldDesk demo environment seeded with **their company name** as fake jobs (e.g., "White Light Electric — service call, 1234 Main St")
-- Pricing math specific to their tech count (already in the brief)
-- 3 likely objections with rebuttals
-
-### 3b. Live Demo Script (one shareable URL)
-
-A new `/demo-runner/<booking_id>` page Matt opens during the call. Single-screen, advances through:
-
-1. Their current site → ours (split screen)
-2. FieldDesk dispatch board (live, pre-seeded with their data)
-3. Tech mobile view (large buttons, "your tech in a panel box")
-4. TechAlert pitch: "Here are 3 licensed electricians in Wayne County right now"
-5. Pricing card with bundle math
-6. "Send proposal" button → triggers `send-djconley-proposal-v3` style flow customized for them
-
-This is the "million-dollar" piece — Matt walks in with a personalized environment, not a generic deck.
-
----
-
-## Part 4 — Enroll Matt in FieldDesk as a real customer
-
-So Matt can practice, learn the product, and dogfood it.
-
-- Insert a `field_crm_clients` row for `matt@detroitwebagent.com` / "Detroit Web Agency Internal" with full subscription (`status='active'`, `plan='founder_internal'`, no Stripe charge).
-- Seed 8 fake jobs across statuses (Open / Assigned / En Route / On Site / Completed) with realistic Detroit addresses.
-- Seed 3 fake techs with GPS coordinates around Metro Detroit so the Tech Map looks alive.
-- Add Matt's phone (313-806-4952) as the dispatcher SMS endpoint so he gets the real notifications.
-- Generate a magic-login link to `/my-field-desk` and SMS it to him.
-- Add a small "Demo Mode" badge to the UI when `plan='founder_internal'` so he knows it's seeded data.
-
----
-
-## Technical Section
-
-**New files**
-
-- `src/pages/BookDemo.tsx` — booking grid
-- `src/pages/DemoRunner.tsx` — live demo screen for Matt
-- `src/pages/WebsitePlusFieldDesk.tsx` — bundle landing page
-- `supabase/functions/create-demo-booking/index.ts` — writes booking, calendar invite, SMS Matt
-- `supabase/functions/generate-demo-prep/index.ts` — runs 30-min pre-call, emails Matt the dossier
-- `supabase/functions/research-prospect/index.ts` — Firecrawl + LARA + Apollo + Places dossier builder
-- `supabase/functions/create-website-fielddesk-trial-checkout/index.ts`
-- `supabase/functions/seed-fielddesk-internal/index.ts` — one-shot to provision Matt
-
-**New tables (one migration)**
-
-- `demo_slots` (id, slot_date, start_time, is_booked, booking_id)
-- `demo_bookings` (id, prospect_email, prospect_name, company, slot_id, demo_type, status, notes, created_at)
-- `prospect_research_dossier` (id, email, company, website, dossier_json, generated_at)
-
-All with RLS + service_role bypass.
-
-**Stripe webhook**: add `website_fielddesk_trial` type handler that creates client + 30-day trial subscription.
-
-**Edge function deploys needed**: all new functions above, plus a re-deploy of `stripe-webhook`.
+### 7. Verification (mandatory after build)
+- Browser tool: navigate each new/changed URL on the live preview at 399px viewport
+- Click through `/book-demo` → confirmation, `/website-plus-fielddesk` → both CTAs, `/demo-runner` all 6+ steps with prefill params
+- Insert a fake demo_booking row via service_role and trigger `demo-reminder-dispatcher` manually with NOW shifted to verify the 24h/1h windows fire correctly
+- Confirm `update-demo-outcome` writes to both `demo_bookings` AND `demo_outcome_log`
+- Report broken/mismatched routes back in the final message
 
 ---
 
-## Suggested order of execution (after you approve)
+## Wave 2 — Ship later (after first close)
 
-1. Run prospect research on White Light Electric — get the dossier first (no code changes needed; uses existing tools).
-2. Provision Matt's FieldDesk so he can play with it tonight.
-3. Build `/book-demo` + booking infrastructure.
-4. Build the website+FieldDesk trial bundle + landing page.
-5. Build demo-prep + demo-runner.
-6. Send the personalized reply to Anne-Abel with the booking link.
-
-Step 1, 2, and 6 can happen in parallel today. Steps 3–5 are the longer build.
+These aren't in this build:
+- **Lead capture form at end of `/demo-runner`** — wait until you've actually run a demo and know what data you wish you'd captured
+- **Demo-runner step persistence to backend** — localStorage is fine; backend is over-engineering
+- **Paywall on demo/checkout** — actively harmful to cold outreach
+- **Generic /shop with all DWA products** — your existing per-product landing pages convert better than a catalog
 
 ---
 
-## Open questions for you
+## Technical details
 
-1. Demo length default — **15 min discovery** (low friction, screen later) or **30 min full demo** out of the gate? Im not sure, whats standard? I'll let you recommend.
-2. Bundle pricing — confirm **$1,499 website + 30 days free FieldDesk + then $159/mo** (the brief's bundle price) — or do you want a different trial offer? No its $499 for the website. Remember the website is the Trojan Horse lets not price ppl out.
-3. Calendar — should bookings push to your existing Google Calendar (`GOOGLE_CALENDAR_ID`) or a new dedicated DWA-demos calendar? New demos calendar that texts me when ppl sign up. 
-4. Demo mode — do you want Tom (the autonomous lead-hunter agent) to also auto-research every reply that comes in going forward, so this happens automatically next time? Yes.
+**Files created:**
+- `src/pages/WebsitePlusFieldDesk.tsx`
+- `src/pages/BundleSuccess.tsx` (post-checkout thank-you)
+- `src/components/admin/DemoPipelineTab.tsx`
+- `supabase/functions/create-bundle-90day-checkout/index.ts`
+- `supabase/functions/update-demo-outcome/index.ts`
+- `supabase/functions/demo-reminder-dispatcher/index.ts`
+- `supabase/migrations/<ts>_demo_outcome_tracking.sql`
+
+**Files modified:**
+- `src/App.tsx` — routes for `/website-plus-fielddesk`, `/bundle-success`
+- `src/pages/DemoRunner.tsx` — Tailwind refactor + 2 new comparison views + mobile layout
+- `src/pages/DWAAdmin.tsx` — add Demo Pipeline tab
+- `supabase/functions/stripe-webhook/index.ts` — handle `bundle_90day_purchase` type (welcome email + admin SMS)
+- `supabase/config.toml` — `verify_jwt = false` for new public functions
+
+**pg_cron:**
+- `demo-reminder-dispatcher` every 15 min via existing vault-key pattern (per CLAUDE.md migration template)
+
+**Schema:** all new columns nullable, append-only audit log, RLS enabled with service_role bypass + admin read.
+
+**No mocks, no skipped error handling.** All edge functions fail-fast on errors per DWA Defensive Programming Protocol (memory: tech/dwa-defensive-programming-protocol).
