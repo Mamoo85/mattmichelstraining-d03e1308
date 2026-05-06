@@ -1,7 +1,7 @@
 // Stripe reconciliation diff — read-only snapshot for admin dashboard.
 // Lists last-7-day Stripe checkout sessions and flags ones missing from product tables.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import Stripe from "https://esm.sh/stripe@18.5.0";
+import Stripe from "npm:stripe@18.5.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

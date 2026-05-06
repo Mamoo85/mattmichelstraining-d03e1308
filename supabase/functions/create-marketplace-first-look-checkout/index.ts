@@ -1,7 +1,7 @@
 // create-marketplace-first-look-checkout — Stripe subscription for early access to hot leads.
 // $49/mo single product, $129/mo all-products. Subscribers see hot leads 1h before public.
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@18.5.0";
+import Stripe from "npm:stripe@18.5.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

@@ -1,7 +1,7 @@
 // v4 §5 — Add-On Marketplace Stripe checkout
 // Accepts { addon_slug, client_email } and creates a recurring Stripe subscription.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
+import Stripe from "npm:stripe@14.21.0?target=deno";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

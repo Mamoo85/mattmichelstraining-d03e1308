@@ -1,6 +1,6 @@
 // One-time $50 checkout for "5 More Dossiers" pack (upgrade from free dossier preview).
 // Public endpoint — guest checkout supported. Email collected on request-free-dossier flow.
-import Stripe from "https://esm.sh/stripe@18.5.0";
+import Stripe from "npm:stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {

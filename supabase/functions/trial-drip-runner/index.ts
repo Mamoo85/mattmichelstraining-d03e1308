@@ -5,7 +5,7 @@
 //   - Fires day2 / day5 / day6 concierge touches (idempotent via trial_drip_state)
 //   - On day 4: checks SLA status, auto-extends Stripe trial +7d if under-delivered
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import Stripe from "https://esm.sh/stripe@18.5.0";
+import Stripe from "npm:stripe@18.5.0";
 import { sendSMS } from "../_shared/twilio.ts";
 import { dwaEmail } from "../_shared/dwa-email.ts";
 import { wrapServe } from "../_shared/telemetry.ts";
