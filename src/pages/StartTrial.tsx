@@ -231,24 +231,30 @@ export default function StartTrial() {
     e.preventDefault();
     setBusy(true);
     setError(null);
+    const productKey = canonical ?? rawProduct ?? null;
+    trackTrialEvent("form_submit", productKey, { email });
     try {
       const { data, error: fnError } = await (supabase.functions as any).invoke(config!.fn, {
         body: buildPayload(),
       });
       if (fnError) throw fnError;
       if (data?.magic_url) {
+        trackTrialEvent("trial_success", productKey, { email, metadata: { via: "magic_url" } });
         window.location.href = data.magic_url;
         return;
       }
       const url = data?.url || data?.setup_url || data?.pilot_url;
       if (url) {
+        trackTrialEvent("checkout_redirect", productKey, { email, metadata: { via: "checkout_url" } });
         window.location.href = url;
         return;
       }
       throw new Error(data?.error || "Checkout did not return a URL.");
     } catch (e: any) {
-      setError(e?.message || "Something went wrong starting your trial. Text (313) 992-1219 and we'll fix it now.");
+      const msg = e?.message || "Something went wrong starting your trial. Text (313) 992-1219 and we'll fix it now.";
+      setError(msg);
       setBusy(false);
+      trackTrialEvent("trial_error", productKey, { email, metadata: { error: msg } });
       // Notify Matt so he can manually rescue the lead
       (supabase.functions as any).invoke("notify-matt-trial-fail", {
         body: { product: config?.fn ?? rawProduct, email, error: e?.message ?? "unknown" },
