@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>D.J. Conley Associates — Command Center</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --teal: #27CCC0;
+      --teal-dark: #1fa89d;
+      --teal-glow: rgba(39,204,192,0.15);
+      --red: #c12a3b;
+      --dark: #0b1622;
+      --dark2: #111d2b;
+      --mid: #1a2f44;
+      --panel: #152438;
+      --border-dark: rgba(39,204,192,0.18);
+      --text: #1a2332;
+      --text-light: #e2e8f0;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --light: #f8fafc;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      color: var(--text);
+      background: var(--dark);
+      line-height: 1.6;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(11,22,34,0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-dark);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 40px;
+      height: 64px;
+    }
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--teal), var(--teal-dark));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      color: #fff;
+      font-size: 13px;
+    }
+    .brand-name {
+      color: #fff;
+      font-weight: 800;
+      font-size: 15px;
+    }
+    .brand-name em {
+      color: var(--teal);
+      font-style: normal;
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+    }
+    .nav-links a {
+      color: #94a3b8;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: #fff; }
+    .nav-cta {
+      background: var(--red);
+      color: #fff !important;
+      padding: 8px 18px;
+      border-radius: 7px;
+      font-weight: 700 !important;
+      font-size: 13px !important;
+    }
+    .nav-cta:hover { background: #a82333 !important; }
+
+    /* ── SPLIT HERO ── */
+    .hero {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      min-height: calc(100vh - 64px);
+      align-items: center;
+    }
+    .hero-left {
+      padding: 80px 48px 80px 64px;
+      background: var(--dark);
+      position: relative;
+    }
+    .hero-left::after {
+      content: '';
+      position: absolute;
+      top: 0; right: 0; bottom: 0;
+      width: 1px;
+      background: linear-gradient(to bottom, transparent, var(--border-dark), transparent);
+    }
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(39,204,192,0.1);
+      border: 1px solid rgba(39,204,192,0.25);
+      color: var(--teal);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      border-radius: 100px;
+      margin-bottom: 28px;
+    }
+    .hero h1 {
+      color: #fff;
+      font-size: clamp(32px, 3.5vw, 52px);
+      font-weight: 900;
+      line-height: 1.1;
+      letter-spacing: -1.5px;
+      margin-bottom: 20px;
+    }
+    .hero h1 span { color: var(--teal); }
+    .hero-sub {
+      color: #94a3b8;
+      font-size: 16px;
+      line-height: 1.7;
+      margin-bottom: 36px;
+      max-width: 440px;
+    }
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .btn-teal {
+      background: var(--teal);
+      color: #fff;
+      font-weight: 800;
+      font-size: 14px;
+      padding: 13px 24px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .btn-teal:hover { background: var(--teal-dark); transform: translateY(-1px); }
+    .btn-ghost {
+      background: transparent;
+      color: #94a3b8;
+      font-weight: 700;
+      font-size: 14px;
+      padding: 13px 24px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.1);
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .btn-ghost:hover { border-color: var(--teal); color: var(--teal); }
+
+    /* ── DASHBOARD PANEL ── */
+    .hero-right {
+      background: var(--dark2);
+      padding: 48px 48px 48px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: calc(100vh - 64px);
+    }
+    .dashboard-panel {
+      background: var(--panel);
+      border: 1px solid var(--border-dark);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 460px;
+      overflow: hidden;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(39,204,192,0.1);
+    }
+    .panel-topbar {
+      background: var(--mid);
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-dark);
+    }
+    .panel-dots {
+      display: flex;
+      gap: 6px;
+    }
+    .panel-dots span {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+    .panel-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #64748b;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .live-badge {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(39,204,192,0.12);
+      border: 1px solid rgba(39,204,192,0.3);
+      color: var(--teal);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      padding: 3px 8px;
+      border-radius: 100px;
+      text-transform: uppercase;
+    }
+    .live-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--teal);
+      border-radius: 50%;
+      animation: blink 1.5s ease-in-out infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.2; }
+    }
+    .panel-body { padding: 20px; }
+    .panel-date {
+      font-size: 11px;
+      color: #4a6180;
+      font-weight: 600;
+      margin-bottom: 16px;
+      letter-spacing: 0.5px;
+    }
+    .panel-kpis {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .kpi {
+      background: var(--dark);
+      border: 1px solid var(--border-dark);
+      border-radius: 10px;
+      padding: 14px 10px;
+      text-align: center;
+    }
+    .kpi-val {
+      font-size: 22px;
+      font-weight: 900;
+      color: var(--teal);
+      letter-spacing: -1px;
+      line-height: 1;
+    }
+    .kpi-label {
+      font-size: 10px;
+      color: #4a6180;
+      font-weight: 600;
+      margin-top: 5px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .panel-section-title {
+      font-size: 10px;
+      font-weight: 700;
+      color: #4a6180;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin: 16px 0 10px;
+    }
+    .dispatch-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: var(--dark);
+      border: 1px solid rgba(39,204,192,0.08);
+      border-radius: 8px;
+      margin-bottom: 6px;
+    }
+    .dispatch-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .dispatch-info { flex: 1; min-width: 0; }
+    .dispatch-client {
+      font-size: 12px;
+      font-weight: 700;
+      color: #e2e8f0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .dispatch-status {
+      font-size: 10px;
+      color: #4a6180;
+      font-weight: 500;
+    }
+    .dispatch-time {
+      font-size: 11px;
+      font-weight: 700;
+      color: #64748b;
+    }
+    .panel-alert {
+      margin-top: 14px;
+      background: rgba(193,42,59,0.1);
+      border: 1px solid rgba(193,42,59,0.25);
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .alert-icon { font-size: 16px; }
+    .alert-text { font-size: 11px; color: #fca5a5; font-weight: 600; line-height: 1.4; }
+    .alert-action {
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--red);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    /* ── CASE STUDY ── */
+    .case-study-section {
+      background: #fff;
+      padding: 80px 40px;
+    }
+    .case-study-inner {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .section-eyebrow {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin-bottom: 12px;
+    }
+    .section-title {
+      font-size: clamp(28px, 3vw, 40px);
+      font-weight: 900;
+      color: var(--text);
+      letter-spacing: -1px;
+      line-height: 1.2;
+      margin-bottom: 48px;
+    }
+    .case-card {
+      background: var(--dark);
+      border-radius: 16px;
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    }
+    .case-card-left {
+      padding: 48px 40px;
+    }
+    .case-tag {
+      display: inline-block;
+      background: rgba(39,204,192,0.15);
+      color: var(--teal);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 5px 12px;
+      border-radius: 100px;
+      margin-bottom: 20px;
+    }
+    .case-card-left h3 {
+      color: #fff;
+      font-size: 22px;
+      font-weight: 900;
+      line-height: 1.3;
+      margin-bottom: 16px;
+      letter-spacing: -0.5px;
+    }
+    .case-card-left p {
+      color: #94a3b8;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 28px;
+    }
+    .case-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .case-stat { }
+    .case-stat-val {
+      font-size: 26px;
+      font-weight: 900;
+      color: var(--teal);
+      letter-spacing: -1px;
+    }
+    .case-stat-label {
+      font-size: 11px;
+      color: #4a6180;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+    .case-card-right {
+      background: var(--mid);
+      padding: 48px 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 20px;
+      border-left: 1px solid var(--border-dark);
+    }
+    .scope-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+    .scope-num {
+      width: 28px;
+      height: 28px;
+      background: rgba(39,204,192,0.1);
+      border: 1px solid rgba(39,204,192,0.25);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--teal);
+      flex-shrink: 0;
+    }
+    .scope-text strong {
+      display: block;
+      color: #e2e8f0;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+    .scope-text span {
+      font-size: 12px;
+      color: #4a6180;
+    }
+
+    /* ── RESPONSE TIMER ── */
+    .response-section {
+      background: var(--dark2);
+      padding: 80px 40px;
+    }
+    .response-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+    }
+    .response-left h2 {
+      color: #fff;
+      font-size: clamp(28px, 3vw, 42px);
+      font-weight: 900;
+      letter-spacing: -1px;
+      line-height: 1.2;
+      margin-bottom: 16px;
+    }
+    .response-left h2 span { color: var(--teal); }
+    .response-left p {
+      color: #94a3b8;
+      font-size: 15px;
+      line-height: 1.7;
+      margin-bottom: 28px;
+    }
+    .response-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .response-step {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .step-check {
+      width: 24px;
+      height: 24px;
+      background: rgba(39,204,192,0.12);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: var(--teal);
+      font-weight: 900;
+      flex-shrink: 0;
+    }
+    .step-text {
+      font-size: 14px;
+      color: #94a3b8;
+      font-weight: 500;
+    }
+    .step-text strong { color: #e2e8f0; }
+    .timer-graphic {
+      text-align: center;
+    }
+    .timer-ring {
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      background: conic-gradient(var(--teal) 0% 22%, rgba(39,204,192,0.08) 22% 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      position: relative;
+    }
+    .timer-ring::before {
+      content: '';
+      width: 156px;
+      height: 156px;
+      background: var(--dark2);
+      border-radius: 50%;
+      position: absolute;
+    }
+    .timer-center {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+    }
+    .timer-num {
+      display: block;
+      font-size: 44px;
+      font-weight: 900;
+      color: var(--teal);
+      letter-spacing: -2px;
+      line-height: 1;
+    }
+    .timer-unit {
+      font-size: 12px;
+      color: #4a6180;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .timer-label {
+      font-size: 15px;
+      font-weight: 700;
+      color: #94a3b8;
+    }
+    .timer-sub {
+      font-size: 12px;
+      color: #4a6180;
+      margin-top: 4px;
+    }
+
+    /* ── SERVICES ACCORDION ── */
+    .services-section {
+      background: #fff;
+      padding: 80px 40px;
+    }
+    .services-inner {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .accordion { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+    .accordion-item { border-bottom: 1px solid var(--border); }
+    .accordion-item:last-child { border-bottom: none; }
+    .accordion-trigger {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px;
+      background: #fff;
+      border: none;
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.2s;
+    }
+    .accordion-trigger:hover { background: var(--light); }
+    .accordion-trigger.open { background: rgba(39,204,192,0.04); }
+    .acc-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .acc-icon {
+      width: 36px;
+      height: 36px;
+      background: rgba(39,204,192,0.1);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    .acc-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .acc-arrow {
+      color: var(--muted);
+      font-size: 18px;
+      transition: transform 0.25s;
+    }
+    .accordion-trigger.open .acc-arrow { transform: rotate(180deg); color: var(--teal); }
+    .accordion-body {
+      display: none;
+      padding: 0 24px 24px 74px;
+    }
+    .accordion-body.open { display: block; }
+    .accordion-body p {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    /* ── TESTIMONIALS ── */
+    .testimonials-section {
+      background: var(--dark);
+      padding: 80px 40px;
+      overflow: hidden;
+    }
+    .testimonials-inner {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .testimonials-inner .section-title { color: #fff; }
+    .testimonials-track {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-top: 40px;
+    }
+    .testimonial-card {
+      background: var(--panel);
+      border: 1px solid var(--border-dark);
+      border-radius: 12px;
+      padding: 24px;
+      transition: border-color 0.2s;
+    }
+    .testimonial-card:hover { border-color: rgba(39,204,192,0.4); }
+    .t-stars { color: #f59e0b; font-size: 14px; margin-bottom: 12px; }
+    .t-text {
+      font-size: 13px;
+      color: #94a3b8;
+      line-height: 1.6;
+      margin-bottom: 16px;
+      font-style: italic;
+    }
+    .t-attr {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .t-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--teal);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 800;
+      color: #fff;
+      flex-shrink: 0;
+    }
+    .t-name {
+      font-size: 12px;
+      font-weight: 700;
+      color: #e2e8f0;
+    }
+    .t-company { font-size: 11px; color: #4a6180; }
+
+    /* ── TRUST STRIP ── */
+    .trust-strip {
+      background: var(--dark2);
+      border-top: 1px solid var(--border-dark);
+      padding: 32px 40px;
+    }
+    .trust-strip-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 40px;
+      flex-wrap: wrap;
+    }
+    .trust-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #64748b;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .trust-badge-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--panel);
+      border: 1px solid var(--border-dark);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    /* ── FINAL CTA ── */
+    .final-cta {
+      background: var(--dark);
+      padding: 100px 40px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .final-cta::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 70% 60% at 50% 50%, rgba(39,204,192,0.06) 0%, transparent 70%);
+    }
+    .final-cta-inner {
+      max-width: 560px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+    .final-cta h2 {
+      color: #fff;
+      font-size: clamp(28px, 3.5vw, 46px);
+      font-weight: 900;
+      letter-spacing: -1.5px;
+      margin-bottom: 16px;
+    }
+    .final-cta h2 span { color: var(--teal); }
+    .final-cta p {
+      color: #94a3b8;
+      font-size: 16px;
+      margin-bottom: 36px;
+    }
+    .final-cta-btns {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn-red {
+      background: var(--red);
+      color: #fff;
+      font-weight: 800;
+      font-size: 15px;
+      padding: 15px 30px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .btn-red:hover { background: #a82333; transform: translateY(-1px); }
+
+    /* ── FOOTER ── */
+    footer {
+      background: rgba(0,0,0,0.3);
+      border-top: 1px solid var(--border-dark);
+      padding: 32px 40px;
+      text-align: center;
+    }
+    footer p { color: #334155; font-size: 12px; margin-bottom: 4px; }
+    footer a { color: var(--teal); text-decoration: none; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      nav { padding: 0 20px; }
+      .nav-links { display: none; }
+      .hero { grid-template-columns: 1fr; }
+      .hero-left { padding: 48px 24px; }
+      .hero-right { min-height: auto; padding: 32px 24px; }
+      .case-card { grid-template-columns: 1fr; }
+      .response-inner { grid-template-columns: 1fr; }
+      .testimonials-track { grid-template-columns: 1fr; }
+      .case-study-section, .services-section, .response-section,
+      .testimonials-section, .final-cta { padding-left: 20px; padding-right: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <div class="nav-brand">
+      <div class="brand-icon">DJC</div>
+      <div class="brand-name">D.J. <em>Conley</em> Associates</div>
+    </div>
+    <div class="nav-links">
+      <a href="#services">Services</a>
+      <a href="#response">Response</a>
+      <a href="#case-study">Case Studies</a>
+      <a href="tel:+13139921219" class="nav-cta">Emergency: (313) 992-1219</a>
+    </div>
+  </nav>
+
+  <!-- SPLIT HERO -->
+  <section class="hero">
+    <!-- LEFT: Copy -->
+    <div class="hero-left">
+      <div class="hero-eyebrow">Founded 1957 · Operated Like 2026</div>
+      <h1>Commercial Boiler<br/><span>Intelligence.</span><br/>Instant Response.</h1>
+      <p class="hero-sub">
+        We've been keeping Detroit's biggest facilities running since 1957. Today, every one of our technicians is GPS-tracked, every job is dispatched in real time, and every client can see exactly where their tech is.
+      </p>
+      <div class="hero-actions">
+        <a href="tel:+13139921219" class="btn-teal">
+          ⚡ Get a Tech Dispatched Now
+        </a>
+        <a href="#case-study" class="btn-ghost">
+          See Our Work →
+        </a>
+      </div>
+    </div>
+
+    <!-- RIGHT: Live Dashboard Mock -->
+    <div class="hero-right">
+      <div class="dashboard-panel">
+        <div class="panel-topbar">
+          <div class="panel-dots">
+            <span style="background:#ef4444"></span>
+            <span style="background:#f59e0b"></span>
+            <span style="background:#22c55e"></span>
+          </div>
+          <span class="panel-title">Operations Center</span>
+          <div class="live-badge">
+            <span class="live-dot"></span>
+            Live
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="panel-date">Wednesday, May 6 · 8:41 AM EDT</div>
+          <div class="panel-kpis">
+            <div class="kpi">
+              <div class="kpi-val">7</div>
+              <div class="kpi-label">Jobs Today</div>
+            </div>
+            <div class="kpi">
+              <div class="kpi-val">4</div>
+              <div class="kpi-label">Techs In Field</div>
+            </div>
+            <div class="kpi">
+              <div class="kpi-val">47m</div>
+              <div class="kpi-label">Avg Response</div>
+            </div>
+          </div>
+
+          <div class="panel-section-title">Active Dispatch</div>
+
+          <div class="dispatch-row">
+            <span class="dispatch-dot" style="background:#22c55e"></span>
+            <div class="dispatch-info">
+              <div class="dispatch-client">Stellantis — Jefferson Assembly</div>
+              <div class="dispatch-status">En route · Tech J. Kowalski</div>
+            </div>
+            <span class="dispatch-time">8:38</span>
+          </div>
+
+          <div class="dispatch-row">
+            <span class="dispatch-dot" style="background:#22c55e"></span>
+            <div class="dispatch-info">
+              <div class="dispatch-client">Henry Ford Health — Main Campus</div>
+              <div class="dispatch-status">On site · Preventive maint.</div>
+            </div>
+            <span class="dispatch-time">7:15</span>
+          </div>
+
+          <div class="dispatch-row">
+            <span class="dispatch-dot" style="background:#f59e0b"></span>
+            <div class="dispatch-info">
+              <div class="dispatch-client">Wayne County — Admin Building</div>
+              <div class="dispatch-status">Scheduled · 10:00 AM</div>
+            </div>
+            <span class="dispatch-time">pending</span>
+          </div>
+
+          <div class="panel-alert">
+            <span class="alert-icon">🔴</span>
+            <div class="alert-text">New emergency call — Detroit Public Schools — Boiler down</div>
+            <span class="alert-action">Dispatch →</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CASE STUDY -->
+  <section class="case-study-section" id="case-study">
+    <div class="case-study-inner">
+      <div class="section-eyebrow">Featured Project</div>
+      <h2 class="section-title">The Work We're Most Proud Of</h2>
+      <div class="case-card">
+        <div class="case-card-left">
+          <div class="case-tag">Industrial · Multi-Site</div>
+          <h3>Stellantis Facilities Management — Metro Detroit Boiler Retrofit</h3>
+          <p>
+            Stellantis needed a full boiler system replacement across 11 manufacturing sites simultaneously, coordinated without interrupting a single production shift. We engineered a phased retrofit plan, staged equipment deliveries, and executed site by site — every handoff on schedule.
+          </p>
+          <div class="case-stats">
+            <div class="case-stat">
+              <div class="case-stat-val">$2.4M</div>
+              <div class="case-stat-label">Project value</div>
+            </div>
+            <div class="case-stat">
+              <div class="case-stat-val">11</div>
+              <div class="case-stat-label">Sites completed</div>
+            </div>
+            <div class="case-stat">
+              <div class="case-stat-val">0</div>
+              <div class="case-stat-label">Production delays</div>
+            </div>
+            <div class="case-stat">
+              <div class="case-stat-val">18mo</div>
+              <div class="case-stat-label">On-time delivery</div>
+            </div>
+          </div>
+        </div>
+        <div class="case-card-right">
+          <div class="scope-item">
+            <div class="scope-num">1</div>
+            <div class="scope-text">
+              <strong>Engineering & Planning</strong>
+              <span>Load analysis, phased site sequencing, zero-downtime schedule</span>
+            </div>
+          </div>
+          <div class="scope-item">
+            <div class="scope-num">2</div>
+            <div class="scope-text">
+              <strong>Equipment Procurement</strong>
+              <span>Factory-direct boiler systems, staged delivery to each site</span>
+            </div>
+          </div>
+          <div class="scope-item">
+            <div class="scope-num">3</div>
+            <div class="scope-text">
+              <strong>Installation & Commissioning</strong>
+              <span>11 sites, certified crews, parallel execution across the metro</span>
+            </div>
+          </div>
+          <div class="scope-item">
+            <div class="scope-num">4</div>
+            <div class="scope-text">
+              <strong>Ongoing Service Contract</strong>
+              <span>Annual maintenance, priority dispatch, single point of contact</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RESPONSE TIMER -->
+  <section class="response-section" id="response">
+    <div class="response-inner">
+      <div class="response-left">
+        <h2>Average response:<br/><span>47 minutes.</span></h2>
+        <p>
+          When your boiler goes down, every minute is money. Our dispatch team picks up live — no answering service, no voicemail. A certified tech is rolling within minutes of your call.
+        </p>
+        <div class="response-steps">
+          <div class="response-step">
+            <div class="step-check">✓</div>
+            <div class="step-text"><strong>You call.</strong> A live person answers. Every time.</div>
+          </div>
+          <div class="response-step">
+            <div class="step-check">✓</div>
+            <div class="step-text"><strong>We dispatch.</strong> Nearest certified tech is assigned in under 5 minutes.</div>
+          </div>
+          <div class="response-step">
+            <div class="step-check">✓</div>
+            <div class="step-text"><strong>You get a text</strong> with the tech's name, photo, and live ETA.</div>
+          </div>
+          <div class="response-step">
+            <div class="step-check">✓</div>
+            <div class="step-text"><strong>Tech arrives</strong> with the right parts — first-call resolution rate: 94%.</div>
+          </div>
+        </div>
+      </div>
+      <div class="timer-graphic">
+        <div class="timer-ring">
+          <div class="timer-center">
+            <span class="timer-num">47</span>
+            <span class="timer-unit">minutes</span>
+          </div>
+        </div>
+        <div class="timer-label">Average On-Site Response</div>
+        <div class="timer-sub">Metro Detroit · 24/7 · 365 days/year</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SERVICES ACCORDION -->
+  <section class="services-section" id="services">
+    <div class="services-inner">
+      <div class="section-eyebrow">What We Do</div>
+      <h2 class="section-title">Every Service Your Facility Needs</h2>
+      <div class="accordion">
+        <div class="accordion-item">
+          <button class="accordion-trigger open" onclick="toggleAcc(this)">
+            <div class="acc-left">
+              <div class="acc-icon">🔥</div>
+              <div class="acc-title">Boiler Installation & Replacement</div>
+            </div>
+            <span class="acc-arrow">▾</span>
+          </button>
+          <div class="accordion-body open">
+            <p>Full-service design, procurement, and installation of commercial and industrial boiler systems for facilities of any size. We size the system correctly, handle all permits and inspections, and train your team on operation. Most installations are completed without interrupting your operations.</p>
+          </div>
+        </div>
+        <div class="accordion-item">
+          <button class="accordion-trigger" onclick="toggleAcc(this)">
+            <div class="acc-left">
+              <div class="acc-icon">🔧</div>
+              <div class="acc-title">Preventive Maintenance Programs</div>
+            </div>
+            <span class="acc-arrow">▾</span>
+          </button>
+          <div class="accordion-body">
+            <p>Annual and semi-annual maintenance plans that include full system inspection, burner tuning, safety control testing, water treatment analysis, and written condition reports. Most boiler failures are predictable — our maintenance clients average 4× fewer emergency calls than non-contract facilities.</p>
+          </div>
+        </div>
+        <div class="accordion-item">
+          <button class="accordion-trigger" onclick="toggleAcc(this)">
+            <div class="acc-left">
+              <div class="acc-icon">⚡</div>
+              <div class="acc-title">24/7 Emergency Repair</div>
+            </div>
+            <span class="acc-arrow">▾</span>
+          </button>
+          <div class="accordion-body">
+            <p>Live dispatch around the clock, every day of the year. Our techs carry 95% of the common failure parts on their trucks. First-call resolution rate of 94%. If we can't fix it same day, we'll get you temporary heat until we can.</p>
+          </div>
+        </div>
+        <div class="accordion-item">
+          <button class="accordion-trigger" onclick="toggleAcc(this)">
+            <div class="acc-left">
+              <div class="acc-icon">📋</div>
+              <div class="acc-title">Fixed-Cost Service Contracts</div>
+            </div>
+            <span class="acc-arrow">▾</span>
+          </button>
+          <div class="accordion-body">
+            <p>Flat annual contracts that cover all labor, most parts, priority dispatch, and quarterly maintenance visits. One number in your budget. No surprise invoices. Preferred by finance teams at large manufacturing and healthcare facilities who need predictable mechanical costs.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TESTIMONIALS -->
+  <section class="testimonials-section">
+    <div class="testimonials-inner">
+      <div class="section-eyebrow" style="color:var(--teal)">What Clients Say</div>
+      <h2 class="section-title">Trusted by Detroit's Most Demanding Facilities</h2>
+      <div class="testimonials-track">
+        <div class="testimonial-card">
+          <div class="t-stars">★★★★★</div>
+          <p class="t-text">"Boiler down at 11pm on a Thursday. Tech on site by midnight, back up by 3am. $40k/day production line. D.J. Conley saved us. I don't call anyone else."</p>
+          <div class="t-attr">
+            <div class="t-avatar">MR</div>
+            <div>
+              <div class="t-name">Mike R.</div>
+              <div class="t-company">Facilities Manager, Automotive Supplier</div>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-card">
+          <div class="t-stars">★★★★★</div>
+          <p class="t-text">"We've had the same service contract for 11 years. Their techs know our building better than we do. Proactive — they catch things before they become problems."</p>
+          <div class="t-attr">
+            <div class="t-avatar">DW</div>
+            <div>
+              <div class="t-name">Diane W.</div>
+              <div class="t-company">VP Facilities, Healthcare System</div>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-card">
+          <div class="t-stars">★★★★★</div>
+          <p class="t-text">"Every other contractor gave us a window. D.J. Conley gave us a name, a photo, and a 47-minute ETA. That's the standard we expect for critical infrastructure."</p>
+          <div class="t-attr">
+            <div class="t-avatar">JT</div>
+            <div>
+              <div class="t-name">James T.</div>
+              <div class="t-company">Director of Operations, Wayne County</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRUST STRIP -->
+  <section class="trust-strip">
+    <div class="trust-strip-inner">
+      <div class="trust-badge">
+        <div class="trust-badge-icon">🏛️</div>
+        Michigan Licensed Mechanical Contractor
+      </div>
+      <div class="trust-badge">
+        <div class="trust-badge-icon">🛡️</div>
+        Fully Bonded &amp; Insured
+      </div>
+      <div class="trust-badge">
+        <div class="trust-badge-icon">🏅</div>
+        Factory-Certified Technicians
+      </div>
+      <div class="trust-badge">
+        <div class="trust-badge-icon">⭐</div>
+        BBB Accredited — A+ Rating
+      </div>
+      <div class="trust-badge">
+        <div class="trust-badge-icon">🔒</div>
+        ASME Certified
+      </div>
+    </div>
+  </section>
+
+  <!-- FINAL CTA -->
+  <section class="final-cta">
+    <div class="final-cta-inner">
+      <h2>Ready to Work With <span>Detroit's Best?</span></h2>
+      <p>Schedule a free on-site assessment for your facility. No pitch deck — just a certified tech who'll tell you exactly what you have and what it needs.</p>
+      <div class="final-cta-btns">
+        <a href="tel:+13139921219" class="btn-red">
+          🔴 Call for Emergency Service
+        </a>
+        <a href="mailto:service@djconley.com" class="btn-teal">
+          Get a Free Site Assessment
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <p><strong style="color:#475569;">D.J. Conley Associates, Inc.</strong> · Troy, MI 48084</p>
+    <p>
+      <a href="tel:+13139921219">(313) 992-1219</a> ·
+      <a href="mailto:service@djconley.com">service@djconley.com</a> ·
+      <a href="https://www.djconley.com">djconley.com</a>
+    </p>
+    <p style="margin-top:12px;font-size:11px;color:#1e2d3d;">© 2026 D.J. Conley Associates · Licensed · Bonded · Insured</p>
+  </footer>
+
+  <script>
+    function toggleAcc(btn) {
+      const body = btn.nextElementSibling;
+      const isOpen = btn.classList.contains('open');
+      // close all
+      document.querySelectorAll('.accordion-trigger').forEach(b => {
+        b.classList.remove('open');
+        b.nextElementSibling.classList.remove('open');
+      });
+      // open clicked if it was closed
+      if (!isOpen) {
+        btn.classList.add('open');
+        body.classList.add('open');
+      }
+    }
+  </script>
+
+</body>
+</html>

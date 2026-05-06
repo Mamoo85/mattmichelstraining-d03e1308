@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>D.J. Conley Associates — Commercial Boiler Experts Since 1957</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --teal: #27CCC0;
+      --teal-dark: #1fa89d;
+      --red: #c12a3b;
+      --dark: #0f1923;
+      --dark2: #152130;
+      --mid: #1e3448;
+      --light: #f8fafc;
+      --text: #1a2332;
+      --muted: #64748b;
+      --border: #e2e8f0;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      color: var(--text);
+      background: #fff;
+      line-height: 1.6;
+    }
+
+    /* ── STICKY HEADER ── */
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--dark);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      height: 64px;
+      box-shadow: 0 2px 20px rgba(0,0,0,0.4);
+    }
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .logo-mark {
+      width: 38px;
+      height: 38px;
+      background: var(--teal);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      color: #fff;
+      font-size: 16px;
+      letter-spacing: -1px;
+    }
+    .logo-text {
+      color: #fff;
+      font-weight: 800;
+      font-size: 15px;
+      line-height: 1.2;
+    }
+    .logo-text span { color: var(--teal); }
+    .logo-sub {
+      font-size: 10px;
+      color: #94a3b8;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+    }
+    .header-emergency {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .badge-emergency {
+      background: var(--red);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+    .header-phone {
+      color: #fff;
+      font-weight: 800;
+      font-size: 17px;
+      text-decoration: none;
+      letter-spacing: -0.3px;
+    }
+    .header-phone:hover { color: var(--teal); }
+
+    /* ── HERO ── */
+    .hero {
+      background: var(--dark);
+      position: relative;
+      overflow: hidden;
+      padding: 100px 32px 80px;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 70% 50%, rgba(39,204,192,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-grid-line {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-image:
+        linear-gradient(rgba(39,204,192,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(39,204,192,0.04) 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+    .hero-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(39,204,192,0.12);
+      border: 1px solid rgba(39,204,192,0.3);
+      color: var(--teal);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      border-radius: 100px;
+      margin-bottom: 28px;
+    }
+    .hero-eyebrow::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      background: var(--teal);
+      border-radius: 50%;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+    .hero h1 {
+      color: #fff;
+      font-size: clamp(36px, 5vw, 62px);
+      font-weight: 900;
+      line-height: 1.1;
+      letter-spacing: -1.5px;
+      margin-bottom: 20px;
+    }
+    .hero h1 span { color: var(--teal); }
+    .hero-sub {
+      color: #94a3b8;
+      font-size: 18px;
+      font-weight: 500;
+      max-width: 580px;
+      margin-bottom: 40px;
+      line-height: 1.6;
+    }
+    .hero-ctas {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .btn-primary {
+      background: var(--teal);
+      color: #fff;
+      font-weight: 800;
+      font-size: 15px;
+      padding: 14px 28px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .btn-primary:hover { background: var(--teal-dark); transform: translateY(-1px); }
+    .btn-outline {
+      background: transparent;
+      color: #fff;
+      font-weight: 700;
+      font-size: 15px;
+      padding: 14px 28px;
+      border-radius: 8px;
+      border: 2px solid rgba(255,255,255,0.2);
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .btn-outline:hover { border-color: var(--teal); color: var(--teal); }
+    .hero-trust {
+      margin-top: 56px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .trust-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #94a3b8;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .trust-item svg { color: var(--teal); }
+
+    /* ── COUNTER STATS ── */
+    .stats-bar {
+      background: var(--dark2);
+      border-top: 1px solid rgba(39,204,192,0.2);
+      border-bottom: 1px solid rgba(39,204,192,0.2);
+      padding: 40px 32px;
+    }
+    .stats-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 32px;
+    }
+    .stat-item { text-align: center; }
+    .stat-num {
+      font-size: clamp(36px, 4vw, 54px);
+      font-weight: 900;
+      color: var(--teal);
+      letter-spacing: -2px;
+      line-height: 1;
+    }
+    .stat-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #94a3b8;
+      margin-top: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .stat-divider {
+      width: 1px;
+      background: rgba(39,204,192,0.15);
+    }
+
+    /* ── SECTION WRAPPER ── */
+    .section {
+      padding: 80px 32px;
+    }
+    .section-inner {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .section-eyebrow {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin-bottom: 12px;
+    }
+    .section-title {
+      font-size: clamp(28px, 3vw, 40px);
+      font-weight: 900;
+      color: var(--text);
+      letter-spacing: -1px;
+      line-height: 1.2;
+      margin-bottom: 16px;
+    }
+    .section-sub {
+      font-size: 16px;
+      color: var(--muted);
+      max-width: 560px;
+      line-height: 1.6;
+      margin-bottom: 48px;
+    }
+
+    /* ── SERVICES GRID ── */
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+    }
+    .service-card {
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 28px 24px;
+      position: relative;
+      transition: all 0.25s;
+      background: #fff;
+    }
+    .service-card:hover {
+      border-color: var(--teal);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 32px rgba(39,204,192,0.12);
+    }
+    .service-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--teal);
+      border-radius: 12px 12px 0 0;
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+    .service-card:hover::before { opacity: 1; }
+    .service-icon {
+      width: 44px;
+      height: 44px;
+      background: rgba(39,204,192,0.1);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      margin-bottom: 16px;
+    }
+    .service-name {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .service-desc {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* ── CLIENT LOGO BAR ── */
+    .clients-section {
+      background: var(--light);
+      padding: 60px 32px;
+    }
+    .clients-inner {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .clients-label {
+      text-align: center;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 36px;
+    }
+    .clients-logos {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 40px;
+      flex-wrap: wrap;
+    }
+    .client-logo {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 22px;
+      font-size: 13px;
+      font-weight: 800;
+      color: #475569;
+      letter-spacing: -0.3px;
+      min-width: 140px;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .client-logo:hover {
+      border-color: var(--teal);
+      color: var(--text);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    }
+    .client-logo .logo-type {
+      display: block;
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    /* ── REVIEW SECTION ── */
+    .review-section {
+      background: var(--dark);
+      padding: 80px 32px;
+    }
+    .review-inner {
+      max-width: 760px;
+      margin: 0 auto;
+      text-align: center;
+    }
+    .stars {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      margin-bottom: 24px;
+    }
+    .star {
+      color: #f59e0b;
+      font-size: 28px;
+    }
+    .review-text {
+      color: #e2e8f0;
+      font-size: clamp(18px, 2.5vw, 26px);
+      font-weight: 600;
+      line-height: 1.5;
+      font-style: italic;
+      margin-bottom: 28px;
+    }
+    .review-attr {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+    .review-avatar {
+      width: 44px;
+      height: 44px;
+      background: var(--teal);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      color: #fff;
+      font-size: 16px;
+    }
+    .review-name {
+      text-align: left;
+    }
+    .review-name strong {
+      display: block;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .review-name span {
+      font-size: 12px;
+      color: #64748b;
+    }
+    .review-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 6px 12px;
+      border-radius: 8px;
+      color: #94a3b8;
+      font-size: 12px;
+      font-weight: 600;
+      margin-top: 32px;
+      display: inline-flex;
+    }
+
+    /* ── EMERGENCY SECTION ── */
+    .emergency-section {
+      background: var(--red);
+      padding: 56px 32px;
+    }
+    .emergency-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 32px;
+      flex-wrap: wrap;
+    }
+    .emergency-left h2 {
+      color: #fff;
+      font-size: clamp(24px, 3vw, 36px);
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+    }
+    .emergency-left p {
+      color: rgba(255,255,255,0.8);
+      font-size: 15px;
+    }
+    .emergency-phone {
+      color: #fff;
+      font-size: clamp(28px, 4vw, 44px);
+      font-weight: 900;
+      text-decoration: none;
+      letter-spacing: -1px;
+      display: block;
+    }
+    .emergency-phone:hover { opacity: 0.9; }
+    .emergency-avail {
+      font-size: 13px;
+      color: rgba(255,255,255,0.7);
+      font-weight: 600;
+      margin-top: 4px;
+    }
+
+    /* ── CTA SECTION ── */
+    .cta-section {
+      padding: 100px 32px;
+      text-align: center;
+      background: var(--light);
+    }
+    .cta-inner { max-width: 640px; margin: 0 auto; }
+    .cta-section h2 {
+      font-size: clamp(28px, 3.5vw, 44px);
+      font-weight: 900;
+      color: var(--text);
+      letter-spacing: -1px;
+      margin-bottom: 16px;
+    }
+    .cta-section p {
+      color: var(--muted);
+      font-size: 16px;
+      margin-bottom: 36px;
+    }
+    .cta-buttons {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn-dark {
+      background: var(--dark);
+      color: #fff;
+      font-weight: 700;
+      font-size: 15px;
+      padding: 14px 28px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .btn-dark:hover { background: var(--mid); transform: translateY(-1px); }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--dark);
+      padding: 40px 32px;
+      text-align: center;
+    }
+    footer p {
+      color: #475569;
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+    footer a { color: var(--teal); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 640px) {
+      .site-header { padding: 0 16px; }
+      .hero, .section, .cta-section { padding-left: 20px; padding-right: 20px; }
+      .stats-inner { grid-template-columns: repeat(2, 1fr); }
+      .stat-divider { display: none; }
+      .emergency-inner { flex-direction: column; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- STICKY HEADER -->
+  <header class="site-header">
+    <div class="header-logo">
+      <div class="logo-mark">DJC</div>
+      <div>
+        <div class="logo-text">D.J. <span>Conley</span> Associates</div>
+        <div class="logo-sub">Commercial Boiler Service — Metro Detroit</div>
+      </div>
+    </div>
+    <div class="header-emergency">
+      <span class="badge-emergency">24/7</span>
+      <a href="tel:+13139921219" class="header-phone">(313) 992-1219</a>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-grid-line"></div>
+    <div class="hero-inner">
+      <div class="hero-eyebrow">Serving Metro Detroit Since 1957</div>
+      <h1>Detroit's Commercial<br/><span>Boiler Experts</span></h1>
+      <p class="hero-sub">When a boiler goes down, every hour costs you. We keep the largest commercial and industrial facilities in Southeast Michigan running — 24 hours a day, 365 days a year.</p>
+      <div class="hero-ctas">
+        <a href="tel:+13139921219" class="btn-primary">
+          &#128222; Request Emergency Service
+        </a>
+        <a href="#estimate" class="btn-outline">
+          Get a Free Estimate →
+        </a>
+      </div>
+      <div class="hero-trust">
+        <div class="trust-item">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+          Licensed &amp; Insured
+        </div>
+        <div class="trust-item">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+          Factory-Certified Technicians
+        </div>
+        <div class="trust-item">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+          Same-Day Response Guarantee
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS BAR -->
+  <section class="stats-bar">
+    <div class="stats-inner">
+      <div class="stat-item">
+        <div class="stat-num">65+</div>
+        <div class="stat-label">Years Serving Detroit</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">400+</div>
+        <div class="stat-label">Active Client Sites</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">24/7</div>
+        <div class="stat-label">Emergency Response</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">4.9★</div>
+        <div class="stat-label">Google Rating</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SERVICES -->
+  <section class="section" style="background:#fff;">
+    <div class="section-inner">
+      <div class="section-eyebrow">What We Do</div>
+      <h2 class="section-title">Complete Commercial Boiler Services</h2>
+      <p class="section-sub">From new installations to emergency repairs, our factory-certified technicians handle every aspect of your commercial heating systems.</p>
+      <div class="services-grid">
+        <div class="service-card">
+          <div class="service-icon">🔥</div>
+          <div class="service-name">Boiler Installation</div>
+          <div class="service-desc">Full-service installation of commercial and industrial boiler systems. We engineer the right solution for your facility size and usage requirements.</div>
+        </div>
+        <div class="service-card">
+          <div class="service-icon">🔧</div>
+          <div class="service-name">Preventive Maintenance</div>
+          <div class="service-desc">Scheduled maintenance plans that prevent costly breakdowns. Most failures are predictable — we catch them before they stop your operation.</div>
+        </div>
+        <div class="service-card">
+          <div class="service-icon">⚡</div>
+          <div class="service-name">Emergency Service</div>
+          <div class="service-desc">24/7 emergency response, every day of the year. Our dispatch team gets a certified tech to your facility — fast. No hold music. No callbacks.</div>
+        </div>
+        <div class="service-card">
+          <div class="service-icon">📋</div>
+          <div class="service-name">Service Contracts</div>
+          <div class="service-desc">Fixed-cost annual contracts that cover parts, labor, and priority dispatch. The easiest way to budget for your facility's mechanical reliability.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CLIENT LOGOS -->
+  <section class="clients-section">
+    <div class="clients-inner">
+      <div class="clients-label">Trusted by Detroit's Largest Organizations</div>
+      <div class="clients-logos">
+        <div class="client-logo">
+          Stellantis
+          <span class="logo-type">Automotive Manufacturing</span>
+        </div>
+        <div class="client-logo">
+          Henry Ford Health
+          <span class="logo-type">Healthcare System</span>
+        </div>
+        <div class="client-logo">
+          Wayne County
+          <span class="logo-type">Municipal Government</span>
+        </div>
+        <div class="client-logo">
+          Detroit Public Schools
+          <span class="logo-type">K–12 Education</span>
+        </div>
+        <div class="client-logo">
+          General Motors
+          <span class="logo-type">Automotive Manufacturing</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GOOGLE REVIEW PULL QUOTE -->
+  <section class="review-section">
+    <div class="review-inner">
+      <div class="stars">
+        <span class="star">★</span>
+        <span class="star">★</span>
+        <span class="star">★</span>
+        <span class="star">★</span>
+        <span class="star">★</span>
+      </div>
+      <p class="review-text">"Our boiler went down at 11pm on a Thursday. D.J. Conley had a tech on-site by midnight and we were back up by 3am. We have a $40,000/day production line — that response saved us. I don't call anyone else."</p>
+      <div class="review-attr">
+        <div class="review-avatar">MR</div>
+        <div class="review-name">
+          <strong>Mike R.</strong>
+          <span>Facilities Manager, Automotive Supplier — Warren, MI</span>
+        </div>
+      </div>
+      <div class="review-badge">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="#4285F4"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+        Verified Google Review · 5.0 stars
+      </div>
+    </div>
+  </section>
+
+  <!-- EMERGENCY BAND -->
+  <section class="emergency-section">
+    <div class="emergency-inner">
+      <div class="emergency-left">
+        <h2>Boiler Down Right Now?</h2>
+        <p>Don't wait on hold. Our live dispatch picks up 24 hours a day, every day of the year.</p>
+      </div>
+      <div>
+        <a href="tel:+13139921219" class="emergency-phone">(313) 992-1219</a>
+        <div class="emergency-avail">Available 24/7 · 365 days a year · No answering service</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA SECTION -->
+  <section class="cta-section" id="estimate">
+    <div class="cta-inner">
+      <h2>Ready to Talk About Your Facility?</h2>
+      <p>We offer free on-site assessments for commercial and industrial facilities across Southeast Michigan. No pressure, no obligation.</p>
+      <div class="cta-buttons">
+        <a href="tel:+13139921219" class="btn-primary">
+          &#128222; Request Service Now
+        </a>
+        <a href="mailto:service@djconley.com" class="btn-dark">
+          ✉ Get a Free Estimate
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <p><strong style="color:#94a3b8;">D.J. Conley Associates, Inc.</strong></p>
+    <p>Commercial Boiler Service &amp; Installation · Troy, MI 48084</p>
+    <p style="margin-top:12px;">
+      <a href="tel:+13139921219">(313) 992-1219</a>
+      &nbsp;·&nbsp;
+      <a href="mailto:service@djconley.com">service@djconley.com</a>
+      &nbsp;·&nbsp;
+      <a href="https://www.djconley.com">djconley.com</a>
+    </p>
+    <p style="margin-top:16px;font-size:11px;color:#334155;">Licensed · Bonded · Insured · Michigan Mechanical Contractor #1234567</p>
+  </footer>
+
+</body>
+</html>
