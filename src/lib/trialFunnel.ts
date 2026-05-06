@@ -1,0 +1,63 @@
+// Tiny tracker for trial-funnel landing pages. Fire-and-forget; never throws.
+// Writes to public.trial_funnel_events (anon insert allowed via RLS).
+import { supabase } from "@/integrations/supabase/client";
+
+export type TrialFunnelEvent =
+  | "view"
+  | "form_focus"
+  | "form_submit"
+  | "checkout_redirect"
+  | "trial_success"
+  | "trial_error";
+
+const SESSION_KEY = "trial_funnel_session_id";
+
+function getSessionId(): string {
+  try {
+    let id = sessionStorage.getItem(SESSION_KEY);
+    if (!id) {
+      id = (crypto as any)?.randomUUID?.() ?? `s_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+      sessionStorage.setItem(SESSION_KEY, id);
+    }
+    return id;
+  } catch {
+    return `s_${Date.now()}`;
+  }
+}
+
+function getUtm(): Record<string, string> {
+  try {
+    const sp = new URLSearchParams(window.location.search);
+    const out: Record<string, string> = {};
+    ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "rcpt"].forEach((k) => {
+      const v = sp.get(k);
+      if (v) out[k] = v;
+    });
+    return out;
+  } catch {
+    return {};
+  }
+}
+
+export function trackTrialEvent(
+  eventType: TrialFunnelEvent,
+  product: string | null,
+  extra?: { email?: string; metadata?: Record<string, unknown> },
+): void {
+  try {
+    const payload = {
+      event_type: eventType,
+      product: product ?? null,
+      email: extra?.email?.trim().toLowerCase() || null,
+      session_id: getSessionId(),
+      utm: getUtm(),
+      metadata: extra?.metadata ?? {},
+      user_agent: typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 500) : null,
+      referrer: typeof document !== "undefined" ? (document.referrer || "").slice(0, 500) : null,
+    };
+    // Fire-and-forget. Never await, never throw.
+    void supabase.from("trial_funnel_events").insert(payload as any).then(() => {}, () => {});
+  } catch {
+    /* swallow */
+  }
+}
