@@ -147,24 +147,7 @@ export default function AdminDeadLeads() {
   const pipeline = pipelineResult?.rows || [];
   const totalEmailedExact = pipelineResult?.total ?? pipeline.length;
 
-  // Today's pitch rotation badge
-  const todayPitch = (() => {
-    const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
-    const r = dayOfYear % 5;
-    return ["dead_lead", "tech_alert", "missed_call", "web_design", "care_alert"][r];
-  })();
-  const pitchLabels: Record<string, string> = {
-    dead_lead: "♻️ Dead Lead",
-    tech_alert: "🎯 TechAlert",
-    missed_call: "📞 Missed-Call",
-    web_design: "🌐 Web Design",
-    care_alert: "🏥 CareAlert",
-  };
-  const daysUntilDeadLead = (() => {
-    const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
-    const r = dayOfYear % 5;
-    return r === 0 ? 0 : 5 - r;
-  })();
+  // This panel always pitches dead_lead — pitch_override is hardcoded in handleRunProspector
 
   const pipelineStats = {
     total: totalEmailedExact,
@@ -611,18 +594,11 @@ export default function AdminDeadLeads() {
 
         {/* ── PROSPECTING PIPELINE TAB ─────────────────────────────── */}
         {tab === "pipeline" && <>
-          {/* Today's pitch rotation badge */}
-          <div style={{ background: todayPitch === "dead_lead" ? "#0f3a2e" : "#1f2937", border: `1px solid ${todayPitch === "dead_lead" ? "#10b981" : "#475569"}`, borderRadius: 8, padding: "10px 14px", marginBottom: 14, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-            <span style={{ fontSize: 11, color: "#94a3b8", fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase" }}>Today's Auto-Pitch:</span>
-            <span style={{ fontSize: 14, color: "#fff", fontWeight: 700 }}>{pitchLabels[todayPitch]}</span>
-            {todayPitch !== "dead_lead" && (
-              <span style={{ fontSize: 11, color: "#fbbf24", marginLeft: "auto" }}>
-                Dead-lead pitch returns in {daysUntilDeadLead} day{daysUntilDeadLead === 1 ? "" : "s"} — manual button below forces dead-lead
-              </span>
-            )}
-            {todayPitch === "dead_lead" && (
-              <span style={{ fontSize: 11, color: "#10b981", marginLeft: "auto", fontWeight: 600 }}>✓ Cron will send dead-lead today</span>
-            )}
+          {/* Pitch confirmation — always dead_lead from this panel */}
+          <div style={{ background: "#0f3a2e", border: "1px solid #10b981", borderRadius: 8, padding: "10px 14px", marginBottom: 14, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 11, color: "#94a3b8", fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase" }}>Always Pitches:</span>
+            <span style={{ fontSize: 14, color: "#fff", fontWeight: 700 }}>♻️ Dead Lead Reactivation</span>
+            <span style={{ fontSize: 11, color: "#10b981", marginLeft: "auto", fontWeight: 600 }}>✓ pitch_override=dead_lead on every run</span>
           </div>
 
           {/* Pipeline stats */}

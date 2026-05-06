@@ -1,10 +1,9 @@
 /**
  * gmail-send-outreach
  *
- * Admin-only — sends a Trojan Horse outreach email through Matt's Gmail
- * (matt@detroitwebagent.com) via the Lovable connector gateway. Builds a
- * proper RFC 2822 multipart/alternative MIME message (HTML + plain) so it
- * renders beautifully in any client, then logs the send to system_comms_log.
+ * Admin-only — sends a Trojan Horse outreach email from matt@detroitwebagent.com.
+ * Uses Resend API (already domain-verified) so no Gmail connector setup required.
+ * Logs the send to system_comms_log and ai_action_queue.
  */
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -14,9 +13,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const GATEWAY_URL = "https://connector-gateway.lovable.dev/google_mail/gmail/v1";
-const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
-const GMAIL_API_KEY = Deno.env.get("GOOGLE_MAIL_API_KEY") || "";
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const FROM_NAME = "Matt Michels";
 const FROM_EMAIL = "matt@detroitwebagent.com";
 
@@ -25,68 +22,11 @@ const sb = createClient(
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
 );
 
-function base64UrlEncode(str: string): string {
-  // Encode to base64 then make URL-safe
-  const b64 = btoa(unescape(encodeURIComponent(str)));
-  return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-}
-
-function buildMimeMessage(opts: {
-  to: string;
-  toName?: string | null;
-  from: string;
-  fromName: string;
-  replyTo?: string;
-  subject: string;
-  html: string;
-  plain: string;
-}): string {
-  const boundary = `bnd_${Math.random().toString(36).slice(2)}_${Date.now().toString(36)}`;
-  const toHeader = opts.toName ? `"${opts.toName.replace(/"/g, "")}" <${opts.to}>` : opts.to;
-  const fromHeader = `"${opts.fromName.replace(/"/g, "")}" <${opts.from}>`;
-
-  // Subject — RFC 2047 encode if non-ASCII
-  const needsEncoding = /[^\x20-\x7e]/.test(opts.subject);
-  const subjectHeader = needsEncoding
-    ? `=?UTF-8?B?${btoa(unescape(encodeURIComponent(opts.subject)))}?=`
-    : opts.subject;
-
-  const headers = [
-    `From: ${fromHeader}`,
-    `To: ${toHeader}`,
-    opts.replyTo ? `Reply-To: ${opts.replyTo}` : `Reply-To: ${opts.from}`,
-    `Subject: ${subjectHeader}`,
-    `MIME-Version: 1.0`,
-    `Content-Type: multipart/alternative; boundary="${boundary}"`,
-  ].join("\r\n");
-
-  const body = [
-    ``,
-    `--${boundary}`,
-    `Content-Type: text/plain; charset="UTF-8"`,
-    `Content-Transfer-Encoding: 7bit`,
-    ``,
-    opts.plain,
-    ``,
-    `--${boundary}`,
-    `Content-Type: text/html; charset="UTF-8"`,
-    `Content-Transfer-Encoding: 7bit`,
-    ``,
-    opts.html,
-    ``,
-    `--${boundary}--`,
-    ``,
-  ].join("\r\n");
-
-  return `${headers}\r\n${body}`;
-}
-
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY missing");
-    if (!GMAIL_API_KEY) throw new Error("Gmail connection not linked — connect Google Mail in Connectors");
+    if (!RESEND_API_KEY) throw new Error("RESEND_API_KEY missing — add it to Supabase edge function secrets");
 
     // Admin gate
     const authHeader = req.headers.get("Authorization");
@@ -115,45 +55,38 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: "invalid recipient email" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const mime = buildMimeMessage({
-      to,
-      toName: to_name,
-      from: FROM_EMAIL,
-      fromName: FROM_NAME,
-      subject,
-      html: html_body,
-      plain: plain_body || "(plain-text version unavailable — please view in HTML mode)",
-    });
-
-    const raw = base64UrlEncode(mime);
-
-    const res = await fetch(`${GATEWAY_URL}/users/me/messages/send`, {
+    const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
-        "X-Connection-Api-Key": GMAIL_API_KEY,
+        "Authorization": `Bearer ${RESEND_API_KEY}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ raw }),
+      body: JSON.stringify({
+        from: `${FROM_NAME} <${FROM_EMAIL}>`,
+        to: [to],
+        reply_to: FROM_EMAIL,
+        subject,
+        html: html_body,
+        text: plain_body || undefined,
+      }),
       signal: AbortSignal.timeout(20_000),
     });
 
     const sendData = await res.json().catch(() => ({}));
     if (!res.ok) {
-      const errMsg = sendData?.error?.message || JSON.stringify(sendData);
-      console.error(`[gmail-send-outreach] Gmail API ${res.status}:`, errMsg);
-      // Log failure
+      const errMsg = sendData?.message || sendData?.error || JSON.stringify(sendData);
+      console.error(`[gmail-send-outreach] Resend ${res.status}:`, errMsg);
       await sb.from("system_comms_log").insert({
-        channel: "email_gmail",
+        channel: "email_resend",
         direction: "outbound",
         from_addr: FROM_EMAIL,
         to_addr: to,
         subject,
-        body: `Gmail send failed [${res.status}]: ${errMsg}`,
+        body: `Send failed [${res.status}]: ${errMsg}`,
         status: "failed",
         meta: { agency_name, http_status: res.status },
       }).then(() => {}, () => {});
-      return new Response(JSON.stringify({ error: `Gmail send failed: ${errMsg}` }), {
+      return new Response(JSON.stringify({ error: `Send failed: ${errMsg}` }), {
         status: 502,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -161,32 +94,26 @@ serve(async (req) => {
 
     // Success — log
     await sb.from("system_comms_log").insert({
-      channel: "email_gmail",
+      channel: "email_resend",
       direction: "outbound",
       from_addr: FROM_EMAIL,
       to_addr: to,
       subject,
-      body: plain_body || "[HTML email — see Gmail Sent folder]",
+      body: plain_body || "[HTML email]",
       status: "sent",
-      meta: {
-        agency_name,
-        gmail_message_id: sendData?.id,
-        gmail_thread_id: sendData?.threadId,
-      },
+      meta: { agency_name, resend_id: sendData?.id },
     }).then(() => {}, () => {});
 
-    // Audit
     await sb.from("ai_action_queue").insert({
       action_type: "trojan_horse_email_sent",
       ai_result: subject,
-      context: { agency_name, to, gmail_message_id: sendData?.id },
+      context: { agency_name, to, resend_id: sendData?.id },
       status: "sent",
     }).then(() => {}, () => {});
 
     return new Response(JSON.stringify({
       ok: true,
-      gmail_message_id: sendData?.id,
-      gmail_thread_id: sendData?.threadId,
+      resend_id: sendData?.id,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
