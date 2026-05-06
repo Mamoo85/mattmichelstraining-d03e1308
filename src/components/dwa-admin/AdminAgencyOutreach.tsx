@@ -462,16 +462,33 @@ export default function AdminAgencyOutreach() {
                     <pre className="text-slate-300 text-xs whitespace-pre-wrap font-mono leading-relaxed p-4 max-h-[540px] overflow-y-auto">{draft.plain_body}</pre>
                   )}
 
-                  <div className="px-4 py-3 border-t border-white/10 flex gap-2 flex-wrap">
+                  <div className="px-4 py-3 border-t border-white/10 flex gap-2 flex-wrap items-center">
                     <button
                       onClick={() => sendViaGmail(agency)}
                       disabled={!enrich?.contact_email || sending === agency.name}
                       className="px-4 py-2 rounded-lg bg-[#00d4ff] text-[#0a1628] text-xs font-bold flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#00b8e0]"
-                      title={!enrich?.contact_email ? "Enrich the contact first" : "Send from matt@detroitwebagent.com"}
+                      title={!enrich?.contact_email ? "Enrichment didn't return an email — paste one manually below to enable Send" : "Send from matt@detroitwebagent.com"}
                     >
                       {sending === agency.name ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
                       Send via Gmail
                     </button>
+                    {!enrich?.contact_email && (
+                      <input
+                        type="email"
+                        placeholder="Add email manually…"
+                        defaultValue=""
+                        onBlur={(e) => {
+                          const v = e.target.value.trim();
+                          if (!v) return;
+                          setEnrichments((prev) => ({
+                            ...prev,
+                            [agency.name]: { ...(prev[agency.name] || {}), contact_email: v, contact_full_name: prev[agency.name]?.contact_full_name || agency.contact },
+                          }));
+                          toast.success("Email saved for this session");
+                        }}
+                        className="px-3 py-2 rounded-lg bg-[#0a1628] border border-amber-500/40 text-amber-200 text-xs w-56"
+                      />
+                    )}
                     <button onClick={() => copyHtml(agency.name)} className="px-3 py-2 rounded-lg border border-white/10 text-slate-300 text-xs font-semibold flex items-center gap-1.5 hover:border-[#00d4ff]/40">
                       <Copy className="w-3 h-3" /> Copy HTML
                     </button>

@@ -262,7 +262,16 @@ function FindProspects() {
         body: { audience_type: audience, county: county || undefined, limit },
       });
       if (error) throw error;
-      toast.success(`Scrape complete: ${data?.inserted ?? 0} new, ${data?.total ?? 0} total`);
+      const inserted = data?.inserted ?? 0;
+      const found = data?.found ?? 0;
+      const dup = data?.duplicates ?? 0;
+      if (found === 0) {
+        toast.warning(`No "${audience}" prospects returned${county ? ` in ${county}` : ""}. Try a different audience or remove the county filter.`);
+      } else if (inserted === 0) {
+        toast.message(`Found ${found} but all were duplicates (${dup} already in pool).`);
+      } else {
+        toast.success(`Scrape complete: ${inserted} new · ${dup} duplicates · ${found} found`);
+      }
       qc.invalidateQueries({ queryKey: ["prospect_pool"] });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Scrape failed");
@@ -992,7 +1001,13 @@ async function handleDispatchAction(
       const sent = data?.sent ?? 0;
       const failed = data?.failed ?? 0;
       const cost = data?.cost ?? data?.total_cost ?? 0;
-      toast.success(`✅ ${sent} sent · ${failed} failed · $${Number(cost).toFixed(2)}`);
+      if (data?.success === false || (sent === 0 && data?.error)) {
+        toast.error(`${label} send failed: ${data?.error || data?.last_error || "no prospects matched"}`);
+      } else if (sent === 0) {
+        toast.warning(`${label}: 0 sent — campaign had no eligible prospects.`);
+      } else {
+        toast.success(`✅ ${sent} sent · ${failed} failed · $${Number(cost).toFixed(2)}`);
+      }
       qc.invalidateQueries({ queryKey: [queryKey] });
       return;
     }

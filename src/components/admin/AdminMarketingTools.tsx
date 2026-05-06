@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,9 +6,12 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { COMMAND_CENTER_CATALOG, CATEGORY_ORDER, type CommandCenterCatalogEntry } from "@/lib/commandCenterCatalog";
 import {
   Mail, MessageSquare, Eye, Star, ShieldAlert, ShieldCheck,
-  RotateCw, Plus, Trash2, ExternalLink, GripVertical, Send,
+  RotateCw, Plus, Trash2, ExternalLink, GripVertical, Send, Search, Check,
 } from "lucide-react";
 
 // --------- Marketing tile config (status pulled live) ---------
@@ -205,8 +208,11 @@ function deriveLabel(url: string): { label: string; emoji: string } {
 
 function CommandCenterTabs() {
   const [tiles, setTiles] = useState<Tile[]>([]);
-  const [pasteText, setPasteText] = useState("");
   const [loading, setLoading] = useState(true);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [customOpen, setCustomOpen] = useState(false);
+  const [customUrl, setCustomUrl] = useState("");
+  const [customLabel, setCustomLabel] = useState("");
   const [owner] = useState("matt@detroitwebagent.com");
 
   async function load() {
@@ -222,22 +228,42 @@ function CommandCenterTabs() {
   }
   useEffect(() => { load(); }, []);
 
-  async function syncPaste() {
-    const lines = pasteText.split("\n").map((l) => l.trim()).filter((l) => l && /[\w-]+\.[a-z]/i.test(l));
-    if (!lines.length) { toast({ title: "No URLs found", variant: "destructive" }); return; }
+  const existingUrls = useMemo(() => new Set(tiles.map((t) => t.url)), [tiles]);
 
-    // Build inserts; preserve order user pasted in
+  async function addEntries(entries: { label: string; url: string; emoji: string }[]) {
     const startOrder = tiles.length;
-    const rows = lines.map((raw, i) => {
-      const { label, emoji } = deriveLabel(raw);
-      const url = raw.startsWith("http") ? raw : `https://${raw}`;
-      return { owner_email: owner, label, url, icon_emoji: emoji, sort_order: startOrder + i, is_active: true };
-    });
+    const rows = entries.map((e, i) => ({
+      owner_email: owner,
+      label: e.label,
+      url: e.url.startsWith("http") ? e.url : `https://${e.url}`,
+      icon_emoji: e.emoji,
+      sort_order: startOrder + i,
+      is_active: true,
+    }));
     const { error } = await supabase.from("command_center_tiles" as any).insert(rows);
     if (error) { toast({ title: "Insert failed", description: error.message, variant: "destructive" }); return; }
-    toast({ title: `✅ Added ${rows.length} tabs`, description: "Edit labels inline below." });
-    setPasteText("");
+    toast({ title: `✅ Added ${rows.length} tab${rows.length === 1 ? "" : "s"}` });
     load();
+  }
+
+  async function addFromCatalog(entry: CommandCenterCatalogEntry) {
+    if (existingUrls.has(entry.url)) {
+      toast({ title: "Already added", description: entry.label });
+      setPickerOpen(false);
+      return;
+    }
+    await addEntries([{ label: entry.label, url: entry.url, emoji: entry.emoji }]);
+    setPickerOpen(false);
+  }
+
+  async function addCustom() {
+    if (!customUrl.trim()) return;
+    const url = customUrl.trim();
+    const { label: derivedLabel, emoji } = deriveLabel(url);
+    await addEntries([{ label: customLabel.trim() || derivedLabel, url, emoji }]);
+    setCustomUrl("");
+    setCustomLabel("");
+    setCustomOpen(false);
   }
 
   async function updateTile(id: string, patch: Partial<Tile>) {
@@ -260,30 +286,87 @@ function CommandCenterTabs() {
     load();
   }
 
+  const grouped = useMemo(() => {
+    const map = new Map<string, CommandCenterCatalogEntry[]>();
+    for (const cat of CATEGORY_ORDER) map.set(cat, []);
+    for (const e of COMMAND_CENTER_CATALOG) {
+      if (!map.has(e.category)) map.set(e.category, []);
+      map.get(e.category)!.push(e);
+    }
+    return Array.from(map.entries()).filter(([, items]) => items.length > 0);
+  }, []);
+
   return (
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-base">🎛️ My Command Center Tabs</CardTitle>
         <p className="text-xs text-muted-foreground">
-          Paste your tab URLs (one per line). Labels + emojis auto-detected. Edit inline, reorder, or delete.
+          Search common tools or add a custom URL. Edit labels inline, reorder, or delete.
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Textarea
-          placeholder={"https://eway.com\nhttps://fieldservio.com\nhttps://qbo.intuit.com\nhttps://mail.google.com\nmitn.info"}
-          value={pasteText}
-          onChange={(e) => setPasteText(e.target.value)}
-          rows={5}
-          className="font-mono text-xs"
-        />
-        <Button size="sm" onClick={syncPaste} disabled={!pasteText.trim()}>
-          <Plus size={14} className="mr-1" /> Sync to Command Center
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
+            <PopoverTrigger asChild>
+              <Button size="sm" variant="default">
+                <Search size={14} className="mr-1" /> Add from catalog
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[360px] p-0" align="start">
+              <Command>
+                <CommandInput placeholder="Search tools (Gmail, Stripe, Jobber…)" />
+                <CommandList className="max-h-[360px]">
+                  <CommandEmpty>No matches. Use "Custom URL" below.</CommandEmpty>
+                  {grouped.map(([category, items]) => (
+                    <CommandGroup key={category} heading={category}>
+                      {items.map((e) => {
+                        const already = existingUrls.has(e.url);
+                        return (
+                          <CommandItem
+                            key={e.id}
+                            value={`${e.label} ${e.id} ${category}`}
+                            onSelect={() => addFromCatalog(e)}
+                            disabled={already}
+                          >
+                            <span className="mr-2">{e.emoji}</span>
+                            <span className="flex-1">{e.label}</span>
+                            {already && <Check size={14} className="text-emerald-500" />}
+                          </CommandItem>
+                        );
+                      })}
+                    </CommandGroup>
+                  ))}
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+          <Button size="sm" variant="outline" onClick={() => setCustomOpen((v) => !v)}>
+            <Plus size={14} className="mr-1" /> Custom URL
+          </Button>
+        </div>
+
+        {customOpen && (
+          <div className="flex flex-wrap gap-2 items-center p-3 rounded border border-dashed border-border bg-card/40">
+            <Input
+              placeholder="https://example.com"
+              value={customUrl}
+              onChange={(e) => setCustomUrl(e.target.value)}
+              className="flex-1 min-w-[200px] h-8 text-xs"
+            />
+            <Input
+              placeholder="Label (optional)"
+              value={customLabel}
+              onChange={(e) => setCustomLabel(e.target.value)}
+              className="w-40 h-8 text-xs"
+            />
+            <Button size="sm" onClick={addCustom} disabled={!customUrl.trim()}>Add</Button>
+          </div>
+        )}
 
         {loading ? (
           <p className="text-xs text-muted-foreground">Loading…</p>
         ) : tiles.length === 0 ? (
-          <p className="text-xs text-muted-foreground">No tabs yet. Paste above to get started.</p>
+          <p className="text-xs text-muted-foreground">No tabs yet. Use "Add from catalog" above to get started.</p>
         ) : (
           <div className="space-y-1.5">
             {tiles.map((t, i) => (
