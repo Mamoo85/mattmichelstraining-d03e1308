@@ -14,7 +14,7 @@ const corsHeaders = {
 const STRIPE_SECRET_KEY = Deno.env.get("STRIPE_SECRET_KEY")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const SITE_URL = Deno.env.get("SITE_URL") || "https://detroitwebagency.com";
+const SITE_URL = Deno.env.get("SITE_URL") || "https://detroitwebagent.com";
 
 const VALID_VERTICALS = ["roofing","hvac","plumbing","electrical","pest_control","gutters","exterior","tree","restoration","demo_junk","foundation"];
 
