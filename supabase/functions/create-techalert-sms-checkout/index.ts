@@ -67,8 +67,8 @@ Deno.serve(async (req) => {
         phone: String(phone).replace(/\D/g, ""),
       },
     },
-    success_url: `${SITE_URL}/tech-alert?subscribed=sms&session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${SITE_URL}/tech-alert`,
+    success_url: `${SITE_URL}/talent-radar?subscribed=sms&session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${SITE_URL}/talent-radar`,
     allow_promotion_codes: true,
   });
 
