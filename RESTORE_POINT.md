@@ -18,3 +18,5 @@
 
 ## How to Restore
 Revert each file listed above to the git commit prior to this redesign. The BottomTabBar.tsx file can simply be deleted.
+
+<!-- build-refresh: 2026-05-06 -->
