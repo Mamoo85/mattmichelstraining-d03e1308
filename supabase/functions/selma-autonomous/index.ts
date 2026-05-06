@@ -8,7 +8,7 @@ const cors = {
 // Priority tiers: 1 = focus first (Matt's top services), 2 = secondary, 3 = backburner
 const PRODUCT_TABLES = [
   // === TIER 1: TOP PRIORITY — focus campaigns here ===
-  { table: "web_design_leads", name: "Web Design Services", price: 1499, ltv_months: 12, priority: 1, keywords: [
+  { table: "web_design_leads", name: "Web Design Services", price: 499, ltv_months: 12, priority: 1, keywords: [
     // Core commercial intent
     "web design for small business", "affordable web design near me", "small business website design",
     "local business website builder", "web design Michigan", "web design Grosse Pointe",
