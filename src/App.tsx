@@ -35,6 +35,7 @@ const BottomTabBar = lazyRetry(() => import("@/components/layout/BottomTabBar"))
 
 // Lazy-load ALL pages including Index for faster initial JS parse
 const Index = lazyRetry(() => import("./pages/Index"));
+const BookDemo = lazyRetry(() => import("./pages/BookDemo"));
 const AgencyHome = lazyRetry(() => import("./pages/AgencyHome"));
 const OwnerLogin = lazyRetry(() => import("./pages/OwnerLogin"));
 const OwnerVerify = lazyRetry(() => import("./pages/OwnerVerify"));
@@ -1008,6 +1009,7 @@ const App = () => (
                     <Route path="/client-dash" element={<ProtectedRoute><ClientDashboard /></ProtectedRoute>} />
                     <Route path="/agency-portal" element={<ClientRoute><AgencyClientPortal /></ClientRoute>} />
                     <Route path="/embed/capture/:tenantId" element={<EmbedCapture />} />
+                    <Route path="/book-demo" element={<BookDemo />} />
                     <Route path="*" element={<NotFound />} />
                     </Routes>
                   </div>
