@@ -153,6 +153,12 @@ export default function StartTrial() {
       : "Start trial";
   }, [config]);
 
+  // Funnel: page view (once per canonical product)
+  useEffect(() => {
+    trackTrialEvent("view", canonical ?? rawProduct ?? null, { email });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canonical]);
+
   // Auto-redirect products that need their full landing page (compliance, territory, etc).
   useEffect(() => {
     if (config?.externalLandingUrl) {
