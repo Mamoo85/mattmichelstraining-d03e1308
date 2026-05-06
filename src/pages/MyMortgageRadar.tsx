@@ -57,8 +57,10 @@ type Outreach = {
 };
 
 export default function MyMortgageRadar() {
-  const clientEmail = new URLSearchParams(window.location.search).get("email") || "";
-  const dashboardToken = new URLSearchParams(window.location.search).get("token") || "";
+  const params = new URLSearchParams(window.location.search);
+  const clientEmail = params.get("email") || "";
+  const dashboardToken = params.get("token") || "";
+  const justPurchased = params.get("trial") === "success" || params.get("success") === "1";
   const [authError, setAuthError] = useState<string | null>(null);
   const [clientId, setClientId] = useState<string | null>(null);
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -264,6 +266,20 @@ export default function MyMortgageRadar() {
   const pendingApproval = outreach.filter(o => o.status === "pending_approval" || o.status === "approved");
 
   if (authError) {
+    if (justPurchased) {
+      return (
+        <div className="min-h-screen bg-[#030711] text-foreground flex items-center justify-center px-4">
+          <div className="bg-[#0a1628] border border-[#1e3a5f] rounded-xl p-8 text-center max-w-md w-full">
+            <div className="text-5xl mb-3">🎉</div>
+            <p className="text-white text-xl font-bold mb-2">Payment confirmed!</p>
+            <p className="text-[#94a3b8] text-sm leading-relaxed mb-4">
+              Your <strong className="text-white">Mortgage Radar</strong> account is being activated. Check your email — we're sending you a one-click login link right now.
+            </p>
+            <p className="text-[#64748b] text-xs">Didn't get it? Text Matt at (313) 992-1219 and we'll sort it out in minutes.</p>
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="min-h-screen bg-[#030711] text-foreground">
         <SEOHead title="My Mortgage Radar — Loan Officer Dashboard" description="Daily in-market mortgage leads from public records." />

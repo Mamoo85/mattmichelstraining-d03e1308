@@ -587,7 +587,7 @@ export default function FieldServiceDispatch() {
               { label: "Add your first technician", done: onboardingData.tech_count > 0 },
               { label: "Create your first job", done: onboardingData.job_count > 0 },
               { label: "Add a customer contact", done: onboardingData.customer_count > 0 },
-              { label: "SiteRadar snippet installed", done: onboardingData.snippet_active, helpUrl: "/my-fielddesk" },
+              { label: "SiteRadar snippet installed", done: onboardingData.snippet_active, helpUrl: "/my-field-desk" },
             ];
             const allDone = checks.every(c => c.done);
             const doneCount = checks.filter(c => c.done).length;
