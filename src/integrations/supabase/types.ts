@@ -24648,6 +24648,15 @@ export type Database = {
         }[]
       }
       get_agency_role: { Args: { _user_id: string }; Returns: string }
+      get_cron_job_command: {
+        Args: { p_jobname: string }
+        Returns: {
+          active: boolean
+          command: string
+          jobname: string
+          schedule: string
+        }[]
+      }
       get_last_net_response_for_url: {
         Args: { p_since: string; p_url: string }
         Returns: {

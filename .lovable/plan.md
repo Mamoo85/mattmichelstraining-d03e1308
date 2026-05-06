@@ -1,47 +1,42 @@
-## Audit of Claude's plan
-All bugs claimed are confirmed in the current repo — nothing has been fixed yet:
-- `contractor-prospector/index.ts:43` — `trialCtaHtml(opts)` is called with `{ product, ctaUrl }`, but `trialCtaHtml` expects `{ product, url }`. The href in every cold-email CTA renders as `undefined`.
-- 5 `ctaUrl` values in `contractor-prospector` point to landing pages instead of `/start-trial`.
-- 2 `ctaUrl` values in `techalert-outreach/index.ts` (lines 80, 106) point to `/talent-radar` instead of `/start-trial?product=techalert`.
-- 3 AI prompts hardcode `https://www.detroitwebagent.com/hire-alert` and `/missed-call-catch` inside the email body text, so the LLM repeats the wrong URL even after we fix the button.
+I found the problem behind the screenshot.
 
-One correction to Claude's plan: routing `contractor_leads` and `dead_lead` through `/start-trial` is fine (the page auto-redirects them to their landing pages), but `wrapDwaShell` always injects a "Start your 7-day free trial" CTA box via `trialCtaHtml`. Neither product is actually trial-eligible. So we should use `plainCtaHtml` for those two, not `trialCtaHtml`.
+The cron itself is not dead anymore: `industry-pulse-commercial-3am-et` is currently scheduled and has been producing `industry-pulse-scanner` run logs daily at 07:00 UTC. The latest watchdog rows after the last fix are passing.
 
-## What I will change
+However, this has been noisy for a week because the monitoring stack had two design bugs:
 
-### 1. `supabase/functions/contractor-prospector/index.ts`
+1. The watchdog was checking `demand_radar_runs` globally, not the specific source for the cron. That let unrelated `demand-radar-enhanced-scan` rows confuse the check, and earlier it also produced a blank `count query failed:` message.
+2. The alert email said “URL missing from cron schedule” because the watchdog depended on `cron_schedule_history` parsing and did not reliably use the live `cron.job` row as the source of truth.
 
-**Fix the prop-name bug (line 43)**
-- Change `trialCtaHtml(opts)` → `trialCtaHtml({ product: opts.product, url: opts.ctaUrl })` so the button gets a real href.
+Plan to fix this properly:
 
-**Split trial vs non-trial CTA helpers**
-- Extend `wrapDwaShell` to accept an `isTrial` flag (default true) and use `plainCtaHtml` when false, so non-trial products get an honest CTA instead of a fake "free trial" box.
+1. Harden `cron-zero-output-watchdog`
+   - Add an optional `sourceFilter` per watched job.
+   - For `industry-pulse-commercial-3am-et`, count only `demand_radar_runs.source = 'industry-pulse-scanner'`.
+   - For enhanced Demand Radar checks, keep them separate from commercial Industry Pulse instead of mixing both under the same table.
+   - Improve the error message so failed DB counts include the actual backend error text instead of blank `count query failed:`.
 
-**Fix the 5 cold-email CTA URLs**
-- `buildEmailHtml` (Contractor Leads, line 351): non-trial — keep landing page `/contractor-leads`, switch to `plainCtaHtml`.
-- `buildDeadLeadEmailHtml` (Dead Lead, line 400): non-trial — keep landing page `/dead-lead-intake`, switch to `plainCtaHtml`.
-- `buildTechAlertEmailHtml` (line 505): trial — point to `/start-trial?product=techalert`.
-- `buildMissedCallEmailHtml` (line 552): trial — point to `/start-trial?product=missed_call_catch`.
-- `buildCareAlertEmailHtml` (line 606): trial — point to `/start-trial?product=techalert` (CareAlert is a TechAlert variant).
+2. Stop relying only on `cron_schedule_history` for URLs
+   - Add a small read-only RPC/function in a migration that safely returns the live `cron.job` command for a job name.
+   - Update the watchdog to prefer the live cron command first, then fall back to `cron_schedule_history`, then fall back to the known function URL.
+   - This prevents future emails from showing “URL missing from cron schedule” when the cron is active.
 
-**Fix the URLs the AI is told to embed in the email body**
-- TechAlert prompt (~line 481): `https://www.detroitwebagent.com/hire-alert` → `https://detroitwebagent.com/start-trial?product=techalert`
-- Missed-Call prompt (~line 528): `https://www.detroitwebagent.com/missed-call-catch` → `https://detroitwebagent.com/start-trial?product=missed_call_catch`
-- CareAlert prompt (~line 583): `https://www.detroitwebagent.com/hire-alert` → `https://detroitwebagent.com/start-trial?product=techalert`
-- Dead Lead prompt: keep `/dead-lead-intake` (correct — it is a real intake page, not a trial).
-- Contractor prompt: keep `/contractor-leads` (correct landing page).
+3. Repair cron health bookkeeping
+   - Make sure `cron_schedule_history` has the current active row for `industry-pulse-commercial-3am-et`.
+   - Make sure the live cron command and stored history command match.
+   - Reset stale `cron_job_health` failure state for this job once the checks pass.
 
-### 2. `supabase/functions/techalert-outreach/index.ts`
-- Line 80 (`teaserCardHtml.ctaUrl`) → `https://detroitwebagent.com/start-trial?product=techalert&utm_source=cold&utm_campaign=techalert`
-- Line 106 (`dwaColdEmail.ctaUrl`) → same.
+4. Reduce alert spam
+   - Keep SMS dedupe, but add email dedupe for repeated identical watchdog failures so you don’t get the same false alarm every hour.
+   - Include last successful output timestamp in the report so you can immediately see whether the job is actually stale.
 
-### 3. Deploy edge functions
-After the edits, deploy:
-- `contractor-prospector`
-- `techalert-outreach`
+5. Verify after changes
+   - Deploy the changed watchdog function.
+   - Run the watchdog manually and confirm it reports `failures: 0`.
+   - Query recent `demand_radar_runs` and `cron_sentinel_alerts` to confirm the latest status is passing.
+   - I will also confirm whether today’s Demand Radar / Industry Pulse scan produced output or is waiting for the next 07:00 UTC run.
 
-### 4. Verify
-Run the existing `e2e-link-auditor` from `/dwa-admin/link-health` to confirm every `/start-trial?product=...` URL we just introduced resolves cleanly (it already audits `techalert`, `missed_call_catch`, `contractor_leads`, `dead_lead`).
+Technical files/migrations involved:
 
-## Out of scope for this fix
-- The bigger end-to-end "every email → every signup → every drip → revert" audit system you also asked about. This plan only addresses the immediate broken-link bug. Once approved I can do the larger lifecycle audit as a follow-up.
+- `supabase/functions/cron-zero-output-watchdog/index.ts`
+- Likely a new migration for the safe `cron.job` command reader RPC and health cleanup
+- Possibly `supabase/functions/cron-sentinel/index.ts` if the same source-specific filtering should be mirrored there too
