@@ -204,6 +204,8 @@ export default function MySiteRadar() {
     }
   };
 
+  if (!loading && error && isJustPurchased()) return <JustPurchasedScreen product="SiteRadar" />;
+
   return (
     <>
       <Helmet><title>SiteRadar — Your Dashboard | Detroit Web Agency</title></Helmet>
