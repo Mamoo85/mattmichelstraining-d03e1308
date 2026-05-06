@@ -39,6 +39,7 @@ const BookDemo = lazyRetry(() => import("./pages/BookDemo"));
 const DemoRunner = lazyRetry(() => import("./pages/DemoRunner"));
 const WebsitePlusFieldDesk = lazyRetry(() => import("./pages/WebsitePlusFieldDesk"));
 const BundleSuccess = lazyRetry(() => import("./pages/BundleSuccess"));
+const PaymentSuccess = lazyRetry(() => import("./pages/PaymentSuccess"));
 const AgencyHome = lazyRetry(() => import("./pages/AgencyHome"));
 const BlueprintLanding = lazyRetry(() => import("./pages/BlueprintLanding"));
 const BlueprintSuccess = lazyRetry(() => import("./pages/BlueprintSuccess"));
