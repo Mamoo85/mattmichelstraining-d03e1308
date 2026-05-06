@@ -300,7 +300,7 @@ async function sendDigestForClient(
     : "Trade Radar · Detroit Web Agency";
   const replyTo = client.is_whitelabel && client.whitelabel_from_email
     ? client.whitelabel_from_email
-    : "matt@detroitwebagency.com";
+    : "matt@detroitwebagent.com";
   const footerBrand = client.is_whitelabel && client.whitelabel_brand
     ? client.whitelabel_brand
     : "Detroit Web Agency";
