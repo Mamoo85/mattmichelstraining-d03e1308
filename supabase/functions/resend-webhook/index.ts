@@ -48,6 +48,21 @@ serve(async (req) => {
 
     console.log(`[RESEND-WEBHOOK] type=${type} resend_id=${resendId} matched=${updated?.length || 0}`, error ? `error: ${error.message}` : "");
 
+    // Also update email_send_log (correlated via metadata.resend_email_id) so the
+    // dashboard / cold-email analytics see opens & clicks.
+    if (status === "opened" || status === "clicked") {
+      const eslPatch: Record<string, any> = {};
+      if (status === "opened") eslPatch.opened_at = new Date().toISOString();
+      if (status === "clicked") eslPatch.clicked_at = new Date().toISOString();
+      const { data: eslRows, error: eslErr } = await sb
+        .from("email_send_log")
+        .update(eslPatch)
+        .eq("status", "sent")
+        .filter("metadata->>resend_email_id", "eq", resendId)
+        .select("id");
+      console.log(`[RESEND-WEBHOOK] email_send_log ${status} matched=${eslRows?.length || 0}`, eslErr ? `error: ${eslErr.message}` : "");
+    }
+
     // SECURITY: Hard-bounces and spam complaints suppress the address permanently.
     // Prevents future Ingestion Pipeline sends to a known-dead or complaining endpoint.
     if (status === "bounced" || status === "complained") {
