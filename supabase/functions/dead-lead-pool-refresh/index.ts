@@ -194,6 +194,7 @@ serve(wrapServe("dead-lead-pool-refresh", async (req) => {
     }
 
     // SOURCE E — Google Maps Places API: Detroit-area trade businesses
+    // Text search doesn't return phone numbers — fetch Place Details per result to get phone.
     if (GOOGLE_MAPS_KEY) {
       for (const query of TRADE_SEARCHES.slice(0, 5)) { // limit to 5 searches per run to control quota
         try {
@@ -201,15 +202,34 @@ serve(wrapServe("dead-lead-pool-refresh", async (req) => {
           const res = await fetch(placesUrl, { signal: AbortSignal.timeout(10_000) });
           if (!res.ok) break;
           const d = await res.json();
-          for (const place of (d?.results ?? []).slice(0, 10)) {
-            const name = place.name ?? "";
-            const phone = place.formatted_phone_number ?? null;
+          const places = (d?.results ?? []).slice(0, 10);
+
+          // Fetch phone numbers in parallel via Place Details (text search never returns phone)
+          const phoneResults = await Promise.allSettled(
+            places.map(async (place: any) => {
+              if (!place.place_id) return null;
+              try {
+                const dr = await fetch(
+                  `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.place_id}&fields=formatted_phone_number&key=${GOOGLE_MAPS_KEY}`,
+                  { signal: AbortSignal.timeout(6_000) },
+                );
+                if (!dr.ok) return null;
+                const dd = await dr.json();
+                return (dd?.result?.formatted_phone_number as string) ?? null;
+              } catch { return null; }
+            }),
+          );
+
+          const tradeWord = query.split(" ")[0].toLowerCase();
+          for (let i = 0; i < places.length; i++) {
+            const place = places[i];
+            const name: string = place.name ?? "";
             if (!name) continue;
-            const tradeWord = query.split(" ")[0].toLowerCase();
+            const phone = phoneResults[i].status === "fulfilled" ? phoneResults[i].value : null;
             candidates.push({
               source: "google_maps_places",
               business_name: name,
-              phone: phone,
+              phone,
               email: null,
               trade: tradeWord,
               signal_age_days: 0,
