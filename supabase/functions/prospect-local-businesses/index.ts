@@ -71,6 +71,66 @@ const INDUSTRY_PAGE_MAP: Record<string, { path: string; price: string; monthly: 
 };
 const DEFAULT_PAGE = { path: "/detroit-web-design", price: "$499", monthly: "$49/mo" };
 
+// Per-industry demo preview images — Matt uploads these to /email-assets/ on detroitwebagent.com
+const DEMO_IMAGES: Record<string, string> = {
+  "/healthcare-web-design":    "https://detroitwebagent.com/email-assets/preview-healthcare-demo.png",
+  "/dental-web-design":        "https://detroitwebagent.com/email-assets/preview-dental-demo.png",
+  "/legal-web-design":         "https://detroitwebagent.com/email-assets/preview-legal-demo.png",
+  "/manufacturing-web-design": "https://detroitwebagent.com/email-assets/preview-manufacturing-demo.png",
+  "/real-estate-web-design":   "https://detroitwebagent.com/email-assets/preview-realestate-demo.png",
+  "/restaurant-web-design":    "https://detroitwebagent.com/email-assets/preview-restaurant-demo.png",
+  "/detroit-web-design":       "https://detroitwebagent.com/email-assets/preview-general-demo.png",
+};
+
+// Industry label for the demo caption
+const INDUSTRY_LABELS: Record<string, string> = {
+  "/healthcare-web-design":    "healthcare",
+  "/dental-web-design":        "dental",
+  "/legal-web-design":         "legal",
+  "/manufacturing-web-design": "manufacturing",
+  "/real-estate-web-design":   "real estate",
+  "/restaurant-web-design":    "restaurant",
+  "/detroit-web-design":       "business",
+};
+
+// Build the visual email body HTML — demo screenshot + texting add-ons block + ecosystem line
+function buildWebDesignEmailHtml(
+  observationHtml: string,  // AI-written observation + stakes (already <br>-escaped)
+  landingPage: { path: string; price: string; monthly: string },
+): string {
+  const demoUrl = `https://detroitwebagent.com${landingPage.path}#demo`;
+  const demoImg = DEMO_IMAGES[landingPage.path] || DEMO_IMAGES["/detroit-web-design"];
+  const industryLabel = INDUSTRY_LABELS[landingPage.path] || "business";
+
+  return `${observationHtml}
+
+<div style="margin:20px 0;border-radius:8px;overflow:hidden;border:1px solid #cbd5e1;">
+  <a href="${demoUrl}" style="display:block;text-decoration:none;">
+    <img src="${demoImg}" alt="${industryLabel} website demo" width="100%"
+         style="display:block;width:100%;max-width:520px;height:auto;border-bottom:1px solid #e2e8f0;" />
+    <div style="background:#f8fafc;padding:10px 14px;font-size:13px;color:#0ea5e9;font-weight:600;">
+      👆 Click to see a live ${industryLabel} demo site →
+    </div>
+  </a>
+</div>
+
+<p style="margin:16px 0 8px;font-size:15px;color:#1e293b;">
+  <strong>${landingPage.price} flat.</strong> Professional design, Google-ranked, mobile-ready — <strong>no contract, no agency markup.</strong> ${landingPage.monthly} after that.
+</p>
+
+<div style="margin:16px 0;padding:14px 16px;border:2px solid #00d4ff;border-radius:8px;background:#f0fdff;">
+  <p style="margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#0891b2;">Included FREE with every website:</p>
+  <p style="margin:4px 0;font-size:14px;color:#0f172a;">📱 <strong>Review Texts</strong> — auto-texts every patient asking for a Google review</p>
+  <p style="margin:4px 0;font-size:14px;color:#0f172a;">💳 <strong>Pay-Me Texts</strong> — send a payment link by text, get paid in hours</p>
+  <p style="margin:4px 0;font-size:14px;color:#0f172a;">🔔 <strong>Reminder Texts</strong> — automated appointment reminders cut no-shows 40%+</p>
+  <p style="margin:4px 0;font-size:14px;color:#0f172a;">👁️ <strong>SiteRadar</strong> — see which companies visit your site every day</p>
+</div>
+
+<p style="margin:12px 0;font-size:14px;color:#334155;">
+  We also manage Google &amp; Meta ads, and every client gets access to our full growth platform — Trade signals, visitor tracking, and more.
+</p>`;
+}
+
 function getIndustryPage(industry: string): { path: string; price: string; monthly: string } {
   const lower = industry.toLowerCase();
   for (const [key, val] of Object.entries(INDUSTRY_PAGE_MAP)) {
