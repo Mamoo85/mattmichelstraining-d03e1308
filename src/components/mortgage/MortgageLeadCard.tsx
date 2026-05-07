@@ -113,12 +113,21 @@ export default function MortgageLeadCard({ lead: l, clientId, onMarkWorking, onD
             className="shrink-0 w-[110px] h-[82px] rounded-md overflow-hidden border border-[#1e3a5f] bg-[#030711] flex items-center justify-center hover:border-[#00d4ff]/60 transition-colors"
             title={thumb ? "Click for more details" : "No Street View available"}
           >
-            {thumb ? (
-              <img src={thumb} alt={l.address || "Property"} className="w-full h-full object-cover" loading="lazy" />
+            {showThumbImg ? (
+              <>
+                {!thumbLoaded && <Skeleton className="absolute inset-0 bg-[#1e3a5f]/40" />}
+                <img
+                  src={thumb}
+                  alt={l.address || "Property"}
+                  className={`w-full h-full object-cover transition-opacity ${thumbLoaded ? "opacity-100" : "opacity-0"}`}
+                  loading="lazy"
+                  onLoad={() => setThumbLoaded(true)}
+                  onError={() => { setThumbErrored(true); setThumbLoaded(true); }}
+                />
+              </>
             ) : (
-              <ImageOff className="w-5 h-5 text-[#475569]" />
+              <ImageOff className="w-5 h-5 text-[#475569]" aria-label={thumb ? "Street View failed to load" : "No Street View available"} />
             )}
-          </button>
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
