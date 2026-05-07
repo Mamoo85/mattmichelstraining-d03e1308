@@ -11,16 +11,15 @@ import ManageBillingButton from "@/components/billing/ManageBillingButton";
 import LeadGuaranteeBar from "@/components/shared/LeadGuaranteeBar";
 import CrmWebhookSettings from "@/components/shared/CrmWebhookSettings";
 import EmptyDashboardState from "@/components/shared/EmptyDashboardState";
-import { Home, Lock, Phone, MessageSquare, MapPin, Bell, Download, Send, Check, X, List, Map as MapIcon, Columns } from "lucide-react";
+import { Home, Lock, Bell, Download, Send, Check, X, List, Map as MapIcon, Columns } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import MortgageRadarMap from "@/components/mortgage/MortgageRadarMap";
 import MortgageRadarPipeline from "@/components/mortgage/MortgageRadarPipeline";
 import MortgageRadarWelcome from "@/components/mortgage/MortgageRadarWelcome";
 import MortgageRadarSeedLead from "@/components/mortgage/MortgageRadarSeedLead";
-import LeadActionBar from "@/components/trade-radar/LeadActionBar";
+import MortgageLeadCard from "@/components/mortgage/MortgageLeadCard";
 import RadarExportBar from "@/components/shared/RadarExportBar";
 import OnboardingChecklist from "@/components/shared/OnboardingChecklist";
-import ScoreBreakdown from "@/components/shared/ScoreBreakdown";
 
 type Lead = {
   id: string;
