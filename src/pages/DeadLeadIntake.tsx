@@ -365,6 +365,7 @@ export default function DeadLeadIntake() {
                 type="email"
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
+                onFocus={trackFocus}
                 placeholder="john@smithhvac.com"
                 style={inputStyle}
               />
