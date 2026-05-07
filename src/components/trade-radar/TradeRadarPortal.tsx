@@ -55,6 +55,7 @@ export default function TradeRadarPortal({
   const searchParams = new URLSearchParams(window.location.search);
   const clientEmail = searchParams.get("email") || "";
   const dashboardToken = searchParams.get("token") || "";
+  const legacyTrial = searchParams.get("trial") || "";
   const justPurchased = searchParams.get("trial") === "success";
 
   const [authError, setAuthError] = useState<string | null>(null);
@@ -64,17 +65,43 @@ export default function TradeRadarPortal({
   const [loading, setLoading] = useState(true);
   const [activeSignalType, setActiveSignalType] = useState<string>("all");
   const [notEnrolled, setNotEnrolled] = useState(false);
+  const [rescuing, setRescuing] = useState(false);
+  const [rescueSent, setRescueSent] = useState(false);
+
+  async function requestFreshLink() {
+    if (!clientEmail) {
+      const { toast } = await import("sonner");
+      toast.error("Open the link from your trial email, or text Matt at (313) 992-1219.");
+      return;
+    }
+    setRescuing(true);
+    try {
+      const productKey = `${vertical}_radar`;
+      const { error } = await supabase.functions.invoke("start-radar-trial", {
+        body: { email: clientEmail, product: productKey, source: "rescue_link" },
+      });
+      if (error) throw error;
+      setRescueSent(true);
+      const { toast } = await import("sonner");
+      toast.success("Fresh login link sent — check your email.");
+    } catch (e: any) {
+      const { toast } = await import("sonner");
+      toast.error(e?.message || "Couldn't send link — text Matt at (313) 992-1219.");
+    } finally {
+      setRescuing(false);
+    }
+  }
 
   useEffect(() => {
     (async () => {
-      if (!dashboardToken) {
+      if (!dashboardToken && !clientEmail && !legacyTrial && !justPurchased) {
         setAuthError("No dashboard link found. Check your weekly digest email.");
         setLoading(false);
         return;
       }
 
       const { data: dashboardData, error: dashboardError } = await supabase.functions.invoke("trade-radar-dashboard", {
-        body: { email: clientEmail || undefined, token: dashboardToken, vertical },
+        body: { email: clientEmail || undefined, token: dashboardToken || undefined, trial: legacyTrial || undefined, vertical },
       });
 
       if (dashboardError || (dashboardData as any)?.error) {
@@ -83,7 +110,7 @@ export default function TradeRadarPortal({
           setNotEnrolled(true);
         } else {
           setAuthError(code === "invalid_or_expired_link"
-            ? "Your dashboard link is invalid or expired — request a new one from your weekly digest email."
+            ? "Your dashboard link is invalid or expired — request a new one below."
             : "Could not load this dashboard link. Text Matt at (313) 992-1219 and we'll fix it now.");
         }
         setLoading(false);
@@ -107,7 +134,7 @@ export default function TradeRadarPortal({
       setActions(map);
       setLoading(false);
     })();
-  }, [clientEmail, dashboardToken, vertical]);
+  }, [clientEmail, dashboardToken, legacyTrial, vertical]);
 
   // Intersect configured signal types with what's actually in the data
   const availableTypes = useMemo(() => {
