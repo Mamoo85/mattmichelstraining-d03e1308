@@ -110,7 +110,7 @@ export default function MortgageLeadCard({ lead: l, clientId, onMarkWorking, onD
           <button
             type="button"
             onClick={() => setExpanded((v) => !v)}
-            className="shrink-0 w-[110px] h-[82px] rounded-md overflow-hidden border border-[#1e3a5f] bg-[#030711] flex items-center justify-center hover:border-[#00d4ff]/60 transition-colors"
+            className="relative shrink-0 w-[110px] h-[82px] rounded-md overflow-hidden border border-[#1e3a5f] bg-[#030711] flex items-center justify-center hover:border-[#00d4ff]/60 transition-colors"
             title={thumb ? "Click for more details" : "No Street View available"}
           >
             {showThumbImg ? (
