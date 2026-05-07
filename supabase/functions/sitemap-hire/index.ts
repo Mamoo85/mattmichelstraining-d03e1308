@@ -67,6 +67,19 @@ Deno.serve(async (req) => {
     { path: "/real-estate-web-design", priority: "0.6", changefreq: "monthly" },
     { path: "/roi", priority: "0.5", changefreq: "monthly" },
     { path: "/get-started", priority: "0.6", changefreq: "monthly" },
+    { path: "/start-trial", priority: "0.9", changefreq: "weekly" },
+    { path: "/radars", priority: "0.9", changefreq: "weekly" },
+    { path: "/roofing-radar", priority: "0.8", changefreq: "weekly" },
+    { path: "/hvac-radar", priority: "0.8", changefreq: "weekly" },
+    { path: "/plumbing-radar", priority: "0.8", changefreq: "weekly" },
+    { path: "/electrical-radar", priority: "0.8", changefreq: "weekly" },
+    { path: "/pest-control-radar", priority: "0.8", changefreq: "weekly" },
+    { path: "/gutters-radar", priority: "0.8", changefreq: "weekly" },
+    { path: "/exterior-radar", priority: "0.8", changefreq: "weekly" },
+    { path: "/tree-radar", priority: "0.8", changefreq: "weekly" },
+    { path: "/restoration-radar", priority: "0.8", changefreq: "weekly" },
+    { path: "/demo-junk-radar", priority: "0.8", changefreq: "weekly" },
+    { path: "/foundation-radar", priority: "0.8", changefreq: "weekly" },
   ];
 
   const staticUrls = STATIC_DWA_PAGES.map((p) => `  <url>
