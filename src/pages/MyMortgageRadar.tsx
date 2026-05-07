@@ -454,7 +454,11 @@ export default function MyMortgageRadar() {
         )}
 
         {loading ? (
-          <p className="text-[#94a3b8]">Loading leads…</p>
+          <div className="grid gap-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <MortgageLeadCardSkeleton key={i} />
+            ))}
+          </div>
         ) : (
           <Tabs defaultValue="list" className="w-full">
             <TabsList className="bg-[#0a1628] border border-[#1e3a5f] mb-4">
