@@ -122,6 +122,18 @@ Deno.serve(async (req) => {
       payment_method_types: ["card"],
       payment_method_collection: "if_required",
       discounts: [{ coupon: "s5f2M1Vq" }],
+      // session-level metadata is what stripe-webhook reads at checkout.session.completed
+      metadata: {
+        type: "trade_radar_subscription",
+        vertical: normalizedVertical,
+        email: email as string,
+        contact_name: (contact_name as string) ?? "",
+        business_name: (business_name as string) ?? "",
+        phone: (phone as string) ?? "",
+        zip_codes: Array.isArray(zip_codes) ? (zip_codes as string[]).join(",") : ((zip_codes as string) ?? ""),
+        tcpa_consent: "true",
+        tcpa_consent_at: new Date().toISOString(),
+      },
       line_items: [{
         price_data: {
           currency: "usd",
