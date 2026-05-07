@@ -26,6 +26,8 @@ export default function DeadLeadIntake() {
   const [inputMode, setInputMode] = useState<"paste" | "csv">("paste");
   const [csvFileName, setCsvFileName] = useState<string>("");
   const [csvPreview, setCsvPreview] = useState<string[]>([]);
+  const [hasFocused, setHasFocused] = useState(false);
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
 
   const [form, setForm] = useState({
     business_name: "",
@@ -36,6 +38,23 @@ export default function DeadLeadIntake() {
     leads: "",
     google_review_link: "",
   });
+
+  // Track page view on mount (Phase 1: visibility)
+  useEffect(() => {
+    trackTrialEvent("view", PRODUCT_KEY, {
+      metadata: { page: "/dead-lead-intake", viewport: typeof window !== "undefined" ? window.innerWidth : null },
+    });
+  }, []);
+
+  function trackFocus() {
+    if (hasFocused) return;
+    setHasFocused(true);
+    trackTrialEvent("form_focus", PRODUCT_KEY);
+  }
+
+  function trackEscape(channel: "call" | "sms" | "email") {
+    trackTrialEvent("form_focus", PRODUCT_KEY, { metadata: { escape_hatch: channel } });
+  }
 
   function handleCsvUpload(file: File) {
     setError("");
