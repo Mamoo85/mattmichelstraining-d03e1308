@@ -65,6 +65,29 @@ const PRODUCTS: Record<CanonicalKey, ProductDef> = {
   trade_radar_foundation:   { fn: "create-trade-radar-checkout", label: "Foundation Radar",   trial: true, vertical: "foundation", needsPhone: true },
 };
 
+// Per-product pricing & "what happens next" preview block. Shown above the form so
+// people aren't filling in 3 fields with zero context. Kept in one place for easy edit.
+const PRODUCT_PITCH: Partial<Record<CanonicalKey, { price: string; promise: string; bullets: string[] }>> = {
+  mortgage_radar:       { price: "$149/mo after trial", promise: "Refi & purchase intent leads in your inbox within 4 hours of signup.", bullets: ["FCRA/TCPA compliant", "Daily AM digest by 9:30am ET", "Cancel anytime in one click"] },
+  field_desk:           { price: "$199/mo after trial", promise: "Live tech GPS, job dispatch, and a customer portal — running by tomorrow morning.", bullets: ["Replaces ServiceTitan / Housecall Pro at 1/4 the price", "Customer SMS confirmations", "CSV export anytime"] },
+  site_radar:           { price: "$49/mo after trial",  promise: "Identify the companies visiting your site within 24 hours of installing the script.", bullets: ["1-line install", "Weekly hot-visitor digest", "Slack/email alerts on repeat visits"] },
+  missed_call_catch:    { price: "$99/mo after trial",  promise: "Every missed call gets a friendly text-back inside 60 seconds — recover ~27% of dropped revenue.", bullets: ["Voicemail transcribed to text", "Callback reminders to your team", "Works with any number"] },
+  phone_answering:      { price: "From $99/mo",         promise: "AI receptionist answers in your brand voice — books jobs, captures leads, escalates urgent calls.", bullets: ["24/7 availability", "Live call transcripts", "Trained on your services"] },
+  bundle_revenue_suite: { price: "$299/mo bundle",      promise: "FieldDesk + SiteRadar + Missed-Call Catch in one setup. Save $48/mo vs standalone.", bullets: ["Single onboarding call", "All 3 admin dashboards", "First leads + visitors in 24h"] },
+  techalert:            { price: "$149/mo · $79/mo bundled", promise: "Get tipped off when local trades businesses are hiring — perfect for staffing, equipment, software pitches.", bullets: ["8 signal sources", "Daily AM brief", "Owner contact enriched"] },
+  trade_radar_roofing:      { price: "$149/mo after trial", promise: "Storm-damage, new-permit, and homeowner-equity leads in your county — daily.", bullets: ["NOAA + BSEED + 40+ public sources", "Score 9 = SMS alert", "Owner phone + Street View included"] },
+  trade_radar_hvac:         { price: "$149/mo after trial", promise: "Aging-system, heatwave, and new-homeowner HVAC leads — daily AM digest.", bullets: ["NOAA extreme-temp alerts", "Pre-1990 home targeting", "Owner contact enriched"] },
+  trade_radar_plumbing:     { price: "$149/mo after trial", promise: "Major plumbing permits, water-damage signals, and lead-line jobs in your area.", bullets: ["BSEED permit feed", "311 water/sewer complaints", "Score 9 = SMS alert"] },
+  trade_radar_electrical:   { price: "$149/mo after trial", promise: "Panel-upgrade permits and aging-electrical-system leads in your county.", bullets: ["BSEED permit feed", "Pre-1960 home targeting", "Owner contact enriched"] },
+  trade_radar_pest_control: { price: "$149/mo after trial", promise: "Vacant-property, foreclosure, and overgrown-lot pest leads — daily.", bullets: ["DLBA + blight ticket feed", "Owner contact enriched", "Daily AM digest"] },
+  trade_radar_gutters:      { price: "$149/mo after trial", promise: "Storm-damage and new-roof-permit gutter leads in your area.", bullets: ["NOAA storm + BSEED feed", "Owner contact enriched", "Daily AM digest"] },
+  trade_radar_exterior:     { price: "$149/mo after trial", promise: "Siding, window, and exterior-paint leads from storms + permits + new homeowners.", bullets: ["NOAA + BSEED + Wayne County deeds", "Owner contact enriched", "Score 9 = SMS alert"] },
+  trade_radar_tree:         { price: "$149/mo after trial", promise: "Storm-wind, tree-permit, and 311 tree-down leads — daily AM digest.", bullets: ["NOAA wind + 311 feed", "Owner contact enriched", "Score 9 = SMS alert"] },
+  trade_radar_restoration:  { price: "$149/mo after trial", promise: "Fire, water-damage, and FEMA-zone restoration leads in your county.", bullets: ["Detroit Fire Incidents feed", "FEMA disaster overlay", "Owner contact enriched"] },
+  trade_radar_demo_junk:    { price: "$149/mo after trial", promise: "Demo permits, estate sales, and probate filings — perfect demo/junk-haul leads.", bullets: ["BSEED demo permit feed", "Estate sale + probate scrapers", "Daily AM digest"] },
+  trade_radar_foundation:   { price: "$149/mo after trial", promise: "Heavy-rain, flood, and foundation-permit leads in your county.", bullets: ["NOAA flood + FEMA NFIP", "BSEED foundation permits", "Daily AM digest"] },
+};
+
 const START_RADAR_TRIAL_PRODUCTS: Partial<Record<CanonicalKey, string>> = {
   mortgage_radar: "mortgage_radar",
 };
