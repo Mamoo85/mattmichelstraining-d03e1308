@@ -1,9 +1,15 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import SEOHead from "@/components/layout/SEOHead";
 import { supabase } from "@/integrations/supabase/client";
 import ReceiptStatusBanner from "@/components/checkout/ReceiptStatusBanner";
 import CheckEmailCard from "@/components/checkout/CheckEmailCard";
 import ActionButton from "@/components/ui/action-button";
+import { trackTrialEvent } from "@/lib/trialFunnel";
+
+const PRODUCT_KEY = "dead_lead_reactivation";
+const SUPPORT_PHONE_DISPLAY = "(313) 992-1219";
+const SUPPORT_PHONE_TEL = "+13139921219";
+const SUPPORT_EMAIL = "matt@detroitwebagent.com";
 
 const TRADES = ["HVAC", "Plumbing", "Roofing", "Electrical", "General Contractor", "Landscaping", "Painting", "Other"];
 
@@ -20,6 +26,8 @@ export default function DeadLeadIntake() {
   const [inputMode, setInputMode] = useState<"paste" | "csv">("paste");
   const [csvFileName, setCsvFileName] = useState<string>("");
   const [csvPreview, setCsvPreview] = useState<string[]>([]);
+  const [hasFocused, setHasFocused] = useState(false);
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
 
   const [form, setForm] = useState({
     business_name: "",
@@ -30,6 +38,23 @@ export default function DeadLeadIntake() {
     leads: "",
     google_review_link: "",
   });
+
+  // Track page view on mount (Phase 1: visibility)
+  useEffect(() => {
+    trackTrialEvent("view", PRODUCT_KEY, {
+      metadata: { page: "/dead-lead-intake", viewport: typeof window !== "undefined" ? window.innerWidth : null },
+    });
+  }, []);
+
+  function trackFocus() {
+    if (hasFocused) return;
+    setHasFocused(true);
+    trackTrialEvent("form_focus", PRODUCT_KEY);
+  }
+
+  function trackEscape(channel: "call" | "sms" | "email") {
+    trackTrialEvent("form_focus", PRODUCT_KEY, { metadata: { escape_hatch: channel } });
+  }
 
   function handleCsvUpload(file: File) {
     setError("");
@@ -113,8 +138,14 @@ export default function DeadLeadIntake() {
       .map((l) => l.trim())
       .filter((l) => l.length > 0);
 
+    trackTrialEvent("form_submit", PRODUCT_KEY, {
+      email: form.email,
+      metadata: { lead_count: lines.length, trade: form.trade, input_mode: inputMode },
+    });
+
     if (lines.length === 0) {
       setError("Please paste at least one phone number.");
+      trackTrialEvent("trial_error", PRODUCT_KEY, { metadata: { reason: "no_leads" } });
       return;
     }
 
@@ -136,6 +167,7 @@ export default function DeadLeadIntake() {
       if (data?.error === "free_tier_exhausted") {
         setBillingRedirectUrl(data.billing_url || null);
         setError("Your free trial (10 leads) has been used. Add a card to continue — you only pay $50 when a lead replies YES.");
+        trackTrialEvent("checkout_redirect", PRODUCT_KEY, { email: form.email, metadata: { reason: "free_tier_exhausted" } });
         setSubmitting(false);
         return;
       }
@@ -147,8 +179,16 @@ export default function DeadLeadIntake() {
       setContractorId(data.contractor_id);
       setContactsAdded(data.contacts_added);
       setStep("success");
+      trackTrialEvent("trial_success", PRODUCT_KEY, {
+        email: form.email,
+        metadata: { contacts_added: data.contacts_added, contractor_id: data.contractor_id },
+      });
     } catch (e: any) {
       setError(e.message || "Something went wrong. Please try again.");
+      trackTrialEvent("trial_error", PRODUCT_KEY, {
+        email: form.email,
+        metadata: { error: String(e?.message || e).slice(0, 200) },
+      });
     } finally {
       setSubmitting(false);
     }
@@ -236,18 +276,56 @@ export default function DeadLeadIntake() {
             Paste your old quotes below. We text them for you. <strong style={{ color: "#fff" }}>Zero charge until someone replies YES.</strong> First reply is free — after that, $50 per positive reply. No monthly fee, ever.
           </p>
         </div>
-        <div style={{ marginBottom: 28 }}>
+        <div style={{ marginBottom: 24 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
             <span style={{ fontSize: 28 }}>♻️</span>
             <h1 style={{ color: "#fff", fontSize: 22, fontWeight: 800, margin: 0 }}>
-              Dead Lead Reactivation
+              Wake Up Your Dead Leads
             </h1>
           </div>
-          <p style={{ color: "#64748b", fontSize: 14, lineHeight: 1.6, margin: 0 }}>
-            Paste your old estimates and dead leads below. We'll send a 3-message SMS sequence
-            on your behalf — <strong style={{ color: "#fff" }}>first positive reply is FREE, then $50 only when a lead replies YES</strong>.
+          <p style={{ color: "#94a3b8", fontSize: 14, lineHeight: 1.6, margin: 0 }}>
+            We text the old quotes that ghosted you. <strong style={{ color: "#fff" }}>$0 to start. $50 only when someone replies YES.</strong> First reply is on the house.
           </p>
         </div>
+
+        {/* Sample SMS exchange — proof of what they get */}
+        <div style={{ marginBottom: 20, padding: 14, background: "#0a1628", border: "1px solid #1e3a5f", borderRadius: 10 }}>
+          <p style={{ color: "#64748b", fontSize: 11, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", margin: "0 0 10px" }}>What they receive (real example)</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <div style={{ alignSelf: "flex-start", maxWidth: "85%", background: "#1e3a5f", color: "#fff", padding: "8px 12px", borderRadius: "12px 12px 12px 2px", fontSize: 13, lineHeight: 1.4 }}>
+              Hey Sarah — Smith HVAC. We quoted your furnace back in March. Still need it done before winter? Reply YES and I'll lock today's pricing.
+            </div>
+            <div style={{ alignSelf: "flex-end", maxWidth: "85%", background: "#00d4ff", color: "#0a1628", padding: "8px 12px", borderRadius: "12px 12px 2px 12px", fontSize: 13, fontWeight: 600, lineHeight: 1.4 }}>
+              Yes actually — call me tomorrow morning 👍
+            </div>
+          </div>
+          <p style={{ color: "#10b981", fontSize: 12, fontWeight: 700, margin: "10px 0 0", textAlign: "center" }}>↑ That reply = $50 to us. Closed job = $4,800 to you.</p>
+        </div>
+
+        {/* Trust strip */}
+        <div style={{ marginBottom: 20, display: "flex", flexWrap: "wrap", gap: 6, fontSize: 11, color: "#64748b" }}>
+          <span style={{ padding: "4px 9px", background: "#0a1628", border: "1px solid #1e3a5f", borderRadius: 999 }}>✓ TCPA-compliant</span>
+          <span style={{ padding: "4px 9px", background: "#0a1628", border: "1px solid #1e3a5f", borderRadius: 999 }}>✓ Carrier-screened</span>
+          <span style={{ padding: "4px 9px", background: "#0a1628", border: "1px solid #1e3a5f", borderRadius: 999 }}>✓ Detroit-based</span>
+          <span style={{ padding: "4px 9px", background: "#0a1628", border: "1px solid #1e3a5f", borderRadius: 999 }}>✓ Auto opt-out</span>
+        </div>
+
+        {/* Mobile / no-form escape hatch */}
+        {isMobile && (
+          <div style={{ marginBottom: 20, padding: 14, background: "linear-gradient(135deg, #00d4ff20, #00d4ff05)", border: "1px solid #00d4ff60", borderRadius: 10 }}>
+            <p style={{ color: "#fff", fontSize: 14, fontWeight: 700, margin: "0 0 8px" }}>📱 On your phone? Skip the form.</p>
+            <p style={{ color: "#94a3b8", fontSize: 12, margin: "0 0 10px", lineHeight: 1.5 }}>
+              Just text Matt your business name + a screenshot of your old quotes. We'll do the rest.
+            </p>
+            <a
+              href={`sms:${SUPPORT_PHONE_TEL}?&body=${encodeURIComponent("Hey Matt — I want to try Dead Lead Reactivation. My business is: ")}`}
+              onClick={() => trackEscape("sms")}
+              style={{ display: "block", padding: "12px", background: "#00d4ff", color: "#0a1628", borderRadius: 8, fontWeight: 800, fontSize: 14, textAlign: "center", textDecoration: "none" }}
+            >
+              💬 Text Matt: {SUPPORT_PHONE_DISPLAY}
+            </a>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 16 }}>
@@ -287,6 +365,7 @@ export default function DeadLeadIntake() {
                 type="email"
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
+                onFocus={trackFocus}
                 placeholder="john@smithhvac.com"
                 style={inputStyle}
               />
@@ -350,26 +429,33 @@ export default function DeadLeadIntake() {
           </Field>
 
           {error && (
-            <div>
-              <p style={{ color: "#ef4444", fontSize: 13, margin: 0 }}>{error}</p>
-              {billingRedirectUrl && (
+            <div style={{ padding: 14, background: "#7f1d1d20", border: "1px solid #ef444460", borderRadius: 8 }}>
+              <p style={{ color: "#fca5a5", fontSize: 13, margin: "0 0 10px", fontWeight: 600 }}>{error}</p>
+              {billingRedirectUrl ? (
                 <button
-                  onClick={() => window.location.href = billingRedirectUrl}
-                  style={{
-                    marginTop: 12,
-                    padding: "12px 24px",
-                    background: "#00d4ff",
-                    color: "#0a1628",
-                    border: "none",
-                    borderRadius: 8,
-                    fontWeight: 700,
-                    fontSize: 14,
-                    cursor: "pointer",
-                    width: "100%",
-                  }}
+                  type="button"
+                  onClick={() => { trackTrialEvent("checkout_redirect", PRODUCT_KEY, { email: form.email }); window.location.href = billingRedirectUrl; }}
+                  style={{ padding: "12px 24px", background: "#00d4ff", color: "#0a1628", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 14, cursor: "pointer", width: "100%" }}
                 >
                   Set Up Billing — $50/Revival →
                 </button>
+              ) : (
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  <a
+                    href={`sms:${SUPPORT_PHONE_TEL}?&body=${encodeURIComponent("Hey Matt — got an error on the dead-lead intake page. Can you help?")}`}
+                    onClick={() => trackEscape("sms")}
+                    style={{ flex: 1, minWidth: 130, padding: "10px 14px", background: "#00d4ff", color: "#0a1628", borderRadius: 7, fontWeight: 700, fontSize: 13, textAlign: "center", textDecoration: "none" }}
+                  >
+                    💬 Text Matt
+                  </a>
+                  <a
+                    href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Dead Lead Intake error")}&body=${encodeURIComponent("Hi Matt — I tried to submit the dead-lead intake form but it errored. Here's my list:\n\n")}`}
+                    onClick={() => trackEscape("email")}
+                    style={{ flex: 1, minWidth: 130, padding: "10px 14px", background: "#0a1628", color: "#00d4ff", border: "1px solid #00d4ff60", borderRadius: 7, fontWeight: 700, fontSize: 13, textAlign: "center", textDecoration: "none" }}
+                  >
+                    ✉️ Email Matt
+                  </a>
+                </div>
               )}
             </div>
           )}
@@ -389,7 +475,7 @@ export default function DeadLeadIntake() {
               letterSpacing: "0.3px",
             }}
           >
-            {submitting ? "Submitting…" : "Start Reactivation Campaign →"}
+            {submitting ? "Submitting…" : "Wake Up My Dead Leads — First Reply FREE →"}
           </button>
         </form>
 
