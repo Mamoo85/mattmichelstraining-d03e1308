@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { trackTrialEvent } from "@/lib/trialFunnel";
 import StickyTrialCTA from "@/components/trial/StickyTrialCTA";
+import TrustSignals from "@/components/trial/TrustSignals";
 
 // ────────────────────────────────────────────────────────────────────
 // Canonical product config
