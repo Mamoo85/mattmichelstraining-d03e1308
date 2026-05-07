@@ -105,6 +105,7 @@ const LinkHealth = lazyRetry(() => import("./pages/admin/LinkHealth"));
 const TrialDripPreview = lazyRetry(() => import("./pages/admin/TrialDripPreview"));
 const ScannerHealth = lazyRetry(() => import("./pages/admin/ScannerHealth"));
 const ColdEmailRamp = lazyRetry(() => import("./pages/admin/ColdEmailRamp"));
+const TrialReactivationCampaign = lazyRetry(() => import("./pages/admin/TrialReactivationCampaign"));
 const DwaAdminV4 = lazyRetry(() => import("./pages/DwaAdminV4"));
 const DwaAdminStripeReconcile = lazyRetry(() => import("./pages/DwaAdminStripeReconcile"));
 const DwaAdminQbrQueue = lazyRetry(() => import("./pages/DwaAdminQbrQueue"));
