@@ -122,7 +122,7 @@ export default function MyMortgageRadar() {
 
       const since = new Date(Date.now() - 90 * 86_400_000).toISOString();
       let query = (supabase.from as any)("mortgage_radar_leads")
-        .select("id, full_name, address, city, zip, phone, email, signal_type, signal_source, signal_detail, signal_date, score, signal_count, suggested_opener, best_call_window, created_at, pipeline_stage")
+        .select("id, full_name, address, city, zip, phone, email, signal_type, signal_source, signal_detail, signal_date, score, signal_count, suggested_opener, best_call_window, created_at, pipeline_stage, street_view_url, intel_highlights, year_built, building_sqft, last_sale_price_cents, last_sale_date, estimated_equity, equity_range_low_cents, equity_range_high_cents, human_summary, signal_history")
         .gte("created_at", since)
         .order("score", { ascending: false })
         .order("created_at", { ascending: false })
