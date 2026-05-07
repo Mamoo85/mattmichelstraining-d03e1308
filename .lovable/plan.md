@@ -1,72 +1,86 @@
-# Trial Conversion + Deployment Plan
+# Full Customer-Path Live Audit — Execution Plan
 
-Seven discrete items targeting the `/start-trial` drop-off and three pending edge function deploys.
+This is a read-only audit run end-to-end against the live DB + edge functions. Output: one markdown report at `/mnt/documents/audit-2026-05-07.md` with a PASS/FAIL table per layer, receipts inline (SQL output / curl bodies / log excerpts), and a prioritized P0/P1/P2 fix list at the end.
 
-## 1. Sticky mobile CTA bar
-- New component `src/components/trial/StickyTrialCTA.tsx` — fixed bottom bar, `md:hidden`, safe-area inset padding, shadow, single primary button "Start 7-day free trial →".
-- Mount on `/start-trial` and on every product landing page that links to trial (read current routes; gate via prop `productKey` so click scrolls to form OR routes to `/start-trial?product=<key>` with email pre-fill if captured).
-- Hide when the trial form is in viewport (IntersectionObserver) so it doesn't double-stack with the form's own submit button.
-- Fire `trackTrialEvent('sticky_cta_click', { product })`.
+Before I burn ~80–120 tool calls executing this, I need you to confirm 3 scope decisions below — otherwise I'll guess wrong and we redo it.
 
-## 2. Product picker fallback on `/start-trial`
-- When `?product=` is missing OR not in `PRODUCT_PITCH`, render a picker grid instead of erroring/blank.
-- Pull from `PRODUCT_PITCH` keys in `StartTrial.tsx` (already canonical). Each card: icon, name, 1-line value prop, "Start free trial →".
-- Selecting a card sets product in URL (`navigate('?product=...', { replace: true })`) — no reload, form mounts inline below.
-- Track `picker_view` and `picker_select` events.
+---
 
-## 3. Trial funnel analytics
-- Already partially shipped (`logTrialFunnelEvent` / `trackTrialEvent`). Audit `StartTrial.tsx` to confirm and add any missing events:
-  - `view` (page mount, with product key)
-  - `picker_view` / `picker_select` (new from item 2)
-  - `form_focus` (first focus on any field)
-  - `form_submit_attempt`
-  - `form_submit_success` (before Stripe redirect)
-  - `form_submit_error` (with error code/message)
-  - `checkout_redirect` (immediately before `window.location.href = url`)
-  - `sticky_cta_click` (from item 1)
-- All writes go to `trial_funnel_events` (anon INSERT already granted Tuesday).
-- Add a small admin tile to `AdminOpsCenter` showing 7-day funnel (view → focus → submit → success → redirect) with drop-off %.
+## Methodology per layer
 
-## 4. Reduce form friction
-- Make **business phone** optional (label "(optional)", remove `required`).
-- Make **business name** optional with smart fallback: if blank, default to `"{first_name}'s {trade}"` server-side at trial creation. Update Zod/validation in both client and `start-trial` edge function.
-- Keep required: email, first name, trade (these gate provisioning). Phone optional but show micro-copy: "Add phone for SMS lead alerts (recommended)".
-- Re-test edge function happy path via `supabase--curl_edge_functions`.
+**L1 — Public links & SEO**
+- Parse `public/sitemap.xml`, `public/robots.txt`, then `rg "https?://" supabase/functions/_shared/` and every `success_url|cancel_url` in `supabase/functions/create-*-checkout/`.
+- Curl each URL with `-o /dev/null -w "%{http_code} %{url_effective}\n"`, group by host, flag non-200 + cross-domain.
+- Diff `productCatalog.ts` keys vs `PRODUCT_PITCH` keys vs `OFFERS` keys in `_shared/offers.ts` vs sitemap entries. Curl `/start-trial?product=<key>` for each.
 
-## 5. Abandoned-trial drip
-- New table `trial_abandonment_state` (email, product, last_event, last_event_at, resume_token uuid, emailed_at, completed_at).
-- Trigger or scheduled function `trial-abandonment-sweeper` (cron every 30 min): finds rows where last event was `form_focus` or `form_submit_error` 30+ min ago, no `form_submit_success`, no `emailed_at`. Sends a one-click resume email with `https://detroitwebagent.com/start-trial?product=<key>&email=<email>&resume=<token>` (pre-fills email + product, marks resume in funnel events).
-- Email via `dwaEmail()`. Subject: "You were one click away from {product} — finish in 30 sec".
-- Honor `email_suppression` and `outreach-blocklist`.
+**L2 — Checkout → Webhook → Provisioning**
+- `ls supabase/functions/create-*-checkout` → for each, grep `metadata.type` + `success_url`.
+- Cross-reference against switch arms in `stripe-webhook/index.ts`. Build a matrix: checkout → type → handler → table upsert → welcome email → `markFulfilled`.
+- SQL: `SELECT type, fulfillment_status, count(*) FROM stripe_webhook_events WHERE created_at > now()-interval '30 days' GROUP BY 1,2`.
+- SQL: webhook events with no client row (LEFT JOIN per product).
+- Invoke `e2e-link-auditor` if it exists; otherwise note as gap.
 
-## 6. Cold-email CTA URL pre-fill
-- Audit all cold-email senders (TechAlert outreach, channel-prospector, dead-lead drip, mortgage-radar-outreach, marketplace, weekly digests). Update CTA URLs from `…/start-trial?product=X` → `…/start-trial?product=X&email={{recipient_email}}&src=cold_email&utm_campaign={{campaign}}`.
-- `StartTrial.tsx` already needs to read `?email=` and pre-fill (add if missing).
-- Centralize URL construction in `_shared/offer-url.ts` so future senders can't drift.
+**L3 — RLS & GRANTs**
+- Run the `information_schema.role_table_grants` query you provided for the full anon-write table list.
+- For each, attempt `curl -X POST $SUPABASE_URL/rest/v1/<table>` with anon key + minimal body. Record 201 / 401 / 403 / 42501.
+- Cross-check against `pg_policies` for `WITH CHECK` clauses.
 
-## 7. Deploy three edge functions
-- `send-stewart-dental-proposal`
-- `send-youngblood-proposal`
-- `create-blueprint-checkout`
-- Verify each exists in `supabase/functions/`, has CORS + correct `verify_jwt` in `config.toml`, then deploy.
-- Smoke test `create-blueprint-checkout` with a test payload.
+**L4 — Auth & portal gates**
+- Static analysis of `ProtectedRoute`, `SubscriptionGuard`, `BlurGate`, `PostCheckoutClaim`, all 23 `My*` pages — check redirect targets + loading-state guards (infinite-loop risk).
+- Live: I cannot puppeteer all 4 auth states for 23 pages without browser sessions. **Decision needed (Q1).**
 
-## Technical notes
+**L5 — Inbound webhooks**
+- Static: confirm signature verification in `stripe-webhook`, `inbound-sms-relay`, Resend webhook handler.
+- Live: query last 7 days of `missed_call_captures`, `voicemail_transcriptions`, `inbound_sms_log`, `email_send_log` for completeness. I will NOT place a real test call to Twilio (costs money + pages you). **Decision needed (Q2).**
 
-**Files touched (estimate)**
-- New: `src/components/trial/StickyTrialCTA.tsx`, `src/components/trial/ProductPicker.tsx`, `supabase/functions/trial-abandonment-sweeper/index.ts`, `supabase/functions/_shared/offer-url.ts` (if missing helper for cold email URLs).
-- Edited: `src/pages/StartTrial.tsx` (picker fallback, email pre-fill, optional fields, more events), `src/lib/trialFunnel.ts` (new event types), `src/components/admin/AdminOpsCenter.tsx` (funnel tile), all cold-email senders (CTA URL helper), edge function `start-trial` (relaxed validation + business-name fallback).
-- Migrations: `trial_abandonment_state` table (RLS, anon insert policy via service-role write only) + cron schedule for sweeper.
+**L6 — Outbound compliance**
+- `rg` every `sendSMS|sendEmail|sendFax|sendPostcard` callsite, confirm each is preceded by blocklist + suppression + quiet-hours + frequency-cap check.
+- SQL: `SELECT recipient, count(*) FROM email_send_log WHERE created_at > now()-interval '7 days' GROUP BY 1 HAVING count(*) > 5` — surfaces the 6–8 emails/recipient bug.
+- Parse cold-email template CTAs, curl each.
 
-**Order of execution**
-1. Migration (table + cron) — needs approval.
-2. Edge function deploys (item 7) in parallel with frontend work.
-3. Frontend: picker fallback + sticky bar + form friction + analytics events.
-4. Sweeper edge function + abandonment writes from `StartTrial.tsx`.
-5. Cold-email URL helper + sweep all senders.
+**L7 — Cron**
+- SQL: `cron.job` + `cron.job_run_details` last 7 days, success/fail counts per job.
+- `rg "name = 'SUPABASE_URL'|name = 'SUPABASE_SERVICE_ROLE_KEY'|app.supabase_url" supabase/migrations/` to find any unfixed broken patterns.
+- Cross-check every cron-invoked function has `verify_jwt = false` in `config.toml`.
 
-**Out of scope** (not asked, will not touch)
-- No new lead sources, no pricing changes, no new copy/positioning.
-- No changes to Stripe products or webhook routing.
+**L8 — Silent failures**
+- SQL: `error_logs` last 7d grouped by source/severity/function_name.
+- `supabase--analytics_query` for `function_edge_logs` 5xx by function last 7d.
+- Run `supabase--linter`.
+- SQL: `SELECT * FROM dlq WHERE resolved_at IS NULL` (if table exists).
 
-Confirm and I'll execute.
+---
+
+## Decisions I need from you
+
+**Q1 — Live portal auth testing**
+For 23 `My*` pages × 4 auth states = 92 page loads. Options:
+- **(a) Static-only** for L4: I read the gate components and trace logic, no live page loads. Fast, ~10 min, ~60% confidence.
+- **(b) Browser tool** spot-check 5 highest-traffic portals × 4 states = 20 loads. ~25 min, ~85% confidence. Requires you to log in once in the preview.
+- **(c) Full sweep** all 23 × 4. ~60 min, requires you to create test accounts at each tier (free, trialing, subscribed, admin).
+
+**Q2 — Live Twilio inbound test**
+Placing a real call to (313) 992-1219 will trigger missed-call SMS to you AND charge ~$0.05. Options:
+- **(a) Skip live call**, audit DB rows from real customer calls in last 7d.
+- **(b) Place one test call** — you'll get a "test call from audit" SMS.
+
+**Q3 — Anon INSERT probes (L3)**
+To prove RLS works, I'll POST a row like `{event_type:'audit_probe', ...}` to each anon-write table. These leave ~10 test rows. Options:
+- **(a) Probe + auto-cleanup** via a single DELETE at end (requires migration tool, technically a state change but trivial).
+- **(b) Probe + leave rows** — you delete later.
+- **(c) Skip probes**, rely on `pg_policies` static check only (~70% confidence — won't catch the GRANT-without-policy class of bug, which is exactly what burned us with `trial_funnel_events`).
+
+**My recommendation: Q1=b, Q2=a, Q3=a.** Highest confidence per minute spent.
+
+---
+
+## Deliverable
+
+`/mnt/documents/audit-2026-05-07.md` with:
+- 8 PASS/FAIL tables (one per layer), receipts column with SQL/curl/log snippet
+- Prioritized fix list: P0 (revenue-blocking / data leak / TCPA), P1 (UX broken), P2 (polish)
+- Final question to you: "Which P0s do I ship in build mode?"
+
+Estimated: ~90 tool calls, 30–45 min wall time.
+
+Reply with answers to Q1/Q2/Q3 (or just "go with your recs") and I'll execute.
