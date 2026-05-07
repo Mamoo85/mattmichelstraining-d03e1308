@@ -13067,41 +13067,65 @@ export type Database = {
         Row: {
           active: boolean | null
           bundled_from: string | null
+          bundled_with: string | null
           business_name: string
+          business_phone: string | null
+          call_count: number
+          contact_name: string | null
           created_at: string | null
           custom_message: string | null
+          dashboard_token: string | null
           email: string
           id: string
           last_triggered_at: string | null
           phone: string | null
+          response_message: string | null
           setup_token: string | null
           stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          text_count: number
         }
         Insert: {
           active?: boolean | null
           bundled_from?: string | null
+          bundled_with?: string | null
           business_name: string
+          business_phone?: string | null
+          call_count?: number
+          contact_name?: string | null
           created_at?: string | null
           custom_message?: string | null
+          dashboard_token?: string | null
           email: string
           id?: string
           last_triggered_at?: string | null
           phone?: string | null
+          response_message?: string | null
           setup_token?: string | null
           stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          text_count?: number
         }
         Update: {
           active?: boolean | null
           bundled_from?: string | null
+          bundled_with?: string | null
           business_name?: string
+          business_phone?: string | null
+          call_count?: number
+          contact_name?: string | null
           created_at?: string | null
           custom_message?: string | null
+          dashboard_token?: string | null
           email?: string
           id?: string
           last_triggered_at?: string | null
           phone?: string | null
+          response_message?: string | null
           setup_token?: string | null
           stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          text_count?: number
         }
         Relationships: []
       }
