@@ -4,7 +4,10 @@
 // MUST use dwaEmail() — never sendM2Email() — to keep brand isolation between
 // M² Training (fitness) and Detroit Web Agency (B2B automation).
 
+import { checkEmailSanity } from "./email-sanity.ts";
+
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "https://eauvubfpanpeuxsrqesu.supabase.co";
 
 export const DWA_FROM = "Matt Michels — Detroit Web Agency <matt@detroitwebagent.com>";
 export const DWA_REPLY_TO = "matt@detroitwebagent.com";
@@ -23,6 +26,8 @@ export interface DwaEmailOpts {
   replyTo?: string;
   /** When set, mirrors a successful send onto the HubSpot contact's timeline. */
   hubspotContactId?: string;
+  /** Extra headers passed through to Resend (e.g. List-Unsubscribe). */
+  headers?: Record<string, string>;
 }
 
 export async function dwaEmail(opts: DwaEmailOpts): Promise<{ ok: boolean; error?: string; resendId?: string }> {
@@ -46,6 +51,7 @@ export async function dwaEmail(opts: DwaEmailOpts): Promise<{ ok: boolean; error
         bcc: [opts.bcc || DWA_BCC],
         subject: opts.subject,
         html: opts.html,
+        ...(opts.headers ? { headers: opts.headers } : {}),
       }),
     });
     if (!r.ok) {
@@ -138,9 +144,20 @@ export function isHiringProduct(product: string): boolean {
       || p.includes("hiring") || p.includes("carealert");
 }
 
+/** Build RFC 8058 List-Unsubscribe headers for a cold email recipient. */
+export function listUnsubHeaders(recipientEmail: string): Record<string, string> {
+  const token = encodeURIComponent(btoa(recipientEmail));
+  const unsubUrl = `${SUPABASE_URL}/functions/v1/handle-email-unsubscribe?token=${token}`;
+  return {
+    "List-Unsubscribe": `<${unsubUrl}>, <mailto:matt@detroitwebagent.com?subject=Unsubscribe>`,
+    "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+  };
+}
+
 /**
  * Canonical cold-email sender. Wraps body in DWA branded shell, gates the
  * trial CTA via TRIAL_ELIGIBLE_PRODUCTS, and logs to email_send_log.
+ * Automatically adds List-Unsubscribe headers and runs a pre-send MX/sanity check.
  */
 export interface DwaColdEmailOpts {
   to: string;
@@ -160,6 +177,23 @@ export async function dwaColdEmail(
   opts: DwaColdEmailOpts,
   sb?: { from: (t: string) => any },
 ): Promise<{ ok: boolean; error?: string; messageId?: string }> {
+  // Pre-send sanity check — skip invalid/disposable/no-MX addresses silently
+  const sanity = await checkEmailSanity(opts.to);
+  if (!sanity.ok) {
+    if (sb) {
+      try {
+        await sb.from("email_send_log").insert({
+          template_name: opts.templateName,
+          recipient_email: opts.to,
+          status: "skipped",
+          error_message: `email_sanity: ${sanity.reason}`,
+          metadata: { product: opts.product, cold: true },
+        });
+      } catch { /* best-effort */ }
+    }
+    return { ok: false, error: `email_sanity: ${sanity.reason}` };
+  }
+
   const ctaBlock = isTrialEligible(opts.product)
     ? trialCtaHtml({ product: opts.product, url: opts.ctaUrl })
     : plainCtaHtml({ url: opts.ctaUrl, text: opts.ctaText || "See it live →" });
@@ -180,7 +214,13 @@ export async function dwaColdEmail(
     } catch { /* best-effort */ }
   }
 
-  const r = await dwaEmail({ to: opts.to, subject: opts.subject, html, bcc: opts.bcc });
+  const r = await dwaEmail({
+    to: opts.to,
+    subject: opts.subject,
+    html,
+    bcc: opts.bcc,
+    headers: listUnsubHeaders(opts.to),
+  });
 
   if (sb) {
     try {
