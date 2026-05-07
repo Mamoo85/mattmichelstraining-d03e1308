@@ -44,6 +44,7 @@ function buildEmailHtml(opts: {
   businessName: string;
   trade: string;
   city: string;
+  state: string;
   trialUrl: string;
 }) {
   const verticalLabel = VERTICALS.find((v) => v.slug === opts.trade)?.label ?? "Trade Radar";
