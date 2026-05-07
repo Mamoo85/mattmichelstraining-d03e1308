@@ -178,11 +178,29 @@ export default function MortgageLeadCard({ lead: l, clientId, onMarkWorking, onD
         </button>
         {expanded && (
           <div className="bg-[#030711] border border-[#1e3a5f] rounded-md p-3 mb-3 space-y-3">
-            {thumb && (
+            {thumb && !largeErrored ? (
               <a href={thumb} target="_blank" rel="noopener noreferrer" className="block">
-                <img src={thumb} alt={l.address || "Property"} className="w-full max-h-[260px] object-cover rounded border border-[#1e3a5f]" loading="lazy" />
+                <div className="relative w-full min-h-[160px] rounded border border-[#1e3a5f] overflow-hidden bg-[#0a1628]">
+                  {!largeLoaded && <Skeleton className="absolute inset-0 bg-[#1e3a5f]/40" />}
+                  <img
+                    src={thumb}
+                    alt={l.address || "Property"}
+                    className={`w-full max-h-[260px] object-cover transition-opacity ${largeLoaded ? "opacity-100" : "opacity-0"}`}
+                    loading="lazy"
+                    onLoad={() => setLargeLoaded(true)}
+                    onError={() => { setLargeErrored(true); setLargeLoaded(true); }}
+                  />
+                </div>
                 <p className="text-[10px] text-[#64748b] mt-1 text-center">Google Street View · click to open full size</p>
               </a>
+            ) : (
+              <div className="w-full h-[120px] rounded border border-dashed border-[#1e3a5f] bg-[#0a1628] flex flex-col items-center justify-center text-[#64748b]">
+                <ImageOff className="w-5 h-5 mb-1" />
+                <p className="text-[11px]">{thumb ? "Street View unavailable for this address" : "No Street View imagery yet"}</p>
+              </div>
+            )}
+            {!l.human_summary && !l.full_name && !l.phone && !l.email && l.year_built == null && !sqft && !lastSale && !equityLow && !equityHigh && highlights.length === 0 && history.length === 0 && (
+              <p className="text-xs text-[#64748b] italic text-center py-2">Property details still being enriched — check back shortly.</p>
             )}
             {l.human_summary && (
               <div>
