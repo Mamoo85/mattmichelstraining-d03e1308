@@ -42,6 +42,11 @@ export default function PostCheckoutClaim({ product }: Props) {
           setError((err?.message || data?.error) ?? "Could not send login link.");
           setStatus("error");
         } else {
+          try {
+            window.localStorage.setItem(guardKey, String(Date.now()));
+          } catch {
+            /* ignore */
+          }
           setStatus("sent");
         }
       } catch (e: any) {
