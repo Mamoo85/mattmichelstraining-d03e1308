@@ -285,10 +285,18 @@ export default function StartTrial() {
     }
   }
 
+  const pitch = canonical ? PRODUCT_PITCH[canonical] : undefined;
+  const [focusFired, setFocusFired] = useState(false);
+  const handleFocus = () => {
+    if (focusFired) return;
+    setFocusFired(true);
+    trackTrialEvent("form_focus", canonical ?? rawProduct ?? null, { email });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0a1628] to-[#0d1f3c] text-white">
       <div className="max-w-xl mx-auto p-6 sm:p-10">
-        <div className="text-center mb-8">
+        <div className="text-center mb-6">
           <div className="text-[#00d4ff] text-sm font-bold tracking-wider uppercase">{config.label}</div>
           <h1 className="text-3xl sm:text-4xl font-black mt-2">
             {config.trial ? "Start your 7-day free trial" : "Get started"}
@@ -300,18 +308,35 @@ export default function StartTrial() {
           )}
         </div>
 
+        {pitch && (
+          <div className="mb-6 bg-[#00d4ff]/10 border border-[#00d4ff]/40 rounded-xl p-5">
+            <div className="flex items-baseline justify-between gap-3 mb-2">
+              <span className="text-xs uppercase tracking-wider text-[#00d4ff] font-bold">What you get</span>
+              <span className="text-sm font-bold text-white">{pitch.price}</span>
+            </div>
+            <p className="text-white text-base font-semibold mb-3">{pitch.promise}</p>
+            <ul className="space-y-1.5">
+              {pitch.bullets.map((b) => (
+                <li key={b} className="text-sm text-white/80 flex gap-2">
+                  <span className="text-[#00d4ff]">✓</span><span>{b}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         <form onSubmit={startCheckout} className="bg-[#0a1628]/60 border border-[#00d4ff]/30 rounded-xl p-6 space-y-4">
           <label className="block">
             <span className="text-sm text-white/70">Work email</span>
             <input
-              required type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+              required type="email" value={email} onChange={(e) => setEmail(e.target.value)} onFocus={handleFocus}
               className="w-full mt-1 bg-[#0a1628] border border-white/20 rounded px-3 py-2 text-white"
             />
           </label>
           <label className="block">
             <span className="text-sm text-white/70">Business name</span>
             <input
-              required value={businessName} onChange={(e) => setBusinessName(e.target.value)}
+              required value={businessName} onChange={(e) => setBusinessName(e.target.value)} onFocus={handleFocus}
               className="w-full mt-1 bg-[#0a1628] border border-white/20 rounded px-3 py-2 text-white"
             />
           </label>
@@ -319,7 +344,7 @@ export default function StartTrial() {
             <label className="block">
               <span className="text-sm text-white/70">Business phone</span>
               <input
-                required value={phone} onChange={(e) => setPhone(e.target.value)}
+                required value={phone} onChange={(e) => setPhone(e.target.value)} onFocus={handleFocus}
                 placeholder="(313) 555-0123"
                 className="w-full mt-1 bg-[#0a1628] border border-white/20 rounded px-3 py-2 text-white"
               />
@@ -329,19 +354,33 @@ export default function StartTrial() {
             <label className="block">
               <span className="text-sm text-white/70">Website</span>
               <input
-                required value={website} onChange={(e) => setWebsite(e.target.value)}
+                required value={website} onChange={(e) => setWebsite(e.target.value)} onFocus={handleFocus}
                 placeholder="https://yourcompany.com"
                 className="w-full mt-1 bg-[#0a1628] border border-white/20 rounded px-3 py-2 text-white"
               />
             </label>
           )}
-          {error && <div className="text-red-400 text-sm">{error}</div>}
+          {error && (
+            <div className="bg-red-500/10 border border-red-500/40 rounded-lg p-3 space-y-2">
+              <div className="text-red-300 text-sm font-semibold">Something went sideways: {error}</div>
+              <div className="text-xs text-white/70">
+                Text Matt directly — he'll get you set up in minutes:{" "}
+                <a className="text-[#00d4ff] underline font-bold" href="sms:+13139921219">(313) 992-1219</a>{" "}
+                · or email{" "}
+                <a className="text-[#00d4ff] underline" href={`mailto:matt@detroitwebagent.com?subject=Trial%20signup%20issue%20-%20${encodeURIComponent(config.label)}&body=My%20email%3A%20${encodeURIComponent(email)}%0AError%3A%20${encodeURIComponent(error)}`}>matt@detroitwebagent.com</a>
+              </div>
+            </div>
+          )}
           <button
             type="submit" disabled={busy}
             className="w-full bg-[#00d4ff] text-[#0a1628] font-bold py-3 rounded text-base disabled:opacity-50"
           >
             {busy ? "Starting…" : (config.trial ? "Start 7-day free trial" : "Continue")}
           </button>
+          <div className="text-center text-xs text-white/60 pt-1">
+            Prefer to talk first? Text Matt:{" "}
+            <a href="sms:+13139921219" className="text-[#00d4ff] font-bold underline">(313) 992-1219</a>
+          </div>
           <p className="text-[10px] text-white/40 text-center">
             By continuing you agree to our terms. Questions? <a href="mailto:matt@detroitwebagent.com" className="text-[#00d4ff]">matt@detroitwebagent.com</a>.
           </p>
