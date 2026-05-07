@@ -192,7 +192,19 @@ export default function MyMortgageRadar() {
       toast.error("No leads to export");
       return;
     }
-    const headers = ["Score", "Address", "City", "ZIP", "Name", "Phone", "Email", "Signal", "Source", "Detail", "Best Call Window", "Suggested Opener", "Detected"];
+    const headers = [
+      "Score", "Address", "City", "ZIP", "Name", "Phone", "Email",
+      "Signal", "Source", "Detail", "Signal Count", "Best Call Window", "Suggested Opener",
+      "Year Built", "Building Sqft", "Last Sale Price", "Last Sale Date",
+      "Estimated Equity", "Equity Range Low", "Equity Range High",
+      "Intel Highlights", "Human Summary", "Pipeline Stage", "Street View URL", "Detected",
+    ];
+    const fmtCents = (c?: number | null) => (c == null ? "" : (c / 100).toFixed(0));
+    const highlightsStr = (h: any) => {
+      if (!h) return "";
+      if (Array.isArray(h)) return h.join(" | ");
+      try { return JSON.stringify(h); } catch { return String(h); }
+    };
     const rows = filtered.map(l => [
       l.score,
       l.address || "",
@@ -204,10 +216,22 @@ export default function MyMortgageRadar() {
       l.signal_type,
       l.signal_source,
       (l.signal_detail || "").replace(/\s+/g, " "),
+      l.signal_count ?? "",
       l.best_call_window || "",
       (l.suggested_opener || "")
         .replace(/\{name\}/g, l.full_name || "there")
         .replace(/\{address\}/g, l.address || "your property"),
+      l.year_built ?? "",
+      l.building_sqft ?? "",
+      fmtCents(l.last_sale_price_cents),
+      l.last_sale_date || "",
+      l.estimated_equity ?? "",
+      fmtCents(l.equity_range_low_cents),
+      fmtCents(l.equity_range_high_cents),
+      highlightsStr(l.intel_highlights).replace(/\s+/g, " "),
+      (l.human_summary || "").replace(/\s+/g, " "),
+      l.pipeline_stage || "",
+      l.street_view_url || "",
       l.signal_date || l.created_at?.slice(0, 10) || "",
     ]);
     const csv = [headers, ...rows]
