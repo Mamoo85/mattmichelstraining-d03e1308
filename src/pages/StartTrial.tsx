@@ -114,10 +114,6 @@ const PRODUCT_PITCH: Partial<Record<CanonicalKey, { price: string; promise: stri
   trade_radar_foundation:   { price: "$149/mo after trial", promise: "Heavy-rain, flood, and foundation-permit leads in your county.", bullets: ["NOAA flood + FEMA NFIP", "BSEED foundation permits", "Daily AM digest"] },
 };
 
-const START_RADAR_TRIAL_PRODUCTS: Partial<Record<CanonicalKey, string>> = {
-  mortgage_radar: "mortgage_radar",
-};
-
 const GENERIC_PRODUCT_DEFAULTS: Record<string, CanonicalKey> = {
   trade_radar: "trade_radar_roofing",
 };
