@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MapPin, Clock, DollarSign, Lock, CheckCircle, Phone, ChevronRight, MessageSquare, Zap } from "lucide-react";
+import { MapPin, Clock, Lock, CheckCircle, Phone, ChevronRight, MessageSquare, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import ScoreBreakdown from "@/components/shared/ScoreBreakdown";
@@ -148,14 +148,19 @@ export default function TradeRadarLeadCard({
     }
   }
 
+  const colors = getScoreColor(lead.score);
+
   return (
     <div className={cn(
-      "relative rounded-2xl border overflow-hidden transition-all duration-300",
-      "bg-[#0a1628] border-white/10",
-      !claimed && "hover:border-[#00d4ff]/50 hover:shadow-[0_0_24px_rgba(0,212,255,0.08)]",
+      "group relative rounded-xl border overflow-hidden transition-all duration-200",
+      "bg-gradient-to-br from-[#0a1628] to-[#0d1d33] border-white/10",
+      !claimed && "hover:border-[#00d4ff]/40 hover:shadow-[0_0_28px_rgba(0,212,255,0.10)] hover:-translate-y-0.5",
       claimed && "border-green-500/30",
       className
     )}>
+      {/* Urgency strip */}
+      <div className={cn("h-1 w-full", colors.bar)} />
+
       {claimed && (
         <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5 bg-green-500/15 border border-green-500/30 text-green-400 text-[10px] font-mono font-bold uppercase tracking-widest px-2.5 py-1 rounded-full">
           <CheckCircle className="w-3 h-3" />
@@ -165,43 +170,41 @@ export default function TradeRadarLeadCard({
 
       <div className="flex flex-col sm:flex-row">
         {lead.street_view_url && (
-          <div className="sm:w-48 sm:flex-shrink-0 relative overflow-hidden">
+          <div className="sm:w-44 sm:flex-shrink-0 relative overflow-hidden bg-black/30">
             <img
               src={lead.street_view_url}
               alt={`Street view of ${lead.address}`}
-              className="w-full h-36 sm:h-full object-cover"
+              className="w-full h-40 sm:h-full object-cover"
               loading="lazy"
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent to-[#0a1628]/60 sm:block hidden" />
-            <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-black/60 backdrop-blur-sm text-[10px] text-white/70 px-2 py-0.5 rounded font-mono">
+            <div className="absolute inset-0 bg-gradient-to-t sm:bg-gradient-to-r from-[#0a1628]/80 sm:from-transparent sm:to-[#0a1628]/70 to-transparent" />
+            <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-black/70 backdrop-blur-sm text-[10px] text-white/80 px-2 py-0.5 rounded font-mono uppercase tracking-wider">
               <MapPin className="w-2.5 h-2.5" />
               Street View
             </div>
           </div>
         )}
 
-        <div className="flex-1 p-5 space-y-4 min-w-0">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="space-y-1 min-w-0">
+        <div className="flex-1 p-4 sm:p-5 space-y-3.5 min-w-0">
+          {/* Header: signal + value */}
+          <div className="flex items-start justify-between gap-3">
+            <div className="space-y-2 min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="inline-flex items-center gap-1.5 bg-[#00d4ff]/10 border border-[#00d4ff]/25 text-[#00d4ff] text-xs font-semibold px-3 py-1 rounded-full">
+                <span className="inline-flex items-center gap-1.5 bg-[#00d4ff]/10 border border-[#00d4ff]/25 text-[#00d4ff] text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md">
                   {signalLabel}
                 </span>
-                <span className="text-[11px] text-white/40 font-mono">{daysAgo}</span>
+                <span className="text-[10px] text-white/40 font-mono uppercase tracking-wider">{daysAgo}</span>
               </div>
-              <div className="flex items-center gap-1.5 text-white/70 text-sm">
-                <MapPin className="w-3.5 h-3.5 text-[#00d4ff] flex-shrink-0" />
-                <span className="font-medium text-white truncate">{lead.address}</span>
-                <span className="text-white/40">·</span>
-                <span className="text-white/50 text-xs">{lead.city}, {lead.zip}</span>
+              <div className="space-y-0.5">
+                <h3 className="font-bold text-white text-base leading-tight truncate">{lead.address}</h3>
+                <p className="text-xs text-white/50 font-mono">{lead.city}, {lead.zip}</p>
               </div>
             </div>
 
-            <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
-              <div className="flex items-center gap-1.5 bg-[#0f2640] border border-white/10 rounded-lg px-3 py-1.5">
-                <DollarSign className="w-3.5 h-3.5 text-[#00d4ff]" />
-                <span className="text-white font-bold text-sm">{jobValue}</span>
-                <span className="text-white/40 text-[11px]">est. job</span>
+            <div className="flex flex-col items-end gap-1 flex-shrink-0">
+              <div className="bg-[#00d4ff]/10 border border-[#00d4ff]/30 rounded-lg px-2.5 py-1.5 text-center">
+                <div className="text-white font-black text-base leading-none">{jobValue}</div>
+                <div className="text-[9px] text-[#00d4ff]/70 font-mono uppercase tracking-wider mt-0.5">est. job</div>
               </div>
             </div>
           </div>

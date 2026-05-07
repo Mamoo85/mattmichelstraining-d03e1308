@@ -105,6 +105,7 @@ const LinkHealth = lazyRetry(() => import("./pages/admin/LinkHealth"));
 const TrialDripPreview = lazyRetry(() => import("./pages/admin/TrialDripPreview"));
 const ScannerHealth = lazyRetry(() => import("./pages/admin/ScannerHealth"));
 const ColdEmailRamp = lazyRetry(() => import("./pages/admin/ColdEmailRamp"));
+const TrialReactivationCampaign = lazyRetry(() => import("./pages/admin/TrialReactivationCampaign"));
 const DwaAdminV4 = lazyRetry(() => import("./pages/DwaAdminV4"));
 const DwaAdminStripeReconcile = lazyRetry(() => import("./pages/DwaAdminStripeReconcile"));
 const DwaAdminQbrQueue = lazyRetry(() => import("./pages/DwaAdminQbrQueue"));
@@ -981,6 +982,7 @@ const App = () => (
                        <Route path="/owner/dashboard" element={<OwnerDashboard />} />
                       <Route path="/dwa-admin/outreach-audit" element={<AgencyAdminRoute><OutreachAuditLog /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/outreach-queue" element={<AgencyAdminRoute><OutreachQueuePage /></AgencyAdminRoute>} />
+                      <Route path="/dwa-admin/trial-reactivation" element={<AgencyAdminRoute><TrialReactivationCampaign /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/outreach-observability" element={<AgencyAdminRoute><OutreachObservabilityPage /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/wave5" element={<AgencyAdminRoute><Wave5Dashboard /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/audit-timeline" element={<AgencyAdminRoute><AuditTimeline /></AgencyAdminRoute>} />
