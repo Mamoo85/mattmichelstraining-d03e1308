@@ -4,11 +4,16 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type TrialFunnelEvent =
   | "view"
+  | "picker_view"
+  | "picker_select"
   | "form_focus"
   | "form_submit"
+  | "form_submit_failure"
   | "checkout_redirect"
   | "trial_success"
-  | "trial_error";
+  | "trial_error"
+  | "escape_hatch_click"
+  | "sticky_cta_click";
 
 const SESSION_KEY = "trial_funnel_session_id";
 
