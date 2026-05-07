@@ -2311,3 +2311,6 @@ verify_jwt = false
 
 [functions.trial-abandonment-sweeper]
 verify_jwt = false
+
+[functions.list-my-trials]
+verify_jwt = false
