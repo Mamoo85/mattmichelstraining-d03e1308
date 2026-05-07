@@ -25041,6 +25041,19 @@ export type Database = {
         }
         Returns: undefined
       }
+      log_trial_funnel_event: {
+        Args: {
+          p_email?: string
+          p_event_type: string
+          p_metadata?: Json
+          p_product?: string
+          p_referrer?: string
+          p_session_id?: string
+          p_user_agent?: string
+          p_utm?: Json
+        }
+        Returns: undefined
+      }
       mark_outreach_send_result: {
         Args: { p_error_msg?: string; p_job_id: string; p_success: boolean }
         Returns: undefined

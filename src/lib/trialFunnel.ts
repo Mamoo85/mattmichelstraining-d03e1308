@@ -4,11 +4,16 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type TrialFunnelEvent =
   | "view"
+  | "picker_view"
+  | "picker_select"
   | "form_focus"
   | "form_submit"
+  | "form_submit_failure"
   | "checkout_redirect"
   | "trial_success"
-  | "trial_error";
+  | "trial_error"
+  | "escape_hatch_click"
+  | "sticky_cta_click";
 
 const SESSION_KEY = "trial_funnel_session_id";
 
@@ -45,18 +50,18 @@ export function trackTrialEvent(
   extra?: { email?: string; metadata?: Record<string, unknown> },
 ): void {
   try {
-    const payload = {
-      event_type: eventType,
-      product: product ?? null,
-      email: extra?.email?.trim().toLowerCase() || null,
-      session_id: getSessionId(),
-      utm: getUtm(),
-      metadata: extra?.metadata ?? {},
-      user_agent: typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 500) : null,
-      referrer: typeof document !== "undefined" ? (document.referrer || "").slice(0, 500) : null,
+    const args = {
+      p_event_type: eventType,
+      p_product: product ?? null,
+      p_email: extra?.email?.trim().toLowerCase() || null,
+      p_session_id: getSessionId(),
+      p_metadata: extra?.metadata ?? {},
+      p_utm: getUtm(),
+      p_user_agent: typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 500) : null,
+      p_referrer: typeof document !== "undefined" ? (document.referrer || "").slice(0, 500) : null,
     };
-    // Fire-and-forget. Never await, never throw.
-    void supabase.from("trial_funnel_events").insert(payload as any).then(() => {}, () => {});
+    // Fire-and-forget. Goes through SECURITY DEFINER RPC so anon INSERT stays revoked at the table level.
+    void (supabase as any).rpc("log_trial_funnel_event", args).then(() => {}, () => {});
   } catch {
     /* swallow */
   }
