@@ -154,6 +154,24 @@ serve(async (req) => {
     }
 
     for (const t of targets) {
+      // Frequency cap: skip if this address received ANY email in the last 7 days.
+      // Prevents the spam loop where one recipient gets 8+ touches in a week.
+      const email = String(t.owner_email).trim().toLowerCase();
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const { count: recentSends } = await sb
+        .from("email_send_log")
+        .select("id", { count: "exact", head: true })
+        .ilike("recipient_email", email)
+        .in("status", ["sent", "queued", "pending"])
+        .gte("created_at", sevenDaysAgo);
+      if ((recentSends ?? 0) > 0) {
+        await sb.from("techalert_prospect_targets")
+          .update({ outreach_status: "frequency_capped", outreach_sent_at: new Date().toISOString() })
+          .eq("id", t.id);
+        skipped++;
+        continue;
+      }
+
       const result = await sendEmail(sb, t.owner_email, t.owner_name, t.company_name, t.role, t.is_boiler, t.score ?? 5);
 
       if (!result.ok) {
