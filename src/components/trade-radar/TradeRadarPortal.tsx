@@ -337,10 +337,28 @@ export default function TradeRadarPortal({
             <div className="grid gap-5">
               {filtered.map((l) => {
                 const a = actions[l.id];
+                const isClaimed = a?.status === "called" || a?.status === "won";
                 return (
                   <TradeRadarLeadCard
                     key={l.id}
                     lead={l}
+                    claimed={isClaimed}
+                    onClaim={async (lead) => {
+                      if (!client) return;
+                      const { error } = await (supabase.from as any)("trade_radar_lead_actions").upsert({
+                        client_id: client.id,
+                        lead_id: lead.id,
+                        status: "called",
+                      }, { onConflict: "client_id,lead_id" });
+                      if (error) {
+                        const { toast } = await import("sonner");
+                        toast.error("Couldn't claim lead — text Matt at (313) 992-1219");
+                        return;
+                      }
+                      setActions((prev) => ({ ...prev, [lead.id]: { status: "called", snooze_until: null } }));
+                      const { toast } = await import("sonner");
+                      toast.success("Lead claimed — call the owner now");
+                    }}
                     actionBar={
                       client ? (
                         <LeadActionBar
