@@ -1,7 +1,7 @@
-// email-deliverability-check — Weekly cron Monday 7am ET.
+// email-deliverability-check — Daily cron 10am ET (14:00 UTC).
 // Monitors cold email deliverability health via Resend API stats.
-// If bounce rate > 5% or spam complaints > 0.1%, SMS Matt immediately.
-// A blacklisted domain kills the entire cold email pipeline silently.
+// If bounce rate > 5% or spam complaints > 0.1%, SMS Matt immediately
+// AND auto-pauses cold_email_ramp_state to protect domain reputation.
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -13,7 +13,7 @@ const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
 
 const BOUNCE_THRESHOLD = 0.05;   // 5%
-const SPAM_THRESHOLD = 0.001;    // 0.1%
+const SPAM_THRESHOLD = 0.001;    // 0.1% — Gmail blacklists above 0.1%
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -26,6 +26,7 @@ serve(async (req) => {
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
   const issues: string[] = [];
   const stats: Record<string, unknown> = {};
+  let pausedRampState = false;
 
   try {
     // Fetch Resend domain stats for the last 7 days
@@ -73,13 +74,25 @@ serve(async (req) => {
         }
         if (spamRate > SPAM_THRESHOLD) {
           issues.push(`HIGH SPAM COMPLAINTS: ${stats.spam_rate_pct}% (threshold: ${SPAM_THRESHOLD * 100}%)`);
+          // Auto-pause cold email pipeline to protect domain reputation
+          try {
+            await sb.from("cold_email_ramp_state").update({
+              paused: true,
+              pause_reason: `Auto-paused ${new Date().toISOString().split("T")[0]}: complaint rate ${stats.spam_rate_pct}% exceeds ${SPAM_THRESHOLD * 100}% threshold`,
+              updated_at: new Date().toISOString(),
+            }).eq("id", 1);
+            pausedRampState = true;
+          } catch (e) {
+            console.error("[email-deliverability-check] failed to pause ramp state:", e);
+          }
         }
       }
     }
 
     // Alert Matt if any issues found
     if (issues.length > 0) {
-      const msg = `🚨 EMAIL DELIVERABILITY ALERT\n${issues.join("\n")}\nCheck Resend dashboard immediately — domain blacklist kills all cold email pipelines.`;
+      const pauseNote = pausedRampState ? "\n⛔ Cold email pipeline AUTO-PAUSED." : "";
+      const msg = `🚨 EMAIL DELIVERABILITY ALERT\n${issues.join("\n")}${pauseNote}\nCheck Resend dashboard immediately — domain blacklist kills all cold email pipelines.`;
       await sendSMS(ADMIN_PHONE, TWILIO_PHONE_NUMBER, msg, "deliverability_alert");
     }
 
@@ -87,11 +100,11 @@ serve(async (req) => {
       agent_name: "email-deliverability-check",
       last_beat: new Date().toISOString(),
       status: issues.length > 0 ? "warning" : "ok",
-      metadata: { issues, ...stats },
+      metadata: { issues, paused_ramp_state: pausedRampState, ...stats },
     }, { onConflict: "agent_name" });
 
     return new Response(
-      JSON.stringify({ ok: true, issues, stats }),
+      JSON.stringify({ ok: true, issues, paused_ramp_state: pausedRampState, stats }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (e: unknown) {
