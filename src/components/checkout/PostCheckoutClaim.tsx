@@ -20,8 +20,18 @@ export default function PostCheckoutClaim({ product }: Props) {
 
   useEffect(() => {
     if (!sessionId) return;
+    const guardKey = `pcc_claimed_${sessionId}`;
     let cancelled = false;
     (async () => {
+      // Idempotency guard: don't re-fire claim-session on page refresh.
+      try {
+        if (typeof window !== "undefined" && window.localStorage.getItem(guardKey)) {
+          setStatus("sent");
+          return;
+        }
+      } catch {
+        /* localStorage unavailable — fall through */
+      }
       setStatus("loading");
       try {
         const { data, error: err } = await supabase.functions.invoke("claim-session", {
@@ -32,6 +42,11 @@ export default function PostCheckoutClaim({ product }: Props) {
           setError((err?.message || data?.error) ?? "Could not send login link.");
           setStatus("error");
         } else {
+          try {
+            window.localStorage.setItem(guardKey, String(Date.now()));
+          } catch {
+            /* ignore */
+          }
           setStatus("sent");
         }
       } catch (e: any) {
