@@ -39,6 +39,17 @@ type Lead = {
   best_call_window: string | null;
   created_at: string;
   pipeline_stage?: string | null;
+  street_view_url?: string | null;
+  intel_highlights?: any;
+  year_built?: number | null;
+  building_sqft?: number | null;
+  last_sale_price_cents?: number | null;
+  last_sale_date?: string | null;
+  estimated_equity?: number | null;
+  equity_range_low_cents?: number | null;
+  equity_range_high_cents?: number | null;
+  human_summary?: string | null;
+  signal_history?: any;
 };
 
 type Outreach = {
