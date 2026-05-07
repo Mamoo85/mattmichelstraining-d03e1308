@@ -10,32 +10,44 @@ const Unsubscribe = () => {
   const [status, setStatus] = useState<Status>("loading");
 
   useEffect(() => {
+    // Add noindex so search engines don't surface this page.
+    const meta = document.createElement("meta");
+    meta.name = "robots";
+    meta.content = "noindex, nofollow";
+    document.head.appendChild(meta);
+    return () => { document.head.removeChild(meta); };
+  }, []);
+
+  useEffect(() => {
     if (!token) {
       setStatus("invalid");
       return;
     }
 
-    const validate = async () => {
+    // ONE-CLICK UNSUB (CAN-SPAM / RFC 8058 best practice).
+    // Previously this was a 2-step flow (validate → confirm) which caused ~76% of
+    // people who landed here to never confirm — leaving us thinking they unsubbed
+    // when they actually didn't. Now the visit itself unsubscribes.
+    const unsubscribeImmediately = async () => {
       try {
-        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-        const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-        const res = await fetch(
-          `${supabaseUrl}/functions/v1/handle-email-unsubscribe?token=${token}`,
-          { headers: { apikey: anonKey } }
-        );
-        const data = await res.json();
-        if (data.valid === false && data.reason === "already_unsubscribed") {
+        const { data, error } = await supabase.functions.invoke("handle-email-unsubscribe", {
+          body: { token },
+        });
+        if (error) throw error;
+        if (data?.success) {
+          setStatus("success");
+        } else if (data?.reason === "already_unsubscribed") {
           setStatus("already");
-        } else if (data.valid) {
-          setStatus("valid");
-        } else {
+        } else if (data?.valid === false) {
           setStatus("invalid");
+        } else {
+          setStatus("error");
         }
       } catch {
-        setStatus("invalid");
+        setStatus("error");
       }
     };
-    validate();
+    unsubscribeImmediately();
   }, [token]);
 
   const handleUnsubscribe = async () => {
