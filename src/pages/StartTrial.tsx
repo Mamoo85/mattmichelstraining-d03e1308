@@ -234,7 +234,7 @@ export default function StartTrial() {
                   key={opt.key}
                   type="button"
                   onClick={() => {
-                    trackTrialEvent("form_focus", opt.key, { metadata: { from: "picker" } });
+                    trackTrialEvent("picker_select", opt.key, { metadata: { from: "picker" } });
                     const next = new URLSearchParams(params);
                     next.set("product", opt.key);
                     navigate(`/start-trial?${next.toString()}`, { replace: true });
