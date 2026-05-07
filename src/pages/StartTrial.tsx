@@ -44,27 +44,51 @@ interface ProductDef {
   externalLandingUrl?: string;
 }
 
+// All trial products go through start-radar-trial (no credit card, magic-link login).
+// Paid checkouts are reached separately from upgrade CTAs inside dashboards.
 const PRODUCTS: Record<CanonicalKey, ProductDef> = {
   mortgage_radar:       { fn: "start-radar-trial", label: "Mortgage Radar", trial: true, needsPhone: true },
-  field_desk:           { fn: "create-field-crm-checkout", label: "FieldDesk", trial: true, needsPhone: true },
-  site_radar:           { fn: "create-site-radar-checkout", label: "SiteRadar", trial: true, needsWebsite: true },
-  missed_call_catch:    { fn: "create-missed-call-subscription", label: "Missed-Call Catch", trial: true, needsPhone: true },
+  field_desk:           { fn: "start-radar-trial", label: "FieldDesk", trial: true, needsPhone: true },
+  site_radar:           { fn: "start-radar-trial", label: "SiteRadar", trial: true, needsWebsite: true },
+  missed_call_catch:    { fn: "start-radar-trial", label: "Missed-Call Catch", trial: true, needsPhone: true },
   phone_answering:      { fn: "create-phone-answering-checkout", label: "AI Phone Answering", trial: true, needsPhone: true },
-  bundle_revenue_suite: { fn: "create-bundle-revenue-suite-checkout", label: "Revenue Suite Bundle", trial: true, needsPhone: true },
-  techalert:            { fn: "create-hire-alert-checkout", label: "TechAlert", trial: false },
-  contractor_leads:     { fn: "create-contractor-checkout", label: "Contractor Leads", trial: false, externalLandingUrl: "/contractor-leads" },
+  bundle_revenue_suite: { fn: "start-radar-trial", label: "Revenue Suite Bundle", trial: true, needsPhone: true },
+  techalert:            { fn: "start-radar-trial", label: "TechAlert", trial: true, needsPhone: true },
+  contractor_leads:     { fn: "start-radar-trial", label: "Contractor Leads", trial: true, needsPhone: true },
   dead_lead:            { fn: "dead-lead-billing-setup", label: "Dead Lead Reactivation", trial: false, externalLandingUrl: "/dead-lead-intake" },
-  trade_radar_roofing:      { fn: "create-trade-radar-checkout", label: "Roofing Radar",      trial: true, vertical: "roofing", needsPhone: true },
-  trade_radar_hvac:         { fn: "create-trade-radar-checkout", label: "HVAC Radar",         trial: true, vertical: "hvac", needsPhone: true },
-  trade_radar_plumbing:     { fn: "create-trade-radar-checkout", label: "Plumbing Radar",     trial: true, vertical: "plumbing", needsPhone: true },
-  trade_radar_electrical:   { fn: "create-trade-radar-checkout", label: "Electrical Radar",   trial: true, vertical: "electrical", needsPhone: true },
-  trade_radar_pest_control: { fn: "create-trade-radar-checkout", label: "Pest Control Radar", trial: true, vertical: "pest_control", needsPhone: true },
-  trade_radar_gutters:      { fn: "create-trade-radar-checkout", label: "Gutters Radar",      trial: true, vertical: "gutters", needsPhone: true },
-  trade_radar_exterior:     { fn: "create-trade-radar-checkout", label: "Exterior Radar",     trial: true, vertical: "exterior", needsPhone: true },
-  trade_radar_tree:         { fn: "create-trade-radar-checkout", label: "Tree Radar",         trial: true, vertical: "tree", needsPhone: true },
-  trade_radar_restoration:  { fn: "create-trade-radar-checkout", label: "Restoration Radar",  trial: true, vertical: "restoration", needsPhone: true },
-  trade_radar_demo_junk:    { fn: "create-trade-radar-checkout", label: "Demo & Junk Radar",  trial: true, vertical: "demo_junk", needsPhone: true },
-  trade_radar_foundation:   { fn: "create-trade-radar-checkout", label: "Foundation Radar",   trial: true, vertical: "foundation", needsPhone: true },
+  trade_radar_roofing:      { fn: "start-radar-trial", label: "Roofing Radar",      trial: true, vertical: "roofing", needsPhone: true },
+  trade_radar_hvac:         { fn: "start-radar-trial", label: "HVAC Radar",         trial: true, vertical: "hvac", needsPhone: true },
+  trade_radar_plumbing:     { fn: "start-radar-trial", label: "Plumbing Radar",     trial: true, vertical: "plumbing", needsPhone: true },
+  trade_radar_electrical:   { fn: "start-radar-trial", label: "Electrical Radar",   trial: true, vertical: "electrical", needsPhone: true },
+  trade_radar_pest_control: { fn: "start-radar-trial", label: "Pest Control Radar", trial: true, vertical: "pest_control", needsPhone: true },
+  trade_radar_gutters:      { fn: "start-radar-trial", label: "Gutters Radar",      trial: true, vertical: "gutters", needsPhone: true },
+  trade_radar_exterior:     { fn: "start-radar-trial", label: "Exterior Radar",     trial: true, vertical: "exterior", needsPhone: true },
+  trade_radar_tree:         { fn: "start-radar-trial", label: "Tree Radar",         trial: true, vertical: "tree", needsPhone: true },
+  trade_radar_restoration:  { fn: "start-radar-trial", label: "Restoration Radar",  trial: true, vertical: "restoration", needsPhone: true },
+  trade_radar_demo_junk:    { fn: "start-radar-trial", label: "Demo & Junk Radar",  trial: true, vertical: "demo_junk", needsPhone: true },
+  trade_radar_foundation:   { fn: "start-radar-trial", label: "Foundation Radar",   trial: true, vertical: "foundation", needsPhone: true },
+};
+
+// Map every CanonicalKey → start-radar-trial product slug.
+const CANONICAL_TO_TRIAL_PRODUCT: Partial<Record<CanonicalKey, string>> = {
+  mortgage_radar: "mortgage_radar",
+  field_desk: "fielddesk",
+  site_radar: "site_radar",
+  missed_call_catch: "missed_call",
+  bundle_revenue_suite: "bundle_revenue_suite",
+  techalert: "techalert",
+  contractor_leads: "contractor_leads",
+  trade_radar_roofing: "roofing_radar",
+  trade_radar_hvac: "hvac_radar",
+  trade_radar_plumbing: "plumbing_radar",
+  trade_radar_electrical: "electrical_radar",
+  trade_radar_pest_control: "pest_control_radar",
+  trade_radar_gutters: "gutters_radar",
+  trade_radar_exterior: "exterior_radar",
+  trade_radar_tree: "tree_radar",
+  trade_radar_restoration: "restoration_radar",
+  trade_radar_demo_junk: "demo_junk_radar",
+  trade_radar_foundation: "foundation_radar",
 };
 
 // Per-product pricing & "what happens next" preview block. Shown above the form so
@@ -88,10 +112,6 @@ const PRODUCT_PITCH: Partial<Record<CanonicalKey, { price: string; promise: stri
   trade_radar_restoration:  { price: "$149/mo after trial", promise: "Fire, water-damage, and FEMA-zone restoration leads in your county.", bullets: ["Detroit Fire Incidents feed", "FEMA disaster overlay", "Owner contact enriched"] },
   trade_radar_demo_junk:    { price: "$149/mo after trial", promise: "Demo permits, estate sales, and probate filings — perfect demo/junk-haul leads.", bullets: ["BSEED demo permit feed", "Estate sale + probate scrapers", "Daily AM digest"] },
   trade_radar_foundation:   { price: "$149/mo after trial", promise: "Heavy-rain, flood, and foundation-permit leads in your county.", bullets: ["NOAA flood + FEMA NFIP", "BSEED foundation permits", "Daily AM digest"] },
-};
-
-const START_RADAR_TRIAL_PRODUCTS: Partial<Record<CanonicalKey, string>> = {
-  mortgage_radar: "mortgage_radar",
 };
 
 const GENERIC_PRODUCT_DEFAULTS: Record<string, CanonicalKey> = {
@@ -293,7 +313,7 @@ export default function StartTrial() {
       base.vertical = config!.vertical;
       base.tcpa_consent = true;
     }
-    const radarTrialProduct = canonical ? START_RADAR_TRIAL_PRODUCTS[canonical] : undefined;
+    const radarTrialProduct = canonical ? CANONICAL_TO_TRIAL_PRODUCT[canonical] : undefined;
     if (radarTrialProduct) {
       base.product = radarTrialProduct;
       base.source = params.get("utm_source") || "start-trial";

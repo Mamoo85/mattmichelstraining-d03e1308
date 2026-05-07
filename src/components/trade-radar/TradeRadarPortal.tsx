@@ -55,6 +55,7 @@ export default function TradeRadarPortal({
   const searchParams = new URLSearchParams(window.location.search);
   const clientEmail = searchParams.get("email") || "";
   const dashboardToken = searchParams.get("token") || "";
+  const legacyTrial = searchParams.get("trial") || "";
   const justPurchased = searchParams.get("trial") === "success";
 
   const [authError, setAuthError] = useState<string | null>(null);
@@ -64,17 +65,43 @@ export default function TradeRadarPortal({
   const [loading, setLoading] = useState(true);
   const [activeSignalType, setActiveSignalType] = useState<string>("all");
   const [notEnrolled, setNotEnrolled] = useState(false);
+  const [rescuing, setRescuing] = useState(false);
+  const [rescueSent, setRescueSent] = useState(false);
+
+  async function requestFreshLink() {
+    if (!clientEmail) {
+      const { toast } = await import("sonner");
+      toast.error("Open the link from your trial email, or text Matt at (313) 992-1219.");
+      return;
+    }
+    setRescuing(true);
+    try {
+      const productKey = `${vertical}_radar`;
+      const { error } = await supabase.functions.invoke("start-radar-trial", {
+        body: { email: clientEmail, product: productKey, source: "rescue_link" },
+      });
+      if (error) throw error;
+      setRescueSent(true);
+      const { toast } = await import("sonner");
+      toast.success("Fresh login link sent — check your email.");
+    } catch (e: any) {
+      const { toast } = await import("sonner");
+      toast.error(e?.message || "Couldn't send link — text Matt at (313) 992-1219.");
+    } finally {
+      setRescuing(false);
+    }
+  }
 
   useEffect(() => {
     (async () => {
-      if (!dashboardToken) {
+      if (!dashboardToken && !clientEmail && !legacyTrial && !justPurchased) {
         setAuthError("No dashboard link found. Check your weekly digest email.");
         setLoading(false);
         return;
       }
 
       const { data: dashboardData, error: dashboardError } = await supabase.functions.invoke("trade-radar-dashboard", {
-        body: { email: clientEmail || undefined, token: dashboardToken, vertical },
+        body: { email: clientEmail || undefined, token: dashboardToken || undefined, trial: legacyTrial || undefined, vertical },
       });
 
       if (dashboardError || (dashboardData as any)?.error) {
@@ -83,7 +110,7 @@ export default function TradeRadarPortal({
           setNotEnrolled(true);
         } else {
           setAuthError(code === "invalid_or_expired_link"
-            ? "Your dashboard link is invalid or expired — request a new one from your weekly digest email."
+            ? "Your dashboard link is invalid or expired — request a new one below."
             : "Could not load this dashboard link. Text Matt at (313) 992-1219 and we'll fix it now.");
         }
         setLoading(false);
@@ -107,7 +134,7 @@ export default function TradeRadarPortal({
       setActions(map);
       setLoading(false);
     })();
-  }, [clientEmail, dashboardToken, vertical]);
+  }, [clientEmail, dashboardToken, legacyTrial, vertical]);
 
   // Intersect configured signal types with what's actually in the data
   const availableTypes = useMemo(() => {
@@ -148,40 +175,53 @@ export default function TradeRadarPortal({
     );
   }
 
-  if (authError) {
+  if (authError || notEnrolled) {
+    const isAccessIssue = !!authError;
     return (
       <div className="min-h-screen bg-[#030711] text-foreground">
         <SEOHead title={`My ${productLabel} — Subscriber Dashboard`} description={`Daily ${productLabel} leads from public records.`} />
         <DWASuiteNav activeProduct="contractor_leads" email={clientEmail || undefined} />
-        <div className="max-w-7xl mx-auto px-4 py-24 flex items-center justify-center">
-          <div className="bg-[#0a1628] border border-red-900 rounded-xl p-8 text-center max-w-md w-full">
-            <Lock className="w-8 h-8 text-red-400 mx-auto mb-3" />
-            <p className="text-white font-semibold mb-2">Access denied</p>
-            <p className="text-sm text-[#94a3b8]">{authError}</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (notEnrolled) {
-    return (
-      <div className="min-h-screen bg-[#030711] text-foreground">
-        <SEOHead title={`My ${productLabel} — Subscriber Dashboard`} description={`Daily ${productLabel} leads.`} />
-        <DWASuiteNav activeProduct="contractor_leads" email={clientEmail || undefined} />
-        <div className="max-w-2xl mx-auto px-4 py-24">
+        <div className="max-w-2xl mx-auto px-4 py-16 sm:py-24">
           <Card className="bg-[#0a1628] border-[#1e3a5f]">
             <CardContent className="p-8 text-center">
-              <Wrench className="w-10 h-10 text-[#00d4ff] mx-auto mb-3" />
-              <p className="text-white font-bold text-lg mb-2">You're not enrolled in {productLabel}</p>
-              <p className="text-sm text-[#94a3b8] mb-6">
-                Start your trial to start receiving daily homeowner intent signals in your service area.
+              {isAccessIssue ? (
+                <Lock className="w-10 h-10 text-red-400 mx-auto mb-3" />
+              ) : (
+                <Wrench className="w-10 h-10 text-[#00d4ff] mx-auto mb-3" />
+              )}
+              <p className="text-white font-bold text-lg mb-2">
+                {isAccessIssue ? "We couldn't open this dashboard" : `You're not enrolled in ${productLabel}`}
               </p>
-              <a href={landingPath}>
-                <Button className="bg-[#00d4ff] text-black hover:bg-[#00d4ff]/90 font-bold">
-                  Start {productLabel} trial
-                </Button>
-              </a>
+              <p className="text-sm text-[#94a3b8] mb-6">
+                {isAccessIssue
+                  ? authError
+                  : "Start your trial to start receiving daily homeowner intent signals in your service area."}
+              </p>
+              <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                {clientEmail ? (
+                  <Button
+                    onClick={requestFreshLink}
+                    disabled={rescuing || rescueSent}
+                    className="bg-[#00d4ff] text-black hover:bg-[#00d4ff]/90 font-bold"
+                  >
+                    {rescueSent ? "Link sent — check email" : rescuing ? "Sending…" : `Email me a fresh ${productLabel} link`}
+                  </Button>
+                ) : (
+                  <a href={landingPath}>
+                    <Button className="bg-[#00d4ff] text-black hover:bg-[#00d4ff]/90 font-bold">
+                      Start {productLabel} trial
+                    </Button>
+                  </a>
+                )}
+                <a href="/my-trials">
+                  <Button variant="outline" className="border-[#1e3a5f] text-[#94a3b8] hover:text-white">
+                    View all my trials
+                  </Button>
+                </a>
+              </div>
+              <p className="text-[11px] text-[#64748b] mt-5">
+                Or text Matt at <a href="sms:+13139921219" className="text-[#00d4ff]">(313) 992-1219</a> and he'll fix it in minutes.
+              </p>
             </CardContent>
           </Card>
         </div>
