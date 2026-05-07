@@ -173,7 +173,30 @@ export default function MyMortgageRadar() {
   const warmCount = useMemo(() => filtered.filter(l => l.score >= 7 && l.score < 9).length, [filtered]);
   const types = useMemo(() => Array.from(new Set(leads.map(l => l.signal_type))), [leads]);
 
+  const trackEvent = (event_type: string, lead: Lead, extra: Record<string, any> = {}) => {
+    try {
+      (supabase.from as any)("trial_funnel_events").insert({
+        event_type,
+        product: "mortgage_radar",
+        email: clientEmail || null,
+        metadata: {
+          lead_id: lead.id,
+          score: lead.score,
+          signal_type: lead.signal_type,
+          zip: lead.zip,
+          client_id: clientId,
+          ...extra,
+        },
+        user_agent: typeof navigator !== "undefined" ? navigator.navigator?.userAgent ?? navigator.userAgent : null,
+        referrer: typeof document !== "undefined" ? document.referrer || null : null,
+      }).then(() => {}, () => {});
+    } catch {
+      // fire-and-forget; never block UI on analytics
+    }
+  };
+
   const markWorking = async (lead: Lead) => {
+    trackEvent("mortgage_radar_mark_working", lead);
     const prevStage = lead.pipeline_stage || "active";
     setLeads(prev => prev.map(x => x.id === lead.id ? { ...x, pipeline_stage: "working" } : x));
     const { error } = await (supabase.from as any)("mortgage_radar_leads")
