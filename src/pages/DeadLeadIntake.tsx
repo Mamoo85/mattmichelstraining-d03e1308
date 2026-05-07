@@ -475,7 +475,7 @@ export default function DeadLeadIntake() {
               letterSpacing: "0.3px",
             }}
           >
-            {submitting ? "Submitting…" : "Start Reactivation Campaign →"}
+            {submitting ? "Submitting…" : "Wake Up My Dead Leads — First Reply FREE →"}
           </button>
         </form>
 
