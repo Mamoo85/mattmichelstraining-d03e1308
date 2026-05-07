@@ -22827,6 +22827,48 @@ export type Database = {
         }
         Relationships: []
       }
+      trial_abandonment_state: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          email: string
+          emailed_at: string | null
+          id: string
+          last_event: string | null
+          last_event_at: string
+          metadata: Json
+          product: string | null
+          resume_token: string
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          email: string
+          emailed_at?: string | null
+          id?: string
+          last_event?: string | null
+          last_event_at?: string
+          metadata?: Json
+          product?: string | null
+          resume_token?: string
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          email?: string
+          emailed_at?: string | null
+          id?: string
+          last_event?: string | null
+          last_event_at?: string
+          metadata?: Json
+          product?: string | null
+          resume_token?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       trial_attribution: {
         Row: {
           campaign: string | null
