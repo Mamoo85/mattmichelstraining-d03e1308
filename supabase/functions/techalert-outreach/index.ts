@@ -7,6 +7,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { dwaColdEmail } from "../_shared/dwa-email.ts";
 import { teaserCardHtml } from "../_shared/teaser-card.ts";
+import { isBlocked } from "../_shared/outreach-blocklist.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -167,6 +168,16 @@ serve(async (req) => {
       if ((recentSends ?? 0) > 0) {
         await sb.from("techalert_prospect_targets")
           .update({ outreach_status: "frequency_capped", outreach_sent_at: new Date().toISOString() })
+          .eq("id", t.id);
+        skipped++;
+        continue;
+      }
+
+      // Blocklist gate: skip paying DWA clients and permanently suppressed contacts.
+      const blockStatus = await isBlocked(sb, { email: t.owner_email, business_name: t.company_name });
+      if (blockStatus.blocked) {
+        await sb.from("techalert_prospect_targets")
+          .update({ outreach_status: "blocklisted", outreach_sent_at: new Date().toISOString() })
           .eq("id", t.id);
         skipped++;
         continue;
