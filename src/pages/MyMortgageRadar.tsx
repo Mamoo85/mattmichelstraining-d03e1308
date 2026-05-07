@@ -271,6 +271,9 @@ export default function MyMortgageRadar() {
   };
 
   const openDraft = (l: Lead, channel: "sms" | "email" | "call_note") => {
+    if (channel === "sms") trackEvent("mortgage_radar_draft_sms", l);
+    else if (channel === "email") trackEvent("mortgage_radar_draft_email", l);
+    else trackEvent("mortgage_radar_draft_call_note", l);
     setDraftFor(l);
     setDraftChannel(channel);
     const body = (l.suggested_opener || "")
