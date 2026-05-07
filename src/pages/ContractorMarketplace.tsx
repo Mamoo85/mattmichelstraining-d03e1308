@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
@@ -7,6 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Zap, Home, Clock, CheckCircle, Lock, Phone } from "lucide-react";
+import { trackTrialEvent } from "@/lib/trialFunnel";
+
+const MKT_PRODUCT_KEY = "contractor_marketplace";
 
 const TRADES = ["All", "Electrical", "HVAC", "Plumbing", "Roofing", "Gutters", "Siding", "Boiler"];
 
