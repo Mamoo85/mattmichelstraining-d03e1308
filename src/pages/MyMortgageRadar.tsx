@@ -187,7 +187,7 @@ export default function MyMortgageRadar() {
           client_id: clientId,
           ...extra,
         },
-        user_agent: typeof navigator !== "undefined" ? navigator.navigator?.userAgent ?? navigator.userAgent : null,
+        user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
         referrer: typeof document !== "undefined" ? document.referrer || null : null,
       }).then(() => {}, () => {});
     } catch {
