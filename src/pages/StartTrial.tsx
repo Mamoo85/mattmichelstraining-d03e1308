@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { trackTrialEvent } from "@/lib/trialFunnel";
+import StickyTrialCTA from "@/components/trial/StickyTrialCTA";
 
 // ────────────────────────────────────────────────────────────────────
 // Canonical product config
@@ -157,8 +158,22 @@ function normalizeKey(raw: string): ResolvedProductKey | null {
   return ALIASES[k] ?? GENERIC_PRODUCT_DEFAULTS[k] ?? null;
 }
 
+// Curated picker for the no-product fallback. Order = priority on the page.
+const PICKER_OPTIONS: { key: CanonicalKey; tagline: string }[] = [
+  { key: "missed_call_catch", tagline: "Auto-text every missed call in 60 seconds" },
+  { key: "trade_radar_roofing", tagline: "Storm + permit + homeowner leads, daily" },
+  { key: "trade_radar_hvac", tagline: "Aging-system + heatwave HVAC leads" },
+  { key: "trade_radar_plumbing", tagline: "Major permits + water-damage signals" },
+  { key: "field_desk", tagline: "Tech GPS + dispatch + customer SMS" },
+  { key: "site_radar", tagline: "Identify companies visiting your site" },
+  { key: "mortgage_radar", tagline: "Refi + purchase intent leads, daily" },
+  { key: "phone_answering", tagline: "AI receptionist that books jobs 24/7" },
+  { key: "bundle_revenue_suite", tagline: "FieldDesk + SiteRadar + Missed-Call" },
+];
+
 export default function StartTrial() {
   const [params] = useSearchParams();
+  const navigate = useNavigate();
   const rawProduct = params.get("product") || "";
   const canonical = useMemo(() => normalizeKey(rawProduct), [rawProduct]);
   const config = canonical ? PRODUCTS[canonical] : null;
@@ -200,17 +215,44 @@ export default function StartTrial() {
 
   if (!config) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0a1628] text-white p-6">
-        <div className="max-w-md text-center space-y-3">
-          <h1 className="text-2xl font-bold">We're getting your trial ready</h1>
-          <p className="text-white/70">
-            One sec — text Matt at <a className="text-[#00d4ff] underline" href="sms:+13139921219">(313) 992-1219</a> or
-            email <a className="text-[#00d4ff] underline" href="mailto:matt@detroitwebagent.com">matt@detroitwebagent.com</a> with the product
-            you wanted and we'll have you set up in minutes.
-          </p>
-          {rawProduct && (
-            <p className="text-xs text-white/40">ref: {rawProduct}</p>
-          )}
+      <div className="min-h-screen bg-gradient-to-b from-[#0a1628] to-[#0d1f3c] text-white">
+        <div className="max-w-3xl mx-auto p-6 sm:p-10">
+          <div className="text-center mb-8">
+            <div className="text-[#00d4ff] text-sm font-bold tracking-wider uppercase">Detroit Web Agency</div>
+            <h1 className="text-3xl sm:text-4xl font-black mt-2">Pick a product to start your free trial</h1>
+            <p className="text-white/70 mt-3">7 days free · no credit card · cancel in one click</p>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-3">
+            {PICKER_OPTIONS.map((opt) => {
+              const def = PRODUCTS[opt.key];
+              const pitch = PRODUCT_PITCH[opt.key];
+              return (
+                <button
+                  key={opt.key}
+                  type="button"
+                  onClick={() => {
+                    trackTrialEvent("form_focus", opt.key, { metadata: { from: "picker" } });
+                    const next = new URLSearchParams(params);
+                    next.set("product", opt.key);
+                    navigate(`/start-trial?${next.toString()}`, { replace: true });
+                  }}
+                  className="text-left bg-[#0a1628]/60 hover:bg-[#0a1628] border border-[#00d4ff]/30 hover:border-[#00d4ff] rounded-xl p-4 transition"
+                >
+                  <div className="flex items-baseline justify-between gap-2">
+                    <div className="font-bold text-white">{def.label}</div>
+                    {pitch && <div className="text-xs text-[#00d4ff] font-semibold whitespace-nowrap">{pitch.price}</div>}
+                  </div>
+                  <div className="text-sm text-white/70 mt-1">{opt.tagline}</div>
+                  <div className="text-xs text-[#00d4ff] mt-2 font-bold">Start free trial →</div>
+                </button>
+              );
+            })}
+          </div>
+          <div className="text-center text-xs text-white/50 mt-6">
+            Don't see what you want? Text Matt at{" "}
+            <a className="text-[#00d4ff] underline font-bold" href="sms:+13139921219">(313) 992-1219</a>
+            {rawProduct && <span className="block mt-1 text-white/30">ref: {rawProduct}</span>}
+          </div>
         </div>
       </div>
     );
@@ -225,18 +267,22 @@ export default function StartTrial() {
   }
 
   function buildPayload() {
+    // Smart fallback for business name so leaving it blank doesn't break checkout.
+    const emailLocal = (email.split("@")[0] || "").replace(/[._-]/g, " ").trim();
+    const productLabel = config?.label || "your business";
+    const effectiveBusiness =
+      businessName.trim() || (emailLocal ? `${emailLocal}'s ${productLabel}` : productLabel);
     const base: Record<string, unknown> = {
       email,
       name: "",
-      contact_name: businessName,
+      contact_name: effectiveBusiness,
       phone,
       city: "",
       website,
-      // Different checkout fns expect different cases — send all common variants.
-      businessName,
-      business_name: businessName,
-      company: businessName,
-      company_name: businessName,
+      businessName: effectiveBusiness,
+      business_name: effectiveBusiness,
+      company: effectiveBusiness,
+      company_name: effectiveBusiness,
     };
     if (config!.vertical) {
       base.vertical = config!.vertical;
@@ -325,7 +371,7 @@ export default function StartTrial() {
           </div>
         )}
 
-        <form onSubmit={startCheckout} className="bg-[#0a1628]/60 border border-[#00d4ff]/30 rounded-xl p-6 space-y-4">
+        <form id="trial-form" onSubmit={startCheckout} className="bg-[#0a1628]/60 border border-[#00d4ff]/30 rounded-xl p-6 space-y-4 pb-24 md:pb-6">
           <label className="block">
             <span className="text-sm text-white/70">Work email</span>
             <input
@@ -334,17 +380,18 @@ export default function StartTrial() {
             />
           </label>
           <label className="block">
-            <span className="text-sm text-white/70">Business name</span>
+            <span className="text-sm text-white/70">Business name <span className="text-white/40 font-normal">(optional)</span></span>
             <input
-              required value={businessName} onChange={(e) => setBusinessName(e.target.value)} onFocus={handleFocus}
+              value={businessName} onChange={(e) => setBusinessName(e.target.value)} onFocus={handleFocus}
+              placeholder="We'll fill it in if you skip"
               className="w-full mt-1 bg-[#0a1628] border border-white/20 rounded px-3 py-2 text-white"
             />
           </label>
           {config.needsPhone && (
             <label className="block">
-              <span className="text-sm text-white/70">Business phone</span>
+              <span className="text-sm text-white/70">Business phone <span className="text-white/40 font-normal">(optional · for SMS lead alerts)</span></span>
               <input
-                required value={phone} onChange={(e) => setPhone(e.target.value)} onFocus={handleFocus}
+                type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} onFocus={handleFocus}
                 placeholder="(313) 555-0123"
                 className="w-full mt-1 bg-[#0a1628] border border-white/20 rounded px-3 py-2 text-white"
               />
@@ -386,6 +433,10 @@ export default function StartTrial() {
           </p>
         </form>
       </div>
+      <StickyTrialCTA
+        label={config.trial ? "Start 7-day free trial →" : "Continue →"}
+        targetFormId="trial-form"
+      />
     </div>
   );
 }

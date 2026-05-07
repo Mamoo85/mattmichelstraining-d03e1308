@@ -2308,3 +2308,6 @@ verify_jwt = false
 
 [functions.create-blueprint-checkout]
 verify_jwt = false
+
+[functions.trial-abandonment-sweeper]
+verify_jwt = false
