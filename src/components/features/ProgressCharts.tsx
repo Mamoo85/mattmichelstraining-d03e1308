@@ -20,6 +20,7 @@ const LogHistory = lazyRetry(() => import("@/components/progress/LogHistory"));
 const RecoveryChart = lazyRetry(() => import("@/components/progress/RecoveryChart"));
 const AiRecoveryAdvisor = lazyRetry(() => import("@/components/progress/AiRecoveryAdvisor"));
 const LiftInsights = lazyRetry(() => import("@/components/progress/LiftInsights"));
+const Big3ProgressChart = lazyRetry(() => import("@/components/progress/Big3ProgressChart"));
 
 const ChartFallback = () => (
   <div className="flex justify-center py-6">
