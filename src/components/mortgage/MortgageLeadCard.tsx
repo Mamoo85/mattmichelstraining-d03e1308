@@ -5,6 +5,7 @@ import { MapPin, MessageSquare, Phone, ChevronDown, ChevronUp, Check, ImageOff }
 import { Skeleton } from "@/components/ui/skeleton";
 import ScoreBreakdown from "@/components/shared/ScoreBreakdown";
 import LeadActionBar from "@/components/trade-radar/LeadActionBar";
+import SignalHistoryTimeline from "@/components/mortgage/SignalHistoryTimeline";
 
 /** Skeleton placeholder shown while the leads list is loading. */
 export function MortgageLeadCardSkeleton() {
