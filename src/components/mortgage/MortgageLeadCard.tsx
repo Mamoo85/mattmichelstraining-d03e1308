@@ -2,8 +2,40 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MapPin, MessageSquare, Phone, ChevronDown, ChevronUp, Check, ImageOff } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import ScoreBreakdown from "@/components/shared/ScoreBreakdown";
 import LeadActionBar from "@/components/trade-radar/LeadActionBar";
+
+/** Skeleton placeholder shown while the leads list is loading. */
+export function MortgageLeadCardSkeleton() {
+  return (
+    <Card className="bg-[#0a1628] border border-[#1e3a5f]">
+      <CardHeader className="pb-3">
+        <div className="flex items-start gap-3">
+          <Skeleton className="shrink-0 w-[110px] h-[82px] rounded-md bg-[#1e3a5f]/40" />
+          <div className="flex-1 min-w-0 space-y-2">
+            <Skeleton className="h-5 w-3/4 bg-[#1e3a5f]/40" />
+            <Skeleton className="h-3 w-1/2 bg-[#1e3a5f]/30" />
+          </div>
+          <div className="text-right space-y-2">
+            <Skeleton className="h-7 w-14 bg-[#1e3a5f]/40" />
+            <Skeleton className="h-2 w-16 bg-[#1e3a5f]/30" />
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <Skeleton className="h-4 w-full bg-[#1e3a5f]/30" />
+        <Skeleton className="h-4 w-5/6 bg-[#1e3a5f]/30" />
+        <Skeleton className="h-16 w-full bg-[#1e3a5f]/30" />
+        <div className="flex gap-2 pt-1">
+          <Skeleton className="h-8 w-28 bg-[#1e3a5f]/40" />
+          <Skeleton className="h-8 w-24 bg-[#1e3a5f]/30" />
+          <Skeleton className="h-8 w-24 bg-[#1e3a5f]/30" />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 export type MortgageLead = {
   id: string;
@@ -56,8 +88,13 @@ interface Props {
 
 export default function MortgageLeadCard({ lead: l, clientId, onMarkWorking, onDraftSms, onDraftEmail }: Props) {
   const [expanded, setExpanded] = useState(false);
+  const [thumbLoaded, setThumbLoaded] = useState(false);
+  const [thumbErrored, setThumbErrored] = useState(false);
+  const [largeLoaded, setLargeLoaded] = useState(false);
+  const [largeErrored, setLargeErrored] = useState(false);
   const isWorking = l.pipeline_stage === "working" || l.pipeline_stage === "claimed";
   const thumb = l.street_view_url;
+  const showThumbImg = !!thumb && !thumbErrored;
   const lastSale = fmtMoney(l.last_sale_price_cents);
   const equityLow = fmtMoney(l.equity_range_low_cents);
   const equityHigh = fmtMoney(l.equity_range_high_cents);
@@ -73,13 +110,23 @@ export default function MortgageLeadCard({ lead: l, clientId, onMarkWorking, onD
           <button
             type="button"
             onClick={() => setExpanded((v) => !v)}
-            className="shrink-0 w-[110px] h-[82px] rounded-md overflow-hidden border border-[#1e3a5f] bg-[#030711] flex items-center justify-center hover:border-[#00d4ff]/60 transition-colors"
+            className="relative shrink-0 w-[110px] h-[82px] rounded-md overflow-hidden border border-[#1e3a5f] bg-[#030711] flex items-center justify-center hover:border-[#00d4ff]/60 transition-colors"
             title={thumb ? "Click for more details" : "No Street View available"}
           >
-            {thumb ? (
-              <img src={thumb} alt={l.address || "Property"} className="w-full h-full object-cover" loading="lazy" />
+            {showThumbImg ? (
+              <>
+                {!thumbLoaded && <Skeleton className="absolute inset-0 bg-[#1e3a5f]/40" />}
+                <img
+                  src={thumb}
+                  alt={l.address || "Property"}
+                  className={`w-full h-full object-cover transition-opacity ${thumbLoaded ? "opacity-100" : "opacity-0"}`}
+                  loading="lazy"
+                  onLoad={() => setThumbLoaded(true)}
+                  onError={() => { setThumbErrored(true); setThumbLoaded(true); }}
+                />
+              </>
             ) : (
-              <ImageOff className="w-5 h-5 text-[#475569]" />
+              <ImageOff className="w-5 h-5 text-[#475569]" aria-label={thumb ? "Street View failed to load" : "No Street View available"} />
             )}
           </button>
           <div className="flex-1 min-w-0">
@@ -131,11 +178,29 @@ export default function MortgageLeadCard({ lead: l, clientId, onMarkWorking, onD
         </button>
         {expanded && (
           <div className="bg-[#030711] border border-[#1e3a5f] rounded-md p-3 mb-3 space-y-3">
-            {thumb && (
+            {thumb && !largeErrored ? (
               <a href={thumb} target="_blank" rel="noopener noreferrer" className="block">
-                <img src={thumb} alt={l.address || "Property"} className="w-full max-h-[260px] object-cover rounded border border-[#1e3a5f]" loading="lazy" />
+                <div className="relative w-full min-h-[160px] rounded border border-[#1e3a5f] overflow-hidden bg-[#0a1628]">
+                  {!largeLoaded && <Skeleton className="absolute inset-0 bg-[#1e3a5f]/40" />}
+                  <img
+                    src={thumb}
+                    alt={l.address || "Property"}
+                    className={`w-full max-h-[260px] object-cover transition-opacity ${largeLoaded ? "opacity-100" : "opacity-0"}`}
+                    loading="lazy"
+                    onLoad={() => setLargeLoaded(true)}
+                    onError={() => { setLargeErrored(true); setLargeLoaded(true); }}
+                  />
+                </div>
                 <p className="text-[10px] text-[#64748b] mt-1 text-center">Google Street View · click to open full size</p>
               </a>
+            ) : (
+              <div className="w-full h-[120px] rounded border border-dashed border-[#1e3a5f] bg-[#0a1628] flex flex-col items-center justify-center text-[#64748b]">
+                <ImageOff className="w-5 h-5 mb-1" />
+                <p className="text-[11px]">{thumb ? "Street View unavailable for this address" : "No Street View imagery yet"}</p>
+              </div>
+            )}
+            {!l.human_summary && !l.full_name && !l.phone && !l.email && l.year_built == null && !sqft && !lastSale && !equityLow && !equityHigh && highlights.length === 0 && history.length === 0 && (
+              <p className="text-xs text-[#64748b] italic text-center py-2">Property details still being enriched — check back shortly.</p>
             )}
             {l.human_summary && (
               <div>
