@@ -11,16 +11,15 @@ import ManageBillingButton from "@/components/billing/ManageBillingButton";
 import LeadGuaranteeBar from "@/components/shared/LeadGuaranteeBar";
 import CrmWebhookSettings from "@/components/shared/CrmWebhookSettings";
 import EmptyDashboardState from "@/components/shared/EmptyDashboardState";
-import { Home, Lock, Phone, MessageSquare, MapPin, Bell, Download, Send, Check, X, List, Map as MapIcon, Columns } from "lucide-react";
+import { Home, Lock, Bell, Download, Send, Check, X, List, Map as MapIcon, Columns } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import MortgageRadarMap from "@/components/mortgage/MortgageRadarMap";
 import MortgageRadarPipeline from "@/components/mortgage/MortgageRadarPipeline";
 import MortgageRadarWelcome from "@/components/mortgage/MortgageRadarWelcome";
 import MortgageRadarSeedLead from "@/components/mortgage/MortgageRadarSeedLead";
-import LeadActionBar from "@/components/trade-radar/LeadActionBar";
+import MortgageLeadCard from "@/components/mortgage/MortgageLeadCard";
 import RadarExportBar from "@/components/shared/RadarExportBar";
 import OnboardingChecklist from "@/components/shared/OnboardingChecklist";
-import ScoreBreakdown from "@/components/shared/ScoreBreakdown";
 
 type Lead = {
   id: string;
@@ -40,6 +39,17 @@ type Lead = {
   best_call_window: string | null;
   created_at: string;
   pipeline_stage?: string | null;
+  street_view_url?: string | null;
+  intel_highlights?: any;
+  year_built?: number | null;
+  building_sqft?: number | null;
+  last_sale_price_cents?: number | null;
+  last_sale_date?: string | null;
+  estimated_equity?: number | null;
+  equity_range_low_cents?: number | null;
+  equity_range_high_cents?: number | null;
+  human_summary?: string | null;
+  signal_history?: any;
 };
 
 type Outreach = {
@@ -112,7 +122,7 @@ export default function MyMortgageRadar() {
 
       const since = new Date(Date.now() - 90 * 86_400_000).toISOString();
       let query = (supabase.from as any)("mortgage_radar_leads")
-        .select("id, full_name, address, city, zip, phone, email, signal_type, signal_source, signal_detail, signal_date, score, signal_count, suggested_opener, best_call_window, created_at, pipeline_stage")
+        .select("id, full_name, address, city, zip, phone, email, signal_type, signal_source, signal_detail, signal_date, score, signal_count, suggested_opener, best_call_window, created_at, pipeline_stage, street_view_url, intel_highlights, year_built, building_sqft, last_sale_price_cents, last_sale_date, estimated_equity, equity_range_low_cents, equity_range_high_cents, human_summary, signal_history")
         .gte("created_at", since)
         .order("score", { ascending: false })
         .order("created_at", { ascending: false })
@@ -163,8 +173,18 @@ export default function MyMortgageRadar() {
   const warmCount = useMemo(() => filtered.filter(l => l.score >= 7 && l.score < 9).length, [filtered]);
   const types = useMemo(() => Array.from(new Set(leads.map(l => l.signal_type))), [leads]);
 
-  const claimLead = async (_leadId: string) => {
-    toast.info("Claim system requires LO login — coming next iteration. For now, draft your outreach.");
+  const markWorking = async (lead: Lead) => {
+    const prevStage = lead.pipeline_stage || "active";
+    setLeads(prev => prev.map(x => x.id === lead.id ? { ...x, pipeline_stage: "working" } : x));
+    const { error } = await (supabase.from as any)("mortgage_radar_leads")
+      .update({ pipeline_stage: "working" })
+      .eq("id", lead.id);
+    if (error) {
+      setLeads(prev => prev.map(x => x.id === lead.id ? { ...x, pipeline_stage: prevStage } : x));
+      toast.error("Couldn't mark working — try again");
+      return;
+    }
+    toast.success("Marked as working");
   };
 
   const exportCsv = () => {
@@ -502,63 +522,14 @@ export default function MyMortgageRadar() {
                 </div>
                 <div className="grid gap-4">
                   {filtered.map((l) => (
-                    <Card key={l.id} className={`bg-[#0a1628] border ${l.score >= 9 ? "border-[#00d4ff]" : "border-[#1e3a5f]"}`}>
-                      <CardHeader className="pb-3">
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <CardTitle className="text-white text-lg">{l.address || "Address pending"}</CardTitle>
-                            <p className="text-xs text-[#94a3b8] mt-1 flex items-center gap-1">
-                              <MapPin className="w-3 h-3" /> {l.city || ""} {l.zip || ""} · {l.signal_source}
-                              {(l.signal_count || 1) > 1 && (
-                                <span className="ml-2 px-1.5 py-0.5 rounded bg-[#00d4ff]/20 text-[#00d4ff] font-bold">×{l.signal_count} signals</span>
-                              )}
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <p className={`text-2xl font-extrabold ${l.score >= 9 ? "text-[#00d4ff]" : "text-white"}`}>{l.score}/10</p>
-                            <p className="text-[10px] text-[#64748b] uppercase tracking-widest">{l.signal_type.replace(/_/g, " ")}</p>
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        {l.signal_detail && <p className="text-sm text-[#cbd5e1] mb-3">{l.signal_detail}</p>}
-                        <div className="mb-3">
-                          <ScoreBreakdown
-                            score={l.score}
-                            signalType={l.signal_type}
-                            signalLabel={l.signal_type.replace(/_/g, " ")}
-                            signalDate={(l as any).signal_date ?? null}
-                            sourceMethod={l.signal_source}
-                            signalCount={l.signal_count ?? null}
-                          />
-                        </div>
-                        {l.suggested_opener && (
-                          <div className="bg-[#030711] border border-[#1e3a5f] rounded p-3 mb-3">
-                            <p className="text-[10px] uppercase tracking-widest text-[#00d4ff] mb-1">Suggested opener</p>
-                            <p className="text-sm text-[#cbd5e1] italic">"{l.suggested_opener}"</p>
-                          </div>
-                        )}
-                        <div className="flex flex-wrap gap-2">
-                          <Button size="sm" onClick={() => claimLead(l.id)} className="bg-[#00d4ff] text-black hover:bg-[#00d4ff]/90 font-bold">
-                            <Lock className="w-3 h-3 mr-1" /> Claim 7d
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={() => openDraft(l, "sms")} className="border-[#1e3a5f] text-white hover:bg-[#1e3a5f]/40">
-                            <MessageSquare className="w-3 h-3 mr-1" /> Draft SMS
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={() => openDraft(l, "email")} className="border-[#1e3a5f] text-white hover:bg-[#1e3a5f]/40">
-                            ✉️ Draft email
-                          </Button>
-                          {l.best_call_window && (
-                            <span className="text-xs text-[#94a3b8] flex items-center gap-1 ml-auto">
-                              <Phone className="w-3 h-3" /> Best: {l.best_call_window}
-                            </span>
-                          )}
-                        </div>
-                        {clientId && (
-                          <LeadActionBar leadId={l.id} clientId={clientId} product="mortgage" />
-                        )}
-                      </CardContent>
-                    </Card>
+                    <MortgageLeadCard
+                      key={l.id}
+                      lead={l}
+                      clientId={clientId}
+                      onMarkWorking={markWorking}
+                      onDraftSms={(lead) => openDraft(lead, "sms")}
+                      onDraftEmail={(lead) => openDraft(lead, "email")}
+                    />
                   ))}
                 </div>
                 </>
