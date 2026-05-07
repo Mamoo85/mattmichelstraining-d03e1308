@@ -128,6 +128,7 @@ export default function MortgageLeadCard({ lead: l, clientId, onMarkWorking, onD
             ) : (
               <ImageOff className="w-5 h-5 text-[#475569]" aria-label={thumb ? "Street View failed to load" : "No Street View available"} />
             )}
+          </button>
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
