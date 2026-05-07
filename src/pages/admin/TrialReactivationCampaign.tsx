@@ -173,10 +173,9 @@ export default function TrialReactivationCampaign() {
         businessName: previewName,
         trade: selectedTrade,
         city: previewCity,
-        trialUrl,
-        // @ts-ignore
         state: previewState,
-      } as any),
+        trialUrl,
+      }),
     [previewName, selectedTrade, previewCity, previewState, trialUrl]
   );
 
