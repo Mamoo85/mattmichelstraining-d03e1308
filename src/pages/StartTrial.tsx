@@ -338,10 +338,17 @@ export default function StartTrial() {
 
   const pitch = canonical ? PRODUCT_PITCH[canonical] : undefined;
   const [focusFired, setFocusFired] = useState(false);
+  const [emailLocked, setEmailLocked] = useState(false);
   const handleFocus = () => {
     if (focusFired) return;
     setFocusFired(true);
     trackTrialEvent("form_focus", canonical ?? rawProduct ?? null, { email });
+  };
+  const saveSpot = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !email.includes("@")) return;
+    setEmailLocked(true);
+    trackTrialEvent("save_spot", canonical ?? rawProduct ?? null, { email });
   };
 
   return (
