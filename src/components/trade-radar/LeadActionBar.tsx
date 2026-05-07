@@ -14,6 +14,9 @@ interface LeadActionBarProps {
   product: "trade" | "mortgage";
   initialStatus?: ActionStatus;
   initialSnoozeUntil?: string | null;
+  /** Optional dashboard auth — passed to backend when user is anon (token link) */
+  email?: string;
+  token?: string;
 }
 
 const TABLE: Record<"trade" | "mortgage", string> = {
@@ -27,6 +30,8 @@ export default function LeadActionBar({
   product,
   initialStatus = "new",
   initialSnoozeUntil = null,
+  email,
+  token,
 }: LeadActionBarProps) {
   const [status, setStatus] = useState<ActionStatus>(initialStatus);
   const [snoozeUntil, setSnoozeUntil] = useState<string | null>(initialSnoozeUntil);
@@ -40,16 +45,28 @@ export default function LeadActionBar({
   async function applyStatus(next: ActionStatus, snoozeDate: string | null = null) {
     setSaving(true);
     try {
-      const payload = {
-        client_id: clientId,
-        lead_id: leadId,
-        status: next,
-        snooze_until: snoozeDate,
-      };
-      const { error } = await (supabase.from as any)(TABLE[product]).upsert(payload, {
-        onConflict: "client_id,lead_id",
+      // Prefer backend function so token-based (anon) dashboard users can save through RLS.
+      const { data, error } = await supabase.functions.invoke("claim-trade-radar-lead", {
+        body: {
+          product,
+          client_id: clientId,
+          lead_id: leadId,
+          status: next,
+          snooze_until: snoozeDate,
+          email,
+          token,
+        },
       });
-      if (error) throw error;
+      if (error || (data as any)?.error) {
+        // Fallback: try direct upsert (works for logged-in admin/owner)
+        const { error: directErr } = await (supabase.from as any)(TABLE[product]).upsert({
+          client_id: clientId,
+          lead_id: leadId,
+          status: next,
+          snooze_until: snoozeDate,
+        }, { onConflict: "client_id,lead_id" });
+        if (directErr) throw (error || directErr);
+      }
       setStatus(next);
       setSnoozeUntil(snoozeDate);
       toast.success(

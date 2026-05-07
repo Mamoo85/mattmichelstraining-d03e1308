@@ -1,5 +1,8 @@
 project_id = "zmyczlfuufhngzovkjdh"
 
+[functions.claim-trade-radar-lead]
+verify_jwt = false
+
 [functions.e2e-link-auditor]
 verify_jwt = false
 
