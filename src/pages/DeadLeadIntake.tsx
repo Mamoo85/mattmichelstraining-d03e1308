@@ -429,26 +429,33 @@ export default function DeadLeadIntake() {
           </Field>
 
           {error && (
-            <div>
-              <p style={{ color: "#ef4444", fontSize: 13, margin: 0 }}>{error}</p>
-              {billingRedirectUrl && (
+            <div style={{ padding: 14, background: "#7f1d1d20", border: "1px solid #ef444460", borderRadius: 8 }}>
+              <p style={{ color: "#fca5a5", fontSize: 13, margin: "0 0 10px", fontWeight: 600 }}>{error}</p>
+              {billingRedirectUrl ? (
                 <button
-                  onClick={() => window.location.href = billingRedirectUrl}
-                  style={{
-                    marginTop: 12,
-                    padding: "12px 24px",
-                    background: "#00d4ff",
-                    color: "#0a1628",
-                    border: "none",
-                    borderRadius: 8,
-                    fontWeight: 700,
-                    fontSize: 14,
-                    cursor: "pointer",
-                    width: "100%",
-                  }}
+                  type="button"
+                  onClick={() => { trackTrialEvent("checkout_redirect", PRODUCT_KEY, { email: form.email }); window.location.href = billingRedirectUrl; }}
+                  style={{ padding: "12px 24px", background: "#00d4ff", color: "#0a1628", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 14, cursor: "pointer", width: "100%" }}
                 >
                   Set Up Billing — $50/Revival →
                 </button>
+              ) : (
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  <a
+                    href={`sms:${SUPPORT_PHONE_TEL}?&body=${encodeURIComponent("Hey Matt — got an error on the dead-lead intake page. Can you help?")}`}
+                    onClick={() => trackEscape("sms")}
+                    style={{ flex: 1, minWidth: 130, padding: "10px 14px", background: "#00d4ff", color: "#0a1628", borderRadius: 7, fontWeight: 700, fontSize: 13, textAlign: "center", textDecoration: "none" }}
+                  >
+                    💬 Text Matt
+                  </a>
+                  <a
+                    href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Dead Lead Intake error")}&body=${encodeURIComponent("Hi Matt — I tried to submit the dead-lead intake form but it errored. Here's my list:\n\n")}`}
+                    onClick={() => trackEscape("email")}
+                    style={{ flex: 1, minWidth: 130, padding: "10px 14px", background: "#0a1628", color: "#00d4ff", border: "1px solid #00d4ff60", borderRadius: 7, fontWeight: 700, fontSize: 13, textAlign: "center", textDecoration: "none" }}
+                  >
+                    ✉️ Email Matt
+                  </a>
+                </div>
               )}
             </div>
           )}
