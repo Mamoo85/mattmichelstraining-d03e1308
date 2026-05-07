@@ -1,9 +1,15 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import SEOHead from "@/components/layout/SEOHead";
 import { supabase } from "@/integrations/supabase/client";
 import ReceiptStatusBanner from "@/components/checkout/ReceiptStatusBanner";
 import CheckEmailCard from "@/components/checkout/CheckEmailCard";
 import ActionButton from "@/components/ui/action-button";
+import { trackTrialEvent } from "@/lib/trialFunnel";
+
+const PRODUCT_KEY = "dead_lead_reactivation";
+const SUPPORT_PHONE_DISPLAY = "(313) 992-1219";
+const SUPPORT_PHONE_TEL = "+13139921219";
+const SUPPORT_EMAIL = "matt@detroitwebagent.com";
 
 const TRADES = ["HVAC", "Plumbing", "Roofing", "Electrical", "General Contractor", "Landscaping", "Painting", "Other"];
 
