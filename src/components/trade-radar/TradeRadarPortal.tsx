@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "sonner";
 import SEOHead from "@/components/layout/SEOHead";
 import DWASuiteNav from "@/components/shared/DWASuiteNav";
 import ManageBillingButton from "@/components/billing/ManageBillingButton";
@@ -87,7 +86,6 @@ export default function TradeRadarPortal({
             ? "Your dashboard link is invalid or expired — request a new one from your weekly digest email."
             : "Could not load this dashboard link. Text Matt at (313) 992-1219 and we'll fix it now.");
         }
-        setNotEnrolled(true);
         setLoading(false);
         return;
       }
