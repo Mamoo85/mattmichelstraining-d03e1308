@@ -267,18 +267,22 @@ export default function StartTrial() {
   }
 
   function buildPayload() {
+    // Smart fallback for business name so leaving it blank doesn't break checkout.
+    const emailLocal = (email.split("@")[0] || "").replace(/[._-]/g, " ").trim();
+    const productLabel = config?.label || "your business";
+    const effectiveBusiness =
+      businessName.trim() || (emailLocal ? `${emailLocal}'s ${productLabel}` : productLabel);
     const base: Record<string, unknown> = {
       email,
       name: "",
-      contact_name: businessName,
+      contact_name: effectiveBusiness,
       phone,
       city: "",
       website,
-      // Different checkout fns expect different cases — send all common variants.
-      businessName,
-      business_name: businessName,
-      company: businessName,
-      company_name: businessName,
+      businessName: effectiveBusiness,
+      business_name: effectiveBusiness,
+      company: effectiveBusiness,
+      company_name: effectiveBusiness,
     };
     if (config!.vertical) {
       base.vertical = config!.vertical;
