@@ -278,32 +278,112 @@ Deno.serve(async (req) => {
     }
   }
 
-  // Provision trade_radar_clients row so the portal can find the user immediately.
-  // Trial users without this row always see "not enrolled" — this fixes that.
+  // Provision the product's NATIVE client row + capture the native token the
+  // dashboard expects. Without this, every trial dashboard shows "not enrolled"
+  // because the portal queries product-specific tables (not radar_trials).
   const tradeVertical = TRADE_RADAR_VERTICAL[product];
-  if (tradeVertical) {
-    const zipCodes = Array.isArray(body.zip_codes) && body.zip_codes.length > 0 ? body.zip_codes : [];
-    const { error: tradeClientError } = await sb.from("trade_radar_clients" as any).upsert({
-      email,
-      vertical: tradeVertical,
-      business_name: body.business_name || null,
-      phone: body.phone || null,
-      zip_codes: zipCodes,
-      active: true,
-      trial_ends_at: expiresAt,
-    }, { onConflict: "email,vertical" });
+  let nativeToken: string | null = null;
+  let useNativeTokenAsTrial = false;
 
-    if (tradeClientError) {
-      console.error("[start-radar-trial] trade_radar_clients upsert", tradeClientError);
-      return new Response(JSON.stringify({ error: "trade_client_provision_failed", detail: tradeClientError.message }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+  try {
+    if (tradeVertical) {
+      const zipCodes = Array.isArray(body.zip_codes) && body.zip_codes.length > 0 ? body.zip_codes : [];
+      const dt = genToken();
+      const { data: row, error } = await sb.from("trade_radar_clients" as any).upsert({
+        email,
+        vertical: tradeVertical,
+        business_name: body.business_name || null,
+        phone: body.phone || null,
+        zip_codes: zipCodes,
+        active: true,
+        trial_ends_at: expiresAt,
+        dashboard_token: dt,
+      }, { onConflict: "email,vertical" }).select("dashboard_token").maybeSingle();
+      if (error) throw error;
+      nativeToken = row?.dashboard_token || dt;
+    } else if (product === "missed_call") {
+      const dt = genToken();
+      const { data: row, error } = await sb.from("missed_call_clients").upsert({
+        email,
+        business_name: body.business_name || null,
+        phone: body.phone || null,
+        active: true,
+        dashboard_token: dt,
+      }, { onConflict: "email" }).select("dashboard_token").maybeSingle();
+      if (error) throw error;
+      nativeToken = row?.dashboard_token || dt;
+      useNativeTokenAsTrial = true;
+    } else if (product === "contractor_leads") {
+      const dt = genToken();
+      const { data: row, error } = await sb.from("contractor_clients").upsert({
+        email,
+        business_name: body.business_name || null,
+        name: body.business_name || null,
+        phone: body.phone || null,
+        city: body.city || null,
+        state: body.state || "MI",
+        active: true,
+        roi_token: dt,
+      }, { onConflict: "email" }).select("roi_token").maybeSingle();
+      if (error) throw error;
+      nativeToken = row?.roi_token || dt;
+      useNativeTokenAsTrial = true;
+    } else if (product === "fielddesk" || product === "site_radar") {
+      const dt = genToken();
+      const { data: row, error } = await sb.from("field_crm_clients").upsert({
+        email,
+        business_name: body.business_name || null,
+        phone: body.phone || null,
+        status: "active",
+        dispatch_token: dt,
+      }, { onConflict: "email" }).select("dispatch_token").maybeSingle();
+      if (error) throw error;
+      nativeToken = row?.dispatch_token || dt;
+      useNativeTokenAsTrial = true;
+    } else if (product === "techalert") {
+      const dt = genToken();
+      const { data: row, error } = await sb.from("hire_alert_clients").upsert({
+        owner_email: email,
+        company_name: body.business_name || null,
+        owner_phone: body.phone || null,
+        active: true,
+        trial_status: founder ? "founder" : "trial",
+        trial_started_at: new Date().toISOString(),
+        trial_ends_at: expiresAt,
+        dashboard_token: dt,
+      }, { onConflict: "owner_email" }).select("dashboard_token").maybeSingle();
+      if (error) throw error;
+      nativeToken = row?.dashboard_token || dt;
+      useNativeTokenAsTrial = true;
+    } else if (product === "industry_pulse") {
+      const dt = genToken();
+      const { data: row, error } = await sb.from("industry_pulse_clients").upsert({
+        email,
+        company_name: body.business_name || null,
+        phone: body.phone || null,
+        active: true,
+        dashboard_token: dt,
+      }, { onConflict: "email" }).select("dashboard_token").maybeSingle();
+      if (error) throw error;
+      nativeToken = row?.dashboard_token || dt;
+      useNativeTokenAsTrial = true;
     }
+  } catch (provErr: any) {
+    console.error("[start-radar-trial] native provisioning failed", product, provErr);
+    return new Response(JSON.stringify({ error: "client_provision_failed", product, detail: provErr?.message || String(provErr) }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 
+  // Build magic URL. Mortgage Radar + Trade Radar dashboards verify HMAC-signed
+  // tokens (need ?email= + signed ?token=). All other portals look up by their
+  // native column (?token=<native>) — no email required.
   const dashboardToken = await signDashboardToken(email);
-  const magicUrl = `${SITE_URL}${cfg.dashboardPath}?email=${encodeURIComponent(email)}&token=${encodeURIComponent(dashboardToken)}&trial=${encodeURIComponent(magicToken)}`;
+  const tokenParam = useNativeTokenAsTrial && nativeToken ? nativeToken : dashboardToken;
+  const emailQS = useNativeTokenAsTrial ? "" : `email=${encodeURIComponent(email)}&`;
+  const trialQS = useNativeTokenAsTrial ? "" : `&trial=${encodeURIComponent(magicToken)}`;
+  const magicUrl = `${SITE_URL}${cfg.dashboardPath}?${emailQS}token=${encodeURIComponent(tokenParam)}${trialQS}`;
   const inner = `
     <h1 style="color:#00d4ff;font-size:24px;margin:0 0 16px;">Your ${cfg.label} trial is live</h1>
     <p style="margin:0 0 14px;font-size:15px;line-height:1.6;">
