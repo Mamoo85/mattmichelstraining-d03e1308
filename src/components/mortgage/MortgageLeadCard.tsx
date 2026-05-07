@@ -2,8 +2,40 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MapPin, MessageSquare, Phone, ChevronDown, ChevronUp, Check, ImageOff } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import ScoreBreakdown from "@/components/shared/ScoreBreakdown";
 import LeadActionBar from "@/components/trade-radar/LeadActionBar";
+
+/** Skeleton placeholder shown while the leads list is loading. */
+export function MortgageLeadCardSkeleton() {
+  return (
+    <Card className="bg-[#0a1628] border border-[#1e3a5f]">
+      <CardHeader className="pb-3">
+        <div className="flex items-start gap-3">
+          <Skeleton className="shrink-0 w-[110px] h-[82px] rounded-md bg-[#1e3a5f]/40" />
+          <div className="flex-1 min-w-0 space-y-2">
+            <Skeleton className="h-5 w-3/4 bg-[#1e3a5f]/40" />
+            <Skeleton className="h-3 w-1/2 bg-[#1e3a5f]/30" />
+          </div>
+          <div className="text-right space-y-2">
+            <Skeleton className="h-7 w-14 bg-[#1e3a5f]/40" />
+            <Skeleton className="h-2 w-16 bg-[#1e3a5f]/30" />
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <Skeleton className="h-4 w-full bg-[#1e3a5f]/30" />
+        <Skeleton className="h-4 w-5/6 bg-[#1e3a5f]/30" />
+        <Skeleton className="h-16 w-full bg-[#1e3a5f]/30" />
+        <div className="flex gap-2 pt-1">
+          <Skeleton className="h-8 w-28 bg-[#1e3a5f]/40" />
+          <Skeleton className="h-8 w-24 bg-[#1e3a5f]/30" />
+          <Skeleton className="h-8 w-24 bg-[#1e3a5f]/30" />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 export type MortgageLead = {
   id: string;
