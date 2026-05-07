@@ -371,7 +371,7 @@ export default function StartTrial() {
           </div>
         )}
 
-        <form onSubmit={startCheckout} className="bg-[#0a1628]/60 border border-[#00d4ff]/30 rounded-xl p-6 space-y-4">
+        <form id="trial-form" onSubmit={startCheckout} className="bg-[#0a1628]/60 border border-[#00d4ff]/30 rounded-xl p-6 space-y-4 pb-24 md:pb-6">
           <label className="block">
             <span className="text-sm text-white/70">Work email</span>
             <input
@@ -380,17 +380,18 @@ export default function StartTrial() {
             />
           </label>
           <label className="block">
-            <span className="text-sm text-white/70">Business name</span>
+            <span className="text-sm text-white/70">Business name <span className="text-white/40 font-normal">(optional)</span></span>
             <input
-              required value={businessName} onChange={(e) => setBusinessName(e.target.value)} onFocus={handleFocus}
+              value={businessName} onChange={(e) => setBusinessName(e.target.value)} onFocus={handleFocus}
+              placeholder="We'll fill it in if you skip"
               className="w-full mt-1 bg-[#0a1628] border border-white/20 rounded px-3 py-2 text-white"
             />
           </label>
           {config.needsPhone && (
             <label className="block">
-              <span className="text-sm text-white/70">Business phone</span>
+              <span className="text-sm text-white/70">Business phone <span className="text-white/40 font-normal">(optional · for SMS lead alerts)</span></span>
               <input
-                required value={phone} onChange={(e) => setPhone(e.target.value)} onFocus={handleFocus}
+                type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} onFocus={handleFocus}
                 placeholder="(313) 555-0123"
                 className="w-full mt-1 bg-[#0a1628] border border-white/20 rounded px-3 py-2 text-white"
               />
@@ -432,6 +433,10 @@ export default function StartTrial() {
           </p>
         </form>
       </div>
+      <StickyTrialCTA
+        label={config.trial ? "Start 7-day free trial →" : "Continue →"}
+        targetFormId="trial-form"
+      />
     </div>
   );
 }
