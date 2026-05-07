@@ -383,72 +383,106 @@ export default function StartTrial() {
           </div>
         )}
 
-        <form id="trial-form" onSubmit={startCheckout} className="bg-[#0a1628]/60 border border-[#00d4ff]/30 rounded-xl p-6 space-y-4 pb-24 md:pb-6">
+        <form id="trial-form" onSubmit={emailLocked ? startCheckout : saveSpot} className="bg-[#0a1628]/60 border border-[#00d4ff]/30 rounded-xl p-6 space-y-4 pb-24 md:pb-6">
           <label className="block">
             <span className="text-sm text-white/70">Work email</span>
             <input
               required type="email" value={email} onChange={(e) => setEmail(e.target.value)} onFocus={handleFocus}
+              readOnly={emailLocked}
               className="w-full mt-1 bg-[#0a1628] border border-white/20 rounded px-3 py-2 text-white"
             />
+            {emailLocked && (
+              <button type="button" onClick={() => setEmailLocked(false)} className="text-xs text-[#00d4ff] underline mt-1">
+                change email
+              </button>
+            )}
           </label>
-          <label className="block">
-            <span className="text-sm text-white/70">Business name <span className="text-white/40 font-normal">(optional)</span></span>
-            <input
-              value={businessName} onChange={(e) => setBusinessName(e.target.value)} onFocus={handleFocus}
-              placeholder="We'll fill it in if you skip"
-              className="w-full mt-1 bg-[#0a1628] border border-white/20 rounded px-3 py-2 text-white"
-            />
-          </label>
-          {config.needsPhone && (
-            <label className="block">
-              <span className="text-sm text-white/70">Business phone <span className="text-white/40 font-normal">(optional · for SMS lead alerts)</span></span>
-              <input
-                type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} onFocus={handleFocus}
-                placeholder="(313) 555-0123"
-                className="w-full mt-1 bg-[#0a1628] border border-white/20 rounded px-3 py-2 text-white"
-              />
-            </label>
+
+          {!emailLocked && (
+            <>
+              <button
+                type="submit"
+                className="w-full bg-[#00d4ff] text-[#0a1628] font-bold py-3 rounded text-base"
+              >
+                Save my spot →
+              </button>
+              <p className="text-[11px] text-white/50 text-center">
+                We'll hold your trial for 24 hours. One more step after this.
+              </p>
+            </>
           )}
-          {config.needsWebsite && (
-            <label className="block">
-              <span className="text-sm text-white/70">Website</span>
-              <input
-                required value={website} onChange={(e) => setWebsite(e.target.value)} onFocus={handleFocus}
-                placeholder="https://yourcompany.com"
-                className="w-full mt-1 bg-[#0a1628] border border-white/20 rounded px-3 py-2 text-white"
-              />
-            </label>
-          )}
-          {error && (
-            <div className="bg-red-500/10 border border-red-500/40 rounded-lg p-3 space-y-2">
-              <div className="text-red-300 text-sm font-semibold">Something went sideways: {error}</div>
-              <div className="text-xs text-white/70">
-                Text Matt directly — he'll get you set up in minutes:{" "}
-                <a className="text-[#00d4ff] underline font-bold" href="sms:+13139921219">(313) 992-1219</a>{" "}
-                · or email{" "}
-                <a className="text-[#00d4ff] underline" href={`mailto:matt@detroitwebagent.com?subject=Trial%20signup%20issue%20-%20${encodeURIComponent(config.label)}&body=My%20email%3A%20${encodeURIComponent(email)}%0AError%3A%20${encodeURIComponent(error)}`}>matt@detroitwebagent.com</a>
+
+          {emailLocked && (
+            <>
+              <label className="block">
+                <span className="text-sm text-white/70">Business name <span className="text-white/40 font-normal">(optional)</span></span>
+                <input
+                  value={businessName} onChange={(e) => setBusinessName(e.target.value)} onFocus={handleFocus}
+                  placeholder="We'll fill it in if you skip"
+                  className="w-full mt-1 bg-[#0a1628] border border-white/20 rounded px-3 py-2 text-white"
+                />
+              </label>
+              {config.needsPhone && (
+                <label className="block">
+                  <span className="text-sm text-white/70">Business phone <span className="text-white/40 font-normal">(optional · for SMS lead alerts)</span></span>
+                  <input
+                    type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} onFocus={handleFocus}
+                    placeholder="(313) 555-0123"
+                    className="w-full mt-1 bg-[#0a1628] border border-white/20 rounded px-3 py-2 text-white"
+                  />
+                </label>
+              )}
+              {config.needsWebsite && (
+                <label className="block">
+                  <span className="text-sm text-white/70">
+                    Website {canonical === "site_radar" ? <span className="text-white/40 font-normal">(skip if you don't have one — we'll text you to set up)</span> : null}
+                  </span>
+                  <input
+                    required={canonical !== "site_radar"}
+                    value={website} onChange={(e) => setWebsite(e.target.value)} onFocus={handleFocus}
+                    placeholder="https://yourcompany.com"
+                    className="w-full mt-1 bg-[#0a1628] border border-white/20 rounded px-3 py-2 text-white"
+                  />
+                  {canonical === "site_radar" && (
+                    <p className="text-[11px] text-white/50 mt-1">
+                      No website yet? Text Matt at <a className="text-[#00d4ff] underline" href="sms:+13139921219">(313) 992-1219</a> — he'll get you set up in 10 minutes.
+                    </p>
+                  )}
+                </label>
+              )}
+              {error && (
+                <div className="bg-red-500/10 border border-red-500/40 rounded-lg p-3 space-y-2">
+                  <div className="text-red-300 text-sm font-semibold">Something went sideways: {error}</div>
+                  <div className="text-xs text-white/70">
+                    Text Matt directly — he'll get you set up in minutes:{" "}
+                    <a className="text-[#00d4ff] underline font-bold" href="sms:+13139921219">(313) 992-1219</a>{" "}
+                    · or email{" "}
+                    <a className="text-[#00d4ff] underline" href={`mailto:matt@detroitwebagent.com?subject=Trial%20signup%20issue%20-%20${encodeURIComponent(config.label)}&body=My%20email%3A%20${encodeURIComponent(email)}%0AError%3A%20${encodeURIComponent(error)}`}>matt@detroitwebagent.com</a>
+                  </div>
+                </div>
+              )}
+              <button
+                type="submit" disabled={busy}
+                className="w-full bg-[#00d4ff] text-[#0a1628] font-bold py-3 rounded text-base disabled:opacity-50"
+              >
+                {busy ? "Starting…" : (config.trial ? "Start 7-day free trial" : "Continue")}
+              </button>
+              <div className="text-center text-xs text-white/60 pt-1">
+                Prefer to talk first? Text Matt:{" "}
+                <a href="sms:+13139921219" className="text-[#00d4ff] font-bold underline">(313) 992-1219</a>
               </div>
-            </div>
+              <p className="text-[10px] text-white/40 text-center">
+                By continuing you agree to our terms. Questions? <a href="mailto:matt@detroitwebagent.com" className="text-[#00d4ff]">matt@detroitwebagent.com</a>.
+              </p>
+            </>
           )}
-          <button
-            type="submit" disabled={busy}
-            className="w-full bg-[#00d4ff] text-[#0a1628] font-bold py-3 rounded text-base disabled:opacity-50"
-          >
-            {busy ? "Starting…" : (config.trial ? "Start 7-day free trial" : "Continue")}
-          </button>
-          <div className="text-center text-xs text-white/60 pt-1">
-            Prefer to talk first? Text Matt:{" "}
-            <a href="sms:+13139921219" className="text-[#00d4ff] font-bold underline">(313) 992-1219</a>
-          </div>
-          <p className="text-[10px] text-white/40 text-center">
-            By continuing you agree to our terms. Questions? <a href="mailto:matt@detroitwebagent.com" className="text-[#00d4ff]">matt@detroitwebagent.com</a>.
-          </p>
         </form>
       </div>
       <StickyTrialCTA
-        label={config.trial ? "Start 7-day free trial →" : "Continue →"}
+        label={!emailLocked ? "Save my spot →" : (config.trial ? "Start 7-day free trial →" : "Continue →")}
         targetFormId="trial-form"
       />
     </div>
   );
 }
+
