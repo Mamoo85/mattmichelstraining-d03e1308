@@ -86,8 +86,38 @@ interface Props {
   onDraftEmail: (lead: MortgageLead) => void;
 }
 
+const EXPAND_STORAGE_KEY = "mortgage_lead_expanded_v1";
+
+function readExpandedSet(): Set<string> {
+  try {
+    const raw = localStorage.getItem(EXPAND_STORAGE_KEY);
+    if (!raw) return new Set();
+    const arr = JSON.parse(raw);
+    return new Set(Array.isArray(arr) ? arr.map(String) : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function writeExpandedSet(set: Set<string>) {
+  try {
+    localStorage.setItem(EXPAND_STORAGE_KEY, JSON.stringify(Array.from(set)));
+  } catch {
+    /* quota or disabled — silent */
+  }
+}
+
 export default function MortgageLeadCard({ lead: l, clientId, onMarkWorking, onDraftSms, onDraftEmail }: Props) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpandedRaw] = useState<boolean>(() => readExpandedSet().has(l.id));
+  const setExpanded = (next: boolean | ((v: boolean) => boolean)) => {
+    setExpandedRaw((prev) => {
+      const value = typeof next === "function" ? (next as (v: boolean) => boolean)(prev) : next;
+      const set = readExpandedSet();
+      if (value) set.add(l.id); else set.delete(l.id);
+      writeExpandedSet(set);
+      return value;
+    });
+  };
   const [thumbLoaded, setThumbLoaded] = useState(false);
   const [thumbErrored, setThumbErrored] = useState(false);
   const [largeLoaded, setLargeLoaded] = useState(false);
