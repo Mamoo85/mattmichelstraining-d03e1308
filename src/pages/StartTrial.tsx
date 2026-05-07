@@ -158,8 +158,22 @@ function normalizeKey(raw: string): ResolvedProductKey | null {
   return ALIASES[k] ?? GENERIC_PRODUCT_DEFAULTS[k] ?? null;
 }
 
+// Curated picker for the no-product fallback. Order = priority on the page.
+const PICKER_OPTIONS: { key: CanonicalKey; tagline: string }[] = [
+  { key: "missed_call_catch", tagline: "Auto-text every missed call in 60 seconds" },
+  { key: "trade_radar_roofing", tagline: "Storm + permit + homeowner leads, daily" },
+  { key: "trade_radar_hvac", tagline: "Aging-system + heatwave HVAC leads" },
+  { key: "trade_radar_plumbing", tagline: "Major permits + water-damage signals" },
+  { key: "field_desk", tagline: "Tech GPS + dispatch + customer SMS" },
+  { key: "site_radar", tagline: "Identify companies visiting your site" },
+  { key: "mortgage_radar", tagline: "Refi + purchase intent leads, daily" },
+  { key: "phone_answering", tagline: "AI receptionist that books jobs 24/7" },
+  { key: "bundle_revenue_suite", tagline: "FieldDesk + SiteRadar + Missed-Call" },
+];
+
 export default function StartTrial() {
   const [params] = useSearchParams();
+  const navigate = useNavigate();
   const rawProduct = params.get("product") || "";
   const canonical = useMemo(() => normalizeKey(rawProduct), [rawProduct]);
   const config = canonical ? PRODUCTS[canonical] : null;
