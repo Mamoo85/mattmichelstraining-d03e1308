@@ -11,6 +11,12 @@ export interface OfferUrlOpts {
   campaign?: string;
   variant?: string;
   recipientId?: string; // hashed/contact id, NOT raw PII
+  /** Pre-fill the trial form's email field. Only set for 1:1 outbound (cold email/drip). */
+  email?: string;
+  /** Pre-fill business name. */
+  business?: string;
+  /** Resume token for abandoned-trial drip. */
+  resume?: string;
 }
 
 export function buildOfferUrl(productKey: ProductKey, opts: OfferUrlOpts): string {
@@ -21,6 +27,9 @@ export function buildOfferUrl(productKey: ProductKey, opts: OfferUrlOpts): strin
   if (opts.campaign) url.searchParams.set("utm_campaign", opts.campaign);
   if (opts.variant) url.searchParams.set("utm_content", opts.variant);
   if (opts.recipientId) url.searchParams.set("rcpt", opts.recipientId);
+  if (opts.email) url.searchParams.set("email", opts.email.trim().toLowerCase());
+  if (opts.business) url.searchParams.set("business", opts.business);
+  if (opts.resume) url.searchParams.set("resume", opts.resume);
   return url.toString();
 }
 
