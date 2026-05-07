@@ -5,6 +5,7 @@ import { MapPin, MessageSquare, Phone, ChevronDown, ChevronUp, Check, ImageOff }
 import { Skeleton } from "@/components/ui/skeleton";
 import ScoreBreakdown from "@/components/shared/ScoreBreakdown";
 import LeadActionBar from "@/components/trade-radar/LeadActionBar";
+import SignalHistoryTimeline from "@/components/mortgage/SignalHistoryTimeline";
 
 /** Skeleton placeholder shown while the leads list is loading. */
 export function MortgageLeadCardSkeleton() {
@@ -256,19 +257,7 @@ export default function MortgageLeadCard({ lead: l, clientId, onMarkWorking, onD
                 </ul>
               </div>
             )}
-            {history.length > 0 && (
-              <div>
-                <p className="text-[10px] uppercase tracking-widest text-[#00d4ff] mb-1">Signal history ({history.length})</p>
-                <ul className="text-xs text-[#94a3b8] space-y-1">
-                  {history.slice(0, 8).map((h: any, i) => (
-                    <li key={i} className="flex justify-between gap-2">
-                      <span className="truncate">{h.type || h.signal_type || "signal"}{h.source ? ` · ${h.source}` : ""}</span>
-                      <span className="shrink-0 text-[#64748b]">{(h.date || h.signal_date || "").toString().slice(0, 10)}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+            {history.length > 0 && <SignalHistoryTimeline history={history} />}
           </div>
         )}
 
