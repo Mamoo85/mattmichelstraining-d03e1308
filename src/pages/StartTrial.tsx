@@ -215,17 +215,44 @@ export default function StartTrial() {
 
   if (!config) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0a1628] text-white p-6">
-        <div className="max-w-md text-center space-y-3">
-          <h1 className="text-2xl font-bold">We're getting your trial ready</h1>
-          <p className="text-white/70">
-            One sec — text Matt at <a className="text-[#00d4ff] underline" href="sms:+13139921219">(313) 992-1219</a> or
-            email <a className="text-[#00d4ff] underline" href="mailto:matt@detroitwebagent.com">matt@detroitwebagent.com</a> with the product
-            you wanted and we'll have you set up in minutes.
-          </p>
-          {rawProduct && (
-            <p className="text-xs text-white/40">ref: {rawProduct}</p>
-          )}
+      <div className="min-h-screen bg-gradient-to-b from-[#0a1628] to-[#0d1f3c] text-white">
+        <div className="max-w-3xl mx-auto p-6 sm:p-10">
+          <div className="text-center mb-8">
+            <div className="text-[#00d4ff] text-sm font-bold tracking-wider uppercase">Detroit Web Agency</div>
+            <h1 className="text-3xl sm:text-4xl font-black mt-2">Pick a product to start your free trial</h1>
+            <p className="text-white/70 mt-3">7 days free · no credit card · cancel in one click</p>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-3">
+            {PICKER_OPTIONS.map((opt) => {
+              const def = PRODUCTS[opt.key];
+              const pitch = PRODUCT_PITCH[opt.key];
+              return (
+                <button
+                  key={opt.key}
+                  type="button"
+                  onClick={() => {
+                    trackTrialEvent("form_focus", opt.key, { metadata: { from: "picker" } });
+                    const next = new URLSearchParams(params);
+                    next.set("product", opt.key);
+                    navigate(`/start-trial?${next.toString()}`, { replace: true });
+                  }}
+                  className="text-left bg-[#0a1628]/60 hover:bg-[#0a1628] border border-[#00d4ff]/30 hover:border-[#00d4ff] rounded-xl p-4 transition"
+                >
+                  <div className="flex items-baseline justify-between gap-2">
+                    <div className="font-bold text-white">{def.label}</div>
+                    {pitch && <div className="text-xs text-[#00d4ff] font-semibold whitespace-nowrap">{pitch.price}</div>}
+                  </div>
+                  <div className="text-sm text-white/70 mt-1">{opt.tagline}</div>
+                  <div className="text-xs text-[#00d4ff] mt-2 font-bold">Start free trial →</div>
+                </button>
+              );
+            })}
+          </div>
+          <div className="text-center text-xs text-white/50 mt-6">
+            Don't see what you want? Text Matt at{" "}
+            <a className="text-[#00d4ff] underline font-bold" href="sms:+13139921219">(313) 992-1219</a>
+            {rawProduct && <span className="block mt-1 text-white/30">ref: {rawProduct}</span>}
+          </div>
         </div>
       </div>
     );
