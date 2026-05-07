@@ -138,8 +138,14 @@ export default function DeadLeadIntake() {
       .map((l) => l.trim())
       .filter((l) => l.length > 0);
 
+    trackTrialEvent("form_submit", PRODUCT_KEY, {
+      email: form.email,
+      metadata: { lead_count: lines.length, trade: form.trade, input_mode: inputMode },
+    });
+
     if (lines.length === 0) {
       setError("Please paste at least one phone number.");
+      trackTrialEvent("trial_error", PRODUCT_KEY, { metadata: { reason: "no_leads" } });
       return;
     }
 
@@ -161,6 +167,7 @@ export default function DeadLeadIntake() {
       if (data?.error === "free_tier_exhausted") {
         setBillingRedirectUrl(data.billing_url || null);
         setError("Your free trial (10 leads) has been used. Add a card to continue — you only pay $50 when a lead replies YES.");
+        trackTrialEvent("checkout_redirect", PRODUCT_KEY, { email: form.email, metadata: { reason: "free_tier_exhausted" } });
         setSubmitting(false);
         return;
       }
@@ -172,8 +179,16 @@ export default function DeadLeadIntake() {
       setContractorId(data.contractor_id);
       setContactsAdded(data.contacts_added);
       setStep("success");
+      trackTrialEvent("trial_success", PRODUCT_KEY, {
+        email: form.email,
+        metadata: { contacts_added: data.contacts_added, contractor_id: data.contractor_id },
+      });
     } catch (e: any) {
       setError(e.message || "Something went wrong. Please try again.");
+      trackTrialEvent("trial_error", PRODUCT_KEY, {
+        email: form.email,
+        metadata: { error: String(e?.message || e).slice(0, 200) },
+      });
     } finally {
       setSubmitting(false);
     }
