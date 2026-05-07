@@ -88,8 +88,13 @@ interface Props {
 
 export default function MortgageLeadCard({ lead: l, clientId, onMarkWorking, onDraftSms, onDraftEmail }: Props) {
   const [expanded, setExpanded] = useState(false);
+  const [thumbLoaded, setThumbLoaded] = useState(false);
+  const [thumbErrored, setThumbErrored] = useState(false);
+  const [largeLoaded, setLargeLoaded] = useState(false);
+  const [largeErrored, setLargeErrored] = useState(false);
   const isWorking = l.pipeline_stage === "working" || l.pipeline_stage === "claimed";
   const thumb = l.street_view_url;
+  const showThumbImg = !!thumb && !thumbErrored;
   const lastSale = fmtMoney(l.last_sale_price_cents);
   const equityLow = fmtMoney(l.equity_range_low_cents);
   const equityHigh = fmtMoney(l.equity_range_high_cents);
