@@ -93,6 +93,31 @@ const COMPANY_WORD_BOUNDARY = /\b(and|son|sons|brothers|bros|pros|pro|llc|inc|co
 // Pure phone-number pattern at start of name
 const PHONE_PREFIX = /^[\(\d\s\)\-\+\.]+/;
 
+// Common English words that appear in page-section headers, nav menus, and CMS labels —
+// NOT person names. If ANY word in the candidate is on this list, reject.
+const NON_NAME_WORDS = new Set([
+  // Navigation / page sections
+  "about", "main", "menu", "menus", "home", "contact", "page", "pages", "site",
+  "header", "footer", "sidebar", "content", "section", "article", "post", "posts",
+  "search", "login", "logout", "register", "signup", "signin", "subscribe",
+  "privacy", "terms", "policy", "legal", "cookies", "sitemap", "faq", "faqs",
+  "help", "support", "blog", "news", "events", "gallery", "media",
+  // CMS / template labels
+  "keywords", "location", "locations", "category", "categories", "tag", "tags",
+  "all", "only", "more", "less", "view", "show", "hide", "click", "read",
+  "customize", "settings", "options", "preferences", "profile", "dashboard",
+  // Union / org page words (from screenshot)
+  "union", "local", "representative", "representatives", "worker", "workers",
+  "apprentice", "apprentices", "empowering", "changing", "lives", "dues",
+  "manager", "business", "membership", "member", "members", "officer", "officers",
+  "training", "education", "scholarship", "benefits", "pension", "retirement",
+  "convention", "conference", "meeting", "meetings", "newsletter",
+  // Generic
+  "lorem", "ipsum", "example", "sample", "test", "demo", "default",
+  "welcome", "thank", "thanks", "hello", "hi", "yes", "no",
+  "title", "subtitle", "heading", "subheading", "label", "button", "link",
+]);
+
 function isPersonName(name: string): boolean {
   if (!name) return false;
   const trimmed = name.trim();
@@ -106,6 +131,11 @@ function isPersonName(name: string): boolean {
   if (alphaWords.length < 2) return false;
   if (COMPANY_SIGNALS.some((s) => lower.includes(s))) return false;
   if (COMPANY_WORD_BOUNDARY.test(lower)) return false;
+  // Reject if ANY token is a known non-name word (page sections, nav, CMS labels)
+  const tokens = lower.split(/\s+/).map((w) => w.replace(/[^a-z]/g, ""));
+  if (tokens.some((t) => NON_NAME_WORDS.has(t))) return false;
+  // Reject -ing verbs (Changing, Empowering, Building, etc.) — almost never first names
+  if (tokens.some((t) => t.length > 5 && t.endsWith("ing"))) return false;
   if (trimmed === trimmed.toUpperCase() && trimmed.length > 8) return false;
   if (trimmed.includes("&")) return false;
   if (lower.endsWith(" and")) return false;
