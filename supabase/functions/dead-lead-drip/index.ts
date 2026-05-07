@@ -9,6 +9,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { sendSMS } from "../_shared/twilio.ts";
 import { logError } from "../_shared/error-log.ts";
 import { getDeadLeadEmail } from "../_shared/dead-lead-emails.ts";
+import { isBlocked } from "../_shared/outreach-blocklist.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -286,6 +287,13 @@ async function runDripJob(): Promise<Response> {
           continue;
         }
 
+        // Blocklist gate: skip if contact became a paying DWA client.
+        const blockStatus = await isBlocked(sb, { phone: contact.phone, business_name: bizName });
+        if (blockStatus.blocked) {
+          await sb.from("dead_lead_contacts" as any).update({ status: "blocklisted", drip_step: 9 }).eq("id", contact.id);
+          continue;
+        }
+
         const smsRes = await sendSMS(contact.phone, TWILIO_PHONE_NUMBER, body, "dead_lead_reactivation");
         if (!smsRes?.success) {
           if (smsRes.twilio_code === 21614) {
@@ -425,6 +433,13 @@ async function runDripJob(): Promise<Response> {
 
         const tpl = customCopy?.drip3_copy || TRADE_TEMPLATES[tradeKey(trade)].d7;
         const body = fillSms(tpl, { name: firstName, bizName, trade });
+
+        // Blocklist gate: skip if contact became a paying DWA client.
+        const blockStatusD7 = await isBlocked(sb, { phone: contact.phone, business_name: bizName });
+        if (blockStatusD7.blocked) {
+          await sb.from("dead_lead_contacts" as any).update({ status: "blocklisted", drip_step: 9 }).eq("id", contact.id);
+          continue;
+        }
 
         const smsRes = await sendSMS(contact.phone, TWILIO_PHONE_NUMBER, body, "dead_lead_reactivation");
         if (!smsRes?.success) {
