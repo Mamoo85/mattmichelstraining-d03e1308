@@ -26,6 +26,11 @@ import { safeLocalStorage } from "@/lib/browserStorage";
 
 // CSS-only spinner — avoids pulling lucide-react into the entry chunk
 
+function PreserveSearchRedirect({ to }: { to: string }) {
+  const location = useLocation();
+  return <Navigate to={`${to}${location.search}`} replace />;
+}
+
 const AnnouncementBanner = lazyRetry(() => import("@/components/layout/AnnouncementBanner"));
 
 const ActiveWorkoutZone = lazyRetry(() => import("@/components/workout/ActiveWorkoutZone"));
