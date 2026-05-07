@@ -4,7 +4,6 @@ Disallow: /dashboard
 Disallow: /admin
 Disallow: /dwa-admin
 Disallow: /unsubscribe
-Disallow: /start-trial
 Disallow: /admin
 Disallow: /progress
 Disallow: /profile
