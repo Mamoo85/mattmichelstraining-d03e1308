@@ -173,8 +173,18 @@ export default function MyMortgageRadar() {
   const warmCount = useMemo(() => filtered.filter(l => l.score >= 7 && l.score < 9).length, [filtered]);
   const types = useMemo(() => Array.from(new Set(leads.map(l => l.signal_type))), [leads]);
 
-  const claimLead = async (_leadId: string) => {
-    toast.info("Claim system requires LO login — coming next iteration. For now, draft your outreach.");
+  const markWorking = async (lead: Lead) => {
+    const prevStage = lead.pipeline_stage || "active";
+    setLeads(prev => prev.map(x => x.id === lead.id ? { ...x, pipeline_stage: "working" } : x));
+    const { error } = await (supabase.from as any)("mortgage_radar_leads")
+      .update({ pipeline_stage: "working" })
+      .eq("id", lead.id);
+    if (error) {
+      setLeads(prev => prev.map(x => x.id === lead.id ? { ...x, pipeline_stage: prevStage } : x));
+      toast.error("Couldn't mark working — try again");
+      return;
+    }
+    toast.success("Marked as working");
   };
 
   const exportCsv = () => {
