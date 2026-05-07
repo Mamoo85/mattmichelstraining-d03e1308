@@ -283,7 +283,7 @@ Deno.serve(async (req) => {
   const tradeVertical = TRADE_RADAR_VERTICAL[product];
   if (tradeVertical) {
     const zipCodes = Array.isArray(body.zip_codes) && body.zip_codes.length > 0 ? body.zip_codes : [];
-    sb.from("trade_radar_clients" as any).upsert({
+    const { error: tradeClientError } = await sb.from("trade_radar_clients" as any).upsert({
       email,
       vertical: tradeVertical,
       business_name: body.business_name || null,
@@ -291,9 +291,15 @@ Deno.serve(async (req) => {
       zip_codes: zipCodes,
       active: true,
       trial_ends_at: expiresAt,
-    }, { onConflict: "email,vertical" }).then(
-      ({ error: e }: any) => { if (e) console.error("[start-radar-trial] trade_radar_clients upsert", e); },
-    );
+    }, { onConflict: "email,vertical" });
+
+    if (tradeClientError) {
+      console.error("[start-radar-trial] trade_radar_clients upsert", tradeClientError);
+      return new Response(JSON.stringify({ error: "trade_client_provision_failed", detail: tradeClientError.message }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
   }
 
   const dashboardToken = await signDashboardToken(email);

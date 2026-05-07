@@ -11,6 +11,7 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { encode } from "https://deno.land/std@0.190.0/encoding/base64url.ts";
 import { sendSMS } from "../_shared/twilio.ts";
 import { dwaEmail, dwaWrap } from "../_shared/dwa-email.ts";
 import { wrapServe } from "../_shared/telemetry.ts";
@@ -24,6 +25,20 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY") || "";
 const TWILIO_FROM = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
+
+async function signDashboardToken(email: string): Promise<string> {
+  const payload = JSON.stringify({ email, exp: Date.now() + 7 * 24 * 60 * 60 * 1000 });
+  const tokenB64 = encode(new TextEncoder().encode(payload));
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(SERVICE_ROLE),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(tokenB64));
+  return `${tokenB64}.${encode(new Uint8Array(sig))}`;
+}
 
 const ALL_VERTICALS = [
   "roofing", "hvac", "plumbing", "electrical", "pest_control", "gutters",
@@ -242,7 +257,8 @@ async function sendDigestForClient(
   const { count: weekCount } = await weekQ;
 
   const name = client.contact_name || client.business_name || "there";
-  const dashboardLink = `https://detroitwebagent.com/my-${vertical.replace("_", "-")}-radar?email=${encodeURIComponent(client.email)}`;
+  const dashboardToken = await signDashboardToken(client.email);
+  const dashboardLink = `https://detroitwebagent.com/my-${vertical.replace(/_/g, "-")}-radar?email=${encodeURIComponent(client.email)}&token=${encodeURIComponent(dashboardToken)}`;
 
   let body: string;
   let subject: string;
