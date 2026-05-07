@@ -116,6 +116,18 @@ export default function ContractorMarketplace() {
   const [notifyPhone, setNotifyPhone] = useState("");
   const [notifySent, setNotifySent] = useState(false);
 
+  useEffect(() => {
+    trackTrialEvent("view", MKT_PRODUCT_KEY, { metadata: { page: "/contractor-marketplace" } });
+  }, []);
+
+  useEffect(() => {
+    if (claimLead) {
+      trackTrialEvent("form_focus", MKT_PRODUCT_KEY, {
+        metadata: { lead_id: claimLead.id, trade: claimLead.trade, tier: claimLead.lead_tier },
+      });
+    }
+  }, [claimLead]);
+
   const { data: leads = [], isLoading } = useQuery({
     queryKey: ["contractor_leads_marketplace"],
     queryFn: async () => {
