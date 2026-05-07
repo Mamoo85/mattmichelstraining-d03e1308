@@ -12,7 +12,54 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ---
 
 ## Current Session State
-*Last updated: 2026-05-05 (Phase 44)*
+*Last updated: 2026-05-07 (Phase 45 — 8-Layer Live Audit + Customer Journey Simulation)*
+
+### Phase 45 — 8-Layer Live Audit + Customer Journey Simulation COMPLETE ✅
+
+**7 P0/P1 fixes committed to main (all merged, branch `claude/add-claude-documentation-A5f7q` → main):**
+
+| Commit | Fix |
+|---|---|
+| `29c68644` | P0-CHECKOUT-1: `create-trade-radar-checkout` — add session-level metadata so webhook can provision `trade_radar_clients` |
+| `3148eecc` | P0-CHECKOUT-2: `create-hire-alert-checkout` — destructure `tier` from req.json (annual plan was crashing HTTP 500) |
+| `41eb8dde` | P0-OUTBOUND-1: `techalert-outreach` — `isBlocked()` gate before cold email send |
+| `df301b9a` | P0-OUTBOUND-2: `techalert-followup-drip` — `isBlocked()` + 7-day freq cap |
+| `f683c102` | P1-OUTBOUND-4: `dead-lead-drip` — `isBlocked()` before D1 and D7 SMS sends |
+| `dac41312` | P0-CRON-1: `20260507120000_fix_remaining_broken_crons.sql` — fixes 19 dead cron jobs (hire-alert-scanner, dead-lead-drip, contractor-fomo-mailer, comply-monitor, etc.) with correct vault key `SUPABASE_SERVICE_ROLE_KEY_VAULT` |
+| `c9886298` | P1-SEO-1: `public/sitemap.xml` — added 20 DWA product URLs (was 0 DWA pages out of 25 total) |
+
+**⚠️ DEPLOYMENT BLOCKER — ALL FIXES ARE IN GIT BUT NOT LIVE IN PRODUCTION**
+The Lovable-managed primary project (`eauvubfpanpeuxsrqesu`) does NOT auto-deploy from git commits.
+Matt must use the following Lovable prompt to deploy:
+
+```
+Please deploy the latest code from git for these edge functions:
+- create-hire-alert-checkout
+- create-trade-radar-checkout
+- techalert-outreach
+- techalert-followup-drip
+- dead-lead-drip
+
+Also please apply migration supabase/migrations/20260507120000_fix_remaining_broken_crons.sql to the primary project database.
+
+Also please fix RLS on trial_funnel_events — anon INSERT is still returning HTTP 201. Add:
+CREATE POLICY no_anon_insert ON trial_funnel_events FOR INSERT TO anon WITH CHECK (false);
+```
+
+**Customer Journey Simulation Audit Results:**
+- 8/9 checkout functions return HTTP 200 (TechAlert annual ❌ until deploy)
+- All 8 stripe-webhook handlers present, properly wired, markFulfilled ✅
+- All leads tables return [] — root cause: scanner crons dead (vault key bug), cron fix migration needs DB apply
+- trial_funnel_events still allows anon INSERT (Lovable's REVOKE didn't take, re-apply needed)
+- Mortgage Radar checkout requires undocumented `dob` field (HB 4388) — UI needs DOB field added
+
+**After deploy, run in Supabase SQL editor to verify:**
+```sql
+SELECT j.jobname, MAX(r.start_time) as last_run
+FROM cron.job j LEFT JOIN cron.job_run_details r 
+  ON j.jobid=r.jobid AND r.status='succeeded' AND r.start_time >= NOW()-INTERVAL '25 hours'
+GROUP BY j.jobname HAVING MAX(r.start_time) IS NULL ORDER BY j.jobname;
+```
 
 ### Phase 44 — Trial Delivery Guarantee + Enrichment Fixes + HubSpot CRM Bridge + Email Waterfall Expansion COMPLETE ✅
 
