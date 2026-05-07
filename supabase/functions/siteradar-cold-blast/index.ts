@@ -1,6 +1,6 @@
 // siteradar-cold-blast — Cold email pitch for SiteRadar to any business with a website.
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { dwaEmail } from "../_shared/dwa-email.ts";
+import { dwaEmail, listUnsubHeaders } from "../_shared/dwa-email.ts";
 import { teaserCardHtml } from "../_shared/teaser-card.ts";
 import { isBlocked } from "../_shared/outreach-blocklist.ts";
 import { isMarketingBlocked } from "../_shared/marketing-kill-switch.ts";
@@ -71,7 +71,7 @@ Deno.serve(async (req) => {
     } catch (_) {}
 
     const subject = `${lead.business_name || "your site"} — see who's actually visiting`;
-    const r = await dwaEmail({ to: lead.email, subject, html: emailHtml(lead) });
+    const r = await dwaEmail({ to: lead.email, subject, html: emailHtml(lead), headers: listUnsubHeaders(lead.email) });
     if (r.ok) {
       sent++;
       await sb.from("outreach_leads").update({

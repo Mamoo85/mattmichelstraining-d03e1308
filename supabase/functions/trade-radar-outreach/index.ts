@@ -7,7 +7,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { generateWithHaiku } from "../_shared/opus.ts";
 import { isRecentlyContacted } from "../_shared/outreach-blocklist.ts";
-import { dwaEmail } from "../_shared/dwa-email.ts";
+import { dwaEmail, listUnsubHeaders } from "../_shared/dwa-email.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -116,6 +116,7 @@ Reply STOP to unsubscribe from future messages.
 
           const res = await dwaEmail({
             to: lead.owner_email,
+            headers: listUnsubHeaders(lead.owner_email),
             subject,
             html,
             replyTo: client.email || "matt@detroitwebagent.com",

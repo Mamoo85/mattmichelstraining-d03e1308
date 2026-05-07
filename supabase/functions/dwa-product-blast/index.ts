@@ -13,7 +13,7 @@
 // All sends respect outreach-blocklist + marketing-kill-switch.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { dwaEmail } from "../_shared/dwa-email.ts";
+import { dwaEmail, listUnsubHeaders } from "../_shared/dwa-email.ts";
 import { isBlocked } from "../_shared/outreach-blocklist.ts";
 import { isMarketingBlocked } from "../_shared/marketing-kill-switch.ts";
 import { buildPremiumEmailHtml, RADAR_ADDON_BOX } from "../_shared/dwa-premium-email.ts";
@@ -201,7 +201,7 @@ Deno.serve(async (req) => {
     const subject = pitch.subject(lead.business_name || "your shop", lead.city || "Michigan");
     const html = emailHtml(lead, pitch);
 
-    const r = await dwaEmail({ to: lead.email, subject, html });
+    const r = await dwaEmail({ to: lead.email, subject, html, headers: listUnsubHeaders(lead.email) });
     if (r.ok) {
       sent++;
       byProduct[pitch.product] = (byProduct[pitch.product] || 0) + 1;

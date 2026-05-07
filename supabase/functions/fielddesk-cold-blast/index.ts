@@ -1,7 +1,7 @@
 // fielddesk-cold-blast — Cold email pitch for FieldDesk to home-service shops
 // in outreach_leads that haven't received a FieldDesk pitch yet.
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { dwaEmail } from "../_shared/dwa-email.ts";
+import { dwaEmail, listUnsubHeaders } from "../_shared/dwa-email.ts";
 import { teaserCardHtml } from "../_shared/teaser-card.ts";
 import { isBlocked } from "../_shared/outreach-blocklist.ts";
 import { isMarketingBlocked } from "../_shared/marketing-kill-switch.ts";
@@ -82,7 +82,7 @@ Deno.serve(async (req) => {
     } catch (_) {}
 
     const subject = `${lead.business_name || "your shop"} — dispatch + tech tracking for $199 flat`;
-    const r = await dwaEmail({ to: lead.email, subject, html: emailHtml(lead) });
+    const r = await dwaEmail({ to: lead.email, subject, html: emailHtml(lead), headers: listUnsubHeaders(lead.email) });
     if (r.ok) {
       sent++;
       await sb.from("outreach_leads").update({
