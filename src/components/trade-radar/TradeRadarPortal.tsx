@@ -411,6 +411,8 @@ export default function TradeRadarPortal({
                           product="trade"
                           initialStatus={(a?.status as any) || "new"}
                           initialSnoozeUntil={a?.snooze_until || null}
+                          email={clientEmail || client.email}
+                          token={dashboardToken}
                         />
                       ) : null
                     }
