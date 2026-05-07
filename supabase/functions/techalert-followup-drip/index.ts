@@ -7,6 +7,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { dwaColdEmail } from "../_shared/dwa-email.ts";
 import { wrapServe } from "../_shared/telemetry.ts";
+import { isBlocked } from "../_shared/outreach-blocklist.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -132,6 +133,20 @@ serve(wrapServe("techalert-followup-drip", async (req) => {
       else if (daysSinceD0 >= 3 && !t.followup_d3_sent_at) touch = "d3";
 
       if (!touch) { skipped++; continue; }
+
+      // Blocklist gate: skip paying DWA clients and permanently suppressed contacts.
+      const blockStatus = await isBlocked(sb, { email: t.owner_email, business_name: t.company_name });
+      if (blockStatus.blocked) { skipped++; continue; }
+
+      // Frequency cap: skip if already emailed in the last 7 days across all sequences.
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const { count: recentSends } = await sb
+        .from("email_send_log")
+        .select("id", { count: "exact", head: true })
+        .ilike("recipient_email", String(t.owner_email).trim().toLowerCase())
+        .in("status", ["sent", "queued", "pending"])
+        .gte("created_at", sevenDaysAgo);
+      if ((recentSends ?? 0) > 2) { skipped++; continue; }
 
       const result = await sendFollowup(sb, t.owner_email, t.owner_name, t.company_name, t.role, touch);
 
