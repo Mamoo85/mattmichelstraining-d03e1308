@@ -317,7 +317,7 @@ export default function StartTrial() {
       base.vertical = config!.vertical;
       base.tcpa_consent = true;
     }
-    const radarTrialProduct = canonical ? START_RADAR_TRIAL_PRODUCTS[canonical] : undefined;
+    const radarTrialProduct = canonical ? CANONICAL_TO_TRIAL_PRODUCT[canonical] : undefined;
     if (radarTrialProduct) {
       base.product = radarTrialProduct;
       base.source = params.get("utm_source") || "start-trial";
