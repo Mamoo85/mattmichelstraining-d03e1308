@@ -2220,6 +2220,9 @@ verify_jwt = false
 [functions.create-trade-radar-checkout]
 verify_jwt = false
 
+[functions.trade-radar-dashboard]
+verify_jwt = false
+
 [functions.trade-radar-am-digest]
 verify_jwt = false
 
