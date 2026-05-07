@@ -920,6 +920,11 @@ const App = () => (
                     <Route path="/gutters-radar/demo" element={<GuttersRadarDemo />} />
                     <Route path="/painting-radar" element={<PaintingRadar />} />
                     <Route path="/painting-radar/demo" element={<PaintingRadarDemo />} />
+                    <Route path="/exterior-radar" element={<PreserveSearchRedirect to="/my-exterior-radar" />} />
+                    <Route path="/tree-radar" element={<PreserveSearchRedirect to="/my-tree-radar" />} />
+                    <Route path="/restoration-radar" element={<PreserveSearchRedirect to="/my-restoration-radar" />} />
+                    <Route path="/demo-junk-radar" element={<PreserveSearchRedirect to="/my-demo-junk-radar" />} />
+                    <Route path="/foundation-radar" element={<PreserveSearchRedirect to="/my-foundation-radar" />} />
                     <Route path="/my-roofing-radar" element={<MyRoofingRadar />} />
                     <Route path="/my-hvac-radar" element={<MyHVACRadar />} />
                     <Route path="/my-plumbing-radar" element={<MyPlumbingRadar />} />
