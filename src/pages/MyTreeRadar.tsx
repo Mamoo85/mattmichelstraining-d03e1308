@@ -5,7 +5,7 @@ export default function MyTreeRadar() {
     <TradeRadarPortal
       vertical="tree"
       productLabel="Tree Service Radar"
-      landingPath="/tree-radar"
+      landingPath="/start-trial"
       signalTypes={[
         { value: "cofc_tree_inspection", label: "🔴 Rental License Expiring" },
         { value: "storm_tree_damage", label: "🌲 Storm Tree Damage" },

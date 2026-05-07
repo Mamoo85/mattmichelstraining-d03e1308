@@ -1346,7 +1346,8 @@ serve(async (req) => {
           );
           await sb.from("system_comms_log").insert({
             product: "dead_lead_pool", status: "alert", channel: "sms",
-            meta: { pending: pendingCount, threshold: DEAD_LEAD_MIN_POOL },
+            recipient: ADMIN_PHONE,
+            metadata: { pending: pendingCount, threshold: DEAD_LEAD_MIN_POOL },
           });
         }
       }

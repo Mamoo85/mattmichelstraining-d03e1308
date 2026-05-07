@@ -5,7 +5,7 @@ export default function MyExteriorRadar() {
     <TradeRadarPortal
       vertical="exterior"
       productLabel="Exterior Radar"
-      landingPath="/exterior-radar"
+      landingPath="/start-trial"
       signalTypes={[
         { value: "cofc_exterior_inspection", label: "🔴 Rental License Expiring" },
         { value: "spc_storm_report_today", label: "☁️ Same-Day Storm — Siding" },

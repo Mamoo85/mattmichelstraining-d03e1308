@@ -5,7 +5,7 @@ export default function MyRestorationRadar() {
     <TradeRadarPortal
       vertical="restoration"
       productLabel="Restoration Radar"
-      landingPath="/restoration-radar"
+      landingPath="/start-trial"
       signalTypes={[
         { value: "fire_smoke_restoration", label: "🔥 Fire Incident — Today" },
         { value: "cofc_mold_water_inspection", label: "🔴 Rental License Expiring" },

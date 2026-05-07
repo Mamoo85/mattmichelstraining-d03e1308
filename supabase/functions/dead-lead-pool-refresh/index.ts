@@ -302,14 +302,28 @@ serve(wrapServe("dead-lead-pool-refresh", async (req) => {
       });
     }
     if (gate.fresh < gate.target / 2 && inserted < 5) {
-      // Pool still very low after refresh — alert Matt (throttle handled by caller cron throttle)
-      const fromNum = Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219";
-      await sendSMS(
-        ADMIN_PHONE,
-        fromNum,
-        `Dead lead pool low: ${gate.fresh} fresh, target ${gate.target}, refresh added ${inserted}.`,
-        "dead_lead_pool",
-      );
+      // Pool still very low after refresh — alert Matt once per 24h max
+      const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const { count: recentAlert } = await sb
+        .from("system_comms_log")
+        .select("id", { count: "exact", head: true })
+        .eq("product", "dead_lead_pool")
+        .eq("status", "alert")
+        .gte("created_at", since24h);
+      if ((recentAlert ?? 0) === 0) {
+        const fromNum = Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219";
+        await sendSMS(
+          ADMIN_PHONE,
+          fromNum,
+          `Dead lead pool low: ${gate.fresh} fresh, target ${gate.target}, refresh added ${inserted}.`,
+          "dead_lead_pool",
+        );
+        await sb.from("system_comms_log").insert({
+          product: "dead_lead_pool", status: "alert", channel: "sms",
+          recipient: ADMIN_PHONE,
+          metadata: { fresh: gate.fresh, target: gate.target, inserted },
+        });
+      }
     }
 
     return new Response(

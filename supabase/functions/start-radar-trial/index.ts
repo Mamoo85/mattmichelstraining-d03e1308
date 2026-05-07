@@ -22,6 +22,22 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const SITE_URL = Deno.env.get("SITE_URL") || "https://detroitwebagent.com";
 
+// Maps start-radar-trial product keys → trade_radar_clients vertical names.
+// Only trade radar products are listed — others (mortgage, techalert) use separate tables.
+const TRADE_RADAR_VERTICAL: Record<string, string> = {
+  roofing_radar: "roofing",
+  hvac_radar: "hvac",
+  plumbing_radar: "plumbing",
+  electrical_radar: "electrical",
+  pest_control_radar: "pest_control",
+  gutters_radar: "gutters",
+  exterior_radar: "exterior",
+  tree_radar: "tree",
+  restoration_radar: "restoration",
+  demo_junk_radar: "demo_junk",
+  foundation_radar: "foundation",
+};
+
 const PRODUCT_CONFIG: Record<string, { label: string; dashboardPath: string; pitch: string }> = {
   mortgage_radar: {
     label: "Mortgage Radar",
@@ -260,6 +276,24 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+  }
+
+  // Provision trade_radar_clients row so the portal can find the user immediately.
+  // Trial users without this row always see "not enrolled" — this fixes that.
+  const tradeVertical = TRADE_RADAR_VERTICAL[product];
+  if (tradeVertical) {
+    const zipCodes = Array.isArray(body.zip_codes) && body.zip_codes.length > 0 ? body.zip_codes : [];
+    sb.from("trade_radar_clients" as any).upsert({
+      email,
+      vertical: tradeVertical,
+      business_name: body.business_name || null,
+      phone: body.phone || null,
+      zip_codes: zipCodes,
+      active: true,
+      trial_ends_at: expiresAt,
+    }, { onConflict: "email,vertical" }).then(
+      ({ error: e }: any) => { if (e) console.error("[start-radar-trial] trade_radar_clients upsert", e); },
+    );
   }
 
   const dashboardToken = await signDashboardToken(email);

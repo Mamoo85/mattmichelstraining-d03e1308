@@ -335,6 +335,14 @@ serve(wrapServe("cron-sentinel", async (req) => {
             `🚨 TechAlert DEAD PIPE: Last 3 scanner runs (source=all) returned 0 candidates within 6h. ${activeClientCount} active client(s). Investigate.`,
             'cron_sentinel_zero_pipe'
           ).catch(() => {});
+          // Write to error_logs so code-fixer-watchdog can pick it up when Matt texts "Fix"
+          await sb.from("error_logs").insert({
+            source: "edge_function",
+            function_name: "hire-alert-scanner",
+            severity: "critical",
+            error_message: `DEAD PIPE: 0 candidates within 6h. ${activeClientCount} active client(s). Scanner appears silently dead.`,
+            created_at: new Date().toISOString(),
+          }).catch(() => {});
         }
       }
     }

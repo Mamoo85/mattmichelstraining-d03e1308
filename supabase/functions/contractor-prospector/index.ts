@@ -167,6 +167,26 @@ function pickOffer(trade: string, issues: string[]): { offer: string; pitch: str
   return { offer: "leads", pitch: "Exclusive Local Leads", price: "$399/mo" };
 }
 
+// Non-contractor business types that should never receive trade contractor cold emails
+const NON_CONTRACTOR_PATTERNS = [
+  /\b(law|legal|attorney|attorneys|lawyer|lawyers|counsel|counselors|paralegal)\b/i,
+  /\b(financial|finance|accounting|accountant|accountants|cpa|bookkeeping|bookkeeper|tax)\b/i,
+  /\b(insurance|real\s+estate|realty|realtor|realtors|mortgage|bank|banking|credit\s+union|investments?|securities|wealth)\b/i,
+  /\b(consulting|consultants?|advisory|advisors?|management\s+group|staffing|recruiting|recruiters?)\b/i,
+  /\b(medical|dental|dentist|dentistry|optometry|optometrist|chiropractic|chiropractor|therapy|therapist|counseling|psychiatry|psychology)\b/i,
+  /\b(salon|spa|beauty|nail|barber|barbershop|hair\s+studio)\b/i,
+  /\b(restaurant|cafe|catering|bakery|diner|grill|pizzeria|sushi|bistro)\b/i,
+  /\b(church|ministry|ministries|chapel|mosque|synagogue|temple|faith|christian)\b/i,
+  /\b(school|academy|university|college|tutoring|daycare|preschool|childcare)\b/i,
+  /\b(nonprofit|non-profit|foundation|charity|charities|association)\b/i,
+  /\bgroup\s+llc\b/i,   // "Barton Group LLC" pattern — generic holding/services LLCs
+  /\b(marketing|advertising|media|design\s+studio|creative\s+agency|digital\s+agency|pr\s+firm)\b/i,
+];
+
+function isNonContractor(businessName: string): boolean {
+  return NON_CONTRACTOR_PATTERNS.some((p) => p.test(businessName));
+}
+
 async function searchGoogleMaps(query: string, apiKey: string): Promise<any[]> {
   const res = await fetch("https://places.googleapis.com/v1/places:searchText", {
     method: "POST",
@@ -819,6 +839,15 @@ serve(async (req) => {
         const website = cleanWebsite(place.websiteUri);
         const rating = place.rating || 0;
         const reviewCount = place.userRatingCount || 0;
+
+        // ── Non-contractor ICP filter ──
+        // Reject law firms, financial services, professional services, etc.
+        // These appear in "General Contractor" searches but are not our buyers.
+        if (isNonContractor(name)) {
+          log("Skipped non-contractor business", { name, trade });
+          totalSkipped++;
+          continue;
+        }
 
         // ── Demand Radar qualification filter ──
         // Drop sole-proprietor / no-velocity listings: require at least

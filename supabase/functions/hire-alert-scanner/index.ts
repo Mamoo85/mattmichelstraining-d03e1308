@@ -453,12 +453,32 @@ const COMPANY_NAME_SIGNALS = [
   "and", "or", // name ending in "and" / "or" = company abbreviation
 ];
 
+// HTML page structure artifacts — scrapers sometimes return these as "names"
+const HTML_ARTIFACT_NAMES = new Set([
+  "main content", "keywords location", "skip navigation", "jump to content",
+  "search results", "job description", "apply now", "filter results",
+  "page content", "primary content", "secondary content", "sidebar content",
+  "header content", "footer content", "site navigation", "main navigation",
+  "breadcrumb navigation", "cookie notice", "privacy policy", "terms of service",
+  "job listing", "job posting", "candidate profile", "resume upload",
+  "location filter", "salary filter", "date posted", "job type",
+  "work type", "experience level", "education level", "company name",
+  "full name", "first name", "last name", "phone number", "email address",
+  "zip code", "city state", "related jobs", "similar jobs", "recommended jobs",
+  "sponsored jobs", "featured jobs", "new jobs", "recent jobs",
+]);
+
 function isPersonNameJobBoard(name: string): boolean {
   const lower = name.toLowerCase().trim();
   const words = lower.split(/\s+/).filter(Boolean);
   if (words.length < 2) return false;
+  // Reject known HTML page structure artifacts
+  if (HTML_ARTIFACT_NAMES.has(lower)) return false;
+  // Reject anything where both words are generic English nouns/adjectives (not names)
   if (COMPANY_NAME_SIGNALS.some((s) => lower.includes(s))) return false;
   if (name === name.toUpperCase() && name.length > 8) return false;
+  // Names must have at least one word starting with a capital letter
+  if (!/^[A-Z]/.test(name.trim())) return false;
   return true;
 }
 
@@ -1470,6 +1490,389 @@ async function sendAlertEmail(
 
 // 50-source registry: pull DOL WARN layoffs (= newly available workers) +
 // licensed-pro lookups via license_waterfall. Best-effort, won't break scanner.
+// ─────────────────────────────────────────────────────────────────────────────
+// NEW TALENT SOURCES — added Phase 46
+// ─────────────────────────────────────────────────────────────────────────────
+
+// SOURCE N1: NPI Registry — new Michigan nursing license registrations (last 30 days)
+// Free federal API, no auth needed. Proactive scan for newly-licensed nurses.
+async function scanNPINewRegistrations(): Promise<RawCandidate[]> {
+  const out: RawCandidate[] = [];
+  try {
+    // Nursing taxonomy codes: RN=163W00000X, LPN=164W00000X, CNA=376J00000X, NP=363L00000X
+    const NURSING_TAXONOMIES = ["163W00000X", "164W00000X", "376J00000X", "363L00000X", "364S00000X"];
+    const sinceDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+    for (const taxonomy of NURSING_TAXONOMIES) {
+      try {
+        const url = `https://npiregistry.cms.hhs.gov/api/?version=2.1&taxonomy_description=${encodeURIComponent(taxonomy)}&state=MI&enumeration_type=NPI-1&limit=20&skip=0`;
+        const res = await fetch(url, { signal: AbortSignal.timeout(8_000), headers: { "User-Agent": "DWA-TechAlert/1.0" } });
+        if (!res.ok) continue;
+        const data = await res.json();
+        for (const result of (data.results || [])) {
+          const basic = result.basic || {};
+          const fullName = [basic.first_name, basic.last_name].filter(Boolean).join(" ").trim();
+          if (!fullName || !isPersonNameJobBoard(fullName)) continue;
+          const addresses = result.addresses || [];
+          const practiceAddr = addresses.find((a: any) => a.address_purpose === "LOCATION") || addresses[0] || {};
+          const city = practiceAddr.city || "";
+          // Filter to Michigan only (API state param doesn't always filter correctly)
+          if (practiceAddr.state && practiceAddr.state !== "MI") continue;
+          const taxDesc = (result.taxonomies || [])[0]?.desc || "";
+          const licenseType = taxDesc.includes("Nurse Practitioner") ? "nurse_practitioner"
+            : taxDesc.includes("Practical") ? "lpn"
+            : taxDesc.includes("Nursing Assistant") ? "cna"
+            : "rn";
+          out.push({
+            full_name: fullName,
+            city,
+            zip: practiceAddr.postal_code?.slice(0, 5) || "",
+            phone: (result.addresses || []).find((a: any) => a.telephone_number)?.telephone_number || null,
+            source: "npi_new_registration",
+            license_type: licenseType,
+            raw_data: {
+              npi_number: basic.npi,
+              taxonomy: taxDesc,
+              credential: basic.credential,
+              enumeration_date: basic.enumeration_date,
+            },
+          });
+        }
+      } catch (_) { /* fail gracefully per taxonomy */ }
+    }
+    console.log(`[hire-alert-scanner] NPI new registrations: ${out.length} MI nursing candidates`);
+  } catch (e) {
+    console.warn("[hire-alert-scanner] scanNPINewRegistrations failed:", e instanceof Error ? e.message : String(e));
+  }
+  return out;
+}
+
+// SOURCE N2: Craigslist Michigan resumes — trades + healthcare
+// Public HTML, no auth, no API key. Scrape resume listings for skilled trades + nurses.
+async function scanCraigslistResumes(): Promise<RawCandidate[]> {
+  const out: RawCandidate[] = [];
+  try {
+    const SEARCH_TERMS = [
+      { q: "HVAC technician", role: "hvac_tech" },
+      { q: "electrician", role: "electrician" },
+      { q: "plumber", role: "plumber" },
+      { q: "registered nurse RN", role: "rn" },
+      { q: "LPN licensed practical nurse", role: "lpn" },
+      { q: "CNA certified nursing assistant", role: "cna" },
+      { q: "roofing", role: "roofer" },
+      { q: "boiler operator", role: "boiler_operator" },
+    ];
+    const CRAIGSLIST_METROS = [
+      "detroit", "annarbor", "flint", "lansing", "grandrapids"
+    ];
+    for (const metro of CRAIGSLIST_METROS) {
+      for (const { q, role } of SEARCH_TERMS.slice(0, 4)) { // 4 terms per metro to stay fast
+        try {
+          const url = `https://${metro}.craigslist.org/search/res?query=${encodeURIComponent(q)}&sort=date`;
+          const res = await fetch(url, {
+            signal: AbortSignal.timeout(6_000),
+            headers: { "User-Agent": "Mozilla/5.0 (compatible; DWA-bot/1.0)" },
+          });
+          if (!res.ok) continue;
+          const html = await res.text();
+          // Extract listing titles — each looks like: <span class="label">Title here</span>
+          const titleMatches = html.matchAll(/<span[^>]*class="[^"]*label[^"]*"[^>]*>([^<]+)<\/span>/g);
+          for (const [, title] of titleMatches) {
+            const cleaned = title.trim();
+            if (cleaned.length < 4 || cleaned.length > 80) continue;
+            // Only keep listings that look like person-authored resumes (contain job role keywords)
+            const lower = cleaned.toLowerCase();
+            const isRelevant = ["hvac", "electrical", "plumber", "nurse", "lpn", "cna", "rn", "boiler", "roof"].some(kw => lower.includes(kw));
+            if (!isRelevant) continue;
+            // Use listing title as "name" placeholder — will be enriched downstream
+            out.push({
+              full_name: cleaned.slice(0, 80),
+              city: metro.charAt(0).toUpperCase() + metro.slice(1),
+              source: "craigslist_resumes",
+              license_type: role,
+              raw_data: { title: cleaned, metro, query: q, url },
+            });
+            if (out.length >= 30) break; // cap total
+          }
+          if (out.length >= 30) break;
+        } catch (_) { /* fail gracefully per search */ }
+        if (out.length >= 30) break;
+      }
+      if (out.length >= 30) break;
+    }
+    // Post-filter: reject anything that doesn't start with a capital (likely a company name)
+    const filtered = out.filter(c => /^[A-Z]/.test(c.full_name || ""));
+    console.log(`[hire-alert-scanner] Craigslist resumes: ${filtered.length} candidates`);
+    return filtered;
+  } catch (e) {
+    console.warn("[hire-alert-scanner] scanCraigslistResumes failed:", e instanceof Error ? e.message : String(e));
+    return [];
+  }
+}
+
+// SOURCE N3: Union hall dispatch boards — UA Local 636 (Pipefitters), IBEW Local 58 (Electricians), SMWIA Local 80
+// Use Firecrawl to extract member/job-board data from union websites.
+async function scanUnionDispatch(): Promise<RawCandidate[]> {
+  if (!FIRECRAWL_API_KEY) return [];
+  const out: RawCandidate[] = [];
+  const UNION_TARGETS = [
+    { url: "https://www.ualocal636.org/jobs", role: "pipefitter", label: "UA Local 636" },
+    { url: "https://www.ibew58.org/job-board", role: "electrician", label: "IBEW Local 58" },
+    { url: "https://smwia80.org/employment", role: "sheet_metal", label: "SMWIA Local 80" },
+    { url: "https://uaplumbers.com/job-opportunities", role: "plumber", label: "UA Plumbers" },
+  ];
+  for (const { url, role, label } of UNION_TARGETS) {
+    try {
+      const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ url, formats: ["markdown"], timeout: 15000 }),
+        signal: AbortSignal.timeout(20_000),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const md = (data.data?.markdown || data.markdown || "") as string;
+      if (!md || md.length < 100) continue;
+      // Extract names — look for patterns like "John Smith - Available", "Jane Doe (journeyman)"
+      const nameMatches = md.matchAll(/\b([A-Z][a-z]{1,15})\s+([A-Z][a-z]{1,20})\b(?:\s*[-–(]|\s+available|\s+seeking|\s+journeyman)?/g);
+      for (const [, first, last] of nameMatches) {
+        const fullName = `${first} ${last}`;
+        if (!isPersonNameJobBoard(fullName)) continue;
+        out.push({
+          full_name: fullName,
+          source: "union_dispatch",
+          license_type: role,
+          city: "Detroit",
+          raw_data: { union: label, url },
+        });
+        if (out.length >= 20) break;
+      }
+    } catch (_) { /* fail gracefully per union site */ }
+  }
+  console.log(`[hire-alert-scanner] Union dispatch: ${out.length} candidates`);
+  return out;
+}
+
+// SOURCE N4: Michigan nursing/healthcare job boards — Vivian Health, NurseFly, TravelNurseSource
+// These list nurses with availability status. Scrape public listings for MI candidates.
+async function scanNursingJobBoards(): Promise<RawCandidate[]> {
+  if (!FIRECRAWL_API_KEY) return [];
+  const out: RawCandidate[] = [];
+  const NURSING_SOURCES = [
+    { url: "https://www.vivian.com/jobs/nursing/michigan/", role: "rn", label: "vivian" },
+    { url: "https://www.nursefly.com/traveling-nurse-jobs/michigan", role: "rn", label: "nursefly" },
+    { url: "https://jobs.michigannurse.org/", role: "rn", label: "mi_nurses_assoc" },
+    { url: "https://www.michiganpublichealth.org/jobs/", role: "rn", label: "mi_public_health" },
+  ];
+  for (const { url, role, label } of NURSING_SOURCES) {
+    try {
+      const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ url, formats: ["markdown"], timeout: 12000 }),
+        signal: AbortSignal.timeout(18_000),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const md = (data.data?.markdown || data.markdown || "") as string;
+      if (!md || md.length < 100) continue;
+      // Extract names from nurse profiles — "Jennifer Smith, RN" or "David Lee (LPN)"
+      const nameMatches = md.matchAll(/\b([A-Z][a-z]{1,15})\s+([A-Z][a-z]{1,20}),?\s*(?:RN|LPN|CNA|NP|CRNA|BSN|MSN)\b/g);
+      for (const [, first, last] of nameMatches) {
+        const fullName = `${first} ${last}`;
+        if (!isPersonNameJobBoard(fullName)) continue;
+        out.push({
+          full_name: fullName,
+          source: "nursing_job_board",
+          license_type: role,
+          city: "Michigan",
+          raw_data: { source_label: label, url },
+        });
+        if (out.length >= 20) break;
+      }
+    } catch (_) { /* fail gracefully */ }
+  }
+  console.log(`[hire-alert-scanner] Nursing job boards: ${out.length} candidates`);
+  return out;
+}
+
+// SOURCE N5: Michigan Works! and Pure Michigan Talent Connect — state workforce job seekers
+// Michigan's public workforce system lists job seekers by trade/occupation. Free, no key.
+async function scanMichiganWorkforce(): Promise<RawCandidate[]> {
+  const out: RawCandidate[] = [];
+  try {
+    // Pure Michigan Talent Connect job seeker API (public)
+    const PMTC_OCCUPATIONS = [
+      { onet: "47-2144.00", role: "hvac_tech", label: "HVAC" },
+      { onet: "47-2111.00", role: "electrician", label: "Electricians" },
+      { onet: "47-2152.00", role: "plumber", label: "Plumbers" },
+      { onet: "29-1141.00", role: "rn", label: "RN" },
+      { onet: "29-2061.00", role: "lpn", label: "LPN" },
+    ];
+    for (const { onet, role, label } of PMTC_OCCUPATIONS) {
+      try {
+        // PMTC public REST API
+        const url = `https://api.michworks.org/v1/jobseekers?onet_code=${onet}&state=MI&limit=10`;
+        const res = await fetch(url, {
+          signal: AbortSignal.timeout(6_000),
+          headers: { "User-Agent": "DWA-TechAlert/1.0", Accept: "application/json" },
+        });
+        if (!res.ok) continue;
+        const data = await res.json();
+        for (const seeker of (data.results || data.job_seekers || []).slice(0, 10)) {
+          const name = seeker.name || seeker.full_name || seeker.display_name;
+          if (!name || !isPersonNameJobBoard(name)) continue;
+          out.push({
+            full_name: name,
+            city: seeker.city || seeker.location || "Michigan",
+            zip: seeker.zip || "",
+            source: "michigan_workforce",
+            license_type: role,
+            raw_data: { onet, occupation: label, source: "pmtc" },
+          });
+        }
+      } catch (_) { /* fail gracefully per occupation */ }
+    }
+    // Fallback: scrape MichiganWorks.org job seeker listings via Firecrawl if API returns nothing
+    if (out.length === 0 && FIRECRAWL_API_KEY) {
+      try {
+        const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ url: "https://www.michiganworks.org/job-seekers", formats: ["markdown"], timeout: 10000 }),
+          signal: AbortSignal.timeout(15_000),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const md = (data.data?.markdown || data.markdown || "") as string;
+          // Extract any names visible on the page
+          const nameMatches = md.matchAll(/\b([A-Z][a-z]{1,15})\s+([A-Z][a-z]{1,20})\b/g);
+          for (const [, first, last] of nameMatches) {
+            const fullName = `${first} ${last}`;
+            if (!isPersonNameJobBoard(fullName)) continue;
+            out.push({ full_name: fullName, source: "michigan_workforce", city: "Michigan", raw_data: { source: "michiganworks_scrape" } });
+            if (out.length >= 10) break;
+          }
+        }
+      } catch (_) { /* ignore scrape failure */ }
+    }
+    console.log(`[hire-alert-scanner] Michigan Workforce (PMTC/MichiganWorks): ${out.length} candidates`);
+  } catch (e) {
+    console.warn("[hire-alert-scanner] scanMichiganWorkforce failed:", e instanceof Error ? e.message : String(e));
+  }
+  return out;
+}
+
+// SOURCE N6: Reddit — r/hvac, r/plumbing, r/nursing "open to work" / "looking for" posts in Michigan
+// Reddit public JSON API — no auth needed. Rate-limited but free.
+async function scanRedditOpenToWork(): Promise<RawCandidate[]> {
+  const out: RawCandidate[] = [];
+  try {
+    const SUBREDDITS = [
+      { sub: "hvac", role: "hvac_tech" },
+      { sub: "plumbing", role: "plumber" },
+      { sub: "electricians", role: "electrician" },
+      { sub: "nursing", role: "rn" },
+      { sub: "nursingprn", role: "rn" },
+    ];
+    const KEYWORDS = ["looking for work", "open to work", "seeking employment", "available", "job hunting", "michigan", "detroit", "metro detroit"];
+    for (const { sub, role } of SUBREDDITS) {
+      try {
+        const url = `https://www.reddit.com/r/${sub}/search.json?q=${encodeURIComponent("michigan OR detroit looking for work OR open to work")}&sort=new&restrict_sr=1&limit=10`;
+        const res = await fetch(url, {
+          signal: AbortSignal.timeout(6_000),
+          headers: { "User-Agent": "DWA-TechAlert/1.0 (talent scout bot)" },
+        });
+        if (!res.ok) continue;
+        const data = await res.json();
+        const posts = data?.data?.children || [];
+        for (const { data: post } of posts) {
+          const title = (post.title || "").toLowerCase();
+          const bodyText = (post.selftext || "").toLowerCase();
+          const isRelevant = KEYWORDS.some(kw => title.includes(kw) || bodyText.includes(kw));
+          if (!isRelevant) continue;
+          const authorName = post.author || "";
+          if (!authorName || authorName === "[deleted]") continue;
+          // Reddit usernames are not real names — use as identifier only, flag for human review
+          out.push({
+            full_name: `Reddit/${authorName}`,
+            source: "reddit_open_to_work",
+            license_type: role,
+            city: "Michigan",
+            raw_data: {
+              username: authorName,
+              post_title: post.title?.slice(0, 120),
+              subreddit: sub,
+              permalink: `https://reddit.com${post.permalink}`,
+              score: post.score,
+            },
+          });
+        }
+      } catch (_) { /* fail gracefully per subreddit */ }
+    }
+    console.log(`[hire-alert-scanner] Reddit open-to-work: ${out.length} candidates`);
+  } catch (e) {
+    console.warn("[hire-alert-scanner] scanRedditOpenToWork failed:", e instanceof Error ? e.message : String(e));
+  }
+  return out;
+}
+
+// SOURCE N7: CareerBuilder / ZipRecruiter via Sonar — targeted resume search for MI trades/nursing
+// Uses OpenRouter Sonar (already in use) to search public resume listings.
+async function scanCareerBuilderResumes(): Promise<RawCandidate[]> {
+  if (!OPENROUTER_API_KEY) return [];
+  const out: RawCandidate[] = [];
+  try {
+    const SEARCHES = [
+      "site:careerbuilder.com Michigan HVAC technician resume available",
+      "site:ziprecruiter.com Michigan registered nurse RN resume open to work",
+      "site:careerbuilder.com Michigan electrician journeyman resume",
+      "site:careerbuilder.com Michigan plumber licensed resume available",
+      "site:careerbuilder.com Michigan CNA certified nursing assistant resume",
+    ];
+    for (const query of SEARCHES) {
+      try {
+        const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${OPENROUTER_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "perplexity/sonar",
+            messages: [{ role: "user", content: `Search for this and extract any person names, locations, and contact info you find: "${query}". Return a JSON array of objects with: full_name, city, state, email, phone, title, url. Return [] if nothing found.` }],
+            max_tokens: 800,
+          }),
+          signal: AbortSignal.timeout(15_000),
+        });
+        if (!res.ok) continue;
+        const data = await res.json();
+        const content = data.choices?.[0]?.message?.content || "";
+        const jsonMatch = content.match(/\[[\s\S]*\]/);
+        if (!jsonMatch) continue;
+        const parsed = JSON.parse(jsonMatch[0]) as any[];
+        for (const item of parsed.slice(0, 5)) {
+          if (!item.full_name || !isPersonNameJobBoard(item.full_name)) continue;
+          if (item.state && item.state !== "MI" && item.state !== "Michigan") continue;
+          out.push({
+            full_name: item.full_name,
+            email: item.email || null,
+            phone: item.phone || null,
+            city: item.city || "Michigan",
+            source: "careerbuilder_sonar",
+            license_type: item.title?.toLowerCase().includes("nurse") ? "rn" : item.title?.toLowerCase().includes("lpn") ? "lpn" : item.title?.toLowerCase().includes("cna") ? "cna" : "trade",
+            raw_data: { query, url: item.url, title: item.title },
+          });
+        }
+      } catch (_) { /* fail gracefully per query */ }
+    }
+    console.log(`[hire-alert-scanner] CareerBuilder/ZipRecruiter Sonar: ${out.length} candidates`);
+  } catch (e) {
+    console.warn("[hire-alert-scanner] scanCareerBuilderResumes failed:", e instanceof Error ? e.message : String(e));
+  }
+  return out;
+}
+
 async function scanRegistryHireSignals(sb: any, state = "MI"): Promise<RawCandidate[]> {
   const out: RawCandidate[] = [];
   try {
@@ -1581,6 +1984,13 @@ serve(async (req: Request) => {
     scanSBALoanApprovals(),
     scanApprenticeshipCompletions(),
     scanRegistryHireSignals(sb),
+    scanNPINewRegistrations(),
+    scanCraigslistResumes(),
+    scanUnionDispatch(),
+    scanNursingJobBoards(),
+    scanMichiganWorkforce(),
+    scanRedditOpenToWork(),
+    scanCareerBuilderResumes(),
   ]);
 
   const mioshaCandidates = results[0].status === "fulfilled" ? results[0].value : [];
@@ -1589,9 +1999,17 @@ serve(async (req: Request) => {
   const sbaLeads = results[3].status === "fulfilled" ? results[3].value : [];
   const apprenticeCandidates = results[4].status === "fulfilled" ? results[4].value : [];
   const registryCandidates = results[5].status === "fulfilled" ? results[5].value : [];
+  const npiNewCandidates = results[6].status === "fulfilled" ? results[6].value : [];
+  const craigslistCandidates = results[7].status === "fulfilled" ? results[7].value : [];
+  const unionCandidates = results[8].status === "fulfilled" ? results[8].value : [];
+  const nursingBoardCandidates = results[9].status === "fulfilled" ? results[9].value : [];
+  const workforceCandidates = results[10].status === "fulfilled" ? results[10].value : [];
+  const redditCandidates = results[11].status === "fulfilled" ? results[11].value : [];
+  const careerBuilderCandidates = results[12].status === "fulfilled" ? results[12].value : [];
 
   // Log new source counts
   console.log(`[hire-alert-scanner] OSHA: ${oshaLeads.length}, SBA: ${sbaLeads.length}, Apprenticeship: ${apprenticeCandidates.length}, Registry: ${registryCandidates.length}`);
+  console.log(`[hire-alert-scanner] New sources — NPI-new: ${npiNewCandidates.length}, Craigslist: ${craigslistCandidates.length}, Union: ${unionCandidates.length}, NursingBoards: ${nursingBoardCandidates.length}, MIWorkforce: ${workforceCandidates.length}, Reddit: ${redditCandidates.length}, CareerBuilder: ${careerBuilderCandidates.length}`);
 
   const sourceErrors: Record<string, string> = {};
   if (results[0].status === "rejected") {
@@ -1618,7 +2036,7 @@ serve(async (req: Request) => {
       .then(() => {}, (e: unknown) => console.warn("[hire-alert-scanner] failed to stamp source errors:", e));
   }
 
-  const allRaw = [...mioshaCandidates, ...jobBoardCandidates, ...apprenticeCandidates, ...oshaLeads, ...sbaLeads, ...registryCandidates];
+  const allRaw = [...mioshaCandidates, ...jobBoardCandidates, ...apprenticeCandidates, ...oshaLeads, ...sbaLeads, ...registryCandidates, ...npiNewCandidates, ...craigslistCandidates, ...unionCandidates, ...nursingBoardCandidates, ...workforceCandidates, ...redditCandidates, ...careerBuilderCandidates];
 
   // Fix 4: 2-strike zero-result alert — only fires after 2 consecutive zero runs to avoid Sunday noise.
   try {

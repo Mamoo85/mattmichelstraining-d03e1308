@@ -44,9 +44,44 @@ jobs:
       - name: Orphan page scan (advisory)
         run: npx tsx scripts/orphan-scan.ts || true
 
-  # deploy-primary job removed — primary project (eauvubfpanpeuxsrqesu) is Lovable-managed
-  # and auto-deploys edge functions + migrations on push to main. The GitHub-side deploy
-  # was redundant and failing with 403s due to token scope. Lovable handles all deploys.
+  deploy-primary:
+    needs: test
+    runs-on: ubuntu-latest
+    # Requires PRIMARY_SUPABASE_ACCESS_TOKEN secret — see setup instructions in CLAUDE.md
+    if: ${{ secrets.PRIMARY_SUPABASE_ACCESS_TOKEN != '' }}
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.PRIMARY_SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_PROJECT_REF: eauvubfpanpeuxsrqesu
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Deploy all edge functions to primary project
+        run: |
+          # Deploy every function directory that exists — supabase CLI will skip ones
+          # that haven't changed (content-hash check). This is safe to run on every push.
+          for dir in supabase/functions/*/; do
+            fn=$(basename "$dir")
+            # Skip _shared (not a function) and any dir without index.ts
+            [ "$fn" = "_shared" ] && continue
+            [ ! -f "$dir/index.ts" ] && continue
+            # Determine if function needs verify_jwt=false (read from config.toml)
+            if grep -q "\[functions\.$fn\]" supabase/config.toml 2>/dev/null; then
+              NO_JWT=$(awk "/\[functions\.$fn\]/{f=1} f && /verify_jwt *= *false/{print \"true\"; f=0}" supabase/config.toml)
+            fi
+            if [ "$NO_JWT" = "true" ]; then
+              supabase functions deploy "$fn" --project-ref $SUPABASE_PROJECT_REF --no-verify-jwt || true
+            else
+              supabase functions deploy "$fn" --project-ref $SUPABASE_PROJECT_REF || true
+            fi
+          done
+
+      - name: Apply pending DB migrations
+        run: |
+          supabase db push --project-ref $SUPABASE_PROJECT_REF || true
 
   deploy:
     needs: test

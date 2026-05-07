@@ -30,6 +30,7 @@ type FixCategory =
   | "retry_function"
   | "restart_cron"
   | "clear_stale_lock"
+  | "dead_pipe"
   | "unknown";
 
 interface ErrorRow {
@@ -53,6 +54,7 @@ function classify(err: ErrorRow): FixCategory {
   if (src === "twilio") return "retry_sms";
   if (src === "cron") return "restart_cron";
   if (msg.includes("stale lock") || msg.includes("marketplace_lead_locks")) return "clear_stale_lock";
+  if (msg.includes("dead pipe") || msg.includes("0 candidates") || msg.includes("zero candidates") || msg.includes("scanner dead")) return "dead_pipe";
   if (src === "edge_function" && status >= 500) return "retry_function";
   if (src === "stripe" && status >= 500) return "retry_function";
   return "unknown";
@@ -133,6 +135,23 @@ async function attemptFix(
         return error
           ? { success: false, detail: `Lock clear failed: ${error.message}` }
           : { success: true, detail: "Stale soft_locks released" };
+      }
+
+      case "dead_pipe": {
+        // Re-trigger the scanner that went silent
+        const fnName = err.function_name || "hire-alert-scanner";
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/${fnName}`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ _fixer_dead_pipe_restart: true }),
+          signal: AbortSignal.timeout(30_000),
+        });
+        return res.ok
+          ? { success: true, detail: `${fnName} re-triggered (status ${res.status}) — check results in ~5 min` }
+          : { success: false, detail: `${fnName} restart returned ${res.status} — may need deploy` };
       }
 
       case "unknown": {
@@ -273,22 +292,18 @@ serve(async (req) => {
     .from("agent_heartbeats")
     .upsert({ agent_name: "fixer", last_beat: new Date().toISOString() }, { onConflict: "agent_name" });
 
-  // SMS Matt only when something actually happened
-  if (toProcess.length > 0) {
-    const smsParts: string[] = [];
-    if (fixed > 0) smsParts.push(`🔧 AutoFix: ${fixed} resolved`);
-    if (escalated > 0) smsParts.push(`🔬 ${escalated} escalated (needs code fix)`);
-    if (failed > 0) smsParts.push(`❌ ${failed} fix attempts failed`);
-    if (smsParts.length > 0) {
-      await sendSMS(
-        ADMIN_PHONE,
-        TWILIO_PHONE,
-        smsParts.join(" | ") + ` — reply ERRORS for details`,
-        "fixer",
-        false,
-        { bypassQuietHours: true }
-      );
-    }
+  // Always SMS when Matt triggered manually; only SMS on auto-triggers if something happened
+  const smsParts: string[] = [];
+  if (fixed > 0) smsParts.push(`🔧 AutoFix: ${fixed} resolved`);
+  if (escalated > 0) smsParts.push(`🔬 ${escalated} escalated (needs code fix)`);
+  if (failed > 0) smsParts.push(`❌ ${failed} fix attempts failed`);
+
+  const shouldSms = trigger === "sms_command" || smsParts.length > 0;
+  if (shouldSms) {
+    const msg = smsParts.length > 0
+      ? smsParts.join(" | ") + ` — reply ERRORS for details`
+      : `🔧 Fixer done: no actionable errors in error_logs (last 15min). If responding to a DEAD PIPE alert, ask Lovable to deploy hire-alert-scanner with latest code.`;
+    await sendSMS(ADMIN_PHONE, TWILIO_PHONE, msg, "fixer", false, { bypassQuietHours: true });
   }
 
   // Log own errors if fixer itself throws — use warn so it doesn't recurse
