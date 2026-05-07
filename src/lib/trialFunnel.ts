@@ -13,7 +13,8 @@ export type TrialFunnelEvent =
   | "trial_success"
   | "trial_error"
   | "escape_hatch_click"
-  | "sticky_cta_click";
+  | "sticky_cta_click"
+  | "save_spot";
 
 const SESSION_KEY = "trial_funnel_session_id";
 
