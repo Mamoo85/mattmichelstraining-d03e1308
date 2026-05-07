@@ -17,7 +17,7 @@ import MortgageRadarMap from "@/components/mortgage/MortgageRadarMap";
 import MortgageRadarPipeline from "@/components/mortgage/MortgageRadarPipeline";
 import MortgageRadarWelcome from "@/components/mortgage/MortgageRadarWelcome";
 import MortgageRadarSeedLead from "@/components/mortgage/MortgageRadarSeedLead";
-import MortgageLeadCard from "@/components/mortgage/MortgageLeadCard";
+import MortgageLeadCard, { MortgageLeadCardSkeleton } from "@/components/mortgage/MortgageLeadCard";
 import RadarExportBar from "@/components/shared/RadarExportBar";
 import OnboardingChecklist from "@/components/shared/OnboardingChecklist";
 
