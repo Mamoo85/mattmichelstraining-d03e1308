@@ -226,6 +226,7 @@ export default function StartTrial() {
             <h1 className="text-3xl sm:text-4xl font-black mt-2">Pick a product to start your free trial</h1>
             <p className="text-white/70 mt-3">7 days free · no credit card · cancel in one click</p>
           </div>
+          <TrustSignals />
           <div className="grid sm:grid-cols-2 gap-3">
             {PICKER_OPTIONS.map((opt) => {
               const def = PRODUCTS[opt.key];
