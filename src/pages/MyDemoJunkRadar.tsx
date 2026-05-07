@@ -5,7 +5,7 @@ export default function MyDemoJunkRadar() {
     <TradeRadarPortal
       vertical="demo_junk"
       productLabel="Demo & Junk Radar"
-      landingPath="/start-trial"
+      landingPath="/start-trial?product=demo_junk_radar"
       signalTypes={[
         { value: "cofc_debris_inspection", label: "🔴 Rental License Expiring" },
         { value: "demo_permit", label: "🏚️ Demolition Order Issued" },

@@ -5,7 +5,7 @@ export default function MyFoundationRadar() {
     <TradeRadarPortal
       vertical="foundation"
       productLabel="Foundation Radar"
-      landingPath="/start-trial"
+      landingPath="/start-trial?product=foundation_radar"
       signalTypes={[
         { value: "cofc_foundation_inspection", label: "🔴 Rental License Expiring" },
         { value: "foundation_flood_risk", label: "💧 Flood Zone — Foundation Risk" },
