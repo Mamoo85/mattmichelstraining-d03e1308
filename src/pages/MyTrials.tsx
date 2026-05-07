@@ -74,7 +74,7 @@ export default function MyTrials() {
   return (
     <div className="min-h-screen bg-[#030711] text-foreground">
       <SEOHead title="My Trials — DWA Dashboards" description="View all your active 7-day trial dashboards and expiration dates." />
-      <DWASuiteNav email={email || undefined} />
+      <DWASuiteNav activeProduct="mortgage_radar" email={email || undefined} />
 
       <header className="border-b border-[#1e3a5f] bg-[#0a1628]/80 backdrop-blur">
         <div className="max-w-5xl mx-auto px-4 py-5 flex items-center justify-between">
