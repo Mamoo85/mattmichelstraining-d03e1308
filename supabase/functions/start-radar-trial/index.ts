@@ -61,7 +61,7 @@ const PRODUCT_CONFIG: Record<string, { label: string; dashboardPath: string; pit
   },
   missed_call: {
     label: "Missed-Call Catch",
-    dashboardPath: "/missed-call-catch",
+    dashboardPath: "/my-missed-call",
     pitch: "auto-text + voicemail capture every time you miss a call",
   },
   industry_pulse: {
@@ -71,7 +71,7 @@ const PRODUCT_CONFIG: Record<string, { label: string; dashboardPath: string; pit
   },
   fielddesk: {
     label: "FieldDesk",
-    dashboardPath: "/field-service/dispatch",
+    dashboardPath: "/my-field-desk",
     pitch: "dispatch, GPS, and invoicing for your field crews",
   },
   bundle_revenue_suite: {
