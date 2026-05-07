@@ -21,7 +21,7 @@ serve(async (req) => {
   }
 
   try {
-    const { email, company_name, phone, plan, target_roles, ref, county, target_state, target_metro, target_zip_prefixes, source_page } = await req.json();
+    const { email, company_name, phone, plan, tier, target_roles, ref, county, target_state, target_metro, target_zip_prefixes, source_page } = await req.json();
 
     if (!email) {
       return new Response(
