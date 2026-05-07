@@ -117,6 +117,13 @@ const ProgressCharts = ({ targetUserId, targetUserName }: ProgressChartsProps) =
         timestamp={targetUserId ? "Admin view — logging for this client" : "Track your maxes and watch them climb"}
       />
 
+      {/* Big 3 multi-lift overview — squat / bench / deadlift on one chart */}
+      {effectiveUserId && (
+        <Suspense fallback={<ChartFallback />}>
+          <Big3ProgressChart targetUserId={effectiveUserId} />
+        </Suspense>
+      )}
+
       {/* Lift category selector */}
       {LIFT_CATEGORIES.map((cat) => (
         <div key={cat.label} className="mb-2">
