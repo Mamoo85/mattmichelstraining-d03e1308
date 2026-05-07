@@ -20,6 +20,7 @@ const LogHistory = lazyRetry(() => import("@/components/progress/LogHistory"));
 const RecoveryChart = lazyRetry(() => import("@/components/progress/RecoveryChart"));
 const AiRecoveryAdvisor = lazyRetry(() => import("@/components/progress/AiRecoveryAdvisor"));
 const LiftInsights = lazyRetry(() => import("@/components/progress/LiftInsights"));
+const Big3ProgressChart = lazyRetry(() => import("@/components/progress/Big3ProgressChart"));
 
 const ChartFallback = () => (
   <div className="flex justify-center py-6">
@@ -115,6 +116,13 @@ const ProgressCharts = ({ targetUserId, targetUserName }: ProgressChartsProps) =
         title={targetUserName ? `${targetUserName} — Lift Tracker` : "Lift Tracker"}
         timestamp={targetUserId ? "Admin view — logging for this client" : "Track your maxes and watch them climb"}
       />
+
+      {/* Big 3 multi-lift overview — squat / bench / deadlift on one chart */}
+      {effectiveUserId && (
+        <Suspense fallback={<ChartFallback />}>
+          <Big3ProgressChart targetUserId={effectiveUserId} />
+        </Suspense>
+      )}
 
       {/* Lift category selector */}
       {LIFT_CATEGORIES.map((cat) => (
