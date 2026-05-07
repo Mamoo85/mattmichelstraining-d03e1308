@@ -721,6 +721,16 @@ serve(async (req) => {
       const meta = session.metadata || {};
       const priceId = (session.line_items?.data?.[0] as any)?.price?.id as string | null;
 
+      // P0-3 polish: stamp product_type on the dedup row early so the admin
+      // Checkout Events dashboard can filter by product even if fulfillment
+      // crashes mid-flight before markFulfilled runs.
+      if (meta.type) {
+        sb.from("processed_stripe_events")
+          .update({ product_type: meta.type })
+          .eq("event_id", event.id)
+          .then(() => {}, () => {});
+      }
+
       // ── RECEIPT TRACKING (checkout hardening) ──
       // Upsert a receipt row so the success page can poll fulfillment status.
       // Status will be flipped to 'fulfilled' at the end of this handler.
