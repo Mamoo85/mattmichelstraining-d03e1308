@@ -23039,6 +23039,48 @@ export type Database = {
         }
         Relationships: []
       }
+      trial_reactivation_sends: {
+        Row: {
+          business_name: string | null
+          city: string | null
+          created_at: string
+          email: string
+          id: string
+          resend_id: string | null
+          sent_at: string
+          state: string | null
+          subject: string | null
+          trade: string | null
+          trial_url: string | null
+        }
+        Insert: {
+          business_name?: string | null
+          city?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          resend_id?: string | null
+          sent_at?: string
+          state?: string | null
+          subject?: string | null
+          trade?: string | null
+          trial_url?: string | null
+        }
+        Update: {
+          business_name?: string | null
+          city?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          resend_id?: string | null
+          sent_at?: string
+          state?: string | null
+          subject?: string | null
+          trade?: string | null
+          trial_url?: string | null
+        }
+        Relationships: []
+      }
       trial_settings: {
         Row: {
           auto_charge_tier: string
