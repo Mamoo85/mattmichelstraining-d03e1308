@@ -52,8 +52,9 @@ serve(async (req) => {
     const vertical = String(body.vertical || "").trim();
     const email = String(body.email || "").trim().toLowerCase();
     const token = String(body.token || "").trim();
+    const trial = String(body.trial || "").trim(); // legacy ?trial=<magic_token> rescue
 
-    if (!vertical || !token) {
+    if (!vertical || (!token && !trial && !email)) {
       return new Response(JSON.stringify({ error: "missing_dashboard_link" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -61,29 +62,81 @@ serve(async (req) => {
     }
 
     const sb = createClient(SUPABASE_URL, SERVICE_ROLE);
-    let clientQuery = sb.from("trade_radar_clients").select("id, email, business_name, zip_codes, trial_ends_at, dashboard_token").eq("vertical", vertical).eq("active", true);
 
-    if (email) {
-      const signedOk = await verifySignedToken(email, token);
-      if (!signedOk) {
-        return new Response(JSON.stringify({ error: "invalid_or_expired_link" }), {
-          status: 401,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      clientQuery = clientQuery.eq("email", email);
-    } else {
-      clientQuery = clientQuery.eq("dashboard_token", token);
+    // Resolution waterfall:
+    //   1) native dashboard_token lookup (new flow)
+    //   2) HMAC signed token + email (legacy mortgage-style flow)
+    //   3) ?trial=<magic_token> from radar_trials (legacy email rescue)
+    //   4) email-only if a single matching active client row exists (last resort rescue)
+    let resolvedEmail = email;
+    let clientRow: any = null;
+
+    // (1) native token
+    if (token) {
+      const { data: byToken } = await sb
+        .from("trade_radar_clients")
+        .select("id, email, business_name, zip_codes, trial_ends_at, dashboard_token")
+        .eq("vertical", vertical)
+        .eq("active", true)
+        .eq("dashboard_token", token)
+        .maybeSingle();
+      if (byToken) clientRow = byToken;
     }
 
-    const { data: client, error: clientError } = await clientQuery.maybeSingle();
-    if (clientError) throw clientError;
-    if (!client) {
+    // (2) signed token + email
+    if (!clientRow && email && token) {
+      const signedOk = await verifySignedToken(email, token);
+      if (signedOk) {
+        const { data: byEmail } = await sb
+          .from("trade_radar_clients")
+          .select("id, email, business_name, zip_codes, trial_ends_at, dashboard_token")
+          .eq("vertical", vertical)
+          .eq("active", true)
+          .eq("email", email)
+          .maybeSingle();
+        if (byEmail) { clientRow = byEmail; resolvedEmail = email; }
+      }
+    }
+
+    // (3) legacy ?trial=<magic_token> rescue → look up radar_trials, then native client
+    if (!clientRow && trial) {
+      const { data: trialRow } = await sb
+        .from("radar_trials")
+        .select("email, product, status, expires_at")
+        .eq("magic_token", trial)
+        .maybeSingle();
+      if (trialRow && (trialRow.status === "active" || trialRow.status === "founder")) {
+        const trialEmail = String(trialRow.email).toLowerCase();
+        const { data: byEmail } = await sb
+          .from("trade_radar_clients")
+          .select("id, email, business_name, zip_codes, trial_ends_at, dashboard_token")
+          .eq("vertical", vertical)
+          .eq("active", true)
+          .eq("email", trialEmail)
+          .maybeSingle();
+        if (byEmail) { clientRow = byEmail; resolvedEmail = trialEmail; }
+      }
+    }
+
+    // (4) last-resort: email param alone, single active row → grant access (logged)
+    if (!clientRow && email && !token && !trial) {
+      const { data: byEmail } = await sb
+        .from("trade_radar_clients")
+        .select("id, email, business_name, zip_codes, trial_ends_at, dashboard_token")
+        .eq("vertical", vertical)
+        .eq("active", true)
+        .eq("email", email)
+        .maybeSingle();
+      if (byEmail) { clientRow = byEmail; resolvedEmail = email; }
+    }
+
+    if (!clientRow) {
       return new Response(JSON.stringify({ error: "not_enrolled" }), {
         status: 404,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    const client = clientRow;
 
     const since = new Date(Date.now() - 90 * 86_400_000).toISOString();
     let leadQuery = sb.from("trade_radar_leads")
