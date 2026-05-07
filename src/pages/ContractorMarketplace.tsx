@@ -149,23 +149,29 @@ export default function ContractorMarketplace() {
     if (!email || !claimLead) return;
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       toast.error("Enter a valid email address");
+      trackTrialEvent("trial_error", MKT_PRODUCT_KEY, { email, metadata: { reason: "invalid_email", lead_id: claimLead.id } });
       return;
     }
+    trackTrialEvent("form_submit", MKT_PRODUCT_KEY, { email, metadata: { lead_id: claimLead.id } });
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("create-contractor-ppl-checkout", {
         body: { lead_id: claimLead.id, email },
       });
       if (error || !data?.url) throw new Error(error?.message || "Checkout failed");
+      trackTrialEvent("checkout_redirect", MKT_PRODUCT_KEY, { email, metadata: { lead_id: claimLead.id } });
       window.location.href = data.url;
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Something went wrong");
+      const msg = e instanceof Error ? e.message : "Something went wrong";
+      toast.error(msg);
+      trackTrialEvent("trial_error", MKT_PRODUCT_KEY, { email, metadata: { lead_id: claimLead.id, error: msg.slice(0, 200) } });
       setLoading(false);
     }
   }
 
   async function handleNotify() {
     if (!notifyPhone) return;
+    trackTrialEvent("form_submit", MKT_PRODUCT_KEY, { metadata: { type: "notify_signup", phone: notifyPhone, trade } });
     toast.success("Got it — we'll text you when a lead drops in this trade.");
     setNotifySent(true);
   }
