@@ -385,18 +385,22 @@ export default function TradeRadarPortal({
                     claimed={isClaimed}
                     onClaim={async (lead) => {
                       if (!client) return;
-                      const { error } = await (supabase.from as any)("trade_radar_lead_actions").upsert({
-                        client_id: client.id,
-                        lead_id: lead.id,
-                        status: "called",
-                      }, { onConflict: "client_id,lead_id" });
-                      if (error) {
-                        const { toast } = await import("sonner");
+                      const { data, error } = await supabase.functions.invoke("claim-trade-radar-lead", {
+                        body: {
+                          product: "trade",
+                          client_id: client.id,
+                          lead_id: lead.id,
+                          status: "called",
+                          email: clientEmail || client.email,
+                          token: dashboardToken,
+                        },
+                      });
+                      const { toast } = await import("sonner");
+                      if (error || (data as any)?.error) {
                         toast.error("Couldn't claim lead — text Matt at (313) 992-1219");
                         return;
                       }
                       setActions((prev) => ({ ...prev, [lead.id]: { status: "called", snooze_until: null } }));
-                      const { toast } = await import("sonner");
                       toast.success("Lead claimed — call the owner now");
                     }}
                     actionBar={
