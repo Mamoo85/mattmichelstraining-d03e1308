@@ -117,7 +117,7 @@ serve(async (req) => {
       "payment_method_types[0]": "card",
       "metadata[type]": "dead_lead_billing_setup",
       "metadata[contractor_id]": resolvedContractorId,
-      success_url: `${SITE_URL}/dead-lead-intake?billing=success`,
+      success_url: `${SITE_URL}/dead-lead-intake?billing=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${SITE_URL}/dead-lead-intake?billing=cancel`,
     });
 
