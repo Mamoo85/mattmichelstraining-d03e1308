@@ -51,6 +51,12 @@ const DWA_ROUTES = [
 ];
 
 function isDWAPage(pathname: string): boolean {
+  // Hostname short-circuit: DWA domain or Lovable preview always = DWA brand,
+  // regardless of path (defensive against M² helmet flashes on /my-* navigation).
+  if (typeof window !== "undefined") {
+    const h = window.location.hostname;
+    if (h === "detroitwebagent.com" || h === "www.detroitwebagent.com") return true;
+  }
   if (getDomainBrand() === "agency") return true;
   return DWA_ROUTES.some(r => pathname.startsWith(r));
 }
