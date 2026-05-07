@@ -39,6 +39,15 @@ const DWA_ROUTES = [
   "/lead-unlocked", "/lead-claimed", "/ai-phone-answering",
   "/manufacturing-web-design", "/real-estate-web-design",
   "/dwa-admin",
+  // All customer dashboards + radar landing pages — DWA brand
+  "/my-", "/talent-radar", "/mortgage-radar", "/trade-radar",
+  "/site-radar", "/buyer-radar", "/growth-radar", "/demand-radar",
+  "/industry-pulse", "/roofing-radar", "/hvac-radar", "/plumbing-radar",
+  "/electrical-radar", "/pest-control-radar", "/gutters-radar",
+  "/painting-radar", "/exterior-radar", "/tree-radar", "/restoration-radar",
+  "/demo-junk-radar", "/foundation-radar",
+  "/claim-lead", "/contractor-marketplace", "/marketplace",
+  "/start-trial", "/billing", "/bundle-revenue-suite",
 ];
 
 function isDWAPage(pathname: string): boolean {
