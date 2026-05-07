@@ -68,78 +68,45 @@ export default function TradeRadarPortal({
 
   useEffect(() => {
     (async () => {
-      if (!clientEmail || !dashboardToken) {
+      if (!dashboardToken) {
         setAuthError("No dashboard link found. Check your weekly digest email.");
         setLoading(false);
         return;
       }
 
-      // Verify magic-link token (same HMAC system as Mortgage Radar)
-      const { data: authData } = await supabase.functions.invoke("verify-dashboard-token", {
-        body: { email: clientEmail, token: dashboardToken },
+      const { data: dashboardData, error: dashboardError } = await supabase.functions.invoke("trade-radar-dashboard", {
+        body: { email: clientEmail || undefined, token: dashboardToken, vertical },
       });
-      if (!(authData as any)?.valid) {
-        setAuthError(
-          (authData as any)?.reason === "expired"
-            ? "Your dashboard link has expired — request a new one from your weekly digest email."
-            : "Invalid dashboard link — request a new one from your weekly digest email."
-        );
+
+      if (dashboardError || (dashboardData as any)?.error) {
+        const code = (dashboardData as any)?.error;
+        if (code === "not_enrolled") {
+          setNotEnrolled(true);
+        } else {
+          setAuthError(code === "invalid_or_expired_link"
+            ? "Your dashboard link is invalid or expired — request a new one from your weekly digest email."
+            : "Could not load this dashboard link. Text Matt at (313) 992-1219 and we'll fix it now.");
+        }
+        setNotEnrolled(true);
         setLoading(false);
         return;
       }
 
-      // Resolve trade client row by email + vertical
-      const { data: clientRow } = await (supabase.from as any)("trade_radar_clients")
-        .select("id, email, business_name, zip_codes, trial_ends_at")
-        .eq("email", clientEmail.toLowerCase())
-        .eq("vertical", vertical)
-        .eq("active", true)
-        .maybeSingle();
-
+      const clientRow = (dashboardData as any)?.client as Client | undefined;
+      const rows = ((dashboardData as any)?.leads as Lead[]) || [];
+      const actData = ((dashboardData as any)?.actions as any[]) || [];
       if (!clientRow) {
         setNotEnrolled(true);
         setLoading(false);
         return;
       }
-      setClient(clientRow as Client);
-
-      // Pull leads for this vertical, filtered by client's zip_codes (last 90 days)
-      const since = new Date(Date.now() - 90 * 86_400_000).toISOString();
-      let query = (supabase.from as any)("trade_radar_leads")
-        .select(
-          "id, full_name, address, city, zip, signal_type, signal_detail, signal_date, score, signal_count, suggested_opener, best_call_window, estimated_value, street_view_url, owner_name, owner_phone, owner_email, enriched_at, created_at"
-        )
-        .eq("vertical", vertical)
-        .gte("created_at", since)
-        .order("score", { ascending: false })
-        .order("created_at", { ascending: false })
-        .limit(200);
-
-      if (clientRow.zip_codes?.length) {
-        query = query.in("zip", clientRow.zip_codes);
-      }
-
-      const { data, error } = await query;
-      if (error) {
-        toast.error("Could not load leads");
-        console.warn("[TradeRadarPortal] lead query failed", error);
-      } else {
-        const rows = (data as Lead[]) || [];
-        setLeads(rows);
-        // Load this client's actions for those leads
-        if (rows.length) {
-          const ids = rows.map((r) => r.id);
-          const { data: actData } = await (supabase.from as any)("trade_radar_lead_actions")
-            .select("lead_id, status, snooze_until")
-            .eq("client_id", clientRow.id)
-            .in("lead_id", ids);
-          const map: Record<string, { status: string; snooze_until: string | null }> = {};
-          (actData || []).forEach((a: any) => {
-            map[a.lead_id] = { status: a.status, snooze_until: a.snooze_until };
-          });
-          setActions(map);
-        }
-      }
+      setClient(clientRow);
+      setLeads(rows);
+      const map: Record<string, { status: string; snooze_until: string | null }> = {};
+      actData.forEach((a: any) => {
+        map[a.lead_id] = { status: a.status, snooze_until: a.snooze_until };
+      });
+      setActions(map);
       setLoading(false);
     })();
   }, [clientEmail, dashboardToken, vertical]);
