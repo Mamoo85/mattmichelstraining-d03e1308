@@ -276,18 +276,56 @@ export default function DeadLeadIntake() {
             Paste your old quotes below. We text them for you. <strong style={{ color: "#fff" }}>Zero charge until someone replies YES.</strong> First reply is free — after that, $50 per positive reply. No monthly fee, ever.
           </p>
         </div>
-        <div style={{ marginBottom: 28 }}>
+        <div style={{ marginBottom: 24 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
             <span style={{ fontSize: 28 }}>♻️</span>
             <h1 style={{ color: "#fff", fontSize: 22, fontWeight: 800, margin: 0 }}>
-              Dead Lead Reactivation
+              Wake Up Your Dead Leads
             </h1>
           </div>
-          <p style={{ color: "#64748b", fontSize: 14, lineHeight: 1.6, margin: 0 }}>
-            Paste your old estimates and dead leads below. We'll send a 3-message SMS sequence
-            on your behalf — <strong style={{ color: "#fff" }}>first positive reply is FREE, then $50 only when a lead replies YES</strong>.
+          <p style={{ color: "#94a3b8", fontSize: 14, lineHeight: 1.6, margin: 0 }}>
+            We text the old quotes that ghosted you. <strong style={{ color: "#fff" }}>$0 to start. $50 only when someone replies YES.</strong> First reply is on the house.
           </p>
         </div>
+
+        {/* Sample SMS exchange — proof of what they get */}
+        <div style={{ marginBottom: 20, padding: 14, background: "#0a1628", border: "1px solid #1e3a5f", borderRadius: 10 }}>
+          <p style={{ color: "#64748b", fontSize: 11, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", margin: "0 0 10px" }}>What they receive (real example)</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <div style={{ alignSelf: "flex-start", maxWidth: "85%", background: "#1e3a5f", color: "#fff", padding: "8px 12px", borderRadius: "12px 12px 12px 2px", fontSize: 13, lineHeight: 1.4 }}>
+              Hey Sarah — Smith HVAC. We quoted your furnace back in March. Still need it done before winter? Reply YES and I'll lock today's pricing.
+            </div>
+            <div style={{ alignSelf: "flex-end", maxWidth: "85%", background: "#00d4ff", color: "#0a1628", padding: "8px 12px", borderRadius: "12px 12px 2px 12px", fontSize: 13, fontWeight: 600, lineHeight: 1.4 }}>
+              Yes actually — call me tomorrow morning 👍
+            </div>
+          </div>
+          <p style={{ color: "#10b981", fontSize: 12, fontWeight: 700, margin: "10px 0 0", textAlign: "center" }}>↑ That reply = $50 to us. Closed job = $4,800 to you.</p>
+        </div>
+
+        {/* Trust strip */}
+        <div style={{ marginBottom: 20, display: "flex", flexWrap: "wrap", gap: 6, fontSize: 11, color: "#64748b" }}>
+          <span style={{ padding: "4px 9px", background: "#0a1628", border: "1px solid #1e3a5f", borderRadius: 999 }}>✓ TCPA-compliant</span>
+          <span style={{ padding: "4px 9px", background: "#0a1628", border: "1px solid #1e3a5f", borderRadius: 999 }}>✓ Carrier-screened</span>
+          <span style={{ padding: "4px 9px", background: "#0a1628", border: "1px solid #1e3a5f", borderRadius: 999 }}>✓ Detroit-based</span>
+          <span style={{ padding: "4px 9px", background: "#0a1628", border: "1px solid #1e3a5f", borderRadius: 999 }}>✓ Auto opt-out</span>
+        </div>
+
+        {/* Mobile / no-form escape hatch */}
+        {isMobile && (
+          <div style={{ marginBottom: 20, padding: 14, background: "linear-gradient(135deg, #00d4ff20, #00d4ff05)", border: "1px solid #00d4ff60", borderRadius: 10 }}>
+            <p style={{ color: "#fff", fontSize: 14, fontWeight: 700, margin: "0 0 8px" }}>📱 On your phone? Skip the form.</p>
+            <p style={{ color: "#94a3b8", fontSize: 12, margin: "0 0 10px", lineHeight: 1.5 }}>
+              Just text Matt your business name + a screenshot of your old quotes. We'll do the rest.
+            </p>
+            <a
+              href={`sms:${SUPPORT_PHONE_TEL}?&body=${encodeURIComponent("Hey Matt — I want to try Dead Lead Reactivation. My business is: ")}`}
+              onClick={() => trackEscape("sms")}
+              style={{ display: "block", padding: "12px", background: "#00d4ff", color: "#0a1628", borderRadius: 8, fontWeight: 800, fontSize: 14, textAlign: "center", textDecoration: "none" }}
+            >
+              💬 Text Matt: {SUPPORT_PHONE_DISPLAY}
+            </a>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 16 }}>
