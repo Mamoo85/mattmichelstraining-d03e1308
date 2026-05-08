@@ -11,6 +11,7 @@ const NAV = [
   { to: "/sandbox/djconley/products", label: "Manufacturers" },
   { to: "/sandbox/djconley/about", label: "About" },
   { to: "/sandbox/djconley/contact", label: "Contact" },
+  { to: "/sandbox/djconley/tour", label: "Command Center" },
 ];
 
 export default function SiteLayout({ children, title }: { children: ReactNode; title?: string }) {
