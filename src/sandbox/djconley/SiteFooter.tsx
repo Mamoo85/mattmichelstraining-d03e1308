@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { djPath } from "./links";
 
 const QUICK_LINKS = [
   ["Home", "/sandbox/djconley"],
@@ -27,7 +28,7 @@ export default function SiteFooter() {
           <ul className="space-y-2">
             {QUICK_LINKS.map(([label, href]) => (
               <li key={label}>
-                <Link to={href} className="text-white/80 hover:text-white">
+                <Link to={href === "#" ? "#" : djPath(href.replace("/sandbox/djconley", "") || "/")} className="text-white/80 hover:text-white">
                   {label}
                 </Link>
               </li>
@@ -40,7 +41,7 @@ export default function SiteFooter() {
           <ul className="space-y-2">
             {SERVICES.map(([label, href]) => (
               <li key={label}>
-                <Link to={href} className="text-white/80 hover:text-white">
+                <Link to={djPath(href.replace("/sandbox/djconley", "") || "/")} className="text-white/80 hover:text-white">
                   {label}
                 </Link>
               </li>
@@ -77,7 +78,7 @@ export default function SiteFooter() {
             Click below to view current openings.
           </p>
           <Link
-            to="/sandbox/djconley/careers"
+            to={djPath("/careers")}
             className="mt-3 inline-block rounded-full border-2 border-[#e30613] px-5 py-2 text-xs font-bold uppercase tracking-wider text-[#e30613] hover:bg-[#e30613] hover:text-white"
           >
             Current Openings
