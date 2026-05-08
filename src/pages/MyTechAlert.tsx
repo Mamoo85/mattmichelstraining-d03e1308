@@ -77,6 +77,7 @@ interface DashboardData {
     target_zip_codes: string[];
     booking_link?: string;
     email?: string | null;
+    dashboard_token?: string | null;
   };
   candidates: Candidate[];
   kpi: { total: number; hot: number; contacted: number; hired: number };
