@@ -3,7 +3,7 @@ import PageRenderer from "../PageRenderer";
 
 const make = (slug: string, title: string) => () => (
   <SiteLayout title={title}>
-    <PageRenderer slug={slug} />
+    <PageRenderer slug={slug} title={title} />
   </SiteLayout>
 );
 
