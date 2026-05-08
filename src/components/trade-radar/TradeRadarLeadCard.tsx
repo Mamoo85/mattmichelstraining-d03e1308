@@ -279,15 +279,25 @@ export default function TradeRadarLeadCard({
                   </>
                 )}
               </Button>
-            ) : (
-              <Button
-                variant="outline"
-                className="border-green-500/30 text-green-400 hover:bg-green-500/10 text-sm rounded-xl"
-                onClick={() => window.open(`tel:${lead.owner_phone ?? ""}`, "_self")}
+            ) : lead.owner_phone ? (
+              <a
+                href={`tel:${lead.owner_phone}`}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-green-500/30 text-green-400 hover:bg-green-500/10 text-sm font-semibold transition-colors"
               >
-                <Phone className="w-4 h-4 mr-1.5" />
-                {lead.owner_phone ? "Call Owner" : "Call Now"}
-              </Button>
+                <Phone className="w-4 h-4" />
+                Call Owner
+              </a>
+            ) : (
+              <a
+                href={`sms:+13139921219?&body=${encodeURIComponent(
+                  `Need owner contact for ${lead.address}, ${lead.city} ${lead.zip} (lead ${lead.id.slice(0, 8)})`
+                )}`}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-amber-500/30 text-amber-400 hover:bg-amber-500/10 text-sm font-semibold transition-colors"
+                title="We'll text you the owner's number within 24h"
+              >
+                <MessageSquare className="w-4 h-4" />
+                Request Owner Info
+              </a>
             )}
           </div>
 
