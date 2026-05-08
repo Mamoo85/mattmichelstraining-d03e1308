@@ -10,6 +10,7 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { dwaEmail, dwaWrap } from "../_shared/dwa-email.ts";
+import { checkEmailSanity } from "../_shared/email-sanity.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
