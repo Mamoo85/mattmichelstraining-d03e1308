@@ -191,7 +191,7 @@
   <!-- DWA SiteRadar Visitor Intel by Detroit Web Agency -->
   <script>
     (function(){
-      if(location.hostname==='pat.detroitwebagent.com') return;
+      if(location.hostname==='pat.detroitwebagent.com' || (location.pathname||'').indexOf('/sandbox/djconley')===0) return;
       var d={page:window.location.href,ref:document.referrer,key:"f35b4c09-3a3b-4d62-a2f3-baa029ecc0d6"};
       fetch("https://eauvubfpanpeuxsrqesu.supabase.co/functions/v1/visitor-identify",{
         method:"POST",headers:{"Content-Type":"application/json"},
