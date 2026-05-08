@@ -10420,22 +10420,31 @@ export type Database = {
       industry_pulse_clients: {
         Row: {
           active: boolean | null
+          avg_deal_size_usd: number | null
           buyer_type: string
+          close_rate_pct: number | null
           company_name: string
           confidence_min: number | null
           confidence_threshold: number
           contact_name: string | null
           created_at: string | null
           dashboard_token: string | null
+          differentiators: string | null
           email: string
           id: string
           is_test_account: boolean
           last_alerted_at: string | null
+          offering_summary: string | null
           phone: string | null
           plan: string | null
           pricing_tier: string | null
+          sender_email: string | null
+          sender_name: string | null
+          sender_phone: string | null
+          service_radius_miles: number | null
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
+          target_buyer_titles: string[] | null
           target_industries: string[] | null
           target_roles: string[] | null
           territory_counties: string[] | null
@@ -10446,22 +10455,31 @@ export type Database = {
         }
         Insert: {
           active?: boolean | null
+          avg_deal_size_usd?: number | null
           buyer_type?: string
+          close_rate_pct?: number | null
           company_name: string
           confidence_min?: number | null
           confidence_threshold?: number
           contact_name?: string | null
           created_at?: string | null
           dashboard_token?: string | null
+          differentiators?: string | null
           email: string
           id?: string
           is_test_account?: boolean
           last_alerted_at?: string | null
+          offering_summary?: string | null
           phone?: string | null
           plan?: string | null
           pricing_tier?: string | null
+          sender_email?: string | null
+          sender_name?: string | null
+          sender_phone?: string | null
+          service_radius_miles?: number | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
+          target_buyer_titles?: string[] | null
           target_industries?: string[] | null
           target_roles?: string[] | null
           territory_counties?: string[] | null
@@ -10472,22 +10490,31 @@ export type Database = {
         }
         Update: {
           active?: boolean | null
+          avg_deal_size_usd?: number | null
           buyer_type?: string
+          close_rate_pct?: number | null
           company_name?: string
           confidence_min?: number | null
           confidence_threshold?: number
           contact_name?: string | null
           created_at?: string | null
           dashboard_token?: string | null
+          differentiators?: string | null
           email?: string
           id?: string
           is_test_account?: boolean
           last_alerted_at?: string | null
+          offering_summary?: string | null
           phone?: string | null
           plan?: string | null
           pricing_tier?: string | null
+          sender_email?: string | null
+          sender_name?: string | null
+          sender_phone?: string | null
+          service_radius_miles?: number | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
+          target_buyer_titles?: string[] | null
           target_industries?: string[] | null
           target_roles?: string[] | null
           territory_counties?: string[] | null
@@ -17948,6 +17975,90 @@ export type Database = {
           outcome?: string | null
           prompted_at?: string
           responded_at?: string | null
+        }
+        Relationships: []
+      }
+      radar_lead_actions: {
+        Row: {
+          action: string
+          client_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          radar: string
+          signal_id: string
+        }
+        Insert: {
+          action: string
+          client_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          radar: string
+          signal_id: string
+        }
+        Update: {
+          action?: string
+          client_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          radar?: string
+          signal_id?: string
+        }
+        Relationships: []
+      }
+      radar_lead_fit_cache: {
+        Row: {
+          client_id: string
+          created_at: string
+          fit_reason: string | null
+          fit_score: number | null
+          id: string
+          next_best_action: string | null
+          objection_to_expect: string | null
+          radar: string
+          raw: Json | null
+          revenue_high_usd: number | null
+          revenue_logic: string | null
+          revenue_low_usd: number | null
+          signal_id: string
+          suggested_opener: string | null
+          urgency_window_days: number | null
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          fit_reason?: string | null
+          fit_score?: number | null
+          id?: string
+          next_best_action?: string | null
+          objection_to_expect?: string | null
+          radar: string
+          raw?: Json | null
+          revenue_high_usd?: number | null
+          revenue_logic?: string | null
+          revenue_low_usd?: number | null
+          signal_id: string
+          suggested_opener?: string | null
+          urgency_window_days?: number | null
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          fit_reason?: string | null
+          fit_score?: number | null
+          id?: string
+          next_best_action?: string | null
+          objection_to_expect?: string | null
+          radar?: string
+          raw?: Json | null
+          revenue_high_usd?: number | null
+          revenue_logic?: string | null
+          revenue_low_usd?: number | null
+          signal_id?: string
+          suggested_opener?: string | null
+          urgency_window_days?: number | null
         }
         Relationships: []
       }

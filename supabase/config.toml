@@ -2359,3 +2359,12 @@ verify_jwt = false
 
 [functions.hub-summary]
 verify_jwt = false
+
+[functions.radar-fit-explainer]
+verify_jwt = false
+
+[functions.radar-action-log]
+verify_jwt = false
+
+[functions.radar-setup-save]
+verify_jwt = false
