@@ -23,12 +23,19 @@ const STATES_50 = [
 // FMCSA public dataset endpoint via Socrata (data.transportation.gov / data.cdc.gov mirrors).
 // We use the FMCSA Motor Carrier Census public Socrata feed.
 async function fetchFMCSA(state: string, limit = 50): Promise<any[]> {
-  const url = `https://data.transportation.gov/resource/az4n-8mr2.json?phy_state=${state}&driver_total=1&$limit=${limit}&$order=mcs150_date+DESC`;
+  // Filter active carriers (status_code='A') with at least 1 driver, ordered by recent registration
+  const url = `https://data.transportation.gov/resource/az4n-8mr2.json?phy_state=${state}&status_code=A&$where=total_drivers!='0'&$limit=${limit}&$order=add_date+DESC`;
   try {
     const r = await fetch(url);
-    if (!r.ok) return [];
+    if (!r.ok) {
+      console.warn(`[cdl] FMCSA ${state} status=${r.status}`);
+      return [];
+    }
     return await r.json();
-  } catch { return []; }
+  } catch (e) {
+    console.warn(`[cdl] FMCSA ${state}:`, (e as Error).message);
+    return [];
+  }
 }
 
 Deno.serve(async (req) => {
@@ -52,19 +59,18 @@ Deno.serve(async (req) => {
     const carriers = await fetchFMCSA(state, Math.floor(limit / states.length));
     pulled += carriers.length;
     for (const c of carriers) {
-      const carrierName = (c.legal_name || c.dba_name || "").trim();
+      const carrierName = (c.legal_name || "").trim();
       if (!carrierName) continue;
-      const phone = (c.telephone || "").replace(/\D/g, "").slice(-10) || null;
-      const driverCount = parseInt(c.driver_total || "0", 10) || 0;
-      // Score: bigger carriers = higher value (more drivers to recruit from / sell to)
+      const phone = (c.phone || "").replace(/\D/g, "").slice(-10) || null;
+      const driverCount = parseInt(c.total_drivers || "0", 10) || 0;
+      const cdlCount = parseInt(c.total_cdl || "0", 10) || 0;
       const score = driverCount > 50 ? 8 : driverCount > 10 ? 6 : 4;
 
       if (dryRun) {
-        if (samples.length < 8) samples.push({ carrier: carrierName, state: c.phy_state, drivers: driverCount, dot: c.dot_number });
+        if (samples.length < 8) samples.push({ carrier: carrierName, state: c.phy_state, drivers: driverCount, cdl: cdlCount, dot: c.dot_number });
         continue;
       }
 
-      // Dedupe by USDOT
       if (c.dot_number) {
         const { data: exist } = await sb.from("hire_alert_candidates").select("id")
           .eq("license_number", `DOT-${c.dot_number}`).maybeSingle();
@@ -81,12 +87,12 @@ Deno.serve(async (req) => {
         license_type: "USDOT Carrier",
         license_number: c.dot_number ? `DOT-${c.dot_number}` : null,
         phone,
-        current_employer: carrierName, // unlocks Hunter/Apollo on enrichment
+        current_employer: carrierName,
         source: "fmcsa_safer",
         score,
         status: "new",
-        is_company_name: true, // carriers, not individual drivers — sales target is the carrier
-        raw_data: { dot_number: c.dot_number, mc_number: c.mc_mx_ff_number, drivers: driverCount, mcs150: c.mcs150_date },
+        is_company_name: true,
+        raw_data: { dot_number: c.dot_number, docket: c.docket1 ? `${c.docket1prefix || "MC"}-${c.docket1}` : null, drivers: driverCount, cdl_drivers: cdlCount, power_units: c.power_units, classdef: c.classdef, add_date: c.add_date },
       });
       if (error) { skipped++; continue; }
       inserted++;
