@@ -95,11 +95,32 @@ export default function AmeriSteelTrials() {
       </header>
 
       <main className="max-w-5xl mx-auto px-5 py-8 space-y-6">
-        <p className="text-white/70 text-base sm:text-lg leading-relaxed">
-          Five tools hand-picked for a 6-person automotive sheet-metal fab shop
-          running RFQ-driven work. Each card opens straight into your dashboard,
-          no login. 30 days free, no card on file.
-        </p>
+        <div className="rounded-xl border-2 border-[#00d4ff]/60 bg-gradient-to-br from-[#00d4ff]/10 to-[#0f1f35] p-6">
+          <div className="text-[11px] uppercase tracking-widest text-[#00d4ff] font-bold mb-2">
+            ⭐ One link · all five tools
+          </div>
+          <h2 className="text-xl sm:text-2xl font-bold mb-2">Your AmeriSteel Trial Hub</h2>
+          <p className="text-sm text-white/70 mb-4">
+            Bookmark this single dashboard — it shows live counts from every tool below in one place.
+            No more juggling 5 tabs.
+          </p>
+          <a
+            href="/hub/ameristeel-2026-trial-hub"
+            className="inline-block rounded-lg bg-[#00d4ff] text-[#061021] px-5 py-3 text-sm font-bold hover:bg-[#22d3ee] transition-colors"
+          >
+            Open Trial Hub →
+          </a>
+        </div>
+
+        <details className="text-white/70 text-sm">
+          <summary className="cursor-pointer text-white/80 font-semibold">
+            Or open each tool individually ↓
+          </summary>
+          <p className="mt-3 leading-relaxed">
+            Five tools hand-picked for a 6-person automotive sheet-metal fab shop running RFQ-driven work.
+            Each card opens straight into your dashboard, no login. 30 days free, no card on file.
+          </p>
+        </details>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
           {PRODUCTS.map((p) => (

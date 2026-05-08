@@ -86,6 +86,7 @@ const Auth = lazyRetry(() => import("./pages/Auth"));
 const ResetPassword = lazyRetry(() => import("./pages/ResetPassword"));
 const Admin = lazyRetry(() => import("./pages/Admin"));
 const DWAAdmin = lazyRetry(() => import("./pages/DWAAdmin"));
+const DataSourcesHealth = lazyRetry(() => import("./pages/admin/DataSourcesHealth"));
 const OutreachAuditLog = lazyRetry(() => import("./pages/admin/OutreachAuditLog"));
 const OutreachQueuePage = lazyRetry(() => import("./pages/admin/OutreachQueue"));
 const OutreachObservabilityPage = lazyRetry(() => import("./pages/admin/OutreachObservability"));
@@ -364,6 +365,7 @@ const SharedLead = lazyRetry(() => import("./pages/SharedLead"));
 const MyMortgageRadar = lazyRetry(() => import("./pages/MyMortgageRadar"));
 const MyTrials = lazyRetry(() => import("./pages/MyTrials"));
 const AmeriSteelTrials = lazyRetry(() => import("./pages/AmeriSteelTrials"));
+const TrialHub = lazyRetry(() => import("./pages/TrialHub"));
 const AcceptTeamInvite = lazyRetry(() => import("./pages/AcceptTeamInvite"));
 const MyMissedCall = lazyRetry(() => import("./pages/MyMissedCall"));
 const MySiteRadar = lazyRetry(() => import("./pages/MySiteRadar"));
@@ -912,6 +914,7 @@ const App = () => {
                     <Route path="/my-mortgage-radar" element={<MyMortgageRadar />} />
                     <Route path="/my-trials" element={<MyTrials />} />
                     <Route path="/trials/ameristeel" element={<AmeriSteelTrials />} />
+                    <Route path="/hub/:token" element={<TrialHub />} />
                     <Route path="/my-missed-call" element={<MyMissedCall />} />
                     <Route path="/my-site-radar" element={<MySiteRadar />} />
                     <Route path="/my-dead-lead-reactivation" element={<MyDeadLeadReactivation />} />
@@ -996,6 +999,7 @@ const App = () => {
                       <Route path="/admin" element={<AgencyAdminRoute><Admin /></AgencyAdminRoute>} />
                       <Route path="/admin/health" element={<AgencyAdminRoute><AdminHealth /></AgencyAdminRoute>} />
                        <Route path="/dwa-admin" element={<AgencyAdminRoute><DWAAdmin /></AgencyAdminRoute>} />
+                      <Route path="/dwa-admin/data-sources" element={<AgencyAdminRoute><DataSourcesHealth /></AgencyAdminRoute>} />
                        <Route path="/owner/login" element={<OwnerLogin />} />
                        <Route path="/owner/verify" element={<OwnerVerify />} />
                        <Route path="/owner/dashboard" element={<OwnerDashboard />} />
