@@ -554,6 +554,7 @@ const ProveItWrapper = () => {
 const App = () => {
   const brand = getDomainBrand();
   const isDJConleyDomain = brand === "djconley";
+  const isDJConleyExperience = isDJConleyDomain || (typeof window !== "undefined" && window.location.pathname.startsWith("/sandbox/djconley"));
 
   return (
   <PersistQueryClientProvider client={queryClient} persistOptions={{ persister, maxAge: 24 * 60 * 60_000 }}>
@@ -567,10 +568,10 @@ const App = () => {
             <BrowserRouter>
               <ReferralCaptureWrapper />
               <ScrollToTop />
-              {!isDJConleyDomain && <Suspense fallback={null}><AnnouncementBanner /></Suspense>}
+              {!isDJConleyExperience && <Suspense fallback={null}><AnnouncementBanner /></Suspense>}
               <ErrorBoundary>
                 <Suspense fallback={<PageLoader />}>
-                  <div className={isDJConleyDomain ? "" : "pb-16"}>
+                  <div className={isDJConleyExperience ? "" : "pb-16"}>
                     <Routes>
                     <Route path="/" element={isDJConleyDomain ? <DJConleySandbox /> : brand === "agency" ? <AgencyHome /> : <Index />} />
                     <Route path="/agency" element={<AgencyHome />} />
@@ -1073,10 +1074,10 @@ const App = () => {
               <ProveItWrapper />
               
               
-              {!isDJConleyDomain && <Suspense fallback={null}><LegalFooterLazy /></Suspense>}
-              {!isDJConleyDomain && <Suspense fallback={null}><CookieBanner /></Suspense>}
-              {!isDJConleyDomain && <Suspense fallback={null}><BottomTabBar /></Suspense>}
-              {!isDJConleyDomain && <Suspense fallback={null}><OfflineBadge /></Suspense>}
+              {!isDJConleyExperience && <Suspense fallback={null}><LegalFooterLazy /></Suspense>}
+              {!isDJConleyExperience && <Suspense fallback={null}><CookieBanner /></Suspense>}
+              {!isDJConleyExperience && <Suspense fallback={null}><BottomTabBar /></Suspense>}
+              {!isDJConleyExperience && <Suspense fallback={null}><OfflineBadge /></Suspense>}
               <SpeedInsights />
             </BrowserRouter>
           </TooltipProvider>
