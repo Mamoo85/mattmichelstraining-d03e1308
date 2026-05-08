@@ -343,6 +343,7 @@ export default function MyBuyerRadar() {
           Buyer Radar uses public records, government bid portals, and behavioral signals only.
         </p>
       </main>
+      <LeadDetailDrawer lead={selectedLead} open={!!selectedLead} onOpenChange={(o) => !o && setSelectedLead(null)} />
     </div>
   );
 }
