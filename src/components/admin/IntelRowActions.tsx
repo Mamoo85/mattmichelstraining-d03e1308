@@ -36,7 +36,9 @@ export default function IntelRowActions({
   const [busy, setBusy] = useState(false);
 
   const googleUrl = `https://www.google.com/search?q=${encodeURIComponent(`${companyName} ${city || ""} ${state || ""}`)}`;
-  const mailto = `mailto:${email || ""}?subject=${encodeURIComponent(emailSubject || `Re: ${companyName}`)}&body=${encodeURIComponent(emailBody || "")}`;
+  const mailto = email
+    ? `mailto:${email}?subject=${encodeURIComponent(emailSubject || `Re: ${companyName}`)}&body=${encodeURIComponent(emailBody || "")}`
+    : null;
 
   async function handleCopy() {
     const blob = [companyName, city && state ? `${city}, ${state}` : null, phone, email, website, sourceUrl]
