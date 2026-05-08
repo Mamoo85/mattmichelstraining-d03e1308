@@ -27,7 +27,8 @@ const FOOT = [
 
 export default function AdminShell({ children }: { children: ReactNode }) {
   const loc = useLocation();
-  const current = [...TABS, ...FOOT].find((t) => (t.end ? loc.pathname === t.to : loc.pathname.startsWith(t.to)));
+  const all: { to: string; label: string; end?: boolean }[] = [...TABS, ...FOOT];
+  const current = all.find((t) => (t.end ? loc.pathname === t.to : loc.pathname.startsWith(t.to)));
 
   return (
     <div className="min-h-screen flex bg-[#0b1622] text-slate-200" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
