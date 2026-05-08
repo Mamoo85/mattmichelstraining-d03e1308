@@ -6,7 +6,9 @@
       // CRITICAL: Run BEFORE any tab-visible tag is parsed. On pat.detroitwebagent.com
       // we must show DJ Conley branding instantly — zero M2/DWA flash.
       (function(){
-        if (location.hostname !== 'pat.detroitwebagent.com') return;
+        var isDJHost = location.hostname === 'pat.detroitwebagent.com';
+        var isDJPath = (location.pathname || '').indexOf('/sandbox/djconley') === 0;
+        if (!isDJHost && !isDJPath) return;
         document.write('<title>D.J. Conley Associates, Inc.<\/title>');
         document.write('<link rel="icon" type="image/png" href="/demo-djconley-current/favicon-32.png">');
         document.write('<link rel="apple-touch-icon" href="/demo-djconley-current/favicon-32.png">');
@@ -143,7 +145,7 @@
     (function(){
       var h=location.hostname;
       var p=location.pathname||'/';
-      if(h==='pat.detroitwebagent.com'){
+      if(h==='pat.detroitwebagent.com' || p.indexOf('/sandbox/djconley')===0){
         var dj={title:'D.J. Conley Associates, Inc.',desc:'D.J. Conley Associates, Inc. — A name you can trust for steam, hot water, heat recovery, service, parts, and products.',img:'https://pat.detroitwebagent.com/demo-djconley-current/djc-51-logo.png',url:'https://pat.detroitwebagent.com/',site:'D.J. Conley Associates, Inc.'};
         document.title=dj.title;
         function sm(a,n,v){var e=document.querySelector('meta['+a+'="'+n+'"]');if(e)e.setAttribute('content',v);}
@@ -185,11 +187,11 @@
       }
     })();
   </script>
-<script>if(location.hostname!=='pat.detroitwebagent.com'){!function(key) {if (window.reb2b) return;window.reb2b = {loaded: true};var s = document.createElement("script");s.async = true;s.src = "https://ddwl4m2hdecbv.cloudfront.net/b/" + key + "/" + key + ".js.gz";document.getElementsByTagName("script")[0].parentNode.insertBefore(s, document.getElementsByTagName("script")[0]);}("QOQRJH9MM162");}</script>
+<script>if(location.hostname!=='pat.detroitwebagent.com' && (location.pathname||'').indexOf('/sandbox/djconley')!==0){!function(key) {if (window.reb2b) return;window.reb2b = {loaded: true};var s = document.createElement("script");s.async = true;s.src = "https://ddwl4m2hdecbv.cloudfront.net/b/" + key + "/" + key + ".js.gz";document.getElementsByTagName("script")[0].parentNode.insertBefore(s, document.getElementsByTagName("script")[0]);}("QOQRJH9MM162");}</script>
   <!-- DWA SiteRadar Visitor Intel by Detroit Web Agency -->
   <script>
     (function(){
-      if(location.hostname==='pat.detroitwebagent.com') return;
+      if(location.hostname==='pat.detroitwebagent.com' || (location.pathname||'').indexOf('/sandbox/djconley')===0) return;
       var d={page:window.location.href,ref:document.referrer,key:"f35b4c09-3a3b-4d62-a2f3-baa029ecc0d6"};
       fetch("https://eauvubfpanpeuxsrqesu.supabase.co/functions/v1/visitor-identify",{
         method:"POST",headers:{"Content-Type":"application/json"},
@@ -199,7 +201,7 @@
   </script>
   <!-- Apollo.io Website Visitor Tracker -->
   <script>
-    function initApollo(){if(location.hostname==='pat.detroitwebagent.com') return;var n=Math.random().toString(36).substring(7),o=document.createElement("script");
+    function initApollo(){if(location.hostname==='pat.detroitwebagent.com'||(location.pathname||'').indexOf('/sandbox/djconley')===0) return;var n=Math.random().toString(36).substring(7),o=document.createElement("script");
     o.src="https://assets.apollo.io/micro/website-tracker/tracker.iife.js?nocache="+n,o.async=!0,o.defer=!0,
     o.onload=function(){window.trackingFunctions.onLoad({appId:"69e58e981f8547001d1376e1"})},
     document.head.appendChild(o)}initApollo();
