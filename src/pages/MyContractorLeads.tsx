@@ -17,6 +17,7 @@ import EmptyDashboardState from "@/components/shared/EmptyDashboardState";
 import OnboardingChecklist from "@/components/shared/OnboardingChecklist";
 import RescueLinkButton from "@/components/shared/RescueLinkButton";
 import JustPurchasedScreen, { isJustPurchased } from "@/components/shared/JustPurchasedScreen";
+import RequestCreditDialog from "@/components/shared/RequestCreditDialog";
 
 interface Lead {
   id: string;
