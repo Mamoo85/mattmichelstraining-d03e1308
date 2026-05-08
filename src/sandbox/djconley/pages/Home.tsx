@@ -1,73 +1,78 @@
-import { Link } from "react-router-dom";
 import SiteLayout from "../SiteLayout";
-import { ArrowRight, Wrench, Package, Flame, Shield, Phone, Award } from "lucide-react";
 
 export default function DJHome() {
   return (
     <SiteLayout>
-      {/* Hero */}
-      <section className="relative bg-[#0b1622] text-white overflow-hidden">
-        <div
-          className="absolute inset-0 opacity-30"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at 20% 30%, rgba(39,204,192,0.4), transparent 50%), radial-gradient(circle at 80% 70%, rgba(193,42,59,0.3), transparent 50%)",
-          }}
+      <section className="relative min-h-[620px] overflow-hidden bg-black text-white md:min-h-[720px]">
+        <img
+          src="/demo-djconley-current/main-cover-photo.jpg"
+          alt="Industrial boiler room with D.J. Conley boiler systems"
+          className="absolute inset-0 h-full w-full object-cover"
         />
-        <div className="relative max-w-[1280px] mx-auto px-5 py-24 md:py-32">
-          <div className="max-w-3xl">
-            <div className="text-[#27CCC0] text-xs uppercase tracking-[0.4em] mb-4">A name you can</div>
-            <h1 className="text-7xl md:text-9xl font-black tracking-tighter leading-none" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
-              TRUST.
-            </h1>
-            <p className="mt-6 text-xl text-slate-300 max-w-xl leading-relaxed">
-              D.J. Conley Associates has been Detroit's trusted source for industrial and commercial boiler solutions since 1948.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link to="/sandbox/djconley/service" className="bg-[#c12a3b] hover:bg-[#a02230] px-6 py-3 rounded-md font-semibold inline-flex items-center gap-2 transition">
-                Get Service <ArrowRight className="h-4 w-4" />
-              </Link>
-              <Link to="/sandbox/djconley/parts" className="bg-[#27CCC0] hover:bg-[#1fa89d] text-[#0b1622] px-6 py-3 rounded-md font-semibold inline-flex items-center gap-2 transition">
-                Get Parts <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
+        <div className="absolute inset-0 bg-black/50" />
+
+        <div className="relative mx-auto flex min-h-[620px] max-w-[1200px] items-center px-6 pt-24 md:min-h-[720px] md:pt-28">
+          <div className="max-w-[520px] md:ml-[70px]">
+            <p className="mb-8 text-[34px] font-light leading-none md:text-[50px]">A name you can</p>
+            <h1 className="mb-10 text-[48px] font-bold leading-none tracking-[0.02em] md:text-[60px]">TRUST.</h1>
+            <a
+              href="tel:2485898220"
+              className="inline-flex rounded-full border-2 border-white/80 px-7 py-3 text-sm font-semibold text-white transition hover:bg-white hover:text-black"
+            >
+              248-589-8220
+            </a>
           </div>
         </div>
-      </section>
 
-      {/* Quick service tiles */}
-      <section className="max-w-[1280px] mx-auto px-5 py-20">
-        <div className="text-center mb-12">
-          <div className="text-[#c12a3b] text-xs uppercase tracking-[0.3em] mb-2">What We Do</div>
-          <h2 className="text-4xl font-black">Service and Parts</h2>
-        </div>
-        <div className="grid md:grid-cols-3 gap-5">
-          {[
-            { i: Wrench, t: "Pressure Vessel", d: "Inspections, repair, replacement, and code compliance." },
-            { i: Shield, t: "Preventative Maintenance", d: "Scheduled service to keep your boiler room running." },
-            { i: Flame, t: "Combustion Analysis", d: "Tuning for efficiency, emissions, and reliability." },
-            { i: Package, t: "Burners", d: "Burner installation, retrofit, and parts." },
-            { i: Wrench, t: "Boiler Tune-Up", d: "Annual tune-ups for peak performance." },
-            { i: Award, t: "Controls", d: "Modern boiler controls and BMS integration." },
-          ].map((s) => (
-            <div key={s.t} className="border border-slate-200 rounded-xl p-6 hover:shadow-xl hover:-translate-y-0.5 transition group bg-white">
-              <s.i className="h-8 w-8 text-[#27CCC0] mb-3" />
-              <div className="font-bold text-lg mb-1">{s.t}</div>
-              <div className="text-sm text-slate-600">{s.d}</div>
-            </div>
-          ))}
+        <div className="absolute bottom-[-42px] left-1/2 hidden h-[90px] w-[90px] -translate-x-1/2 items-center justify-center rounded-full bg-[#e31b23] md:flex">
+          <span className="block h-6 w-6 rotate-45 border-b-[8px] border-r-[8px] border-white" />
         </div>
       </section>
 
-      {/* CTA strip */}
-      <section className="bg-[#111d2b] text-white">
-        <div className="max-w-[1280px] mx-auto px-5 py-16 grid md:grid-cols-2 gap-8 items-center">
+      <section className="bg-[#e9e9e9] px-6 py-16 md:py-24">
+        <div className="mx-auto grid max-w-[1100px] gap-12 md:grid-cols-[1fr_1fr] md:items-start">
           <div>
-            <h2 className="text-3xl font-black mb-3">24/7 Emergency Service</h2>
-            <p className="text-slate-300">When your boiler goes down, we're on the way. Detroit & SE Michigan.</p>
+            <h2 className="mb-8 text-[30px] font-semibold leading-tight text-[#4a4a4a] md:text-[34px]">
+              D.J. Conley Associates, Inc.
+            </h2>
+            <p className="mb-10 max-w-[620px] text-[15px] leading-[2] text-[#666]">
+              D. J. Conley Associates, Inc. is a Manufacturer’s Rep/Distributor engaged in energy conversion
+              and conservation as it relates to the production of steam, hot water and heat recovery. Our
+              commitment to providing quality products and comprehensive solutions, backed by our reputation
+              for excellence, has allowed us to sustain trusted relationships with the businesses we serve.
+            </p>
+            <div className="flex flex-col items-start gap-5">
+              <a href="/sandbox/djconley/service" className="rounded-full border-2 border-[#e31b23] px-7 py-3 text-sm text-[#e31b23] transition hover:bg-[#e31b23] hover:text-white">
+                Get Service
+              </a>
+              <a href="/sandbox/djconley/products" className="rounded-full border-2 border-[#e31b23] px-7 py-3 text-sm text-[#e31b23] transition hover:bg-[#e31b23] hover:text-white">
+                Products
+              </a>
+            </div>
           </div>
-          <a href="tel:+12485855340" className="bg-[#c12a3b] hover:bg-[#a02230] px-8 py-4 rounded-md font-semibold text-lg inline-flex items-center justify-center gap-3 md:justify-self-end transition">
-            <Phone className="h-5 w-5" /> (248) 585-5340
+
+          <a
+            href="https://www.youtube.com/watch?v=L4hK8ftpbp0"
+            target="_blank"
+            rel="noreferrer"
+            className="group relative block overflow-hidden bg-black shadow-sm"
+            aria-label="Watch The DJ Conley Story on YouTube"
+          >
+            <img src="/demo-djconley-current/story-thumb.jpg" alt="The DJ Conley Story video thumbnail" className="aspect-video w-full object-cover" />
+            <div className="absolute inset-0 bg-black/10" />
+            <div className="absolute left-6 top-5 flex items-center gap-3 text-white">
+              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white">
+                <img src="/demo-djconley-current/favicon-32.png" alt="" className="h-8 w-8" />
+              </div>
+              <div>
+                <div className="text-xl font-bold leading-tight">The DJ Conley Story</div>
+                <div className="text-sm">DJ Conley</div>
+              </div>
+            </div>
+            <div className="absolute left-1/2 top-1/2 flex h-[74px] w-[104px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-2xl bg-[#ff0000] transition group-hover:scale-105">
+              <span className="ml-1 h-0 w-0 border-y-[16px] border-l-[25px] border-y-transparent border-l-white" />
+            </div>
+            <div className="absolute bottom-5 right-5 rounded-full bg-black/50 px-5 py-3 text-lg text-white">Watch on YouTube</div>
           </a>
         </div>
       </section>
