@@ -724,17 +724,36 @@ export default function MySiteRadar() {
                 </div>
 
                 {companyDetail.latestEventId && (
-                  <Button
-                    onClick={() => enrich(companyDetail.latestEventId!)}
-                    disabled={enrichingIds.has(companyDetail.latestEventId)}
-                    className="w-full bg-cyan-400 text-slate-900 hover:bg-cyan-300"
-                  >
-                    {enrichingIds.has(companyDetail.latestEventId) ? (
-                      <><Loader2 className="mr-1 h-4 w-4 animate-spin" /> Enriching…</>
-                    ) : (
-                      <><Sparkles className="mr-1 h-4 w-4" /> Re-enrich company data</>
-                    )}
-                  </Button>
+                  <div className="space-y-2">
+                    <Button
+                      onClick={() => enrich(companyDetail.latestEventId!)}
+                      disabled={enrichingIds.has(companyDetail.latestEventId)}
+                      className="w-full bg-cyan-400 text-slate-900 hover:bg-cyan-300"
+                    >
+                      {enrichingIds.has(companyDetail.latestEventId) ? (
+                        <><Loader2 className="mr-1 h-4 w-4 animate-spin" /> Enriching…</>
+                      ) : (
+                        <><Sparkles className="mr-1 h-4 w-4" /> Re-enrich company data</>
+                      )}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full border-cyan-700/40 text-cyan-300 hover:bg-cyan-500/10"
+                      onClick={async () => {
+                        if (!client) return;
+                        toast.info("Drafting AI opener…");
+                        const { data, error } = await supabase.functions.invoke("siteradar-ai-opener", {
+                          body: { client_id: client.id, company_name: companyDetail.name },
+                        });
+                        if (error) { toast.error("Draft failed", { description: error.message }); return; }
+                        const draft = (data as { draft?: string })?.draft || "";
+                        await navigator.clipboard.writeText(draft);
+                        toast.success("AI opener copied", { description: draft.slice(0, 140) });
+                      }}
+                    >
+                      <Zap className="mr-1 h-4 w-4" /> Draft AI cold opener
+                    </Button>
+                  </div>
                 )}
               </div>
             </>
