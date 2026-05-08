@@ -75,6 +75,7 @@ export default function MyDemandRadar() {
   const [signals, setSignals] = useState<Signal[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedLead, setSelectedLead] = useState<LeadDetail | null>(null);
 
   useEffect(() => {
     (async () => {
