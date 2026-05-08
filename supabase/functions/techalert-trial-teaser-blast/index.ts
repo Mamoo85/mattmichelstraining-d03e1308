@@ -48,8 +48,39 @@ Deno.serve(async (req) => {
   let sent = 0; let skipped = 0; let failed = 0;
   const events: any[] = [];
 
+  // Email sanity filter — reject obvious garbage from scraped directory pages.
+  const DIRECTORY_DOMAINS = new Set([
+    "localedge.com","yellowpages.com","yelp.com","manta.com","superpages.com",
+    "merchantcircle.com","bbb.org","mapquest.com","foursquare.com","houzz.com",
+    "thomasnet.com","angi.com","homeadvisor.com","thumbtack.com","porch.com",
+    "nextdoor.com","zoominfo.com","dnb.com","corporationwiki.com","opengovus.com",
+    "sam.gov","yellowbook.com","cylex.us.com","brownbook.net","tupalo.co",
+    "ezlocal.com","cybo.com","tradeford.com","exportersindia.com","example.com",
+    "gmail.com","yahoo.com","hotmail.com","outlook.com","aol.com","icloud.com",
+  ]);
+  function emailLooksValid(e: string): boolean {
+    if (!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(e)) return false;
+    if (/[%<>"'\\]/.test(e)) return false;          // url-encoded / scrape garbage
+    if (e.length > 80) return false;
+    const domain = e.split("@")[1].toLowerCase();
+    if (DIRECTORY_DOMAINS.has(domain)) return false;
+    if (/[^a-z0-9.\-]/.test(domain)) return false;
+    // Apex domain only — reject www./link./survey./dental./etc subdomains.
+    // Allow co.uk-style 2-part TLDs (3 dots) but require last 2 segments alpha.
+    const parts = domain.split(".");
+    if (parts.length !== 2) return false;
+    return true;
+  }
+
+  // Dedupe by email within this batch
+  const seenEmails = new Set<string>();
+
   for (const lead of leads || []) {
-    const email = lead.owner_email!.toLowerCase().trim();
+    const email = (lead.owner_email || "").toLowerCase().trim();
+
+    if (!emailLooksValid(email)) { skipped++; events.push({ email, action: "skipped_invalid" }); continue; }
+    if (seenEmails.has(email)) { skipped++; continue; }
+    seenEmails.add(email);
 
     // Suppression check
     const { data: sup } = await sb.from("suppressed_emails").select("email").eq("email", email).maybeSingle();
@@ -105,12 +136,14 @@ Deno.serve(async (req) => {
 
     if (send.ok) {
       sent++;
+      events.push({ email, action: "sent" });
       await sb.from("outreach_leads").update({
         teaser_sent_at: new Date().toISOString(),
         teaser_magic_url: magicUrl,
       }).eq("id", lead.id);
     } else {
       failed++;
+      events.push({ email, action: "failed", error: send.error });
     }
 
     // Pace: ~1.2s between sends
@@ -118,7 +151,7 @@ Deno.serve(async (req) => {
   }
 
   return new Response(
-    JSON.stringify({ ok: true, sent, skipped, failed, dry_run: dryRun, total_candidates: leads?.length ?? 0, events: dryRun ? events : undefined }),
+    JSON.stringify({ ok: true, sent, skipped, failed, dry_run: dryRun, total_candidates: leads?.length ?? 0, events }),
     { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
   );
 });
