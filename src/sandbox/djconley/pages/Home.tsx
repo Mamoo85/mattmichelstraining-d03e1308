@@ -57,6 +57,30 @@ export default function DJHome() {
         </div>
       </section>
 
+      <section className="bg-[#0b1622] py-16 text-white">
+        <div className="mx-auto max-w-[1100px] px-8">
+          <div className="text-center mb-10">
+            <p className="text-xs uppercase tracking-[0.3em] text-[#27CCC0] mb-3">Service Territory</p>
+            <h2 className="text-[34px] font-semibold">Serving Michigan & the Great Lakes Region</h2>
+            <p className="text-[14px] text-white/70 mt-3 max-w-[640px] mx-auto">From our Warren, MI headquarters we provide sales, service, and parts distribution across Michigan, Ohio, Indiana, and beyond.</p>
+          </div>
+          <div className="aspect-[16/9] overflow-hidden rounded-lg border border-white/10 shadow-xl">
+            <iframe
+              title="D.J. Conley Service Area"
+              src="https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d2913280!2d-85.5!3d43.5!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sen!2sus!4v1700000000000"
+              className="h-full w-full border-0"
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+          </div>
+          <div className="mt-6 text-center">
+            <a href="https://maps.google.com/?q=24650+Dequindre+Rd,+Warren,+MI+48091" target="_blank" rel="noreferrer" className="inline-block rounded-full border border-[#27CCC0] px-5 py-3 text-xs text-[#27CCC0] hover:bg-[#27CCC0] hover:text-[#0b1622]">
+              📍 24650 Dequindre Rd, Warren, MI 48091
+            </a>
+          </div>
+        </div>
+      </section>
+
       <section className="bg-[#e9e9e9] pb-10 pt-4">
         <h2 className="mb-12 text-center text-[34px] font-semibold text-[#333]">Service and Parts</h2>
         <div className="grid md:grid-cols-2">
