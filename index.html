@@ -2,16 +2,25 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      // CRITICAL: Run BEFORE any tab-visible tag is parsed. On pat.detroitwebagent.com
+      // we must show DJ Conley branding instantly — zero M2/DWA flash.
+      (function(){
+        if (location.hostname !== 'pat.detroitwebagent.com') return;
+        document.write('<title>D.J. Conley Associates, Inc.<\/title>');
+        document.write('<link rel="icon" type="image/png" href="/demo-djconley-current/favicon-32.png">');
+        document.write('<link rel="apple-touch-icon" href="/demo-djconley-current/favicon-32.png">');
+        document.write('<meta name="apple-mobile-web-app-title" content="D.J. Conley">');
+        document.write('<meta name="theme-color" content="#000000">');
+        window.__SKIP_DEFAULT_HEAD__ = true;
+      })();
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Detroit Web Agency" />
-    <link rel="icon" type="image/png" href="/favicon.png">
-    <link rel="icon" href="/favicon.ico" sizes="any" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <meta name="theme-color" content="#0d0d0d" />
+    <script>if(!window.__SKIP_DEFAULT_HEAD__){document.write('<meta name="apple-mobile-web-app-title" content="Detroit Web Agency">');document.write('<link rel="icon" type="image/png" href="/favicon.png">');document.write('<link rel="icon" href="/favicon.ico" sizes="any">');document.write('<link rel="apple-touch-icon" href="/apple-touch-icon.png">');document.write('<meta name="theme-color" content="#0d0d0d">');}</script>
     <meta name="google-site-verification" content="QKkkNVL406wBAyQAT5cqpVdUDGDeWapuZ0dw1DerwCw" />
-    <title>Detroit Web Agency | Websites &amp; Automation for Local Business</title>
+    <script>if(!window.__SKIP_DEFAULT_HEAD__){document.write('<title>Detroit Web Agency | Websites &amp; Automation for Local Business<\/title>');}</script>
     <meta name="description" content="Professional websites, CRM systems, and automated lead generation for contractors, HVAC, and local service businesses in metro Detroit.">
     <meta name="author" content="Detroit Web Agency" />
     <meta name="keywords" content="Detroit web design, web agency Michigan, contractor websites, HVAC websites, plumber websites, local business CRM, automated lead generation, Grosse Pointe web design, metro Detroit web agency" />

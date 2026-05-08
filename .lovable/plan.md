@@ -1,168 +1,97 @@
-# DJ Conley Sandbox — Plan
+# DJ Conley Sandbox — Real Clone, Not a Sketch
 
-Goal: stand up a private "shadow" version of djconley.com that looks like Pat's site (slightly sharper) and bolt every DWA product onto it for free, so when Pat sees it the conversation is "we're the backend brain for your existing website" — not "switch your site."
+Two failures in the last build, both fixable:
 
----
+1. **Browser tab still shows M² Training branding** on `pat.detroitwebagent.com`. The runtime script in `index.html` (lines 137–148) swaps `document.title` and favicon AFTER the page boots — so for the first ~200ms the user sees M² title + favicon. Worse, there's a static `<link rel="icon" sizes="any">` and `apple-mobile-web-app-title` in the head that paint instantly with M² values. That's what Pat will see.
+2. **Content is fake.** I shipped curated bullet-point pages. The live site at djconley.com has full marketing copy, dozens of paragraphs per page, full product/manufacturer lists, project case studies, blog posts. None of that is in the sandbox.
 
-## 1. Hosting — How a sandbox like this actually goes live
-
-You don't need to buy hosting, a server, or Cloudflare. Here's the truth on each option, in order of recommendation:
-
-**Option A — Lovable subdomain (recommended, $0, ~30 sec)**
-
-- Every Lovable project gets a free `*.lovable.app` URL when published.
-- We publish at something like `djconley-sandbox.lovable.app` or `pat.detroitwebagent.com`.
-- SSL, CDN, and DNS all handled by Lovable. No servers, no Cloudflare needed.
-- We can password-gate it (publish visibility = private) so only Pat sees it until pitch day.
-
-**Option B — Subdomain on detroitwebagent.com (recommended for the pitch, $0)**
-
-- Use `pat.detroitwebagent.com` or `sandbox.detroitwebagent.com`.
-- One DNS record on detroitwebagent.com → Lovable. Same hosting, just a sharper-looking URL when Pat opens the link.
-- Still free, still SSL, still our infra.
-
-**Option C — Buy djconleyportal.com or similar (~$12/yr, optional polish)**
-
-- Only worth it if Pat is signed. For the demo, Option B is enough.
-
-**Option D — Self-host on a VPS / Cloudflare Pages**
-
-- Not needed. Adds cost, ops, and zero value over Lovable hosting. Skip.
-
-**Recommendation:** publish to `pat.detroitwebagent.com`, set visibility to private (or share-preview link, 7-day expiry) until you're ready to pitch.
+Pat's site has 19 public URLs (per `wp-sitemap-posts-page-1.xml`) plus 9 blog posts. We need every one cloned verbatim.
 
 ---
 
-## 2. The Frontend — "His exact website, slightly sharper"
+## Plan
 
-DJ Conley's real site (djconley.com) is a WordPress + Visual Composer build with this nav:
+### Step 1 — Eliminate the M² flash on `pat.detroitwebagent.com` (zero tolerance)
 
-```text
-Home · About · Industries · Service · Parts · Products · Projects ·
-Rentals · Education · Resources · Careers · Blog · Contact
+Move host detection to a **synchronous block at the very top of `<head>`**, before any `<title>` or `<link rel=icon>` tag is parsed. Use `document.write` for the title/favicon when host is `pat.detroitwebagent.com`, OR conditionally render the static head tags via the existing inline IIFE — but moved to be the **first** child of `<head>`.
+
+Specifically:
+- Add an inline script as the first thing inside `<head>` that, on `pat.detroitwebagent.com`, injects `<title>D.J. Conley Associates, Inc.</title>` + `<link rel="icon" href="/demo-djconley-current/favicon-32.png">` + `<meta name="apple-mobile-web-app-title" content="D.J. Conley">` BEFORE the existing static M² versions are parsed.
+- Easiest approach: keep the current static tags but give them `id="host-default-*"` and have the early script `removeChild` them on the pat host before the parser keeps walking. Browsers process inline scripts synchronously, so this kills the flash if the script appears before the tags.
+- Also remove the M² `apple-touch-icon` and any `<link rel="icon">` with the M² favicon for that host.
+
+Verify with `browser--navigate_to_url` to the live preview path and a screenshot of the tab.
+
+### Step 2 — Scrape all 19 pages of djconley.com verbatim
+
+Use `code--fetch_website` (markdown format) for each URL below. Store raw content in `/tmp/djconley-scrape/<slug>.md`, then convert to React components in `src/sandbox/djconley/pages/`:
+
+```
+/                       → Home.tsx          (already exists, REWRITE with full content)
+/about/                 → About.tsx
+/industries/            → Industries.tsx
+/service/               → Service.tsx
+/parts/                 → Parts.tsx
+/products/              → Products.tsx       (Manufacturers list)
+/projects/              → Projects.tsx
+/rentals/               → Rentals.tsx
+/education/             → Education.tsx
+/resources/             → Resources.tsx
+/careers/               → Careers.tsx
+/contact/               → Contact.tsx
+/blog/                  → Blog.tsx           (index)
+/new-boiler-solutions/  → NewBoilerSolutions.tsx
+/boiler-accessories/    → BoilerAccessories.tsx
+/boiler-burners/        → BoilerBurners.tsx
+/heat-recovery/         → HeatRecovery.tsx
+/exhaust-solutions/     → ExhaustSolutions.tsx
+/boiler-controls/       → BoilerControls.tsx
 ```
 
-Brand: navy + teal `#27CCC0` accent + red `#c12a3b`, white background. Tagline "TRUST. A name you can trust." Boiler/pressure vessel/combustion focus, Detroit/Michigan territory.
+Plus 9 blog posts at `/blog/<slug>/`.
 
-We already have 4 demo iterations in the repo (`/demo-djconley-v2..v6/`). v6 is closest. The plan:
+Each page component must contain:
+- The full body copy from the live page (every paragraph, every bullet, every heading) — no summaries, no rewrites.
+- Every link the live page has, pointing to the corresponding `/sandbox/djconley/...` route.
+- Every image — download from djconley.com to `public/demo-djconley-current/<slug>/` and reference locally.
 
-**Build `/sandbox/djconley` as a true site clone (not a one-pager):**
+### Step 3 — Layout match the live site
 
-- Real multi-page React routes mirroring djconley.com nav 1:1
-- Same copy, same service categories, same brand palette — pulled directly from djconley.com
-- "Slightly sharper" upgrades (no jarring redesign):
-  - Cleaner typography pairing (Inter + a serif accent for "TRUST.")
-  - Faster page loads (lazy-loaded images, modern image formats)
-  - Sticky header that doesn't jump
-  - Mobile nav that actually works (theirs is clunky)
-  - Subtle scroll-reveal animations
-  - Real-feel hero with motion (not a static slideshow)
-  - Service cards with hover depth instead of flat tiles
-- Every page keeps Pat's logo, his territory map PDF, his line cards, his contact info
-- Footer line: "Powered by Detroit Web Agency" — small, but it plants the seed
+Live site uses WordPress + a dark hero on every interior page, then a light gray content area with serif-ish sans body. Current `SiteLayout.tsx` is close but missing:
+- The footer (Quick Links / Services / Territory / Location / Connect with Us / Careers — all visible in screenshot 4).
+- Mobile menu hamburger styled identically to the live site.
+- "Accessibility" floating button (visible left side of screenshots 2/3/4).
 
-This is the Trojan Horse: it looks like *his* site, just better. The pitch becomes "we already rebuilt this — and here's what it can DO."
+Add a new `SiteFooter.tsx` and `AccessibilityButton.tsx` mirroring the live HTML structure. Pull the exact link list and address (`26225 Sherwood, Warren, Michigan 48091`) from screenshot 4.
 
----
+### Step 4 — Update routes in `src/sandbox/djconley/index.tsx`
 
-## 3. The Admin Panel — Pat's "Boiler Room Command Center"
+Add the new pages (blog, blog posts, the 6 product subpages) to the route table. Add `<Route path="blog/:slug" element={<BlogPost />} />` for the dynamic post pages.
 
-Goal: when Pat logs in, he sees a control room that feels as serious as Supabase / Apollo / GitHub. Dark sidebar, dense info, real data, real value.
+### Step 5 — QA pass
 
-**Layout (left sidebar, GitHub/Supabase style):**
+- `browser--navigate_to_url` to `pat.detroitwebagent.com` (or sandbox preview equivalent) on mobile viewport (396×762, matching Pat's screenshots).
+- Tab title check: must read "D.J. Conley Associates, Inc." with DJ flame favicon, no M² flash.
+- Open every one of the 19 pages, confirm content matches live djconley.com.
+- Screenshot 4 pages and visually diff against the originals Pat sent.
 
-```text
-🔥 DJ Conley · Command Center
-─────────────────────────────────
-  📊  Overview (KPIs, today's pulse)
-  🎯  SiteRadar       ← who's on djconley.com right now
-  📞  Missed-Call     ← every missed call + voicemail + auto-text
-  🏭  Buyer Radar     ← MITN.info RFPs, gov bid signals
-  🔧  FieldDesk       ← jobs, techs, schedule, invoices
-  💰  TechAlert       ← competitor hires, talent moves
-  🏗️  Trade Radar     ← permits, building signals (commercial boiler angle)
-  📬  Outreach        ← cold email + fax campaigns to industrial buyers
-  ⭐  Reviews         ← Google review monitor
-  📈  Reports         ← weekly digest, ROI, attribution
-─────────────────────────────────
-  🔌  Integrations
-  ⚙️  Settings
-  👥  Team
-```
+### Out of scope (hold for later)
 
-**Top bar:** search-everything (Apollo style ⌘K), notifications bell, Pat's avatar + org switcher.
-
-**Main panel patterns (per tab):**
-
-- Header strip with KPI cards (live counters)
-- Filter row (date range, status, source)
-- Dense data table with row drawer for detail (Supabase-table feel)
-- Right-side context panel for selected record (GitHub PR-detail feel)
-- Activity feed at bottom of overview (Apollo timeline feel)
-
-**What gets pre-loaded for Pat (the Trojan Horse — all FREE):**
-
-1. **SiteRadar tracking script** already installed on `djconley.com` mirror — first login shows real-feeling visitor data (Stellantis Facilities, DMC, Wayne County Schools — already in `djconley.json` demo config).
-2. **Missed-Call** wired to (313) 590-4404 forwarding, with voicemail transcription + auto-text.
-3. **Buyer Radar** pre-seeded with MITN.info + SAM.gov + Michigan boiler/pressure-vessel RFP signals from the last 90 days.
-4. **Trade Radar** filtered to commercial boiler / pressure vessel / industrial HVAC permits in Wayne / Oakland / Macomb / Washtenaw.
-5. **TechAlert** watching Stellantis, DMC, Henry Ford Health, Beaumont, Wayne State, Detroit Public Schools, big Detroit GCs for boiler/mechanical hiring signals.
-6. **Apollo enrichment budget biased to industrial buyers** — facilities directors, plant engineers, hospital chief engineers, school district maintenance directors, property management at industrial parks. (This is where you said most Apollo credits should go — locked in via a per-tenant Apollo budget config tied to industry='industrial_boiler'.)
-7. **FieldDesk** seeded with 2 weeks of mock jobs styled like real boiler service tickets (so it doesn't feel empty on day 1).
-
-The goal: Pat logs in and within 30 seconds says "wait — this is already running on my company?"
+- Functional contact form submit (live site uses WPForms — sandbox can render the form but POST to a placeholder).
+- Live YouTube embed (we'll keep the same iframe).
+- WordPress comment system on blog posts (omit, just render the article body).
 
 ---
 
-## 4. Technical sections (for the build phase)
+## Technical notes
 
-**Routes to add:**
-
-- `/sandbox/djconley` — public-facing site mirror (12 pages mapping djconley.com nav)
-- `/sandbox/djconley/admin/*` — the command center (gated by an owner session — same `owner_session` pattern already in `OwnerDashboard.tsx`)
-- Login at `/sandbox/djconley/admin/login` — magic-link to `pmichels@djconley.com`
-
-**Reuse of existing code:**
-
-- Owner auth pattern: `src/pages/OwnerDashboard.tsx` (already supports magic-link + command-center tiles per owner email)
-- Demo data: `src/data/demoConfigs/djconley.json` (already has visitors, stats, competitor pricing)
-- Brand palette already in `/demo-djconley-v6/`
-- Existing admin component library under `src/components/admin/` (OutreachObservability, OutreachQueueMonitor, EnrichmentDLQPanel, etc.) — wrap these in DJ-branded shell, don't rebuild
-- SiteRadar visitor script: existing `visitor-identify` edge function
-
-**Industry-bias for Apollo enrichment (the "spend most credits on his type of business" rule):**
-
-- New row in `field_crm_clients` for djconley.com with `industry='industrial_boiler'`
-- Add `apollo_target_titles[]` column (or use existing meta JSON): `["Facilities Director","Plant Engineer","Chief Engineer","Maintenance Director","Director of Operations","Property Manager","VP Engineering"]`
-- Modify `_shared/apollo.ts` callers to read this list when the request originates from a tenant flagged industrial_boiler — bias `person_titles` and `q_keywords=boiler OR steam OR pressure vessel OR HVAC` in the search
-
-**Per-tenant Apollo budget gate:**
-
-- Use existing `_shared/enrichment-budget.ts` to cap monthly Apollo spend per tenant
-- Set DJ Conley's cap high (e.g., $200/mo of Apollo credits) since he's the trojan horse case study
-
-**Hosting / publish:**
-
-- Set publish visibility = private OR generate share-preview link (7 days) until pitch day
-- DNS: add `pat` CNAME on detroitwebagent.com → Lovable
+- All scraping done via `code--fetch_website` in markdown mode, then HTML mode for any page where markdown loses structure.
+- Images downloaded via `curl` in `code--exec` to `public/demo-djconley-current/<page-slug>/`.
+- No business logic changes — frontend-only sandbox work.
+- No M2 imports leak in: every file under `src/sandbox/djconley/` already uses local components only (verified). `App.tsx` already conditionally hides the M2 banner/footer/tabs for this domain.
 
 ---
 
-## 5. Build order (when you say go)
+## Estimated size
 
-1. Stand up the 12-page DJ Conley site mirror at `/sandbox/djconley`
-2. Build the admin shell (sidebar + top bar + Overview tab)
-3. Wire each existing product (SiteRadar, Missed-Call, Buyer Radar, FieldDesk, TechAlert, Trade Radar, Outreach, Reviews) into its tab
-4. Seed the demo data (Stellantis/DMC/Wayne County visitors, Michigan boiler RFPs, Detroit boiler permits, hospital hiring signals)
-5. Bias Apollo enrichment to industrial-boiler titles for this tenant
-6. Magic-link auth for `pmichels@djconley.com`
-7. Publish privately to `pat.detroitwebagent.com`
-
----
-
-## 6. Open questions before I build
-
-1. **URL:** `pat.detroitwebagent.com` — good `sandbox.detroitwebagent.com`, `command.detroitwebagent.com`)?
-2. **Visibility before pitch:** private (login required) or public-but-unlinked (anyone with URL can see)? Private,  super easy login
-3. **"Slightly sharper" — how far?** Pure 1:1 clone with polish only (recommended), or do you want one signature visual upgrade that makes Pat say "whoa" (e.g., animated boiler-room hero, live visitor ticker on the homepage)? Just shaper but we need a tab for "website gadgets" and things like animated boiler room hero should be am option or live vister ticker. Think of 20 useful widgets or gadgets someone like pat would like. 
-4. **Do you want the admin panel to live at** `/sandbox/djconley/admin` **(one project) or get its own subdomain (**`pat-admin.detroitwebagent.com`**)?** Same code either way — just a routing choice. It needs its own subdomain. Cant have the m2 training problem happen to any other website 
+~20 page files × ~150–400 lines each + footer + accessibility widget. Roughly 4000–6000 lines of presentational JSX/TSX. Single deploy. No DB, no edge functions.

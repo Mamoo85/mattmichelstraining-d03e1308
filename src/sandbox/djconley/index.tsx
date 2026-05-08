@@ -11,6 +11,8 @@ import DJHome from "./pages/Home";
 import {
   About, Industries, Service, Parts, Products, Projects, Rentals,
   Education, Resources, Careers, Contact,
+  NewBoilerSolutions, BoilerAccessories, BoilerBurners, BoilerControls,
+  HeatRecovery, ExhaustSolutions,
 } from "./pages/all";
 
 /** Mounted at /sandbox/djconley/* */
@@ -30,6 +32,13 @@ export default function DJConleySandbox() {
       <Route path="resources" element={<Resources />} />
       <Route path="careers" element={<Careers />} />
       <Route path="contact" element={<Contact />} />
+      <Route path="new-boiler-solutions" element={<NewBoilerSolutions />} />
+      <Route path="boiler-accessories" element={<BoilerAccessories />} />
+      <Route path="boiler-burners" element={<BoilerBurners />} />
+      <Route path="boiler-controls" element={<BoilerControls />} />
+      <Route path="heat-recovery" element={<HeatRecovery />} />
+      <Route path="exhaust-solutions" element={<ExhaustSolutions />} />
+
 
       {/* Admin Command Center */}
       <Route path="admin/login" element={<LoginScreen />} />
