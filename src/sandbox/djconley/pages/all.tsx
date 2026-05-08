@@ -20,7 +20,7 @@ export const Rentals = make("rentals", "Boiler Rentals");
 export const Education = make("education", "Training & Education");
 export const Resources = make("resources", "Resources");
 export const Careers = make("careers", "Careers");
-export const Contact = make("contact", "Contact");
+
 export const NewBoilerSolutions = make("new-boiler-solutions", "New Boiler Solutions");
 export const BoilerAccessories = make("boiler-accessories", "Boiler Accessories");
 export const BoilerBurners = make("boiler-burners", "Boiler Burners");
