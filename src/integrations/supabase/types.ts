@@ -11306,6 +11306,54 @@ export type Database = {
         }
         Relationships: []
       }
+      lead_credit_requests: {
+        Row: {
+          created_at: string
+          id: string
+          lead_id: string
+          lead_table: string | null
+          product: string
+          reason_code: string
+          reason_detail: string | null
+          requester_email: string
+          requester_user_id: string | null
+          resolution_note: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lead_id: string
+          lead_table?: string | null
+          product: string
+          reason_code: string
+          reason_detail?: string | null
+          requester_email: string
+          requester_user_id?: string | null
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lead_id?: string
+          lead_table?: string | null
+          product?: string
+          reason_code?: string
+          reason_detail?: string | null
+          requester_email?: string
+          requester_user_id?: string | null
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       lead_enrichment_audit: {
         Row: {
           actor: string | null
