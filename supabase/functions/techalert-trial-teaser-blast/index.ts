@@ -136,12 +136,14 @@ Deno.serve(async (req) => {
 
     if (send.ok) {
       sent++;
+      events.push({ email, action: "sent" });
       await sb.from("outreach_leads").update({
         teaser_sent_at: new Date().toISOString(),
         teaser_magic_url: magicUrl,
       }).eq("id", lead.id);
     } else {
       failed++;
+      events.push({ email, action: "failed", error: send.error });
     }
 
     // Pace: ~1.2s between sends
