@@ -8171,6 +8171,8 @@ export type Database = {
       }
       field_crm_clients: {
         Row: {
+          alert_webhook_min_score: number | null
+          alert_webhook_url: string | null
           business_name: string
           created_at: string | null
           dispatch_token: string
@@ -8180,6 +8182,8 @@ export type Database = {
           google_review_url: string | null
           id: string
           industry: string | null
+          install_platform: string | null
+          install_status: string | null
           migration_status: Database["public"]["Enums"]["fielddesk_migration_status"]
           monthly_price: number | null
           owner_name: string | null
@@ -8192,6 +8196,8 @@ export type Database = {
           website: string | null
         }
         Insert: {
+          alert_webhook_min_score?: number | null
+          alert_webhook_url?: string | null
           business_name: string
           created_at?: string | null
           dispatch_token?: string
@@ -8201,6 +8207,8 @@ export type Database = {
           google_review_url?: string | null
           id?: string
           industry?: string | null
+          install_platform?: string | null
+          install_status?: string | null
           migration_status?: Database["public"]["Enums"]["fielddesk_migration_status"]
           monthly_price?: number | null
           owner_name?: string | null
@@ -8213,6 +8221,8 @@ export type Database = {
           website?: string | null
         }
         Update: {
+          alert_webhook_min_score?: number | null
+          alert_webhook_url?: string | null
           business_name?: string
           created_at?: string | null
           dispatch_token?: string
@@ -8222,6 +8232,8 @@ export type Database = {
           google_review_url?: string | null
           id?: string
           industry?: string | null
+          install_platform?: string | null
+          install_status?: string | null
           migration_status?: Database["public"]["Enums"]["fielddesk_migration_status"]
           monthly_price?: number | null
           owner_name?: string | null
