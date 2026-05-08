@@ -20872,6 +20872,54 @@ export type Database = {
         }
         Relationships: []
       }
+      source_registry: {
+        Row: {
+          blocker: string | null
+          category: string | null
+          created_at: string
+          id: string
+          last_attempted_at: string | null
+          last_result_count: number | null
+          notes: string | null
+          product: string
+          required_secret: string | null
+          source_key: string
+          source_name: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          blocker?: string | null
+          category?: string | null
+          created_at?: string
+          id?: string
+          last_attempted_at?: string | null
+          last_result_count?: number | null
+          notes?: string | null
+          product: string
+          required_secret?: string | null
+          source_key: string
+          source_name: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          blocker?: string | null
+          category?: string | null
+          created_at?: string
+          id?: string
+          last_attempted_at?: string | null
+          last_result_count?: number | null
+          notes?: string | null
+          product?: string
+          required_secret?: string | null
+          source_key?: string
+          source_name?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       source_run_results: {
         Row: {
           attempted: boolean
@@ -23001,6 +23049,42 @@ export type Database = {
           trial_started_at?: string
           utm_content?: string | null
           utm_medium?: string | null
+        }
+        Relationships: []
+      }
+      trial_bundles: {
+        Row: {
+          bundle_token: string
+          company_name: string | null
+          created_at: string
+          display_name: string | null
+          email: string | null
+          expires_at: string | null
+          id: string
+          products: Json
+          updated_at: string
+        }
+        Insert: {
+          bundle_token: string
+          company_name?: string | null
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          expires_at?: string | null
+          id?: string
+          products?: Json
+          updated_at?: string
+        }
+        Update: {
+          bundle_token?: string
+          company_name?: string | null
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          expires_at?: string | null
+          id?: string
+          products?: Json
+          updated_at?: string
         }
         Relationships: []
       }
