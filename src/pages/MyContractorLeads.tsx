@@ -513,12 +513,13 @@ export default function MyContractorLeads() {
                               undo
                             </button>
                             {fb === "bad_lead" && (
-                              <a
-                                href={`mailto:matt@detroitwebagent.com?subject=${encodeURIComponent(`Credit Request — ${lead.name}`)}&body=${encodeURIComponent(`Hi Matt,\n\nRequesting a credit for this lead:\n\nName: ${lead.name}\nPhone: ${lead.phone}\nProject: ${lead.project_type || "N/A"}\nMessage: ${lead.message || "N/A"}\nDate: ${new Date(lead.created_at).toLocaleDateString()}\nLead ID: ${lead.id}\n\nReason this lead was bad:\n[Please describe]\n\nThanks`)}`}
-                                className="text-[10px] text-red-400/70 hover:text-red-400 transition-colors underline"
+                              <button
+                                type="button"
+                                onClick={() => setCreditLead(lead)}
+                                className="text-[10px] text-red-400/80 hover:text-red-400 transition-colors underline"
                               >
                                 Request credit →
-                              </a>
+                              </button>
                             )}
                           </div>
                         )}
