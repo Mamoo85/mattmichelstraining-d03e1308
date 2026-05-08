@@ -55,15 +55,20 @@ serve(async (req) => {
   let enriched = 0, skipped = 0, failed = 0;
   const waterfallCounters: WaterfallCounters = {};
 
+  // Smaller batch sizes to dodge WORKER_RESOURCE_LIMIT on free tier.
+  // Default 5/run; can be overridden per-invocation.
+  const reqBody = await req.json().catch(() => ({} as any));
+  const batchLimit = Math.min(Math.max(Number(reqBody?.limit ?? 5), 1), 25);
+
   try {
-    // Fetch up to 25 unenriched new prospects per run
+    // Fetch up to N unenriched new prospects per run (small batches)
     const { data: targets, error } = await sb
       .from("techalert_prospect_targets")
       .select("id, company_name, city, state, role, source_url")
       .is("enriched_at", null)
       .eq("status", "new")
       .order("score", { ascending: false })
-      .limit(150);
+      .limit(batchLimit);
 
     if (error) throw error;
     if (!targets?.length) {
