@@ -1152,7 +1152,8 @@ serve(async (req) => {
     // Supplemental signals + NOAA weather bonus — all run in parallel
     // Includes the new signal-waterfall (DOL WARN, OSHA, FMCSA, DOT prequal, SAM expanded)
     const { fetchHireSignals } = await import("../_shared/signal-waterfall.ts");
-    const [githubSignals, edgarSignals, usptoSignals, samSignals, samEntitySignals, blsSignals, eventbriteSignals, usaSpendingSignals, googleMapsSignals, oshaSignals, laraNewSignals, laraDissolvedSignals, laraExpiringSignals, nlrbSignals, cfpbSignals, ch7Signals, detroitCertifiedSignals, detroitOpenBizSignals, councilSurveyedSignals, detroitCityContractSignals, multifamilySignals, demoContractorSignals, demoPipelineSignals, billionDollarSignals, detroitBizLicenseSignals, commercialRedSignals, weatherBonus, hireWaterfallSignals] = (await Promise.allSettled([
+    const { runAll50Sources } = await import("../_shared/talent-signals/extras-50.ts");
+    const [githubSignals, edgarSignals, usptoSignals, samSignals, samEntitySignals, blsSignals, eventbriteSignals, usaSpendingSignals, googleMapsSignals, oshaSignals, laraNewSignals, laraDissolvedSignals, laraExpiringSignals, nlrbSignals, cfpbSignals, ch7Signals, detroitCertifiedSignals, detroitOpenBizSignals, councilSurveyedSignals, detroitCityContractSignals, multifamilySignals, demoContractorSignals, demoPipelineSignals, billionDollarSignals, detroitBizLicenseSignals, commercialRedSignals, weatherBonus, hireWaterfallSignals, extras50Result] = (await Promise.allSettled([
       scanGitHubSignals(),
       scanEDGARFundings(),
       scanUSPTOPatents(),
@@ -1181,8 +1182,10 @@ serve(async (req) => {
       scanCommercialComplianceRed(),
       getWeatherHiringBonus(),
       fetchHireSignals(sb, { state: "MI", naics: "238220" }).catch(() => []),
+      runAll50Sources().catch(() => ({ postings: [], bySource: {} })),
     ])).map((r) => (r.status === "fulfilled" ? r.value : []) as any) as any;
-    const supplemental = [...githubSignals, ...edgarSignals, ...usptoSignals, ...samSignals, ...samEntitySignals, ...blsSignals, ...eventbriteSignals, ...usaSpendingSignals, ...googleMapsSignals, ...oshaSignals, ...laraNewSignals, ...laraDissolvedSignals, ...laraExpiringSignals, ...nlrbSignals, ...cfpbSignals, ...ch7Signals, ...detroitCertifiedSignals, ...detroitOpenBizSignals, ...councilSurveyedSignals, ...detroitCityContractSignals, ...multifamilySignals, ...demoContractorSignals, ...demoPipelineSignals, ...billionDollarSignals, ...detroitBizLicenseSignals, ...commercialRedSignals];
+    const extras50Postings = (extras50Result?.postings ?? []) as any[];
+    const supplemental = [...githubSignals, ...edgarSignals, ...usptoSignals, ...samSignals, ...samEntitySignals, ...blsSignals, ...eventbriteSignals, ...usaSpendingSignals, ...googleMapsSignals, ...oshaSignals, ...laraNewSignals, ...laraDissolvedSignals, ...laraExpiringSignals, ...nlrbSignals, ...cfpbSignals, ...ch7Signals, ...detroitCertifiedSignals, ...detroitOpenBizSignals, ...councilSurveyedSignals, ...detroitCityContractSignals, ...multifamilySignals, ...demoContractorSignals, ...demoPipelineSignals, ...billionDollarSignals, ...detroitBizLicenseSignals, ...commercialRedSignals, ...extras50Postings];
     all.push(...supplemental);
     scanned += supplemental.length;
     // Log waterfall signal volume to heartbeat metadata (don't insert as job postings — different shape)

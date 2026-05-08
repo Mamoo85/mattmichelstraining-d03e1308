@@ -14612,6 +14612,9 @@ export type Database = {
           sms_sent_at: string | null
           status: string | null
           target_service: string | null
+          teaser_magic_url: string | null
+          teaser_replied_at: string | null
+          teaser_sent_at: string | null
           validated_email: string | null
           website: string | null
           website_status: string | null
@@ -14660,6 +14663,9 @@ export type Database = {
           sms_sent_at?: string | null
           status?: string | null
           target_service?: string | null
+          teaser_magic_url?: string | null
+          teaser_replied_at?: string | null
+          teaser_sent_at?: string | null
           validated_email?: string | null
           website?: string | null
           website_status?: string | null
@@ -14708,6 +14714,9 @@ export type Database = {
           sms_sent_at?: string | null
           status?: string | null
           target_service?: string | null
+          teaser_magic_url?: string | null
+          teaser_replied_at?: string | null
+          teaser_sent_at?: string | null
           validated_email?: string | null
           website?: string | null
           website_status?: string | null
