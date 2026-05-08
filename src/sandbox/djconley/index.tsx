@@ -8,6 +8,8 @@ import {
 } from "./admin/tabs";
 
 import DJHome from "./pages/Home";
+import Blog from "./pages/Blog";
+import BlogPost from "./pages/BlogPost";
 import {
   About, Industries, Service, Parts, Products, Projects, Rentals,
   Education, Resources, Careers, Contact,
