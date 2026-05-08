@@ -77,7 +77,7 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        sans: ['DM Sans', 'Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
         display: ['Plus Jakarta Sans', 'Inter', 'system-ui', 'sans-serif'],
         mono: ['"Geist Mono"', '"SF Mono"', '"Fira Code"', 'monospace'],
         brand: ['Oswald', 'Impact', '"Arial Black"', 'sans-serif'],
