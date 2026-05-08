@@ -556,6 +556,13 @@ const App = () => {
   const isDJConleyDomain = brand === "djconley";
   const isDJConleyExperience = isDJConleyDomain || (typeof window !== "undefined" && window.location.pathname.startsWith("/sandbox/djconley"));
 
+  useEffect(() => {
+    if (!isDJConleyDomain || typeof window === "undefined") return;
+    if (!window.location.pathname.startsWith("/sandbox/djconley")) return;
+    const cleanPath = window.location.pathname.replace(/^\/sandbox\/djconley/, "") || "/";
+    window.history.replaceState(null, "", `${cleanPath}${window.location.search}${window.location.hash}`);
+  }, [isDJConleyDomain]);
+
   return (
   <PersistQueryClientProvider client={queryClient} persistOptions={{ persister, maxAge: 24 * 60 * 60_000 }}>
     <SplashScreen />
@@ -574,6 +581,7 @@ const App = () => {
                   <div className={isDJConleyExperience ? "" : "pb-16"}>
                     <Routes>
                     <Route path="/" element={isDJConleyDomain ? <DJConleySandbox /> : brand === "agency" ? <AgencyHome /> : <Index />} />
+                    {isDJConleyDomain && <Route path="/*" element={<DJConleySandbox />} />}
                     <Route path="/agency" element={<AgencyHome />} />
                     <Route path="/free-site-scanner" element={<FreeSiteScanner />} />
                     <Route path="/free-tools" element={<FreeToolsHub />} />
