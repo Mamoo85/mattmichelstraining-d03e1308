@@ -63,14 +63,27 @@ export default function SiteLayout({ children, title }: { children: ReactNode; t
       </header>
 
       {title && (
-        <section className="bg-black px-6 pb-16 pt-16 text-white">
-          <div className="mx-auto max-w-[1100px]">
-            <h1 className="text-4xl font-semibold md:text-6xl">{title}</h1>
-          </div>
+        <section
+          className="relative flex min-h-[520px] items-end justify-center bg-cover bg-center px-6 pb-24 pt-[200px] text-white"
+          style={{ backgroundImage: "url('/demo-djconley-current/img/New-Steam-Boiler-Plant_Background.jpg')" }}
+        >
+          <div className="absolute inset-0 bg-black/55" aria-hidden />
+          <h1 className="relative z-10 text-center text-5xl font-light uppercase tracking-[0.08em] md:text-7xl">
+            {title}
+          </h1>
         </section>
       )}
 
-      <main className="bg-[#e9e9e9]">{children}</main>
+      <main className="relative bg-[#e9e9e9]">
+        {title && (
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -top-12 left-0 right-0 h-24 bg-[#e9e9e9]"
+            style={{ clipPath: "ellipse(75% 100% at 50% 100%)" }}
+          />
+        )}
+        <div className="relative">{children}</div>
+      </main>
       <SiteFooter />
 
       <button type="button" aria-label="Accessibility" className="fixed bottom-6 left-6 z-50 rounded border-2 border-white bg-[#e30613] px-3 py-2 text-xs font-bold text-white shadow-lg">
