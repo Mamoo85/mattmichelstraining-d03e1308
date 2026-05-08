@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
   // Pull best enriched prospects, no prior teaser send.
   const { data: leads, error } = await sb
     .from("outreach_leads")
-    .select("id, owner_email, owner_name, business_name, city, state, website, meta")
+    .select("id, owner_email, owner_name, business_name, city, website")
     .not("owner_email", "is", null)
     .not("enriched_at", "is", null)
     .is("teaser_sent_at", null)
