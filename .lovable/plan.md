@@ -1,113 +1,168 @@
-# Audit Answers + Expansion Plan
+# DJ Conley Sandbox — Plan
 
-## 1. Do we already have `/start-trial`?
+Goal: stand up a private "shadow" version of djconley.com that looks like Pat's site (slightly sharper) and bolt every DWA product onto it for free, so when Pat sees it the conversation is "we're the backend brain for your existing website" — not "switch your site."
 
-**Yes — fully built.** `src/pages/StartTrial.tsx` already:
+---
 
-- Reads `?product=` from query params (21 canonical keys + ~50 aliases)
-- Preselects product, shows tailored price + promise + 3 bullets per product
-- Falls back to a curated picker grid if no/unknown product
-- Pre-fills email/business/phone/website from URL params
-- Auto-redirects products with dedicated landing pages (e.g. dead-lead → `/dead-lead-intake`)
-- Routes all trial sign-ups through `start-radar-trial` edge function (no CC, magic link)
-- Tracks funnel events (`view`, `picker_view`, `picker_select`)
+## 1. Hosting — How a sandbox like this actually goes live
 
-The trial re-engagement campaign we just shipped already points every prospect at `/start-trial?product=<key>&email=<email>` so it works as-is. **No code change needed.**
+You don't need to buy hosting, a server, or Cloudflare. Here's the truth on each option, in order of recommendation:
 
-## 2. Is the 300+ missed-call segment getting the right trial?
+**Option A — Lovable subdomain (recommended, $0, ~30 sec)**
 
-The 945 queued prospects break down as:
+- Every Lovable project gets a free `*.lovable.app` URL when published.
+- We publish at something like `djconley-sandbox.lovable.app` or `pat.detroitwebagent.com`.
+- SSL, CDN, and DNS all handled by Lovable. No servers, no Cloudflare needed.
+- We can password-gate it (publish visibility = private) so only Pat sees it until pitch day.
 
+**Option B — Subdomain on detroitwebagent.com (recommended for the pitch, $0)**
 
-| Product                        | Count | Sample industries                                                    |
-| ------------------------------ | ----- | -------------------------------------------------------------------- |
-| `missed_call_catch`            | 323   | cleaning, law firm, dentist, restaurant, urgent care, chiropractic   |
-| `site_radar`                   | 251   | machine shop, manufacturing, accountant, commercial RE, deck builder |
-| `trade_radar_*` (10 verticals) | 371   | HVAC 75, electrical 86, plumbing 66, roofing 76, tree 31, etc.       |
+- Use `pat.detroitwebagent.com` or `sandbox.detroitwebagent.com`.
+- One DNS record on detroitwebagent.com → Lovable. Same hosting, just a sharper-looking URL when Pat opens the link.
+- Still free, still SSL, still our infra.
 
+**Option C — Buy djconleyportal.com or similar (~$12/yr, optional polish)**
 
-**The 323 missed-call prospects are correctly mapped.** Service businesses with phone-driven booking (lawyers, dentists, restaurants, urgent care, chiropractic, cleaning) are exactly who benefits most — every missed call = direct lost revenue. No better-fit trial exists.
+- Only worth it if Pat is signed. For the demo, Option B is enough.
 
-**Optional upsell to consider later:** AI Phone Answering ($149) for the law firms and urgent cares specifically (higher avg call value). I'd keep the trial as Missed-Call Catch for now since it's a 7-day no-CC trial vs. AI Phone Answering's paid setup.
+**Option D — Self-host on a VPS / Cloudflare Pages**
 
-## 3. Is Mortgage Radar sending?
+- Not needed. Adds cost, ops, and zero value over Lovable hosting. Skip.
 
-**No.** Mortgage Radar has 593 leads + 3 enrolled clients — but **zero LOs in the trial resend queue**. The seed query only pulled from `outreach_leads`, `contractor_outreach_prospects`, `techalert_business_prospects`, `roofing_prospects` — none of which contain mortgage brokers. We never built an LO prospect list at scale.
+**Recommendation:** publish to `pat.detroitwebagent.com`, set visibility to private (or share-preview link, 7-day expiry) until you're ready to pitch.
 
-**Fix:** Run a new seeding pass that pulls LOs from Apollo (existing `find-lo-prospects` function uses Apollo people-search for `title=Mortgage Loan Officer`). Target 200–500 Michigan + national LOs, dedupe against suppression, queue with `product_key='mortgage_radar'`.
+---
 
-## 4. Mortgage Radar — 10 ways to expand beyond LOs
+## 2. The Frontend — "His exact website, slightly sharper"
 
-Mortgage Radar's underlying signals (FSBO listings, court records, SOS filings, BSEED permits, probate, foreclosure, divorce filings, deed transfers, license expirations) are **homeowner intent + financial-life-event** signals. Same data, different buyers:
+DJ Conley's real site (djconley.com) is a WordPress + Visual Composer build with this nav:
 
+```text
+Home · About · Industries · Service · Parts · Products · Projects ·
+Rentals · Education · Resources · Careers · Blog · Contact
+```
 
-| #   | New buyer persona                             | Signal angle                                                         | Pricing                                                           |
-| --- | --------------------------------------------- | -------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| 1   | **Real Estate Agents** (buy-side)             | FSBO + price reductions = listing-conversion targets                 | $149/mo — already in product catalog under `real_estate` industry |
-| 2   | **Real Estate Investors / Wholesalers**       | Probate + foreclosure + tax-delinquent = motivated sellers           | $199/mo (higher value) — new product `investor_radar`             |
-| 3   | **Title Companies**                           | New deed transfers + FSBO = title-order pipeline                     | $249/mo                                                           |
-| 4   | **Home Insurance Agents**                     | New deed transfers + new permits = policy-rewrite triggers           | $99/mo                                                            |
-| 5   | **Estate Sale / Junk-Haul (already partial)** | Probate + estate sales — pipe to existing `trade_radar_demo_junk`    | existing                                                          |
-| 6   | **Moving Companies**                          | Deed transfers + FSBO = move-date prediction                         | $99/mo                                                            |
-| 7   | **Solar Installers**                          | New permits + new homeowners (new owners install solar 3× more)      | $149/mo                                                           |
-| 8   | **Property Managers**                         | Multi-unit deed transfers + LLC formations = new landlord onboarding | $149/mo                                                           |
-| 9   | **Estate Attorneys**                          | Probate filings + property transfers post-death                      | $199/mo (low volume, high LTV)                                    |
-| 10  | **Reverse Mortgage Specialists**              | Senior homeowners with paid-off pre-1990 homes (parcel data)         | $199/mo                                                           |
+Brand: navy + teal `#27CCC0` accent + red `#c12a3b`, white background. Tagline "TRUST. A name you can trust." Boiler/pressure vessel/combustion focus, Detroit/Michigan territory.
 
+We already have 4 demo iterations in the repo (`/demo-djconley-v2..v6/`). v6 is closest. The plan:
 
-**Easiest 3 to ship:** Real Estate Agents (data already there, just rename product), Real Estate Investors (probate + foreclosure exists), Solar Installers (new permits + new homeowners exists).
+**Build `/sandbox/djconley` as a true site clone (not a one-pager):**
 
-## 5. Talent Radar — why are we not filling the DB with sellable leads?
+- Real multi-page React routes mirroring djconley.com nav 1:1
+- Same copy, same service categories, same brand palette — pulled directly from djconley.com
+- "Slightly sharper" upgrades (no jarring redesign):
+  - Cleaner typography pairing (Inter + a serif accent for "TRUST.")
+  - Faster page loads (lazy-loaded images, modern image formats)
+  - Sticky header that doesn't jump
+  - Mobile nav that actually works (theirs is clunky)
+  - Subtle scroll-reveal animations
+  - Real-feel hero with motion (not a static slideshow)
+  - Service cards with hover depth instead of flat tiles
+- Every page keeps Pat's logo, his territory map PDF, his line cards, his contact info
+- Footer line: "Powered by Detroit Web Agency" — small, but it plants the seed
 
-Current state: **273 candidates, 39 emails (14%), 88 phones (32%), only 65 with score ≥7.** Trades distribution: boiler 76, HVAC 56, electrical 43, plumbing 35, nursing 10, home health 2.
+This is the Trojan Horse: it looks like *his* site, just better. The pitch becomes "we already rebuilt this — and here's what it can DO."
 
-**Root cause (already documented in `knowledge/talent-radar-v5/talent-radar-enrichment-v5.md`):** MIOSHA license records expose name + license + city only — **no employer**. Hunter/Snov/Apollo/Lusha all need a company domain or employer name. Only ~21% of candidates have an employer, and trade workers are underrepresented in PDL's LinkedIn-skewed DB. Sonar OSINT (`perplexity/sonar-pro`) is the **only** paid API producing results — at $0.005/candidate it's basically free, but ceiling is ~17.5% contactability.
+---
 
-**Why so few candidates total:** scanner is gated to MI licensing data + a few job-board sources. Healthcare (nursing/home health) only has 12 candidates because we never wired up the NPI-based scanner properly for nurses (NPI works for some healthcare but skews physician/dentist).
+## 3. The Admin Panel — Pat's "Boiler Room Command Center"
 
-**What to fix:**
+Goal: when Pat logs in, he sees a control room that feels as serious as Supabase / Apollo / GitHub. Dark sidebar, dense info, real data, real value.
 
-1. **Add nurse + home-health licensure board scanners** — Michigan LARA nursing license database (240k+ active RNs in MI alone) → 100× current nursing volume
-2. **Add CDL/truck-driver licensure** — FMCSA SAFER + state DOT — huge staffing market
-3. **Add electrician journeyman/master license expirations** — already have electrician scanner, expand to "renewal-due-in-90-days" (job-change predictor)
-4. **Phone enrichment via Twilio Lookup** — we have 88 phones, validate them (mobile vs landline) and gate sales by mobile-only ($0.005/lookup)
-5. **Sonar prompt tuning** — current Sonar pulls "current employer" sometimes; tighten prompt to also extract LinkedIn URL for downstream Apollo enrichment hop
-6. **Job-board scrape expansion** — Indeed/ZipRecruiter "looking for" signals (currently sparse)
+**Layout (left sidebar, GitHub/Supabase style):**
 
-Realistic ceiling after fixes: 1,500–3,000 candidates with 25–30% contactability.
+```text
+🔥 DJ Conley · Command Center
+─────────────────────────────────
+  📊  Overview (KPIs, today's pulse)
+  🎯  SiteRadar       ← who's on djconley.com right now
+  📞  Missed-Call     ← every missed call + voicemail + auto-text
+  🏭  Buyer Radar     ← MITN.info RFPs, gov bid signals
+  🔧  FieldDesk       ← jobs, techs, schedule, invoices
+  💰  TechAlert       ← competitor hires, talent moves
+  🏗️  Trade Radar     ← permits, building signals (commercial boiler angle)
+  📬  Outreach        ← cold email + fax campaigns to industrial buyers
+  ⭐  Reviews         ← Google review monitor
+  📈  Reports         ← weekly digest, ROI, attribution
+─────────────────────────────────
+  🔌  Integrations
+  ⚙️  Settings
+  👥  Team
+```
 
-## 6. Concrete implementation plan (this build)
+**Top bar:** search-everything (Apollo style ⌘K), notifications bell, Pat's avatar + org switcher.
 
-Three deliverables — all backend / data:
+**Main panel patterns (per tab):**
 
-### A. Seed Mortgage Radar LOs into trial resend queue
+- Header strip with KPI cards (live counters)
+- Filter row (date range, status, source)
+- Dense data table with row drawer for detail (Supabase-table feel)
+- Right-side context panel for selected record (GitHub PR-detail feel)
+- Activity feed at bottom of overview (Apollo timeline feel)
 
-- Edge function: invoke existing `find-lo-prospects` to pull 300 MI LOs from Apollo
-- Insert into `trial_resend_queue` with `product_key='mortgage_radar'`, `source_table='find_lo_prospects'`
-- Apply existing suppression filter (suppression list, blocklist, past trials, unsubscribes)
-- Daily cron continues delivering 50/day at 14:00 UTC
+**What gets pre-loaded for Pat (the Trojan Horse — all FREE):**
 
-### B. Talent Radar nurse + CDL expansion
+1. **SiteRadar tracking script** already installed on `djconley.com` mirror — first login shows real-feeling visitor data (Stellantis Facilities, DMC, Wayne County Schools — already in `djconley.json` demo config).
+2. **Missed-Call** wired to (313) 590-4404 forwarding, with voicemail transcription + auto-text.
+3. **Buyer Radar** pre-seeded with MITN.info + SAM.gov + Michigan boiler/pressure-vessel RFP signals from the last 90 days.
+4. **Trade Radar** filtered to commercial boiler / pressure vessel / industrial HVAC permits in Wayne / Oakland / Macomb / Washtenaw.
+5. **TechAlert** watching Stellantis, DMC, Henry Ford Health, Beaumont, Wayne State, Detroit Public Schools, big Detroit GCs for boiler/mechanical hiring signals.
+6. **Apollo enrichment budget biased to industrial buyers** — facilities directors, plant engineers, hospital chief engineers, school district maintenance directors, property management at industrial parks. (This is where you said most Apollo credits should go — locked in via a per-tenant Apollo budget config tied to industry='industrial_boiler'.)
+7. **FieldDesk** seeded with 2 weeks of mock jobs styled like real boiler service tickets (so it doesn't feel empty on day 1).
 
-- New scanner: `talent-radar-nurse-scanner` (LARA nursing license DB) — adds RN/LPN candidates with license + city
-- New scanner: `talent-radar-cdl-scanner` (FMCSA SAFER drivers) — adds CDL drivers + carrier name (carrier name = employer, unlocks Hunter/Apollo)
-- Hourly cron, dedupe on `license_number`
-- Adds Twilio Lookup mobile validation pass on existing 88 phones (`talent-radar-phone-validate`)
+The goal: Pat logs in and within 30 seconds says "wait — this is already running on my company?"
 
-### C. Mortgage Radar product variants (data only, no UI yet)
+---
 
-- Add 3 new `start-radar-trial` product slugs: `investor_radar`, `realtor_radar`, `solar_radar`
-- Map to same `mortgage_radar_leads` table but filter by signal type:
-  - `investor_radar` → probate, foreclosure, tax-delinquent
-  - `realtor_radar` → FSBO, price-reductions
-  - `solar_radar` → new permits + new homeowners (deed transfer < 12 months)
-- Add to `StartTrial.tsx` PRODUCTS map + PRODUCT_PITCH (one-line code change per product)
-- No new scanners needed — same data, three new buyer audiences
+## 4. Technical sections (for the build phase)
 
-## 7. Open questions before building
+**Routes to add:**
 
-1. **Mortgage Radar LO seed** — go national (1000+) or Michigan-only (300)? If we can get leads for each location we claim to have leads for then add as many cities as we can handle. I want as many as we can find the sufficient information for!
-2. **Nurse scanner** — Michigan only, or all 50 states (LARA equivalents exist)? If they exist, HELL YA! EXPAND, OUR TROJAN HORSE IS THE FREE TRIAL IF WE CAN PROVE ITS WORTH IT THEN WE WIN.
-3. **3 new Mortgage Radar variants** — ship all 3 (investor/realtor/solar), or just investor first? ALL 3 BUT MAKE SURE WE TEST EVERYTHING AFTER. END TO END, CLICK TESTS. WE HAVE HAD SO MANY ERRORS.
+- `/sandbox/djconley` — public-facing site mirror (12 pages mapping djconley.com nav)
+- `/sandbox/djconley/admin/*` — the command center (gated by an owner session — same `owner_session` pattern already in `OwnerDashboard.tsx`)
+- Login at `/sandbox/djconley/admin/login` — magic-link to `pmichels@djconley.com`
 
-Once you pick those three, I'll execute A + B + C. MAKE SURE THIS IS TOP OF THE LINE, PREMIUM, 10 MILLION DOLLAR COMPANY EVAL LEVEL BUILD. OH THAT REMINDS ME. SHOULD OUR BACKGROUND ON ALL OUR DASHBOARDS BE WHITE? SHOW ME 1 TOP 10 SOFTWARE THAT ISNT WHITE. IF YOU CAN, THEN IM OPEN TO KEEPING THE TEAL, BUT I THINK WHITE OR BLACK IS KINDA THE STANDARD FOR PROFESSIONAL DASHBOARDS, DO YOU AGREE? WE NEED OUR TEXT OR FONT TO BE WHATEVER IS MOST PROFESSIONAL AND HIGHER RESOLUTION. CAN YOU INCREASE THE RESOLUTION OF OUR UI AND STUFF?
+**Reuse of existing code:**
+
+- Owner auth pattern: `src/pages/OwnerDashboard.tsx` (already supports magic-link + command-center tiles per owner email)
+- Demo data: `src/data/demoConfigs/djconley.json` (already has visitors, stats, competitor pricing)
+- Brand palette already in `/demo-djconley-v6/`
+- Existing admin component library under `src/components/admin/` (OutreachObservability, OutreachQueueMonitor, EnrichmentDLQPanel, etc.) — wrap these in DJ-branded shell, don't rebuild
+- SiteRadar visitor script: existing `visitor-identify` edge function
+
+**Industry-bias for Apollo enrichment (the "spend most credits on his type of business" rule):**
+
+- New row in `field_crm_clients` for djconley.com with `industry='industrial_boiler'`
+- Add `apollo_target_titles[]` column (or use existing meta JSON): `["Facilities Director","Plant Engineer","Chief Engineer","Maintenance Director","Director of Operations","Property Manager","VP Engineering"]`
+- Modify `_shared/apollo.ts` callers to read this list when the request originates from a tenant flagged industrial_boiler — bias `person_titles` and `q_keywords=boiler OR steam OR pressure vessel OR HVAC` in the search
+
+**Per-tenant Apollo budget gate:**
+
+- Use existing `_shared/enrichment-budget.ts` to cap monthly Apollo spend per tenant
+- Set DJ Conley's cap high (e.g., $200/mo of Apollo credits) since he's the trojan horse case study
+
+**Hosting / publish:**
+
+- Set publish visibility = private OR generate share-preview link (7 days) until pitch day
+- DNS: add `pat` CNAME on detroitwebagent.com → Lovable
+
+---
+
+## 5. Build order (when you say go)
+
+1. Stand up the 12-page DJ Conley site mirror at `/sandbox/djconley`
+2. Build the admin shell (sidebar + top bar + Overview tab)
+3. Wire each existing product (SiteRadar, Missed-Call, Buyer Radar, FieldDesk, TechAlert, Trade Radar, Outreach, Reviews) into its tab
+4. Seed the demo data (Stellantis/DMC/Wayne County visitors, Michigan boiler RFPs, Detroit boiler permits, hospital hiring signals)
+5. Bias Apollo enrichment to industrial-boiler titles for this tenant
+6. Magic-link auth for `pmichels@djconley.com`
+7. Publish privately to `pat.detroitwebagent.com`
+
+---
+
+## 6. Open questions before I build
+
+1. **URL:** `pat.detroitwebagent.com` — good `sandbox.detroitwebagent.com`, `command.detroitwebagent.com`)?
+2. **Visibility before pitch:** private (login required) or public-but-unlinked (anyone with URL can see)? Private,  super easy login
+3. **"Slightly sharper" — how far?** Pure 1:1 clone with polish only (recommended), or do you want one signature visual upgrade that makes Pat say "whoa" (e.g., animated boiler-room hero, live visitor ticker on the homepage)? Just shaper but we need a tab for "website gadgets" and things like animated boiler room hero should be am option or live vister ticker. Think of 20 useful widgets or gadgets someone like pat would like. 
+4. **Do you want the admin panel to live at** `/sandbox/djconley/admin` **(one project) or get its own subdomain (**`pat-admin.detroitwebagent.com`**)?** Same code either way — just a routing choice. It needs its own subdomain. Cant have the m2 training problem happen to any other website 
