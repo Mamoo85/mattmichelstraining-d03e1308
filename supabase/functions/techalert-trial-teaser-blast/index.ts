@@ -48,8 +48,31 @@ Deno.serve(async (req) => {
   let sent = 0; let skipped = 0; let failed = 0;
   const events: any[] = [];
 
+  // Email sanity filter — reject obvious garbage from scraped directory pages.
+  const DIRECTORY_DOMAINS = new Set([
+    "localedge.com","yellowpages.com","yelp.com","manta.com","superpages.com",
+    "merchantcircle.com","bbb.org","mapquest.com","foursquare.com","houzz.com",
+    "thomasnet.com","angi.com","homeadvisor.com","thumbtack.com","porch.com",
+    "nextdoor.com","zoominfo.com","dnb.com","corporationwiki.com","opengovus.com",
+    "sam.gov","yellowbook.com","cylex.us.com","brownbook.net","tupalo.co",
+    "ezlocal.com","cybo.com","tradeford.com","exportersindia.com","example.com",
+    "gmail.com","yahoo.com","hotmail.com","outlook.com","aol.com","icloud.com",
+  ]);
+  function emailLooksValid(e: string): boolean {
+    if (!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(e)) return false;
+    if (/[%<>"'\\]/.test(e)) return false;          // url-encoded / scrape garbage
+    if (e.length > 80) return false;
+    const domain = e.split("@")[1].toLowerCase();
+    if (DIRECTORY_DOMAINS.has(domain)) return false;
+    if (domain.split(".").length > 3) return false; // weird sub-sub-subdomains
+    if (/[^a-z0-9.\-]/.test(domain)) return false;
+    return true;
+  }
+
   for (const lead of leads || []) {
-    const email = lead.owner_email!.toLowerCase().trim();
+    const email = (lead.owner_email || "").toLowerCase().trim();
+
+    if (!emailLooksValid(email)) { skipped++; events.push({ email, action: "skipped_invalid" }); continue; }
 
     // Suppression check
     const { data: sup } = await sb.from("suppressed_emails").select("email").eq("email", email).maybeSingle();
