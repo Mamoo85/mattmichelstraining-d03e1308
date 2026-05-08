@@ -36,7 +36,9 @@ export default function IntelRowActions({
   const [busy, setBusy] = useState(false);
 
   const googleUrl = `https://www.google.com/search?q=${encodeURIComponent(`${companyName} ${city || ""} ${state || ""}`)}`;
-  const mailto = `mailto:${email || ""}?subject=${encodeURIComponent(emailSubject || `Re: ${companyName}`)}&body=${encodeURIComponent(emailBody || "")}`;
+  const mailto = email
+    ? `mailto:${email}?subject=${encodeURIComponent(emailSubject || `Re: ${companyName}`)}&body=${encodeURIComponent(emailBody || "")}`
+    : null;
 
   async function handleCopy() {
     const blob = [companyName, city && state ? `${city}, ${state}` : null, phone, email, website, sourceUrl]
@@ -74,10 +76,12 @@ export default function IntelRowActions({
           <Phone className="w-3 h-3" /> Call
         </a>
       ) : null}
-      <a href={mailto} title="Email pitch"
-         className={`${btn} bg-blue-500/10 text-blue-300 border-blue-500/30 hover:bg-blue-500/20`}>
-        <Mail className="w-3 h-3" /> Email
-      </a>
+      {mailto ? (
+        <a href={mailto} title="Email pitch"
+           className={`${btn} bg-blue-500/10 text-blue-300 border-blue-500/30 hover:bg-blue-500/20`}>
+          <Mail className="w-3 h-3" /> Email
+        </a>
+      ) : null}
       <a href={googleUrl} target="_blank" rel="noreferrer" title="Google search"
          className={`${btn} bg-white/5 text-white/70 border-white/10 hover:bg-white/10`}>
         <Search className="w-3 h-3" /> Google
