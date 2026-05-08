@@ -145,7 +145,7 @@
     (function(){
       var h=location.hostname;
       var p=location.pathname||'/';
-      if(h==='pat.detroitwebagent.com'){
+      if(h==='pat.detroitwebagent.com' || p.indexOf('/sandbox/djconley')===0){
         var dj={title:'D.J. Conley Associates, Inc.',desc:'D.J. Conley Associates, Inc. — A name you can trust for steam, hot water, heat recovery, service, parts, and products.',img:'https://pat.detroitwebagent.com/demo-djconley-current/djc-51-logo.png',url:'https://pat.detroitwebagent.com/',site:'D.J. Conley Associates, Inc.'};
         document.title=dj.title;
         function sm(a,n,v){var e=document.querySelector('meta['+a+'="'+n+'"]');if(e)e.setAttribute('content',v);}
