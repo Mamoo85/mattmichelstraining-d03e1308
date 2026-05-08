@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Download, Radar } from "lucide-react";
 import { RadarExportBar } from "@/components/shared/RadarExportBar";
+import LeadDetailDrawer, { type LeadDetail } from "@/components/radar/LeadDetailDrawer";
 
 type Signal = {
   id: string;
