@@ -11,6 +11,7 @@ import EmptyDashboardState from "@/components/shared/EmptyDashboardState";
 import OnboardingChecklist from "@/components/shared/OnboardingChecklist";
 import RescueLinkButton from "@/components/shared/RescueLinkButton";
 import JustPurchasedScreen, { isJustPurchased } from "@/components/shared/JustPurchasedScreen";
+import LeadDetailDrawer, { type LeadDetail } from "@/components/radar/LeadDetailDrawer";
 import { Activity, MapPin, TrendingUp, Building2, Lock, Download, Phone } from "lucide-react";
 
 type Signal = {
