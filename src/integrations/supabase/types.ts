@@ -23093,6 +23093,63 @@ export type Database = {
         }
         Relationships: []
       }
+      trial_resend_queue: {
+        Row: {
+          business_name: string | null
+          city: string | null
+          created_at: string
+          email: string
+          error_message: string | null
+          id: string
+          industry: string | null
+          product_key: string
+          product_label: string | null
+          resend_id: string | null
+          send_attempted_at: string | null
+          send_completed_at: string | null
+          skip_reason: string | null
+          source_table: string
+          state: string | null
+          status: string
+        }
+        Insert: {
+          business_name?: string | null
+          city?: string | null
+          created_at?: string
+          email: string
+          error_message?: string | null
+          id?: string
+          industry?: string | null
+          product_key: string
+          product_label?: string | null
+          resend_id?: string | null
+          send_attempted_at?: string | null
+          send_completed_at?: string | null
+          skip_reason?: string | null
+          source_table: string
+          state?: string | null
+          status?: string
+        }
+        Update: {
+          business_name?: string | null
+          city?: string | null
+          created_at?: string
+          email?: string
+          error_message?: string | null
+          id?: string
+          industry?: string | null
+          product_key?: string
+          product_label?: string | null
+          resend_id?: string | null
+          send_attempted_at?: string | null
+          send_completed_at?: string | null
+          skip_reason?: string | null
+          source_table?: string
+          state?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       trial_settings: {
         Row: {
           auto_charge_tier: string
@@ -25131,6 +25188,10 @@ export type Database = {
           p_utm?: Json
         }
         Returns: undefined
+      }
+      map_industry_to_trial_product: {
+        Args: { _industry: string }
+        Returns: string
       }
       mark_outreach_send_result: {
         Args: { p_error_msg?: string; p_job_id: string; p_success: boolean }
