@@ -816,7 +816,7 @@ export default function MyTechAlert() {
                 "Cross-referencing employer hiring signals",
                 "Email/SMS alerts will fire as candidates surface",
               ]}
-              setupGuideHref="mailto:matt@detroitwebagent.com?subject=TechAlert%20setup%20question"
+              setupGuideHref={`/talent-radar/setup?token=${data?.client?.dashboard_token || token || ""}`}
             />
           ) : (
             <Card className="border-white/5 bg-gradient-to-br from-[#0a1628] to-[#0d1f2e]">
