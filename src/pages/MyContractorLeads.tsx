@@ -17,6 +17,7 @@ import EmptyDashboardState from "@/components/shared/EmptyDashboardState";
 import OnboardingChecklist from "@/components/shared/OnboardingChecklist";
 import RescueLinkButton from "@/components/shared/RescueLinkButton";
 import JustPurchasedScreen, { isJustPurchased } from "@/components/shared/JustPurchasedScreen";
+import RequestCreditDialog from "@/components/shared/RequestCreditDialog";
 
 interface Lead {
   id: string;
@@ -94,6 +95,7 @@ export default function MyContractorLeads() {
   const [filter, setFilter] = useState<"all" | "pending" | "hired" | "called" | "bad_lead">("all");
   const [shopOpen, setShopOpen] = useState(false);
   const [bannerDismissed, setBannerDismissed] = useState(false);
+  const [creditLead, setCreditLead] = useState<Lead | null>(null);
 
   const base = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/contractor-leads-dashboard`;
   const apiKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
@@ -511,12 +513,13 @@ export default function MyContractorLeads() {
                               undo
                             </button>
                             {fb === "bad_lead" && (
-                              <a
-                                href={`mailto:matt@detroitwebagent.com?subject=${encodeURIComponent(`Credit Request — ${lead.name}`)}&body=${encodeURIComponent(`Hi Matt,\n\nRequesting a credit for this lead:\n\nName: ${lead.name}\nPhone: ${lead.phone}\nProject: ${lead.project_type || "N/A"}\nMessage: ${lead.message || "N/A"}\nDate: ${new Date(lead.created_at).toLocaleDateString()}\nLead ID: ${lead.id}\n\nReason this lead was bad:\n[Please describe]\n\nThanks`)}`}
-                                className="text-[10px] text-red-400/70 hover:text-red-400 transition-colors underline"
+                              <button
+                                type="button"
+                                onClick={() => setCreditLead(lead)}
+                                className="text-[10px] text-red-400/80 hover:text-red-400 transition-colors underline"
                               >
                                 Request credit →
-                              </a>
+                              </button>
                             )}
                           </div>
                         )}
@@ -597,6 +600,18 @@ export default function MyContractorLeads() {
           </a>
         </footer>
       </div>
+
+      {creditLead && (
+        <RequestCreditDialog
+          open={!!creditLead}
+          onOpenChange={(o) => { if (!o) setCreditLead(null); }}
+          product="contractor_leads"
+          leadTable="contractor_leads"
+          leadId={creditLead.id}
+          requesterEmail={contractor.email}
+          leadSummary={`${creditLead.name} • ${creditLead.phone}\nProject: ${creditLead.project_type || "N/A"}\nReceived: ${new Date(creditLead.created_at).toLocaleDateString()}`}
+        />
+      )}
     </>
   );
 }
