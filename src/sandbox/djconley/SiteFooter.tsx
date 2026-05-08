@@ -8,7 +8,7 @@ const QUICK_LINKS = [
   ["Terms & Conditions", "#"],
   ["Sales Line Card", "/sandbox/djconley/products"],
   ["Service Line Card", "/sandbox/djconley/service"],
-  ["Blog", "#"],
+  ["Blog", "/sandbox/djconley/blog"],
 ];
 const SERVICES = [
   ["Boiler Parts", "/sandbox/djconley/parts"],
