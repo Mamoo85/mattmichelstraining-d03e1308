@@ -10,6 +10,7 @@ const DEMO_VISITORS = [
 ];
 
 const DEMO_RFPS = [
+  { title: "Henry Ford Health – Boiler Tune-Up & Pressure Vessel Inspection RFP", agency: "MITN.info",   value: "$420k",   posted: "47 min ago", hot: true },
   { title: "Stellantis Truck Plant – Boiler Retrofit",        agency: "MITN.info",   value: "$2.4M",   posted: "2h ago",  hot: true },
   { title: "Wayne County – Steam Plant Maintenance Contract", agency: "MITN.info",   value: "$340k/y", posted: "1d ago",  hot: true },
   { title: "Detroit Public Schools – Boiler Tune-Up RFP",     agency: "MITN.info",   value: "$180k",   posted: "2d ago",  hot: false },
