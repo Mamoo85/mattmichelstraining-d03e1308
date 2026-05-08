@@ -240,6 +240,7 @@ export default function DWAAdmin() {
           {activeTab === "hvb"             && <Suspense fallback={lazyFallback("HVB")}><AdminHighVolumeBuyer /></Suspense>}
           {activeTab === "growth-signals"  && <Suspense fallback={lazyFallback("growth signals")}><AdminGrowthSignals /></Suspense>}
           {activeTab === "trial-funnel"    && <Suspense fallback={lazyFallback("Trial Funnel")}><TrialFunnelInsights /></Suspense>}
+          {activeTab === "email-preflight" && <Suspense fallback={lazyFallback("Email Preflight")}><EmailPreflightHarness /></Suspense>}
           {activeTab === "visitor-intel"   && <Suspense fallback={lazyFallback("visitor intel")}><VisitorIntelFeed /></Suspense>}
           {activeTab === "the-wire"        && <Suspense fallback={lazyFallback("The Wire")}><AdminTheWire /></Suspense>}
           {activeTab === "coverage-map"    && <Suspense fallback={lazyFallback("coverage map")}><AdminCoverageMap /></Suspense>}
