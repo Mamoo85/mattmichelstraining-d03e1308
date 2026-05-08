@@ -134,6 +134,18 @@
     (function(){
       var h=location.hostname;
       var p=location.pathname||'/';
+      if(h==='pat.detroitwebagent.com'){
+        var dj={title:'D.J. Conley Associates, Inc.',desc:'D.J. Conley Associates, Inc. — A name you can trust for steam, hot water, heat recovery, service, parts, and products.',img:'https://pat.detroitwebagent.com/demo-djconley-current/djc-51-logo.png',url:'https://pat.detroitwebagent.com/',site:'D.J. Conley Associates, Inc.'};
+        document.title=dj.title;
+        function sm(a,n,v){var e=document.querySelector('meta['+a+'="'+n+'"]');if(e)e.setAttribute('content',v);}
+        sm('property','og:title',dj.title);sm('property','og:description',dj.desc);sm('property','og:image',dj.img);sm('property','og:image:alt',dj.title);sm('property','og:url',dj.url);sm('property','og:site_name',dj.site);
+        sm('name','twitter:title',dj.title);sm('name','twitter:description',dj.desc);sm('name','twitter:image',dj.img);sm('name','description',dj.desc);
+        var appleDj=document.querySelector('meta[name="apple-mobile-web-app-title"]');if(appleDj)appleDj.setAttribute('content','D.J. Conley');
+        var fav=document.querySelector('link[rel="icon"]');if(fav){fav.setAttribute('href','/demo-djconley-current/favicon-32.png');fav.setAttribute('type','image/png');}
+        var favAny=document.querySelector('link[rel="icon"][sizes="any"]');if(favAny)favAny.parentNode.removeChild(favAny);
+        var dwaLdDj=document.getElementById('ld-default');if(dwaLdDj)dwaLdDj.type='application/ld+json-dwa-disabled';
+        return;
+      }
       // DWA product paths — never show M² branding even on M² hostnames (preview/lovable.app).
       var DWA_PATH_PREFIXES=['/agency','/hire-alert','/field-service','/contractor-leads','/dead-lead','/missed-call','/my-','/talent-radar','/mortgage-radar','/trade-radar','/site-radar','/buyer-radar','/growth-radar','/demand-radar','/industry-pulse','/roofing-radar','/hvac-radar','/plumbing-radar','/electrical-radar','/pest-control-radar','/gutters-radar','/painting-radar','/exterior-radar','/tree-radar','/restoration-radar','/demo-junk-radar','/foundation-radar','/claim-lead','/contractor-marketplace','/marketplace','/start-trial','/billing','/bundle-revenue-suite','/all-services','/free-tools','/free-site-scanner','/web-design-services','/detroit-web-design','/get-started','/seo-guard','/lead-unlocked','/lead-claimed','/ai-phone-answering','/manufacturing-web-design','/real-estate-web-design','/dwa-admin','/roi','/my-techalert'];
       var isDwaPath=DWA_PATH_PREFIXES.some(function(pre){return p.indexOf(pre)===0;});
@@ -164,10 +176,11 @@
       }
     })();
   </script>
-<script>!function(key) {if (window.reb2b) return;window.reb2b = {loaded: true};var s = document.createElement("script");s.async = true;s.src = "https://ddwl4m2hdecbv.cloudfront.net/b/" + key + "/" + key + ".js.gz";document.getElementsByTagName("script")[0].parentNode.insertBefore(s, document.getElementsByTagName("script")[0]);}("QOQRJH9MM162");</script>
+<script>if(location.hostname!=='pat.detroitwebagent.com'){!function(key) {if (window.reb2b) return;window.reb2b = {loaded: true};var s = document.createElement("script");s.async = true;s.src = "https://ddwl4m2hdecbv.cloudfront.net/b/" + key + "/" + key + ".js.gz";document.getElementsByTagName("script")[0].parentNode.insertBefore(s, document.getElementsByTagName("script")[0]);}("QOQRJH9MM162");}</script>
   <!-- DWA SiteRadar Visitor Intel by Detroit Web Agency -->
   <script>
     (function(){
+      if(location.hostname==='pat.detroitwebagent.com') return;
       var d={page:window.location.href,ref:document.referrer,key:"f35b4c09-3a3b-4d62-a2f3-baa029ecc0d6"};
       fetch("https://eauvubfpanpeuxsrqesu.supabase.co/functions/v1/visitor-identify",{
         method:"POST",headers:{"Content-Type":"application/json"},
@@ -177,7 +190,7 @@
   </script>
   <!-- Apollo.io Website Visitor Tracker -->
   <script>
-    function initApollo(){var n=Math.random().toString(36).substring(7),o=document.createElement("script");
+    function initApollo(){if(location.hostname==='pat.detroitwebagent.com') return;var n=Math.random().toString(36).substring(7),o=document.createElement("script");
     o.src="https://assets.apollo.io/micro/website-tracker/tracker.iife.js?nocache="+n,o.async=!0,o.defer=!0,
     o.onload=function(){window.trackingFunctions.onLoad({appId:"69e58e981f8547001d1376e1"})},
     document.head.appendChild(o)}initApollo();
