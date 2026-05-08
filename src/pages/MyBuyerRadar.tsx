@@ -280,7 +280,7 @@ export default function MyBuyerRadar() {
                         )}
                       </div>
                     </div>
-                  </div>
+                  </button>
                 );
               })}
             </div>
