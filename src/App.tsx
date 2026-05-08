@@ -185,6 +185,7 @@ const ContractorROIReport = lazyRetry(() => import("./pages/ContractorROIReport"
 const MyContractorLeads = lazyRetry(() => import("./pages/MyContractorLeads"));
 const DeadLeadStats = lazyRetry(() => import("./pages/DeadLeadStats"));
 const MyTechAlert = lazyRetry(() => import("./pages/MyTechAlert"));
+const TalentRadarSetup = lazyRetry(() => import("./pages/TalentRadarSetup"));
 const DeadLeadIntake = lazyRetry(() => import("./pages/DeadLeadIntake"));
 const DeadLeadsRoofingTexas = lazyRetry(() => import("./pages/DeadLeadsRoofingTexas"));
 const DeadLeadsHvacFlorida = lazyRetry(() => import("./pages/DeadLeadsHvacFlorida"));
@@ -861,6 +862,7 @@ const App = () => {
                     <Route path="/talent-radar/enterprise" element={<HireAlertMSPInquiry />} />
                     <Route path="/talent-radar/healthcare" element={<HealthcareHireAlert />} />
                     <Route path="/talent-radar/dashboard" element={<MyTechAlert />} />
+                    <Route path="/talent-radar/setup" element={<TalentRadarSetup />} />
                     <Route path="/talent-radar/trial" element={<HireAlertTrial />} />
                     <Route path="/start-trial" element={<StartTrial />} />
                     <Route path="/billing" element={<BillingPortal />} />

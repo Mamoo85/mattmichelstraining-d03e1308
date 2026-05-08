@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import SEOHead from "@/components/layout/SEOHead";
 import DWASuiteNav from "@/components/shared/DWASuiteNav";
 import JustPurchasedScreen, { isJustPurchased } from "@/components/shared/JustPurchasedScreen";
+import LeadDetailDrawer from "@/components/radar/LeadDetailDrawer";
 import {
   TrendingUp, Zap, Target, Factory, Briefcase,
   RefreshCw, Loader2, ArrowUpRight, BarChart3,
@@ -71,6 +72,7 @@ export default function MyIndustryPulse() {
   const [localActions, setLocalActions] = useState<Record<string, ClientAction>>({});
   const [wonDealModal, setWonDealModal] = useState<string | null>(null); // signal_id
   const [wonDealValue, setWonDealValue] = useState("");
+  const [drawerLead, setDrawerLead] = useState<Signal | null>(null);
 
   const fetchData = async () => {
     if (!token) { setError("No dashboard token provided"); setLoading(false); return; }
@@ -297,7 +299,13 @@ export default function MyIndustryPulse() {
                 return (
                   <div
                     key={signal.id}
-                    className={`bg-[#0f1f35] border rounded-xl p-5 ${
+                    onClick={(e) => {
+                      // Don't open drawer when clicking buttons/links inside
+                      const t = e.target as HTMLElement;
+                      if (t.closest("button") || t.closest("a")) return;
+                      setDrawerLead(signal);
+                    }}
+                    className={`bg-[#0f1f35] border rounded-xl p-5 cursor-pointer hover:border-[#00d4ff]/40 transition-colors ${
                       currentAction?.action === "won" ? "border-emerald-500/30 ring-1 ring-emerald-500/10" :
                       currentAction?.action === "contacted" ? "border-blue-500/20" :
                       signal.signal_type === "cross_referenced" ? "border-amber-500/20 ring-1 ring-amber-500/10" :
