@@ -204,6 +204,7 @@
           var h=window.location.hostname;
           var p=window.location.pathname||'/';
           window.__isDWA=(h==='detroitwebagent.com'||h==='www.detroitwebagent.com');
+          window.__isDJConley=(h==='pat.detroitwebagent.com');
 
           // Multi-app manifest selector — same codebase, different installable PWAs by URL.
           // Each tool gets its own icon, name, and start_url on the home screen.
@@ -256,6 +257,11 @@
           <h1 style="color:hsl(0 0% 93%);font-size:1.5rem;font-weight:700;text-align:center;margin-top:1rem;line-height:1.4">Real strength. Zero gimmicks.<br/><span style="color:hsl(17 84% 50%)">Real coaching. Real results.</span></h1>
           <p style="color:hsl(0 0% 55%);font-size:0.875rem;max-width:36rem;margin:0.75rem auto 0;text-align:center;line-height:1.6">In-person training in Grosse Pointe. Online programs anywhere. Ages 12 to 60+. The same coach either way.</p>
         </div>
+        <!-- D.J. Conley branding (hidden if other domains) -->
+        <div id="hero-djconley" style="display:none;flex-direction:column;align-items:center">
+          <img src="/demo-djconley-current/djc-51-logo.png" alt="D.J. Conley Associates, Inc." width="330" height="90" fetchpriority="high" decoding="sync" style="width:260px;height:auto" />
+          <h1 style="color:hsl(0 0% 93%);font-size:1.25rem;font-weight:700;text-align:center;margin-top:1rem;line-height:1.4;font-family:Arial,Helvetica,sans-serif">A name you can<br/><span style="color:#fff">TRUST.</span></h1>
+        </div>
         <!-- Detroit Web Agency branding (hidden if training) -->
         <div id="hero-agency" style="display:none;flex-direction:column;align-items:center">
           <div style="font-size:1.75rem;font-weight:900;letter-spacing:-0.02em;color:#fff;font-family:system-ui,sans-serif">Detroit <span style="color:#22d3ee">Web</span> Agency</div>
@@ -265,7 +271,7 @@
         </div>
       </div>
       <script>
-        (function(){if(window.__isDWA){document.getElementById('hero-agency').style.display='flex';}else{document.getElementById('hero-m2').style.display='flex';}})();
+        (function(){if(window.__isDJConley){document.getElementById('hero-djconley').style.display='flex';}else if(window.__isDWA){document.getElementById('hero-agency').style.display='flex';}else{document.getElementById('hero-m2').style.display='flex';}})();
       </script>
     </div>
     <noscript>
