@@ -252,7 +252,26 @@ export default function MyDemandRadar() {
         ) : (
           <div className="grid gap-3">
             {signals.map((s) => (
-              <Card key={s.id} className="bg-[#0a1628] border-[#1e3a5f] hover:border-[#00d4ff]/40 transition">
+              <Card
+                key={s.id}
+                role="button"
+                tabIndex={0}
+                onClick={() => setSelectedLead({
+                  id: s.id,
+                  company_name: s.company_name,
+                  location: (s as any).location,
+                  industry: (s as any).industry,
+                  signal_type: (s as any).signal_type,
+                  confidence: (s as any).confidence,
+                  recommended_pitch: (s as any).recommended_pitch,
+                  hiring_count: (s as any).hiring_count,
+                  hiring_roles: (s as any).hiring_roles,
+                  predicted_needs: (s as any).predicted_needs,
+                  source_urls: (s as any).source_urls,
+                  detected_at: (s as any).detected_at,
+                })}
+                className="bg-[#0a1628] border-[#1e3a5f] hover:border-[#00d4ff]/40 transition cursor-pointer"
+              >
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between gap-3 flex-wrap">
                     <div className="min-w-0 flex-1">
