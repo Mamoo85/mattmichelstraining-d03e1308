@@ -74,7 +74,7 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'DM Sans', 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
@@ -141,6 +141,7 @@
   .font-display {
     font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
     font-weight: 800;
+    letter-spacing: -0.02em;
   }
   .font-industrial {
     font-family: 'Rajdhani', 'Plus Jakarta Sans', system-ui, sans-serif;
