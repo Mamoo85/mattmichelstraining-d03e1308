@@ -222,6 +222,7 @@ const GrowthRadarDashboard = () => {
           </div>
         )}
       </div>
+      <LeadDetailDrawer lead={selectedLead} open={!!selectedLead} onOpenChange={(o) => !o && setSelectedLead(null)} />
     </div>
   );
 };
