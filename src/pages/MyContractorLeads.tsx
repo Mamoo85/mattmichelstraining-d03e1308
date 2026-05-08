@@ -161,12 +161,18 @@ export default function MyContractorLeads() {
     if (isJustPurchased()) return <JustPurchasedScreen product="Contractor Leads" />;
     return (
       <div className="min-h-screen bg-[#030711] flex items-center justify-center px-4">
-        <div className="text-center">
+        <div className="text-center max-w-md">
           <Wrench className="h-12 w-12 text-white/20 mx-auto mb-4" />
           <h2 className="text-white font-bold text-lg mb-2">Access Denied</h2>
-          <p className="text-white/50 text-sm">{error || "Invalid or expired dashboard link."}</p>
+          <p className="text-white/50 text-sm mb-5">{error || "Invalid or expired dashboard link."}</p>
+          <div className="flex flex-col sm:flex-row gap-2 justify-center">
+            <RescueLinkButton product="contractor_leads" email={searchParams.get("email") || ""} productLabel="Contractor Leads" />
+            <a href="/my-trials">
+              <Button variant="outline" className="border-[#1e3a5f] text-[#94a3b8] hover:text-white">View all my trials</Button>
+            </a>
+          </div>
           <a href="sms:+13139921219" className="text-[#00d4ff] text-sm mt-4 inline-block hover:underline">
-            Text Matt for help →
+            Or text Matt for help →
           </a>
         </div>
       </div>
