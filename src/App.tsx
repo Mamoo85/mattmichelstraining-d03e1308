@@ -1073,10 +1073,10 @@ const App = () => {
               <ProveItWrapper />
               
               
-              <Suspense fallback={null}><LegalFooterLazy /></Suspense>
-              <Suspense fallback={null}><CookieBanner /></Suspense>
-              <Suspense fallback={null}><BottomTabBar /></Suspense>
-              <Suspense fallback={null}><OfflineBadge /></Suspense>
+              {!isDJConleyDomain && <Suspense fallback={null}><LegalFooterLazy /></Suspense>}
+              {!isDJConleyDomain && <Suspense fallback={null}><CookieBanner /></Suspense>}
+              {!isDJConleyDomain && <Suspense fallback={null}><BottomTabBar /></Suspense>}
+              {!isDJConleyDomain && <Suspense fallback={null}><OfflineBadge /></Suspense>}
               <SpeedInsights />
             </BrowserRouter>
           </TooltipProvider>
@@ -1084,6 +1084,7 @@ const App = () => {
       </TimerProvider>
     </AuthProvider>
   </PersistQueryClientProvider>
-);
+  );
+};
 
 export default App;
