@@ -2347,3 +2347,6 @@ verify_jwt = false
 
 [functions.talent-radar-phone-validate]
 verify_jwt = false
+
+[functions.apollo-health]
+verify_jwt = false
