@@ -40,6 +40,8 @@ export default function DJConleySandbox() {
       <Route path="boiler-controls" element={<BoilerControls />} />
       <Route path="heat-recovery" element={<HeatRecovery />} />
       <Route path="exhaust-solutions" element={<ExhaustSolutions />} />
+      <Route path="blog" element={<Blog />} />
+      <Route path="blog/:slug" element={<BlogPost />} />
 
 
       {/* Admin Command Center */}
