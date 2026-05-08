@@ -69,7 +69,7 @@ Deno.serve(async (req) => {
           business_name: lead.business_name,
           phone: null,
           city: lead.city,
-          state: lead.state || "MI",
+          state: "MI",
           source: "techalert_teaser_blast",
         }),
       });
