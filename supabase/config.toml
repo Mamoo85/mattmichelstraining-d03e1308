@@ -2356,3 +2356,6 @@ verify_jwt = false
 
 [functions.demand-radar-magic-link]
 verify_jwt = false
+
+[functions.hub-summary]
+verify_jwt = false
