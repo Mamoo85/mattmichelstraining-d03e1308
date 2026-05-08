@@ -10,37 +10,37 @@ function renderBlock(b: Block, i: number) {
   switch (b.t) {
     case "h1":
       return (
-        <h1 key={i} className="mb-6 mt-10 text-4xl font-semibold leading-tight text-[#222] md:text-5xl">
+        <h1 key={i} className="mb-8 mt-12 text-center text-3xl font-light uppercase tracking-[0.08em] text-[#222] md:text-4xl">
           {b.text}
         </h1>
       );
     case "h2":
       return (
-        <h2 key={i} className="mb-4 mt-10 text-3xl font-semibold leading-tight text-[#222] md:text-4xl">
+        <h2 key={i} className="mb-6 mt-12 text-center text-2xl font-semibold text-[#222] md:text-3xl">
           {b.text}
         </h2>
       );
     case "h3":
       return (
-        <h3 key={i} className="mb-3 mt-8 text-2xl font-semibold text-[#222]">
+        <h3 key={i} className="mb-3 mt-8 text-xl font-semibold text-[#222]">
           {b.text}
         </h3>
       );
     case "h4":
       return (
-        <h4 key={i} className="mb-2 mt-6 text-lg font-semibold uppercase tracking-wider text-white">
+        <h4 key={i} className="mb-2 mt-6 text-sm font-semibold uppercase tracking-[0.16em] text-[#222]">
           {b.text}
         </h4>
       );
     case "p":
       return (
-        <p key={i} className="mb-5 text-base leading-relaxed text-[#555] md:text-[17px]">
+        <p key={i} className="mb-5 text-[15px] leading-[1.85] text-[#555] md:text-[16px]">
           {b.text}
         </p>
       );
     case "li":
       return (
-        <li key={i} className="mb-2 list-disc pl-2 text-[#555] marker:text-[#21bfb2]">
+        <li key={i} className="mb-2 list-disc pl-2 text-[#555] marker:text-[#e30613]">
           {b.text}
         </li>
       );
