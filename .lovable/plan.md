@@ -1,129 +1,113 @@
-# SiteRadar — Premium Overhaul
+# Audit Answers + Expansion Plan
 
-Three deliverables: (1) fix Enrich, (2) ship a SiteRadar that feels like a $499/mo product not a $49/mo dashboard, (3) nuke every "Matt Michels / M²" leak on DWA pages.
+## 1. Do we already have `/start-trial`?
 
----
+**Yes — fully built.** `src/pages/StartTrial.tsx` already:
 
-## 1. Enrich button — root cause + fix
+- Reads `?product=` from query params (21 canonical keys + ~50 aliases)
+- Preselects product, shows tailored price + promise + 3 bullets per product
+- Falls back to a curated picker grid if no/unknown product
+- Pre-fills email/business/phone/website from URL params
+- Auto-redirects products with dedicated landing pages (e.g. dead-lead → `/dead-lead-intake`)
+- Routes all trial sign-ups through `start-radar-trial` edge function (no CC, magic link)
+- Tracks funnel events (`view`, `picker_view`, `picker_select`)
 
-The button POSTs `{ event_id }`, the edge function requires `{ company_name, city, visitor_event_id }`. Silent 400. Every "Unknown visitor" row is unclickable by design.
+The trial re-engagement campaign we just shipped already points every prospect at `/start-trial?product=<key>&email=<email>` so it works as-is. **No code change needed.**
 
-**Fix:**
-- Backend: accept `{ visitor_event_id }` alone. Look up the event server-side. If `company_name` is null, run **IP → company waterfall**: ipinfo.io → Clearbit Reveal → IPQualityScore → reverse-DNS PTR → ASN org name. Persist result on the event row.
-- Frontend: per-row spinner, optimistic update, success/failure toast, animated "Identified ✓" badge replaces the button when company is found.
-- Add a "Why no match?" tooltip when ISP/residential IP detected (sets honest expectations).
+## 2. Is the 300+ missed-call segment getting the right trial?
 
----
+The 945 queued prospects break down as:
 
-## 2. SiteRadar — 15 premium upgrades
 
-### A. White-glove install ("we handle the tech")
+| Product                        | Count | Sample industries                                                    |
+| ------------------------------ | ----- | -------------------------------------------------------------------- |
+| `missed_call_catch`            | 323   | cleaning, law firm, dentist, restaurant, urgent care, chiropractic   |
+| `site_radar`                   | 251   | machine shop, manufacturing, accountant, commercial RE, deck builder |
+| `trade_radar_*` (10 verticals) | 371   | HVAC 75, electrical 86, plumbing 66, roofing 76, tree 31, etc.       |
 
-1. **Auto-Install Concierge.** Customer enters their domain. We:
-   - Detect platform (WordPress / Shopify / Wix / Squarespace / Webflow / Duda / custom) via Firecrawl + sniffed headers.
-   - WordPress → install via REST API + Application Password (1 paste, then auto-injects via `wp_footer` hook in a tiny must-use plugin we deploy).
-   - Shopify → OAuth app embed → automatic theme.liquid injection.
-   - Webflow → API token, push custom code via Sites API.
-   - Wix / Squarespace / Duda → can't auto-inject; instead **email their webmaster** (form: webmaster email + your name) with a 90-second screen-recording walkthrough we pre-render with their brand color, plus the snippet pre-filled. Status flips to "🟡 Awaiting webmaster" with a follow-up nudge in 24h.
-   - GTM detected → push as a GTM tag automatically.
-   - Status pill in dashboard: **⚪ Not Installed → 🟡 Pending → 🟢 Live** (auto-flips on first event).
 
-2. **Verify-on-paste live test.** Big "Test my install" button — opens their site in headless Browserless, fires the snippet, shows ✅ "Snippet detected, fired in 240ms" or ❌ "Not found on /pricing — here's why."
+**The 323 missed-call prospects are correctly mapped.** Service businesses with phone-driven booking (lawyers, dentists, restaurants, urgent care, chiropractic, cleaning) are exactly who benefits most — every missed call = direct lost revenue. No better-fit trial exists.
 
-3. **DNS health badge.** Side-check: CNAME, TLS, robots.txt — flag if their site blocks our snippet (CSP, ad-blockers, Cloudflare bot protection). Saves the "why isn't it working" support ticket.
+**Optional upsell to consider later:** AI Phone Answering ($149) for the law firms and urgent cares specifically (higher avg call value). I'd keep the trial as Missed-Call Catch for now since it's a 7-day no-CC trial vs. AI Phone Answering's paid setup.
 
-### B. Make the data 10× more valuable
+## 3. Is Mortgage Radar sending?
 
-4. **Visit-Intent Score (0–100).** Pages/session × dwell × pricing-page-hit × return-visitor × ICP-match × company-size. Top of feed pulses. Replaces the meaningless gray dot.
+**No.** Mortgage Radar has 593 leads + 3 enrolled clients — but **zero LOs in the trial resend queue**. The seed query only pulled from `outreach_leads`, `contractor_outreach_prospects`, `techalert_business_prospects`, `roofing_prospects` — none of which contain mortgage brokers. We never built an LO prospect list at scale.
 
-5. **Hot Visitor Hero card.** Above the fold: most recent identified visitor → logo, company, employee count, industry, pages visited, time on site, and a **1-tap action row**: 📞 Call · ✉️ Email · 💬 LinkedIn · ➕ Add to outreach pipeline · 🤖 Draft cold email.
+**Fix:** Run a new seeding pass that pulls LOs from Apollo (existing `find-lo-prospects` function uses Apollo people-search for `title=Mortgage Loan Officer`). Target 200–500 Michigan + national LOs, dedupe against suppression, queue with `product_key='mortgage_radar'`.
 
-6. **AI Cold Email Drafter.** "Draft outreach" button on any identified row → Opus-generated personalized opener referencing the *exact pages they visited* ("Saw you spent 4 minutes on /pricing/enterprise — want to skip the form?"). Pre-fills mailto, copies to clipboard, or pushes to outreach pipeline.
+## 4. Mortgage Radar — 10 ways to expand beyond LOs
 
-7. **Buying-Signal Triggers.** Auto-flag the visit pattern that matters:
-   - Hit `/pricing` AND `/contact` → "🔥 Closing-window"
-   - 3+ visits in 7 days → "🌡️ Returning warm"
-   - Came from competitor comparison search → "⚔️ Bake-off"
-   - Visited from a corporate IP after-hours → "🌙 Decision-maker research mode"
+Mortgage Radar's underlying signals (FSBO listings, court records, SOS filings, BSEED permits, probate, foreclosure, divorce filings, deed transfers, license expirations) are **homeowner intent + financial-life-event** signals. Same data, different buyers:
 
-8. **Real-time push alerts.** Slack / Teams / Discord webhook + email + SMS the moment an ICP visitor arrives. "🔥 Acme Industries (250 emp, manufacturing) just hit /pricing." Webhook config UI in dashboard. (Reuses existing `crm-webhook.ts`.)
 
-9. **Daily Intel Brief.** New cron `siteradar-daily-digest` 8am ET — top 5 identified companies, ICP matches, intent score deltas vs yesterday, biggest mover. Branded HTML email. Toggle in dashboard.
+| #   | New buyer persona                             | Signal angle                                                         | Pricing                                                           |
+| --- | --------------------------------------------- | -------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| 1   | **Real Estate Agents** (buy-side)             | FSBO + price reductions = listing-conversion targets                 | $149/mo — already in product catalog under `real_estate` industry |
+| 2   | **Real Estate Investors / Wholesalers**       | Probate + foreclosure + tax-delinquent = motivated sellers           | $199/mo (higher value) — new product `investor_radar`             |
+| 3   | **Title Companies**                           | New deed transfers + FSBO = title-order pipeline                     | $249/mo                                                           |
+| 4   | **Home Insurance Agents**                     | New deed transfers + new permits = policy-rewrite triggers           | $99/mo                                                            |
+| 5   | **Estate Sale / Junk-Haul (already partial)** | Probate + estate sales — pipe to existing `trade_radar_demo_junk`    | existing                                                          |
+| 6   | **Moving Companies**                          | Deed transfers + FSBO = move-date prediction                         | $99/mo                                                            |
+| 7   | **Solar Installers**                          | New permits + new homeowners (new owners install solar 3× more)      | $149/mo                                                           |
+| 8   | **Property Managers**                         | Multi-unit deed transfers + LLC formations = new landlord onboarding | $149/mo                                                           |
+| 9   | **Estate Attorneys**                          | Probate filings + property transfers post-death                      | $199/mo (low volume, high LTV)                                    |
+| 10  | **Reverse Mortgage Specialists**              | Senior homeowners with paid-off pre-1990 homes (parcel data)         | $199/mo                                                           |
 
-10. **Weekly Executive Report (PDF).** Browserless-rendered 1-page PDF: total visitors, identified companies, ICP hit rate, top intent visitors, recommended next actions. Emailed Mondays. Mat-finishable artifact a customer can forward to their boss = retention gold.
 
-### C. UX polish — make it feel premium
+**Easiest 3 to ship:** Real Estate Agents (data already there, just rename product), Real Estate Investors (probate + foreclosure exists), Solar Installers (new permits + new homeowners exists).
 
-11. **Full Tailwind/shadcn rebuild.** Kill the inline `style={{...}}` soup. Glass-morphism cards, framer-motion on new visitor rows, sticky action bar, sparklines on stat cards, dark gradient hero, semantic tokens (`bg-card`, `text-foreground`).
+## 5. Talent Radar — why are we not filling the DB with sellable leads?
 
-12. **Bulk Enrich + Smart Queue.** Checkbox each row, "Enrich selected" runs through batch with progress. Auto-enriches on a queue when score ≥ 50.
+Current state: **273 candidates, 39 emails (14%), 88 phones (32%), only 65 with score ≥7.** Trades distribution: boiler 76, HVAC 56, electrical 43, plumbing 35, nursing 10, home health 2.
 
-13. **Saved Views & Smart Filters.** "ICP only", "Pricing-page visitors", "Returning ≥ 3x", "Industry: Manufacturing". Each saved view gets its own daily digest toggle.
+**Root cause (already documented in `knowledge/talent-radar-v5/talent-radar-enrichment-v5.md`):** MIOSHA license records expose name + license + city only — **no employer**. Hunter/Snov/Apollo/Lusha all need a company domain or employer name. Only ~21% of candidates have an employer, and trade workers are underrepresented in PDL's LinkedIn-skewed DB. Sonar OSINT (`perplexity/sonar-pro`) is the **only** paid API producing results — at $0.005/candidate it's basically free, but ceiling is ~17.5% contactability.
 
-14. **Company Profile Slide-Over (upgraded).** Logo (Clearbit Logo API), employees, founded year, tech stack (BuiltWith API or Wappalyzer), funding (Crunchbase free tier), LinkedIn link, 5 likely decision-makers (Apollo people search), one-click "Push to HubSpot/Pipedrive."
+**Why so few candidates total:** scanner is gated to MI licensing data + a few job-board sources. Healthcare (nursing/home health) only has 12 candidates because we never wired up the NPI-based scanner properly for nurses (NPI works for some healthcare but skews physician/dentist).
 
-15. **Onboarding 2.0 + Welcome Sequence.** Replace the 4-checklist with a glass progress hero: "You're 50% to your first identified visitor." Day 0 / 1 / 3 / 7 onboarding emails: install nudge → first-data celebration → first-identified-visitor walkthrough → "here's what to do with your data" playbook.
+**What to fix:**
 
-### Bonus retention plays
+1. **Add nurse + home-health licensure board scanners** — Michigan LARA nursing license database (240k+ active RNs in MI alone) → 100× current nursing volume
+2. **Add CDL/truck-driver licensure** — FMCSA SAFER + state DOT — huge staffing market
+3. **Add electrician journeyman/master license expirations** — already have electrician scanner, expand to "renewal-due-in-90-days" (job-change predictor)
+4. **Phone enrichment via Twilio Lookup** — we have 88 phones, validate them (mobile vs landline) and gate sales by mobile-only ($0.005/lookup)
+5. **Sonar prompt tuning** — current Sonar pulls "current employer" sometimes; tighten prompt to also extract LinkedIn URL for downstream Apollo enrichment hop
+6. **Job-board scrape expansion** — Indeed/ZipRecruiter "looking for" signals (currently sparse)
 
-- "First Identified Company" celebration animation + "share with team" link.
-- NPS micro-prompt at day 14 (existing `nps-survey-sender`).
-- **Founder Mode**: in dashboard footer, "Matt's mobile: text WIN to 313-992-1219 when you close one we sourced." Builds the testimonial flywheel.
+Realistic ceiling after fixes: 1,500–3,000 candidates with 25–30% contactability.
 
----
+## 6. Concrete implementation plan (this build)
 
-## 3. Brand cleanup — every M²/Matt Michels leak
+Three deliverables — all backend / data:
 
-Audit and kill:
+### A. Seed Mortgage Radar LOs into trial resend queue
 
-1. **`index.html` line 159** — extra defense: don't swap `apple-mobile-web-app-title` to "M² Training" if path starts with any DWA prefix, including `/my-`, `/dwa-admin`, `/site-radar`, `/contractor-marketplace`, etc. (gate already exists but tighten + test).
-2. **`SEOHead.tsx` line 73** — short-circuit by hostname first: `detroitwebagent.com` → always DWA, regardless of path. Belt + suspenders for the path list.
-3. **Favicon** — confirm `/favicon.png` is DWA on DWA paths. Add a JS favicon swap inside the existing manifest selector block: DWA paths get `/favicon-dwa.png`, M² paths get `/favicon-m2.png`. Ship a generated DWA favicon.
-4. **Browser tab title flash** — the static `<title>Detroit Web Agency…</title>` is correct, but verify SiteRadar's `<Helmet>` runs before any M² helmet on subsequent navigation. Add a defensive `document.title` set on mount of every `My*` page.
-5. **Repo grep sweep** — `Matt Michels`, `M² Training`, `M2 Training`, `mattmichelstraining`, `mattmichels` across all DWA components/pages/email templates. Anything in a DWA-only context → "Detroit Web Agency."
-6. **Email footers** — verify `dwa-email.ts` template never imports M² assets. Verify SiteRadar welcome/digest emails route through `dwaEmail()` not `m2Email()`.
-7. **PWA manifests** — confirm `manifest-dwa-client.webmanifest` has DWA name + icons (not M²).
-8. **Apollo tracker comment** in `index.html` line 168 says "M² SiteRadar" — change to "DWA SiteRadar."
+- Edge function: invoke existing `find-lo-prospects` to pull 300 MI LOs from Apollo
+- Insert into `trial_resend_queue` with `product_key='mortgage_radar'`, `source_table='find_lo_prospects'`
+- Apply existing suppression filter (suppression list, blocklist, past trials, unsubscribes)
+- Daily cron continues delivering 50/day at 14:00 UTC
 
----
+### B. Talent Radar nurse + CDL expansion
 
-## Files touched
+- New scanner: `talent-radar-nurse-scanner` (LARA nursing license DB) — adds RN/LPN candidates with license + city
+- New scanner: `talent-radar-cdl-scanner` (FMCSA SAFER drivers) — adds CDL drivers + carrier name (carrier name = employer, unlocks Hunter/Apollo)
+- Hourly cron, dedupe on `license_number`
+- Adds Twilio Lookup mobile validation pass on existing 88 phones (`talent-radar-phone-validate`)
 
-```text
-src/pages/MySiteRadar.tsx                              # full rebuild
-src/components/site-radar/HotVisitorHero.tsx           # NEW
-src/components/site-radar/IntentScoreBadge.tsx         # NEW
-src/components/site-radar/InstallConcierge.tsx         # NEW
-src/components/site-radar/SignalTriggerChip.tsx        # NEW
-src/components/site-radar/CompanyProfileSheet.tsx      # NEW (upgraded slide-over)
-src/components/site-radar/AlertWebhookConfig.tsx       # NEW
-src/components/site-radar/SavedViewsBar.tsx            # NEW
-src/pages/admin/SiteRadarInstallTool.tsx               # NEW (admin oversight)
-supabase/functions/enrich-visitor/index.ts             # accept event_id-only, IP waterfall
-supabase/functions/siteradar-auto-install/index.ts     # NEW (WP/Shopify/Webflow APIs)
-supabase/functions/siteradar-verify-snippet/index.ts   # NEW (Browserless live test)
-supabase/functions/siteradar-daily-digest/index.ts     # NEW cron 8am ET
-supabase/functions/siteradar-weekly-pdf/index.ts       # NEW cron Mon 7am ET (Browserless)
-supabase/functions/siteradar-intent-score/index.ts     # NEW (compute on insert)
-supabase/functions/siteradar-onboarding-drip/index.ts  # NEW (D0/D1/D3/D7)
-supabase/functions/siteradar-ai-opener/index.ts        # NEW (Opus draft)
-supabase/migrations/<ts>_siteradar_premium.sql         # intent_score, install_status, install_platform, alert_webhooks, saved_views, signal_triggers
-src/components/layout/SEOHead.tsx                      # hostname short-circuit
-index.html                                             # favicon swap + tightened M² gate + Apollo comment
-public/favicon-dwa.png                                 # NEW
-public/favicon-m2.png                                  # NEW
-```
+### C. Mortgage Radar product variants (data only, no UI yet)
 
----
+- Add 3 new `start-radar-trial` product slugs: `investor_radar`, `realtor_radar`, `solar_radar`
+- Map to same `mortgage_radar_leads` table but filter by signal type:
+  - `investor_radar` → probate, foreclosure, tax-delinquent
+  - `realtor_radar` → FSBO, price-reductions
+  - `solar_radar` → new permits + new homeowners (deed transfer < 12 months)
+- Add to `StartTrial.tsx` PRODUCTS map + PRODUCT_PITCH (one-line code change per product)
+- No new scanners needed — same data, three new buyer audiences
 
-## Order of operations (so we ship value fast)
+## 7. Open questions before building
 
-**Wave 1 (today, ~1 hr):** Enrich fix · brand sweep · favicon swap. Quick wins, customers see immediately.
+1. **Mortgage Radar LO seed** — go national (1000+) or Michigan-only (300)? If we can get leads for each location we claim to have leads for then add as many cities as we can handle. I want as many as we can find the sufficient information for!
+2. **Nurse scanner** — Michigan only, or all 50 states (LARA equivalents exist)? If they exist, HELL YA! EXPAND, OUR TROJAN HORSE IS THE FREE TRIAL IF WE CAN PROVE ITS WORTH IT THEN WE WIN.
+3. **3 new Mortgage Radar variants** — ship all 3 (investor/realtor/solar), or just investor first? ALL 3 BUT MAKE SURE WE TEST EVERYTHING AFTER. END TO END, CLICK TESTS. WE HAVE HAD SO MANY ERRORS.
 
-**Wave 2 (next, ~3 hr):** SiteRadar rebuild — Hot Visitor Hero, Intent Score, Bulk Enrich, Signal Triggers, Tailwind polish, upgraded Company slide-over.
-
-**Wave 3 (after Wave 2 verified):** Install Concierge (WP + Shopify + Webflow auto-install + webmaster email flow), Verify-on-paste, Saved Views, Webhook alerts.
-
-**Wave 4 (retention):** Daily digest, Weekly PDF, AI Opener, Onboarding drip, Founder Mode footer.
-
-Approve and I'll start Wave 1 immediately.
+Once you pick those three, I'll execute A + B + C. MAKE SURE THIS IS TOP OF THE LINE, PREMIUM, 10 MILLION DOLLAR COMPANY EVAL LEVEL BUILD. OH THAT REMINDS ME. SHOULD OUR BACKGROUND ON ALL OUR DASHBOARDS BE WHITE? SHOW ME 1 TOP 10 SOFTWARE THAT ISNT WHITE. IF YOU CAN, THEN IM OPEN TO KEEPING THE TEAL, BUT I THINK WHITE OR BLACK IS KINDA THE STANDARD FOR PROFESSIONAL DASHBOARDS, DO YOU AGREE? WE NEED OUR TEXT OR FONT TO BE WHATEVER IS MOST PROFESSIONAL AND HIGHER RESOLUTION. CAN YOU INCREASE THE RESOLUTION OF OUR UI AND STUFF?

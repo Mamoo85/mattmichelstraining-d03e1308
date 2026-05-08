@@ -28,7 +28,10 @@ type CanonicalKey =
   | "trade_radar_tree"
   | "trade_radar_restoration"
   | "trade_radar_demo_junk"
-  | "trade_radar_foundation";
+  | "trade_radar_foundation"
+  | "investor_radar"
+  | "realtor_radar"
+  | "solar_radar";
 
 type ResolvedProductKey = CanonicalKey;
 
@@ -67,6 +70,9 @@ const PRODUCTS: Record<CanonicalKey, ProductDef> = {
   trade_radar_restoration:  { fn: "start-radar-trial", label: "Restoration Radar",  trial: true, vertical: "restoration", needsPhone: true },
   trade_radar_demo_junk:    { fn: "start-radar-trial", label: "Demo & Junk Radar",  trial: true, vertical: "demo_junk", needsPhone: true },
   trade_radar_foundation:   { fn: "start-radar-trial", label: "Foundation Radar",   trial: true, vertical: "foundation", needsPhone: true },
+  investor_radar:       { fn: "start-radar-trial", label: "Investor Radar", trial: true, needsPhone: true },
+  realtor_radar:        { fn: "start-radar-trial", label: "Realtor Radar", trial: true, needsPhone: true },
+  solar_radar:          { fn: "start-radar-trial", label: "Solar Installer Radar", trial: true, needsPhone: true },
 };
 
 // Map every CanonicalKey → start-radar-trial product slug.
@@ -89,6 +95,9 @@ const CANONICAL_TO_TRIAL_PRODUCT: Partial<Record<CanonicalKey, string>> = {
   trade_radar_restoration: "restoration_radar",
   trade_radar_demo_junk: "demo_junk_radar",
   trade_radar_foundation: "foundation_radar",
+  investor_radar: "investor_radar",
+  realtor_radar: "realtor_radar",
+  solar_radar: "solar_radar",
 };
 
 // Per-product pricing & "what happens next" preview block. Shown above the form so
@@ -112,6 +121,9 @@ const PRODUCT_PITCH: Partial<Record<CanonicalKey, { price: string; promise: stri
   trade_radar_restoration:  { price: "$149/mo after trial", promise: "Fire, water-damage, and FEMA-zone restoration leads in your county.", bullets: ["Detroit Fire Incidents feed", "FEMA disaster overlay", "Owner contact enriched"] },
   trade_radar_demo_junk:    { price: "$149/mo after trial", promise: "Demo permits, estate sales, and probate filings — perfect demo/junk-haul leads.", bullets: ["BSEED demo permit feed", "Estate sale + probate scrapers", "Daily AM digest"] },
   trade_radar_foundation:   { price: "$149/mo after trial", promise: "Heavy-rain, flood, and foundation-permit leads in your county.", bullets: ["NOAA flood + FEMA NFIP", "BSEED foundation permits", "Daily AM digest"] },
+  investor_radar:       { price: "$199/mo after trial", promise: "Probate, pre-foreclosure, and tax-delinquent properties — motivated sellers, daily.", bullets: ["Court probate filings + foreclosure feed", "Tax-delinquent property records", "Owner contact enriched"] },
+  realtor_radar:        { price: "$149/mo after trial", promise: "FSBO listings + price reductions in your zip codes — listing-conversion leads, daily.", bullets: ["Zillow + Realtor.com FSBO scrape", "Price-reduction alerts", "Owner phone + email enriched"] },
+  solar_radar:          { price: "$149/mo after trial", promise: "New homeowners + new-permit homes — solar's highest-converting audience.", bullets: ["Deed transfers <12 months", "BSEED + county permit feeds", "Owner contact enriched"] },
 };
 
 const GENERIC_PRODUCT_DEFAULTS: Record<string, CanonicalKey> = {
@@ -171,6 +183,9 @@ const ALIASES: Record<string, CanonicalKey> = {
   trade_radar_restoration: "trade_radar_restoration", restoration_radar: "trade_radar_restoration", restoration: "trade_radar_restoration",
   trade_radar_demo_junk: "trade_radar_demo_junk", demo_junk_radar: "trade_radar_demo_junk", demo_junk: "trade_radar_demo_junk",
   trade_radar_foundation: "trade_radar_foundation", foundation_radar: "trade_radar_foundation", foundation: "trade_radar_foundation",
+  investor_radar: "investor_radar", investor: "investor_radar", wholesaler: "investor_radar", wholesaler_radar: "investor_radar",
+  realtor_radar: "realtor_radar", realtor: "realtor_radar", real_estate_agent: "realtor_radar", agent_radar: "realtor_radar",
+  solar_radar: "solar_radar", solar: "solar_radar", solar_installer: "solar_radar",
 };
 
 function normalizeKey(raw: string): ResolvedProductKey | null {
