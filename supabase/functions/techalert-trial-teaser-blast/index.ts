@@ -79,6 +79,8 @@ Deno.serve(async (req) => {
     const email = (lead.owner_email || "").toLowerCase().trim();
 
     if (!emailLooksValid(email)) { skipped++; events.push({ email, action: "skipped_invalid" }); continue; }
+    if (seenEmails.has(email)) { skipped++; continue; }
+    seenEmails.add(email);
 
     // Suppression check
     const { data: sup } = await sb.from("suppressed_emails").select("email").eq("email", email).maybeSingle();
