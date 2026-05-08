@@ -307,7 +307,7 @@
         window.addEventListener('m2:app-mounted', function() {
           mounted = true;
           try {
-            sessionStorage.removeItem('m2_app_recovery_attempted');
+              sessionStorage.removeItem('app_recovery_attempted');
           } catch (e) {}
         }, { once: true });
 
@@ -325,7 +325,7 @@
 
         function hardReload() {
           var nextUrl = new URL(location.href);
-          nextUrl.searchParams.set('m2-recovery', String(Date.now()));
+          nextUrl.searchParams.set('app-recovery', String(Date.now()));
           location.replace(nextUrl.toString());
         }
 
@@ -366,7 +366,7 @@
               if (!hasLegacyWorker) return;
 
               try {
-                sessionStorage.setItem('m2_app_recovery_attempted', '1');
+                sessionStorage.setItem('app_recovery_attempted', '1');
               } catch (e) {}
 
               return clearWorkersAndReload().catch(function() {
@@ -381,12 +381,12 @@
 
           var attempted = false;
           try {
-            attempted = sessionStorage.getItem('m2_app_recovery_attempted') === '1';
+            attempted = sessionStorage.getItem('app_recovery_attempted') === '1';
           } catch (e) {}
 
           if (!attempted && 'serviceWorker' in navigator) {
             try {
-              sessionStorage.setItem('m2_app_recovery_attempted', '1');
+              sessionStorage.setItem('app_recovery_attempted', '1');
             } catch (e) {}
 
             clearWorkersAndReload()
