@@ -2288,6 +2288,15 @@ verify_jwt = false
 [functions.site-radar-monthly-proof]
 verify_jwt = false
 
+[functions.siteradar-ai-opener]
+verify_jwt = false
+
+[functions.siteradar-webhook-alert]
+verify_jwt = false
+
+[functions.siteradar-install-concierge]
+verify_jwt = false
+
 [functions.missed-call-monthly-proof]
 verify_jwt = false
 
