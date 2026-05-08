@@ -6,7 +6,9 @@
       // CRITICAL: Run BEFORE any tab-visible tag is parsed. On pat.detroitwebagent.com
       // we must show DJ Conley branding instantly — zero M2/DWA flash.
       (function(){
-        if (location.hostname !== 'pat.detroitwebagent.com') return;
+        var isDJHost = location.hostname === 'pat.detroitwebagent.com';
+        var isDJPath = (location.pathname || '').indexOf('/sandbox/djconley') === 0;
+        if (!isDJHost && !isDJPath) return;
         document.write('<title>D.J. Conley Associates, Inc.<\/title>');
         document.write('<link rel="icon" type="image/png" href="/demo-djconley-current/favicon-32.png">');
         document.write('<link rel="apple-touch-icon" href="/demo-djconley-current/favicon-32.png">');
