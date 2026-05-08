@@ -151,7 +151,7 @@ Deno.serve(async (req) => {
   }
 
   return new Response(
-    JSON.stringify({ ok: true, sent, skipped, failed, dry_run: dryRun, total_candidates: leads?.length ?? 0, events: dryRun ? events : undefined }),
+    JSON.stringify({ ok: true, sent, skipped, failed, dry_run: dryRun, total_candidates: leads?.length ?? 0, events }),
     { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
   );
 });
