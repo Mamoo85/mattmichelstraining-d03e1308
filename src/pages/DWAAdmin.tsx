@@ -61,6 +61,7 @@ const AdminEnrichmentHealth = lazy(() => import("@/components/admin/AdminEnrichm
 const AdminReplyInbox = lazy(() => import("@/components/admin/AdminReplyInbox"));
 const AdminClientAttribution = lazy(() => import("@/components/admin/AdminClientAttribution"));
 const TrialFunnelInsights = lazy(() => import("@/components/dwa-admin/TrialFunnelInsights"));
+const EmailPreflightHarness = lazy(() => import("@/components/dwa-admin/EmailPreflightHarness"));
 
 type Tab =
   | "ai-command"
@@ -69,7 +70,7 @@ type Tab =
   | "contractor-leads" | "contractor-onboarding" | "contractor-market" | "fielddesk" | "techalert" | "missed-call" | "missed-call-leads" | "clients-all"
   | "lead-marketplace" | "demand-radar" | "hvb" | "growth-signals" | "visitor-intel" | "the-wire" | "coverage-map" | "trade-radar"
   | "health" | "simulation" | "playbook-hub" | "field-ops" | "command"
-  | "sales-hub" | "buyer-radar-qa" | "mortgage-radar" | "strategy-mode" | "enrichment-audit" | "enrichment-health" | "reply-inbox" | "client-attribution" | "marketing-tools" | "djconley" | "proposals" | "manual-onboarding" | "suppression-lists" | "system-audit" | "demo-pipeline" | "trial-funnel";
+  | "sales-hub" | "buyer-radar-qa" | "mortgage-radar" | "strategy-mode" | "enrichment-audit" | "enrichment-health" | "reply-inbox" | "client-attribution" | "marketing-tools" | "djconley" | "proposals" | "manual-onboarding" | "suppression-lists" | "system-audit" | "demo-pipeline" | "trial-funnel" | "email-preflight";
 
 const GROUPS: SidebarGroup[] = [
   {
@@ -132,6 +133,7 @@ const GROUPS: SidebarGroup[] = [
       { id: "hvb",             label: "📦 High-Volume Buyers" },
       { id: "growth-signals",  label: "📡 Growth Signals" },
       { id: "trial-funnel",    label: "🎯 Trial Funnel & Email" },
+      { id: "email-preflight", label: "📧 Email Preflight" },
       { id: "visitor-intel",   label: "👁️ Visitor Intel" },
       { id: "the-wire",        label: "📡 The Wire" },
       { id: "coverage-map",    label: "🗺️ Coverage Map" },
@@ -238,6 +240,7 @@ export default function DWAAdmin() {
           {activeTab === "hvb"             && <Suspense fallback={lazyFallback("HVB")}><AdminHighVolumeBuyer /></Suspense>}
           {activeTab === "growth-signals"  && <Suspense fallback={lazyFallback("growth signals")}><AdminGrowthSignals /></Suspense>}
           {activeTab === "trial-funnel"    && <Suspense fallback={lazyFallback("Trial Funnel")}><TrialFunnelInsights /></Suspense>}
+          {activeTab === "email-preflight" && <Suspense fallback={lazyFallback("Email Preflight")}><EmailPreflightHarness /></Suspense>}
           {activeTab === "visitor-intel"   && <Suspense fallback={lazyFallback("visitor intel")}><VisitorIntelFeed /></Suspense>}
           {activeTab === "the-wire"        && <Suspense fallback={lazyFallback("The Wire")}><AdminTheWire /></Suspense>}
           {activeTab === "coverage-map"    && <Suspense fallback={lazyFallback("coverage map")}><AdminCoverageMap /></Suspense>}
