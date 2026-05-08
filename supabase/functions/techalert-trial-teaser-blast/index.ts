@@ -64,10 +64,16 @@ Deno.serve(async (req) => {
     if (e.length > 80) return false;
     const domain = e.split("@")[1].toLowerCase();
     if (DIRECTORY_DOMAINS.has(domain)) return false;
-    if (domain.split(".").length > 3) return false; // weird sub-sub-subdomains
     if (/[^a-z0-9.\-]/.test(domain)) return false;
+    // Apex domain only — reject www./link./survey./dental./etc subdomains.
+    // Allow co.uk-style 2-part TLDs (3 dots) but require last 2 segments alpha.
+    const parts = domain.split(".");
+    if (parts.length !== 2) return false;
     return true;
   }
+
+  // Dedupe by email within this batch
+  const seenEmails = new Set<string>();
 
   for (const lead of leads || []) {
     const email = (lead.owner_email || "").toLowerCase().trim();
