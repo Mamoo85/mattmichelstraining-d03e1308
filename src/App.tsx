@@ -551,7 +551,11 @@ const ProveItWrapper = () => {
 };
 
 
-const App = () => (
+const App = () => {
+  const brand = getDomainBrand();
+  const isDJConleyDomain = brand === "djconley";
+
+  return (
   <PersistQueryClientProvider client={queryClient} persistOptions={{ persister, maxAge: 24 * 60 * 60_000 }}>
     <SplashScreen />
     <AuthProvider>
@@ -563,12 +567,12 @@ const App = () => (
             <BrowserRouter>
               <ReferralCaptureWrapper />
               <ScrollToTop />
-              <Suspense fallback={null}><AnnouncementBanner /></Suspense>
+              {!isDJConleyDomain && <Suspense fallback={null}><AnnouncementBanner /></Suspense>}
               <ErrorBoundary>
                 <Suspense fallback={<PageLoader />}>
-                  <div className="pb-16">
+                  <div className={isDJConleyDomain ? "" : "pb-16"}>
                     <Routes>
-                    <Route path="/" element={getDomainBrand() === "agency" ? <AgencyHome /> : <Index />} />
+                    <Route path="/" element={isDJConleyDomain ? <DJConleySandbox /> : brand === "agency" ? <AgencyHome /> : <Index />} />
                     <Route path="/agency" element={<AgencyHome />} />
                     <Route path="/free-site-scanner" element={<FreeSiteScanner />} />
                     <Route path="/free-tools" element={<FreeToolsHub />} />
