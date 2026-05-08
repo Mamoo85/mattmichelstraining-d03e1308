@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { PAGES, Block } from "./content";
+import { djPath } from "./links";
 
 function isInternal(href: string) {
   return href.startsWith("/sandbox/djconley");
@@ -49,7 +50,7 @@ function renderBlock(b: Block, i: number) {
         return (
           <Link
             key={i}
-            to={href}
+            to={djPath(href.replace("/sandbox/djconley", "") || "/")}
             className="my-4 inline-block rounded-full border-2 border-[#e30613] bg-[#e30613] px-7 py-3 text-sm font-bold uppercase tracking-wider text-white transition hover:bg-transparent hover:text-[#e30613]"
           >
             {b.text}
