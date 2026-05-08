@@ -1,5 +1,8 @@
 // DJ Conley demo contact form -> emails Pat (pmichels@djconley.com)
-import { corsHeaders } from "@supabase/supabase-js/cors";
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const TO_EMAIL = "pmichels@djconley.com";
