@@ -24,7 +24,7 @@ const STATES_50 = [
 // We use the FMCSA Motor Carrier Census public Socrata feed.
 async function fetchFMCSA(state: string, limit = 50): Promise<any[]> {
   // Filter active carriers (status_code='A') with at least 1 driver, ordered by recent registration
-  const url = `https://data.transportation.gov/resource/az4n-8mr2.json?phy_state=${state}&status_code=A&$where=total_drivers>0&$limit=${limit}&$order=add_date+DESC`;
+  const url = `https://data.transportation.gov/resource/az4n-8mr2.json?phy_state=${state}&status_code=A&$where=total_drivers%3E0&$limit=${limit}&$order=add_date+DESC`;
   try {
     const r = await fetch(url);
     if (!r.ok) {
