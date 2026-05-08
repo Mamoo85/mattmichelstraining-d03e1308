@@ -359,7 +359,16 @@ export default function MyMortgageRadar() {
           <div className="bg-[#0a1628] border border-red-900 rounded-xl p-8 text-center max-w-md w-full">
             <Lock className="w-8 h-8 text-red-400 mx-auto mb-3" />
             <p className="text-white font-semibold mb-2">Access denied</p>
-            <p className="text-sm text-[#94a3b8]">{authError}</p>
+            <p className="text-sm text-[#94a3b8] mb-5">{authError}</p>
+            <div className="flex flex-col sm:flex-row gap-2 justify-center">
+              <RescueLinkButton product="mortgage_radar" email={clientEmail} productLabel="Mortgage Radar" />
+              <a href="/my-trials">
+                <Button variant="outline" className="border-[#1e3a5f] text-[#94a3b8] hover:text-white">View all my trials</Button>
+              </a>
+            </div>
+            <p className="text-[11px] text-[#64748b] mt-4">
+              Or text Matt at <a href="sms:+13139921219" className="text-[#00d4ff]">(313) 992-1219</a>.
+            </p>
           </div>
         </div>
       </div>
