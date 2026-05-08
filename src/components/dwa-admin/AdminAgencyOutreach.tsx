@@ -501,12 +501,21 @@ export default function AdminAgencyOutreach() {
                     <button onClick={() => copyHtml(agency.name)} className="px-3 py-2 rounded-lg border border-white/10 text-slate-300 text-xs font-semibold flex items-center gap-1.5 hover:border-[#00d4ff]/40">
                       <Copy className="w-3 h-3" /> Copy HTML
                     </button>
-                    <a
-                      href={`mailto:${enrich?.contact_email || ""}?subject=${encodeURIComponent(draft.subject)}&body=${encodeURIComponent(draft.plain_body)}`}
-                      className="px-3 py-2 rounded-lg border border-white/10 text-slate-300 text-xs font-semibold flex items-center gap-1.5 hover:border-[#00d4ff]/40"
-                    >
-                      <Mail className="w-3 h-3" /> Open in mail
-                    </a>
+                    {enrich?.contact_email ? (
+                      <a
+                        href={`mailto:${enrich.contact_email}?subject=${encodeURIComponent(draft.subject)}&body=${encodeURIComponent(draft.plain_body)}`}
+                        className="px-3 py-2 rounded-lg border border-white/10 text-slate-300 text-xs font-semibold flex items-center gap-1.5 hover:border-[#00d4ff]/40"
+                      >
+                        <Mail className="w-3 h-3" /> Open in mail
+                      </a>
+                    ) : (
+                      <span
+                        title="Add a contact email above to enable"
+                        className="px-3 py-2 rounded-lg border border-white/5 text-slate-500 text-xs font-semibold flex items-center gap-1.5 cursor-not-allowed"
+                      >
+                        <Mail className="w-3 h-3" /> No email
+                      </span>
+                    )}
                   </div>
                 </div>
               )}
