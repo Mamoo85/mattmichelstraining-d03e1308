@@ -10,6 +10,7 @@ import {
 import DJHome from "./pages/Home";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
+import AdminTour from "./pages/AdminTour";
 import {
   About, Industries, Service, Parts, Products, Projects, Rentals,
   Education, Resources, Careers, Contact,
@@ -42,6 +43,8 @@ export default function DJConleySandbox() {
       <Route path="exhaust-solutions" element={<ExhaustSolutions />} />
       <Route path="blog" element={<Blog />} />
       <Route path="blog/:slug" element={<BlogPost />} />
+      <Route path="tour" element={<AdminTour />} />
+
 
 
       {/* Admin Command Center */}
