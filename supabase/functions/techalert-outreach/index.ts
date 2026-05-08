@@ -8,6 +8,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { dwaColdEmail } from "../_shared/dwa-email.ts";
 import { teaserCardHtml } from "../_shared/teaser-card.ts";
 import { isBlocked } from "../_shared/outreach-blocklist.ts";
+import { checkEmailSanity } from "../_shared/email-sanity.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -155,9 +156,20 @@ serve(async (req) => {
     }
 
     for (const t of targets) {
+      const email = String(t.owner_email || "").trim().toLowerCase();
+
+      // Email sanity gate — reject %22@…, directory garbage, non-apex subdomains.
+      const sanity = checkEmailSanity(email);
+      if (!sanity.ok) {
+        await sb.from("techalert_prospect_targets")
+          .update({ outreach_status: `bad_email_${sanity.reason}`, outreach_sent_at: new Date().toISOString() })
+          .eq("id", t.id);
+        skipped++;
+        continue;
+      }
+
       // Frequency cap: skip if this address received ANY email in the last 7 days.
       // Prevents the spam loop where one recipient gets 8+ touches in a week.
-      const email = String(t.owner_email).trim().toLowerCase();
       const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
       const { count: recentSends } = await sb
         .from("email_send_log")

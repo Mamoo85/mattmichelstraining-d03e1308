@@ -1,45 +1,49 @@
-// Pre-send email sanity checks: DNS MX lookup + disposable/role address rejection.
-// Call from dwaColdEmail() before any outreach send. Fail-open on DNS errors
-// to avoid blocking legitimate sends during transient network issues.
+// Shared email sanity filter — rejects scraped-directory garbage,
+// URL-encoded characters, role inboxes (optional), and non-apex domains.
+// Used by every outbound function (techalert-outreach, teaser-blast, etc.)
+// to protect Resend deliverability and sending domain reputation.
 
-const DISPOSABLE_DOMAINS = new Set([
-  "mailinator.com", "guerrillamail.com", "tempmail.com", "throwaway.email",
-  "10minutemail.com", "yopmail.com", "trashmail.com", "fakeinbox.com",
-  "sharklasers.com", "guerrillamailblock.com", "grr.la", "guerrillamail.info",
-  "guerrillamail.biz", "guerrillamail.de", "guerrillamail.net", "guerrillamail.org",
-  "spam4.me", "trashmail.at", "trashmail.io", "trashmail.me", "dispostable.com",
-  "mailnull.com", "spamgourmet.com", "maildrop.cc", "getairmail.com",
+export const DIRECTORY_DOMAINS = new Set([
+  "localedge.com","yellowpages.com","yelp.com","manta.com","superpages.com",
+  "merchantcircle.com","bbb.org","mapquest.com","foursquare.com","houzz.com",
+  "thomasnet.com","angi.com","homeadvisor.com","thumbtack.com","porch.com",
+  "nextdoor.com","zoominfo.com","dnb.com","corporationwiki.com","opengovus.com",
+  "sam.gov","yellowbook.com","cylex.us.com","brownbook.net","tupalo.co",
+  "ezlocal.com","cybo.com","tradeford.com","exportersindia.com","example.com",
+  "gmail.com","yahoo.com","hotmail.com","outlook.com","aol.com","icloud.com",
+  "indeed.com","linkedin.com","facebook.com","instagram.com",
 ]);
 
-const ROLE_PREFIXES = [
-  "noreply", "no-reply", "donotreply", "do-not-reply",
-  "postmaster", "mailer-daemon", "abuse", "hostmaster",
-  "webmaster", "bounces", "bounce",
-];
+export interface EmailSanityResult {
+  ok: boolean;
+  reason?:
+    | "empty"
+    | "bad_format"
+    | "url_encoded_garbage"
+    | "too_long"
+    | "directory_domain"
+    | "bad_domain_chars"
+    | "non_apex_subdomain";
+}
 
-export async function checkEmailSanity(email: string): Promise<{ ok: boolean; reason?: string }> {
-  if (!email || !email.includes("@")) return { ok: false, reason: "invalid_format" };
-
-  const parts = email.split("@");
-  if (parts.length !== 2) return { ok: false, reason: "invalid_format" };
-
-  const local = parts[0].toLowerCase();
-  const domain = parts[1].toLowerCase();
-
-  if (DISPOSABLE_DOMAINS.has(domain)) return { ok: false, reason: "disposable" };
-
-  if (ROLE_PREFIXES.some((p) => local === p || local.startsWith(p + "."))) {
-    return { ok: false, reason: "role_address" };
-  }
-
-  try {
-    const mx = await Deno.resolveDns(domain, "MX");
-    if (!mx || mx.length === 0) return { ok: false, reason: "no_mx" };
-  } catch {
-    // DNS lookup failed (network error, NXDOMAIN) — fail open so transient
-    // DNS issues don't silence legitimate sends.
+export function checkEmailSanity(raw: string | null | undefined): EmailSanityResult {
+  const e = (raw || "").toLowerCase().trim();
+  if (!e) return { ok: false, reason: "empty" };
+  if (!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(e)) return { ok: false, reason: "bad_format" };
+  if (/[%<>"'\\]/.test(e)) return { ok: false, reason: "url_encoded_garbage" };
+  if (e.length > 80) return { ok: false, reason: "too_long" };
+  const domain = e.split("@")[1];
+  if (DIRECTORY_DOMAINS.has(domain)) return { ok: false, reason: "directory_domain" };
+  if (/[^a-z0-9.\-]/.test(domain)) return { ok: false, reason: "bad_domain_chars" };
+  const parts = domain.split(".");
+  // Allow co.uk-style 2-part TLDs (3 segments) by checking last segment is short.
+  if (parts.length === 2) return { ok: true };
+  if (parts.length === 3 && parts[parts.length - 2].length <= 3 && parts[parts.length - 1].length <= 3) {
     return { ok: true };
   }
+  return { ok: false, reason: "non_apex_subdomain" };
+}
 
-  return { ok: true };
+export function emailLooksValid(raw: string | null | undefined): boolean {
+  return checkEmailSanity(raw).ok;
 }
