@@ -9,6 +9,7 @@ import DWASuiteNav from "@/components/shared/DWASuiteNav";
 import ManageBillingButton from "@/components/billing/ManageBillingButton";
 import EmptyDashboardState from "@/components/shared/EmptyDashboardState";
 import OnboardingChecklist from "@/components/shared/OnboardingChecklist";
+import RescueLinkButton from "@/components/shared/RescueLinkButton";
 import JustPurchasedScreen, { isJustPurchased } from "@/components/shared/JustPurchasedScreen";
 import { Activity, MapPin, TrendingUp, Building2, Lock, Download, Phone } from "lucide-react";
 
@@ -151,7 +152,16 @@ export default function MyDemandRadar() {
             <CardContent className="p-8 text-center">
               <Lock className="w-8 h-8 text-red-400 mx-auto mb-3" />
               <p className="text-white font-semibold mb-2">Access denied</p>
-              <p className="text-sm text-[#94a3b8]">{error}</p>
+              <p className="text-sm text-[#94a3b8] mb-5">{error}</p>
+              <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                <RescueLinkButton product="industry_pulse" email={clientEmail} productLabel="Demand Radar" />
+                <a href="/my-trials">
+                  <Button variant="outline" className="border-[#1e3a5f] text-[#94a3b8] hover:text-white">View all my trials</Button>
+                </a>
+              </div>
+              <p className="text-[11px] text-[#64748b] mt-4">
+                Or text Matt at <a href="sms:+13139921219" className="text-[#00d4ff]">(313) 992-1219</a>.
+              </p>
             </CardContent>
           </Card>
         </div>
