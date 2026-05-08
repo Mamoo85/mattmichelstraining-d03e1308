@@ -37,6 +37,7 @@ export default function MyBuyerRadar() {
   const [signals, setSignals] = useState<Signal[]>([]);
   const [rfqs, setRfqs] = useState<Rfq[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedLead, setSelectedLead] = useState<LeadDetail | null>(null);
 
   useEffect(() => {
     (async () => {
