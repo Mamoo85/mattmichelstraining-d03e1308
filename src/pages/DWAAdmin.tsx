@@ -133,6 +133,7 @@ const GROUPS: SidebarGroup[] = [
       { id: "hvb",             label: "📦 High-Volume Buyers" },
       { id: "growth-signals",  label: "📡 Growth Signals" },
       { id: "trial-funnel",    label: "🎯 Trial Funnel & Email" },
+      { id: "email-preflight", label: "📧 Email Preflight" },
       { id: "visitor-intel",   label: "👁️ Visitor Intel" },
       { id: "the-wire",        label: "📡 The Wire" },
       { id: "coverage-map",    label: "🗺️ Coverage Map" },
