@@ -40,7 +40,11 @@ async function pullApollo(state: string, page: number, perPage = 25): Promise<an
       page,
       per_page: perPage,
     } as any);
-    return r?.people || r?.contacts || [];
+    if (!r.ok) {
+      console.warn(`[seed-lo-queue] apollo ${state} p${page} status=${r.status}: ${r.error}`);
+      return [];
+    }
+    return (r.data as any)?.people || (r.data as any)?.contacts || [];
   } catch (e) {
     console.warn(`[seed-lo-queue] apollo ${state} p${page}:`, (e as Error).message);
     return [];
