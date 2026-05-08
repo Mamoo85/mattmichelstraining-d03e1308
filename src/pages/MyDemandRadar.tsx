@@ -339,6 +339,7 @@ export default function MyDemandRadar() {
           <ManageBillingButton email={clientEmail} />
         </div>
       )}
+      <LeadDetailDrawer lead={selectedLead} open={!!selectedLead} onOpenChange={(o) => !o && setSelectedLead(null)} />
     </div>
   );
 }
