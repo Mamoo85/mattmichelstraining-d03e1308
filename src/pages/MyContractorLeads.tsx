@@ -600,6 +600,18 @@ export default function MyContractorLeads() {
           </a>
         </footer>
       </div>
+
+      {creditLead && (
+        <RequestCreditDialog
+          open={!!creditLead}
+          onOpenChange={(o) => { if (!o) setCreditLead(null); }}
+          product="contractor_leads"
+          leadTable="contractor_leads"
+          leadId={creditLead.id}
+          requesterEmail={contractor.email}
+          leadSummary={`${creditLead.name} • ${creditLead.phone}\nProject: ${creditLead.project_type || "N/A"}\nReceived: ${new Date(creditLead.created_at).toLocaleDateString()}`}
+        />
+      )}
     </>
   );
 }
