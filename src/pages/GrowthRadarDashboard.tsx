@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Download, Radar } from "lucide-react";
 import { RadarExportBar } from "@/components/shared/RadarExportBar";
+import LeadDetailDrawer, { type LeadDetail } from "@/components/radar/LeadDetailDrawer";
 
 type Signal = {
   id: string;
@@ -38,6 +39,7 @@ const GrowthRadarDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [minConfidence, setMinConfidence] = useState(7);
   const [activeTypes, setActiveTypes] = useState<string[]>([]);
+  const [selectedLead, setSelectedLead] = useState<LeadDetail | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -174,7 +176,22 @@ const GrowthRadarDashboard = () => {
         ) : (
           <div className="space-y-3">
             {filtered.map((s) => (
-              <Card key={s.id} className="p-4">
+              <Card
+                key={s.id}
+                role="button"
+                tabIndex={0}
+                onClick={() => setSelectedLead({
+                  id: s.id,
+                  company_name: s.company_name,
+                  location: s.county,
+                  signal_type: s.signal_type,
+                  confidence: s.confidence,
+                  recommended_pitch: s.recommended_pitch,
+                  source_urls: s.source_url ? [s.source_url] : [],
+                  detected_at: (s as any).detected_at,
+                })}
+                className="p-4 cursor-pointer hover:border-primary/40 transition"
+              >
                 <div className="flex items-start justify-between gap-3 mb-2 flex-wrap">
                   <div>
                     <div className="font-semibold text-base">{s.company_name}</div>
@@ -205,6 +222,7 @@ const GrowthRadarDashboard = () => {
           </div>
         )}
       </div>
+      <LeadDetailDrawer lead={selectedLead} open={!!selectedLead} onOpenChange={(o) => !o && setSelectedLead(null)} />
     </div>
   );
 };

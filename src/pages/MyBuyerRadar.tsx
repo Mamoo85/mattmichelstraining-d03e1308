@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import SEOHead from "@/components/layout/SEOHead";
 import OnboardingChecklist from "@/components/shared/OnboardingChecklist";
 import JustPurchasedScreen, { isJustPurchased } from "@/components/shared/JustPurchasedScreen";
+import LeadDetailDrawer, { type LeadDetail } from "@/components/radar/LeadDetailDrawer";
 import { Factory, Loader2, ExternalLink, Clock, Zap, TrendingUp, Radar, Download } from "lucide-react";
 
 type Signal = {
@@ -36,6 +37,7 @@ export default function MyBuyerRadar() {
   const [signals, setSignals] = useState<Signal[]>([]);
   const [rfqs, setRfqs] = useState<Rfq[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedLead, setSelectedLead] = useState<LeadDetail | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -226,9 +228,19 @@ export default function MyBuyerRadar() {
                 const isWarm = conf >= 5 && conf < 8;
                 const color = isHot ? "#22c55e" : isWarm ? "#00d4ff" : "#94a3b8";
                 return (
-                  <div
+                  <button
+                    type="button"
                     key={s.id}
-                    className={`group relative bg-[#0a1628] border rounded-xl p-4 transition-all hover:border-[#00d4ff]/40 hover:-translate-y-0.5 ${
+                    onClick={() => setSelectedLead({
+                      id: s.id,
+                      company_name: s.company_name,
+                      location: s.location,
+                      industry: s.industry,
+                      confidence: s.confidence,
+                      predicted_needs: s.predicted_needs,
+                      detected_at: (s as any).detected_at,
+                    })}
+                    className={`group relative bg-[#0a1628] border rounded-xl p-4 transition-all hover:border-[#00d4ff]/40 hover:-translate-y-0.5 text-left w-full ${
                       isHot ? "border-[#22c55e]/40" : "border-[#1e3a5f]"
                     }`}
                     style={isHot ? { boxShadow: "0 0 0 1px rgba(34,197,94,0.08), 0 0 24px -8px rgba(34,197,94,0.25)" } : undefined}
@@ -268,7 +280,7 @@ export default function MyBuyerRadar() {
                         )}
                       </div>
                     </div>
-                  </div>
+                  </button>
                 );
               })}
             </div>
@@ -331,6 +343,7 @@ export default function MyBuyerRadar() {
           Buyer Radar uses public records, government bid portals, and behavioral signals only.
         </p>
       </main>
+      <LeadDetailDrawer lead={selectedLead} open={!!selectedLead} onOpenChange={(o) => !o && setSelectedLead(null)} />
     </div>
   );
 }
