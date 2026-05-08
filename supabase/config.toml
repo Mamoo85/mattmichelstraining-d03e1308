@@ -2332,3 +2332,6 @@ verify_jwt = false
 
 [functions.trial-reactivation-send]
 verify_jwt = false
+
+[functions.resend-trial-invites]
+verify_jwt = false
