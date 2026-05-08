@@ -139,6 +139,21 @@ const PRODUCT_CONFIG: Record<string, { label: string; dashboardPath: string; pit
     dashboardPath: "/my-foundation-radar",
     pitch: "flooding, structural, basement, and foundation permit signals in your ZIPs",
   },
+  investor_radar: {
+    label: "Investor Radar",
+    dashboardPath: "/my-mortgage-radar",
+    pitch: "probate, pre-foreclosure, and tax-delinquent properties — motivated sellers, daily",
+  },
+  realtor_radar: {
+    label: "Realtor Radar",
+    dashboardPath: "/my-mortgage-radar",
+    pitch: "FSBO listings + price reductions in your ZIPs — listing-conversion leads",
+  },
+  solar_radar: {
+    label: "Solar Installer Radar",
+    dashboardPath: "/my-mortgage-radar",
+    pitch: "new homeowners + new-permit homes — solar's highest-converting audience",
+  },
 };
 
 function genToken(): string {
