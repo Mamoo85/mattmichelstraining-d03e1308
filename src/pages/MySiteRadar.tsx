@@ -19,6 +19,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import ManageBillingButton from "@/components/billing/ManageBillingButton";
 import OnboardingChecklist from "@/components/shared/OnboardingChecklist";
 import LeadGuaranteeBar from "@/components/shared/LeadGuaranteeBar";
+import AlertWebhookConfig from "@/components/site-radar/AlertWebhookConfig";
+import InstallConcierge from "@/components/site-radar/InstallConcierge";
 import JustPurchasedScreen, { isJustPurchased } from "@/components/shared/JustPurchasedScreen";
 
 type Client = {
@@ -619,6 +621,10 @@ export default function MySiteRadar() {
                   </Button>
                 </div>
               </Card>
+
+              <InstallConcierge clientId={client.id} />
+
+              <AlertWebhookConfig clientId={client.id} />
 
               <div className="pt-2">
                 <ManageBillingButton email={client.email} />
