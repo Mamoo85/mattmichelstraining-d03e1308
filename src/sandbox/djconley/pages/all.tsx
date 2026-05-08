@@ -1,11 +1,14 @@
 import SiteLayout from "../SiteLayout";
 import PageRenderer from "../PageRenderer";
+import DJContact from "./Contact";
 
 const make = (slug: string, title: string) => () => (
   <SiteLayout title={title}>
     <PageRenderer slug={slug} title={title} />
   </SiteLayout>
 );
+
+export { DJContact as Contact };
 
 export const About = make("about", "About Us");
 export const Industries = make("industries", "Industries");
