@@ -10,6 +10,7 @@ const DEMO_VISITORS = [
 ];
 
 const DEMO_RFPS = [
+  { title: "Henry Ford Health – Boiler Tune-Up & Pressure Vessel Inspection RFP", agency: "MITN.info",   value: "$420k",   posted: "47 min ago", hot: true },
   { title: "Stellantis Truck Plant – Boiler Retrofit",        agency: "MITN.info",   value: "$2.4M",   posted: "2h ago",  hot: true },
   { title: "Wayne County – Steam Plant Maintenance Contract", agency: "MITN.info",   value: "$340k/y", posted: "1d ago",  hot: true },
   { title: "Detroit Public Schools – Boiler Tune-Up RFP",     agency: "MITN.info",   value: "$180k",   posted: "2d ago",  hot: false },
@@ -26,6 +27,23 @@ export default function Overview() {
       />
 
       <div className="p-6 space-y-6">
+        {/* Welcome card — Pat */}
+        <div className="bg-gradient-to-r from-[#27CCC0]/10 via-[#111d2b] to-[#111d2b] border border-[#27CCC0]/30 rounded-lg p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#27CCC0] to-[#1fa89d] flex items-center justify-center text-[#0b1622] font-black">PM</div>
+            <div>
+              <div className="text-[10px] uppercase tracking-[0.3em] text-[#27CCC0] mb-0.5">Welcome back</div>
+              <div className="text-lg font-bold text-white">Pat Michels — Owner, D.J. Conley & Associates</div>
+              <div className="text-xs text-slate-400">Boiler &amp; mechanical service, SE Michigan · 60+ years</div>
+            </div>
+          </div>
+          <div className="flex flex-col text-right text-xs">
+            <a href="tel:+13135904404" className="text-[#27CCC0] font-semibold hover:underline">📞 (313) 590-4404</a>
+            <a href="mailto:pmichels@djconley.com" className="text-slate-300 hover:text-white">pmichels@djconley.com</a>
+            <a href="https://djconley.com" target="_blank" rel="noreferrer" className="text-slate-500 hover:text-white">djconley.com</a>
+          </div>
+        </div>
+
         {/* KPI strip */}
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
           <KpiCard label="Visitors today"    value="47"      sub="↑ 18% vs avg" accent="text-[#27CCC0]" />
