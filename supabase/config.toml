@@ -2335,3 +2335,15 @@ verify_jwt = false
 
 [functions.resend-trial-invites]
 verify_jwt = false
+
+[functions.seed-mortgage-radar-trial-queue]
+verify_jwt = false
+
+[functions.talent-radar-nurse-scanner]
+verify_jwt = false
+
+[functions.talent-radar-cdl-scanner]
+verify_jwt = false
+
+[functions.talent-radar-phone-validate]
+verify_jwt = false
