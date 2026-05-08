@@ -2350,3 +2350,6 @@ verify_jwt = false
 
 [functions.apollo-health]
 verify_jwt = false
+
+[functions.test-apollo]
+verify_jwt = false
