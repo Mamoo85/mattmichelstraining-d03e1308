@@ -141,6 +141,7 @@
   .font-display {
     font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
     font-weight: 800;
+    letter-spacing: -0.02em;
   }
   .font-industrial {
     font-family: 'Rajdhani', 'Plus Jakarta Sans', system-ui, sans-serif;
