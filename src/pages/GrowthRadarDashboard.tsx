@@ -39,6 +39,7 @@ const GrowthRadarDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [minConfidence, setMinConfidence] = useState(7);
   const [activeTypes, setActiveTypes] = useState<string[]>([]);
+  const [selectedLead, setSelectedLead] = useState<LeadDetail | null>(null);
 
   useEffect(() => {
     (async () => {
