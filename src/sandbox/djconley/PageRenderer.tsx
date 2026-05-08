@@ -83,9 +83,18 @@ function renderBlock(b: Block, i: number) {
   }
 }
 
-export default function PageRenderer({ slug }: { slug: string }) {
-  const blocks = PAGES[slug] || [];
-  // Group consecutive <li> into <ul>
+export default function PageRenderer({ slug, title }: { slug: string; title?: string }) {
+  let blocks = PAGES[slug] || [];
+  const norm = (s: string) => s.trim().toLowerCase();
+  // Strip leading H1/H2 that duplicate the hero title
+  while (
+    blocks.length &&
+    (blocks[0].t === "h1" || blocks[0].t === "h2") &&
+    title &&
+    norm((blocks[0] as { text: string }).text) === norm(title)
+  ) {
+    blocks = blocks.slice(1);
+  }
   const out: React.ReactNode[] = [];
   let liBuffer: Block[] = [];
   const flushLis = () => {
