@@ -20,6 +20,7 @@ import MortgageRadarSeedLead from "@/components/mortgage/MortgageRadarSeedLead";
 import MortgageLeadCard, { MortgageLeadCardSkeleton } from "@/components/mortgage/MortgageLeadCard";
 import RadarExportBar from "@/components/shared/RadarExportBar";
 import OnboardingChecklist from "@/components/shared/OnboardingChecklist";
+import RescueLinkButton from "@/components/shared/RescueLinkButton";
 
 type Lead = {
   id: string;
