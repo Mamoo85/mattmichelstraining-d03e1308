@@ -18,7 +18,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Checkbox } from "@/components/ui/checkbox";
 import ManageBillingButton from "@/components/billing/ManageBillingButton";
 import OnboardingChecklist from "@/components/shared/OnboardingChecklist";
-import LeadGuaranteeBar from "@/components/shared/LeadGuaranteeBar";
+
 import AlertWebhookConfig from "@/components/site-radar/AlertWebhookConfig";
 import InstallConcierge from "@/components/site-radar/InstallConcierge";
 import JustPurchasedScreen, { isJustPurchased } from "@/components/shared/JustPurchasedScreen";
