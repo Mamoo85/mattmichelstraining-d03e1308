@@ -17,18 +17,39 @@ serve(async (req) => {
   // Twilio sends form-encoded POST
   const contentType = req.headers.get("content-type") || "";
   let form: FormData;
+  let rawParams: Record<string, string> = {};
 
   try {
     if (contentType.includes("application/x-www-form-urlencoded")) {
       const text = await req.text();
       const params = new URLSearchParams(text);
       form = new FormData();
-      for (const [k, v] of params.entries()) form.append(k, v);
+      for (const [k, v] of params.entries()) {
+        form.append(k, v);
+        rawParams[k] = v;
+      }
     } else {
       form = await req.formData();
+      for (const [k, v] of form.entries()) rawParams[k] = String(v);
     }
   } catch {
     return twiml("Sorry, couldn't process that. Please try again.");
+  }
+
+  // Fail-closed Twilio signature check
+  if (!TWILIO_AUTH_TOKEN) {
+    console.error("[license-vision-intake] TWILIO_AUTH_TOKEN not set");
+    return new Response("Misconfigured", { status: 500 });
+  }
+  const sigOk = await verifyTwilioSignature(
+    req.url,
+    rawParams,
+    req.headers.get("X-Twilio-Signature"),
+    TWILIO_AUTH_TOKEN,
+  );
+  if (!sigOk) {
+    console.warn("[license-vision-intake] Invalid Twilio signature");
+    return new Response("Forbidden", { status: 403 });
   }
 
   const fromPhone = form.get("From")?.toString() || "";
