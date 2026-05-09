@@ -405,6 +405,7 @@ const MyTreeRadar = lazyRetry(() => import("./pages/MyTreeRadar"));
 const MyRestorationRadar = lazyRetry(() => import("./pages/MyRestorationRadar"));
 const MyDemoJunkRadar = lazyRetry(() => import("./pages/MyDemoJunkRadar"));
 const MyFoundationRadar = lazyRetry(() => import("./pages/MyFoundationRadar"));
+const TenantIntel = lazyRetry(() => import("./pages/TenantIntel"));
 
 const AgencyPortal = lazyRetry(() => import("./pages/AgencyPortal"));
 const LicenseMonitor = lazyRetry(() => import("./pages/LicenseMonitor"));
@@ -962,6 +963,7 @@ const App = () => {
                     <Route path="/my-restoration-radar" element={<MyRestorationRadar />} />
                     <Route path="/my-demo-junk-radar" element={<MyDemoJunkRadar />} />
                     <Route path="/my-foundation-radar" element={<MyFoundationRadar />} />
+                    <Route path="/tenant-intel" element={<TenantIntel />} />
                     <Route path="/agency-portal" element={<AgencyPortal />} />
                     <Route path="/license-monitor" element={<LicenseMonitor />} />
                     <Route path="/regulatory-filing-monitor" element={<RegulatoryFilingMonitor />} />
