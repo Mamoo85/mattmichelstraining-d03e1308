@@ -971,7 +971,10 @@ const App = () => {
                     <Route path="/my-restoration-radar" element={<MyRestorationRadar />} />
                     <Route path="/my-demo-junk-radar" element={<MyDemoJunkRadar />} />
                     <Route path="/my-foundation-radar" element={<MyFoundationRadar />} />
-                    <Route path="/tenant-intel" element={<TenantIntel />} />
+                    <Route path="/tenant-intel" element={<Navigate to="/counsel-search" replace />} />
+                    <Route path="/counsel-search" element={<CounselSearchLanding />} />
+                    <Route path="/counsel-search/console" element={<CounselSearch />} />
+                    <Route path="/my-counsel-search" element={<MyCounselSearch />} />
                     <Route path="/agency-portal" element={<AgencyPortal />} />
                     <Route path="/license-monitor" element={<LicenseMonitor />} />
                     <Route path="/regulatory-filing-monitor" element={<RegulatoryFilingMonitor />} />
