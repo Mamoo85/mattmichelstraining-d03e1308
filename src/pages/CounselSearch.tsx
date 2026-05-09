@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { Helmet } from "react-helmet-async";
+import { trackCounselFirstSearch } from "@/lib/counselSearchAB";
 
 interface IntelHit {
   source: string;
@@ -96,6 +97,7 @@ export default function CounselSearch() {
         throw new Error(data.message || data.error);
       }
       setResult(data as SearchResult);
+      trackCounselFirstSearch();
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Search failed";
       toast.error(msg);

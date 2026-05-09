@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
+import { getCounselVariant, trackCounselCheckoutStarted } from "@/lib/counselSearchAB";
 
 const TIERS = [
   {
@@ -39,9 +40,18 @@ const TIERS = [
 ];
 
 export default function CounselSearchLanding() {
+  const [variant, setVariant] = useState<"highlight_solo" | "highlight_monitoring">("highlight_monitoring");
   const [tier, setTier] = useState<"solo" | "monitoring">("monitoring");
   const [form, setForm] = useState({ email: "", contact_name: "", firm_name: "", bar_number: "", phone: "" });
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const v = getCounselVariant();
+    setVariant(v);
+    setTier(v === "highlight_solo" ? "solo" : "monitoring");
+  }, []);
+
+  const featuredKey = variant === "highlight_solo" ? "solo" : "monitoring";
 
   const checkout = async () => {
     if (!form.email) {
@@ -50,6 +60,7 @@ export default function CounselSearchLanding() {
     }
     setLoading(true);
     try {
+      trackCounselCheckoutStarted(tier);
       const { data, error } = await supabase.functions.invoke("create-counsel-search-checkout", {
         body: { ...form, tier },
       });
@@ -91,10 +102,10 @@ export default function CounselSearchLanding() {
               key={t.key}
               className={`bg-[#0a1628] border-2 cursor-pointer transition ${
                 tier === t.key ? "border-[#00d4ff]" : "border-[#1e3a5f]"
-              } ${t.featured ? "relative" : ""}`}
+              } ${t.key === featuredKey ? "relative" : ""}`}
               onClick={() => setTier(t.key)}
             >
-              {t.featured && (
+              {t.key === featuredKey && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#00d4ff] text-black text-[10px] font-bold px-3 py-1 rounded-full">RECOMMENDED</div>
               )}
               <CardContent className="p-6">
