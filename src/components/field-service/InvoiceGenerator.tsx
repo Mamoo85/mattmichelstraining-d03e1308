@@ -52,6 +52,9 @@ export default function InvoiceGenerator({ job, contractorName, onClose }: Invoi
   const fmt = (n: number) => n.toLocaleString("en-US", { style: "currency", currency: "USD" });
 
   const handlePrint = () => {
+    const esc = (s: unknown) => String(s ?? "")
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
     const itemRows = lineItems
       .filter((item) => item.description.trim())
       .map((item) => {
@@ -60,7 +63,7 @@ export default function InvoiceGenerator({ job, contractorName, onClose }: Invoi
         const total = qty * rate;
         return `
           <tr>
-            <td>${item.description}</td>
+            <td>${esc(item.description)}</td>
             <td style="text-align:center">${qty}</td>
             <td style="text-align:right">${rate ? fmt(rate) : "—"}</td>
             <td style="text-align:right">${total ? fmt(total) : "—"}</td>
