@@ -12,7 +12,8 @@ import OnboardingChecklist from "@/components/shared/OnboardingChecklist";
 import RescueLinkButton from "@/components/shared/RescueLinkButton";
 import JustPurchasedScreen, { isJustPurchased } from "@/components/shared/JustPurchasedScreen";
 import LeadDetailDrawer, { type LeadDetail } from "@/components/radar/LeadDetailDrawer";
-import { Activity, MapPin, TrendingUp, Building2, Lock, Download, Phone } from "lucide-react";
+import RadarFitCard from "@/components/radar/RadarFitCard";
+import { Activity, Lock, Download } from "lucide-react";
 
 type Signal = {
   id: string;
@@ -98,7 +99,7 @@ export default function MyDemandRadar() {
       }
 
       const { data: c } = await (supabase.from as any)("industry_pulse_clients")
-        .select("id, email, company_name, territory_counties")
+        .select("id, email, company_name, territory_counties, target_buyer_titles, sender_name, sender_phone, sender_email")
         .eq("email", clientEmail.toLowerCase())
         .eq("active", true)
         .maybeSingle();
@@ -252,78 +253,26 @@ export default function MyDemandRadar() {
         ) : (
           <div className="grid gap-3">
             {signals.map((s) => (
-              <Card
+              <RadarFitCard
                 key={s.id}
-                role="button"
-                tabIndex={0}
+                radar="demand"
+                signal={s as any}
+                client={client as any}
                 onClick={() => setSelectedLead({
                   id: s.id,
                   company_name: s.company_name,
-                  location: (s as any).location,
-                  industry: (s as any).industry,
-                  signal_type: (s as any).signal_type,
-                  confidence: (s as any).confidence,
-                  recommended_pitch: (s as any).recommended_pitch,
-                  hiring_count: (s as any).hiring_count,
-                  hiring_roles: (s as any).hiring_roles,
-                  predicted_needs: (s as any).predicted_needs,
-                  source_urls: (s as any).source_urls,
-                  detected_at: (s as any).detected_at,
+                  location: s.location,
+                  industry: s.industry,
+                  signal_type: s.signal_type,
+                  confidence: s.confidence,
+                  recommended_pitch: s.recommended_pitch,
+                  hiring_count: s.hiring_count,
+                  hiring_roles: s.hiring_roles,
+                  predicted_needs: s.predicted_needs,
+                  source_urls: s.source_urls,
+                  detected_at: s.detected_at,
                 })}
-                className="bg-[#0a1628] border-[#1e3a5f] hover:border-[#00d4ff]/40 transition cursor-pointer"
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between gap-3 flex-wrap">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 flex-wrap mb-1">
-                        {s.signal_strength_tier && (
-                          <Badge variant="outline" className={tierColor(s.signal_strength_tier)}>
-                            {s.signal_strength_tier.toUpperCase()}
-                          </Badge>
-                        )}
-                        {s.signal_type && (
-                          <Badge variant="outline" className="bg-[#00d4ff]/10 border-[#00d4ff]/30 text-[#00d4ff]">
-                            {s.signal_type}
-                          </Badge>
-                        )}
-                        {s.confidence != null && (
-                          <span className="text-[11px] text-[#64748b] font-mono">
-                            {Math.round(s.confidence * 100)}% conf
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-white font-bold flex items-center gap-1.5">
-                        <Building2 className="w-4 h-4 text-[#00d4ff]" />
-                        {s.company_name}
-                      </p>
-                      <div className="flex items-center gap-3 flex-wrap mt-1 text-xs text-[#94a3b8]">
-                        {s.industry && <span>{s.industry}</span>}
-                        {s.location && (
-                          <span className="flex items-center gap-1">
-                            <MapPin className="w-3 h-3" /> {s.location}
-                          </span>
-                        )}
-                        {s.hiring_count && s.hiring_count > 0 && (
-                          <span className="flex items-center gap-1 text-amber-400">
-                            <TrendingUp className="w-3 h-3" /> {s.hiring_count} hiring
-                          </span>
-                        )}
-                      </div>
-                      {s.human_summary && (
-                        <p className="text-sm text-[#cbd5e1] mt-2 leading-relaxed">{s.human_summary}</p>
-                      )}
-                      {s.recommended_pitch && (
-                        <div className="mt-3 rounded-lg border border-[#00d4ff]/15 bg-[#00d4ff]/5 p-3">
-                          <p className="text-[10px] uppercase tracking-widest text-[#00d4ff]/70 font-bold mb-1">
-                            Suggested opener
-                          </p>
-                          <p className="text-sm text-white/85 italic">"{s.recommended_pitch}"</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              />
             ))}
           </div>
         )}
