@@ -1,5 +1,6 @@
 // GR-20: Weekly client-branded PDF report (returns HTML for browser print-to-PDF)
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { requireAdmin, escapeHtml } from "../_shared/admin-auth.ts";
 
 const corsHeaders = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
