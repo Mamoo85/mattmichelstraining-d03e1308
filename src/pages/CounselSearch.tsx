@@ -79,7 +79,7 @@ export default function CounselSearch() {
         },
       });
       if (error) {
-        const msg = (error as any).message || "Search failed";
+        const msg = (error as Error).message || "Search failed";
         if (msg.includes("quota") || msg.includes("trial_exhausted")) {
           toast.error("Free trial used up — subscribe to continue");
           navigate("/counsel-search");
@@ -96,8 +96,9 @@ export default function CounselSearch() {
         throw new Error(data.message || data.error);
       }
       setResult(data as SearchResult);
-    } catch (e: any) {
-      toast.error(e.message || "Search failed");
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Search failed";
+      toast.error(msg);
     } finally {
       setLoading(false);
     }

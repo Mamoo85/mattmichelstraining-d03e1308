@@ -40,26 +40,28 @@ export default function MyCounselSearch() {
     }
     (async () => {
       try {
-        const { data, error } = await supabase
-          .from("counsel_search_clients" as any)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const sb = supabase as any;
+        const { data, error } = await sb
+          .from("counsel_search_clients")
           .select("email,contact_name,firm_name,tier,monitoring_enabled,active,dashboard_token")
           .eq("email", email.toLowerCase())
           .maybeSingle();
         if (error) throw error;
-        if (!data || (data as any).dashboard_token !== token) {
+        if (!data || data.dashboard_token !== token) {
           setErr("Invalid or expired access token.");
           return;
         }
-        setClient(data as any);
-        const { data: rows } = await supabase
-          .from("counsel_searches" as any)
+        setClient(data as Client);
+        const { data: rows } = await sb
+          .from("counsel_searches")
           .select("id,query_name,case_matter,total_hits,high_priority_hits,created_at")
           .eq("email", email.toLowerCase())
           .order("created_at", { ascending: false })
           .limit(50);
-        setSearches((rows as any) || []);
-      } catch (e: any) {
-        setErr(e.message || "Failed to load");
+        setSearches((rows as SearchRow[]) || []);
+      } catch (e: unknown) {
+        setErr(e instanceof Error ? e.message : "Failed to load");
       } finally {
         setLoading(false);
       }
@@ -94,9 +96,26 @@ export default function MyCounselSearch() {
           {client.monitoring_enabled && <span className="ml-3 text-[#00d4ff]">• Saved subjects re-scanned weekly</span>}
         </p>
 
-        <Link to="/counsel-search/console" className="inline-block bg-[#00d4ff] text-black font-bold px-6 py-3 rounded-lg text-sm mb-8 hover:bg-[#00b8e0]">
-          ⚖️ Run a New Search →
-        </Link>
+        <div className="flex gap-2 mb-8 flex-wrap">
+          <Link to="/counsel-search/console" className="inline-block bg-[#00d4ff] text-black font-bold px-6 py-3 rounded-lg text-sm hover:bg-[#00b8e0]">
+            ⚖️ Run a New Search →
+          </Link>
+          <button
+            onClick={() => {
+              const header = "Date,Subject,Matter,Total Hits,High Priority\n";
+              const rows = searches.map(s => `"${new Date(s.created_at).toISOString()}","${(s.query_name||'').replace(/"/g,'""')}","${(s.case_matter||'').replace(/"/g,'""')}",${s.total_hits ?? 0},${s.high_priority_hits ?? 0}`).join("\n");
+              const blob = new Blob([header + rows], { type: "text/csv" });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url; a.download = `counsel-searches-${new Date().toISOString().slice(0,10)}.csv`;
+              a.click(); URL.revokeObjectURL(url);
+            }}
+            disabled={searches.length === 0}
+            className="inline-block bg-[#1e3a5f] text-white font-bold px-6 py-3 rounded-lg text-sm hover:bg-[#2a4a6f] disabled:opacity-50"
+          >
+            ⬇ Export CSV
+          </button>
+        </div>
 
         <h2 className="text-lg font-bold mb-3">Recent Searches</h2>
         {searches.length === 0 ? (

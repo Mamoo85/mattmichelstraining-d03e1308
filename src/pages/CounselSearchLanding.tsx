@@ -55,8 +55,9 @@ export default function CounselSearchLanding() {
       });
       if (error) throw error;
       if (data?.url) window.location.href = data.url;
-    } catch (e: any) {
-      toast.error(e.message || "Checkout failed");
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Checkout failed";
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
