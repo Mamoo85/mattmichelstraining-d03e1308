@@ -5,7 +5,8 @@ import SEOHead from "@/components/layout/SEOHead";
 import OnboardingChecklist from "@/components/shared/OnboardingChecklist";
 import JustPurchasedScreen, { isJustPurchased } from "@/components/shared/JustPurchasedScreen";
 import LeadDetailDrawer, { type LeadDetail } from "@/components/radar/LeadDetailDrawer";
-import { Factory, Loader2, ExternalLink, Clock, Zap, TrendingUp, Radar, Download } from "lucide-react";
+import RadarFitCard from "@/components/radar/RadarFitCard";
+import { Factory, Loader2, ExternalLink, Clock, Radar, Download, Zap, TrendingUp } from "lucide-react";
 
 type Signal = {
   id: string;
