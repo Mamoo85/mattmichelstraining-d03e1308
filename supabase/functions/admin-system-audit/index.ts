@@ -1,6 +1,7 @@
 // Consolidated system audit: Stripe reconcile + dead edge functions + customer health + mortgage radar live data
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 import Stripe from "npm:stripe@18.5.0";
+import { requireAdmin } from "../_shared/admin-auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
