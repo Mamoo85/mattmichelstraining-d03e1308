@@ -224,19 +224,19 @@ function buildMultiServiceEmailHtml(subject: string, body: string): string {
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;">
 <tr><td align="center" style="padding:24px 16px;">
   <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;">
-    <tr><td style="background:#e8621a;padding:3px 0;"></td></tr>
+    <tr><td style="background:#22d3ee;padding:3px 0;"></td></tr>
     <tr><td style="padding:24px;color:#334155;font-size:15px;line-height:1.8;">
       ${htmlBody}
       <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;display:flex;align-items:center;gap:12px;">
-        <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" alt="Matt Michels">
-        <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>Grosse Pointe, MI · (313) 992-1219</div>
-        <img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" />
+        <img src="https://www.detroitwebagent.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" alt="Matt Michels">
+        <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>Detroit Web Agency · (313) 992-1219</div>
+        <img src="https://www.detroitwebagent.com/images/dwa-logo.png" alt="Detroit Web Agency" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" />
       </div>
       <p style="font-size:12px;color:#94a3b8;margin-top:8px;">Prefer to just text? (313) 992-1219</p>
     </td></tr>
     <tr><td style="background:#f8fafc;padding:16px 24px;border-top:1px solid #e2e8f0;font-size:11px;color:#94a3b8;">
-      Matt Michels · M² Development · Grosse Pointe, MI · (313) 992-1219<br>
-      <a href="https://www.mattmichelstraining.com" style="color:#94a3b8;">mattmichelstraining.com</a>
+      Matt Michels · Detroit Web Agency · Grosse Pointe, MI · (313) 992-1219<br>
+      <a href="https://www.detroitwebagent.com" style="color:#94a3b8;">detroitwebagent.com</a>
     </td></tr>
   </table>
 </td></tr>
