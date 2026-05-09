@@ -19,15 +19,20 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
 
   try {
-    // Lightweight auth — HubSpot lets you set a custom query string when wiring the workflow.
-    if (SHARED_SECRET) {
-      const url = new URL(req.url);
-      if (url.searchParams.get("token") !== SHARED_SECRET) {
-        return new Response(JSON.stringify({ ok: false, error: "unauthorized" }), {
-          status: 401,
-          headers: { ...cors, "Content-Type": "application/json" },
-        });
-      }
+    // Fail-closed: webhook MUST have a shared secret configured.
+    if (!SHARED_SECRET) {
+      console.error("[hubspot-form-webhook] HUBSPOT_WEBHOOK_SECRET not set — rejecting request");
+      return new Response(JSON.stringify({ ok: false, error: "misconfigured" }), {
+        status: 500,
+        headers: { ...cors, "Content-Type": "application/json" },
+      });
+    }
+    const url = new URL(req.url);
+    if (url.searchParams.get("token") !== SHARED_SECRET) {
+      return new Response(JSON.stringify({ ok: false, error: "unauthorized" }), {
+        status: 401,
+        headers: { ...cors, "Content-Type": "application/json" },
+      });
     }
 
     const payload = await req.json().catch(() => ({}));
