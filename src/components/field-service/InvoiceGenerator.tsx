@@ -109,20 +109,20 @@ export default function InvoiceGenerator({ job, contractorName, onClose }: Invoi
 <body>
   <div class="header">
     <div>
-      <div class="brand">${contractorName || "Your Company"}</div>
+      <div class="brand">${esc(contractorName || "Your Company")}</div>
       <div class="brand-sub">Powered by FieldDesk · Detroit Web Agency</div>
     </div>
     <div class="invoice-meta">
       <div class="invoice-title">INVOICE</div>
-      <div class="invoice-num">${invoiceNumber}</div>
+      <div class="invoice-num">${esc(invoiceNumber)}</div>
     </div>
   </div>
 
   <div style="display:flex;justify-content:space-between;margin-bottom:36px">
     <div>
       <div class="section-label">Bill To</div>
-      <div class="bill-to">${clientName || "Client Name"}</div>
-      ${clientAddress ? `<div class="bill-sub">${clientAddress.replace(/\n/g, "<br>")}</div>` : ""}
+      <div class="bill-to">${esc(clientName || "Client Name")}</div>
+      ${clientAddress ? `<div class="bill-sub">${esc(clientAddress).replace(/\n/g, "<br>")}</div>` : ""}
     </div>
     <div class="dates" style="text-align:right">
       <div>
