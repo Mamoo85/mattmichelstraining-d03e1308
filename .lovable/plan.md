@@ -1,146 +1,152 @@
-# Plan: TechAlert Overhaul + AmeriSteel CEO Trial + Cross-Radar Polish
+# Lawyer Search Engine — Honest Audit + Path to Monetization
 
-This is a large, multi-phase request. To keep it shippable, I'm grouping ~30 items into 7 phases. Each phase is independently deployable and testable. Some items overlap (e.g., lead-card buttons appears twice in your list — folded into one).
+## TL;DR
 
-Before I start, I have a few clarifying questions at the bottom — they'll change the shape of phases 2 and 3.
+The search engine **works** but it is **not good enough to sell to lawyers as-is**. Roughly 30–40% of what it returns is real value; 60% is either a thin Perplexity wrapper a lawyer can replicate for $20/mo, or fragile consumer-site scrapes that compete with free tools. There is no paywall, no auth gate, no trial counter, no tests, and the brand name ("Tenant Intel") actively contradicts the legal disclaimer underneath it.
 
----
-
-## Phase 1 — Foundation: Talent Ingest Pipeline (BLOCKING)
-
-Everything else depends on this. Today every TechAlert scanner writes directly to `hire_alert_candidates` with inconsistent normalization, which is why "Main Content" / "Our Issues" junk keeps appearing.
-
-**Migration** `talent_ingest_pipeline.sql`:
-- `talent_ingest_raw` — raw payload, source, fetched_at, fingerprint, run_id, processed status
-- `talent_ingest_runs` — run_id, source, started_at, finished_at, rows_in/out, dedupe_count, error
-- Add `fingerprint text`, `source text`, `last_seen_at` to `hire_alert_candidates` and `hire_alert_companies` (create if missing)
-- Unique index on `(fingerprint)` for idempotent upserts
-
-**Edge function** `talent-ingest`:
-- Accepts `{ source, run_id, candidates: RawCandidate[], companies: RawCompany[] }`
-- Normalizes (existing `sanitize-candidate.ts` + stricter rules — reject "Main Content", nav fragments, single-token, all-caps >3)
-- Fingerprints: `sha1(lower(name)|lower(company)|trade)` for candidates; `sha1(lower(domain||name))` for companies
-- Writes raw → `talent_ingest_raw`; upserts canonical via `ON CONFLICT (fingerprint) DO UPDATE SET last_seen_at=now()`
-- Returns per-source yield + dedupe stats
-
-**Refactor all existing TechAlert scanners** (`techalert-prospect-hunter`, `signals-*`) to POST to `talent-ingest` instead of direct insert. Single shared helper `_shared/talent-ingest-client.ts`.
-
-**Tests** (`talent-ingest/index.test.ts`):
-- Normalization edge cases (junk patterns, casing, whitespace, unicode)
-- Fingerprint stability across re-ingestion
-- Idempotency: same payload twice → 0 new inserts, 0 dup fingerprints
-- Cross-source dedupe (same person from GitHub + LinkedIn → one row)
+That said — there **is** a real, narrow opportunity: a **Michigan litigation-discovery search tool** priced at $49–$79/mo with a 7-search trial. Not a TLO/Accurint replacement. A focused, defensible niche product. Details below.
 
 ---
 
-## Phase 2 — 50 New TechAlert Sources + Welder/Fabricator Vertical
+## What we actually have today
 
-Add to scanner waterfall with fail-safe (try/catch per source, source provenance in `meta.source_trace`), via the new ingest pipeline. Sources fall into 5 buckets of ~10 each:
+**Frontend:** `src/pages/TenantIntel.tsx` at `/tenant-intel`. Categorized result UI (severity badges, expandable sections, share-by-URL). Anonymous, no auth, no quota.
 
-1. **Public job boards / ATS feeds** — Indeed RSS, ZipRecruiter RSS, Glassdoor sitemap, SimplyHired, JobSpider, CareerBuilder feed, USAJobs, CareerJet, Workable public, Lever public boards
-2. **Federal/state license & registry** — LARA welder/fabricator licenses, OSHA fatality reports, MIOSHA citations, FMCSA driver pulls (proxy for trucking-trade churn), USCG merchant mariner, NLRB strike notices, EEOC charges, WARN Act notices (state DOL feeds × 5)
-3. **Trade-specific niches** — AWS welder cert directory, AISC fabricator listings, Ironworkers Local hall postings, UA Plumbers/Pipefitters locals, IBEW locals, Operating Engineers, SMART sheet metal, Boilermakers, NACE/AMPP corrosion certs, NICET certifications
-4. **OSINT / signals** — GitHub commits in trade orgs, Reddit r/Welding job posts, FB Marketplace "hiring" posts (via Firecrawl), Craigslist gigs, Nextdoor business posts, Discord trade servers, YouTube channel descriptions, Bluesky trade tags, Mastodon, Telegram public groups
-5. **B2B/firmographic** — Apollo job-change events, Crunchbase hires, ZoomInfo free, BuiltWith stack changes, SimilarWeb visitor spike, BBB new accreditations, Chamber of Commerce new members, Better Contractor, Houzz Pro new pros, Angi new pros
+**Backend:** `supabase/functions/tenant-intel-search/index.ts` (815 lines). 28 sources fired in parallel via `Promise.allSettled`, fail-graceful, ~10–20s response time.
 
-**Welder/fabricator vertical**: extend `hire_alert_clients.trade_focus` enum and add `welder_fabricator` signal mapping. Update `MyTechAlert` filter pills.
+**DB:** `tenant_intel_searches` table just logs queries.
 
-**Data-sources dashboard upgrade** (`/dwa-admin/data-sources`): each source has status 🔴 Off / 🟡 Ready / ✅ Live. Add notify-on-promote (email + in-app toast via realtime).
+**Source breakdown — what's real vs what isn't:**
 
-**Backfill budget guard** (`_shared/enrichment-budget.ts` — already exists, extend):
-- Per-source daily cap
-- Per-candidate cap based on score threshold (≥7 → enrich, <7 → metadata only)
-- Rate limit: 60 req/min/source
 
----
+| Tier                        | Sources                                                                                                                           | Honest assessment                                                                                                                                                 |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Strong (keep)**           | CourtListener (federal bankruptcy/civil/criminal/tax), NSOPW, FBI Most Wanted, SAM.gov exclusions, OSHA, EPA ECHO, OpenCorporates | Real public APIs, real value. But all are also free directly to anyone.                                                                                           |
+| **Strong, MI-only**         | Wayne / Oakland / Detroit assessor parcels, Detroit Blight, Detroit Vacant Property Registry, Michigan LARA                       | This is our actual moat — high-quality MI county/city data wired in one place. Useless outside MI.                                                                |
+| **Fragile (rip out)**       | FastPeopleSearch, TruePeopleSearch, Whitepages, USPhoneBook, MI OTIS, MI LARA scrape                                              | Firecrawl scrapes of consumer data-broker sites. Heavy bot protection, regex-parsing markdown, no tests, breaks silently. Lawyers recognize these as "free junk." |
+| **High legal/quality risk** | 7 Perplexity Sonar calls (evictions, criminal, news, social, business, liens, probate)                                            | Half our perceived breadth. But Sonar can hallucinate, we don't verify citations, and a lawyer with Perplexity Pro ($20/mo) gets the same answer. No moat.        |
 
-## Phase 3 — AmeriSteel CEO Trial Hub (FLAGSHIP DEMO)
 
-Single 7-day no-card trial link provisioning 5 products under one login.
+**Wiring status:**
 
-**Edge function** `create-trial-hub`:
-- Input: `{ company, ceo_email, ceo_name, products: ['techalert','site_radar','missed_call','buyer_radar','reputation'] }`
-- Creates one `trial_signups` row + per-product client rows (existing tables)
-- Generates magic link → `/trial-hub?token=...`
-- Idempotent on `(company, ceo_email)`
+- Route registered ✅
+- Edge function deployed ✅
+- DB table created ✅ (two duplicate migrations actually — `20260508100000` and `20260509001150`, you'll want to drop one)
+- **Tests:** none. No Deno tests, no Playwright spec, no QA harness for the scrapers.
+- **Auth/paywall:** none. Anonymous, anyone can hammer it.
+- **Trial counter:** none.
+- **Stripe checkout:** none.
+- **PDF export:** none.
+- **Case/matter audit log:** none.
 
-**Page** `/trial-hub`:
-- Header: company name, "Day X of 7"
-- 5 RadarFitCard tiles, each with deep link to `/my-techalert`, `/my-site-radar`, etc.
-- Filter chips (show only SiteRadar + Growth, etc.)
-- Open Graph meta per tile (`/trial-hub/og?tile=techalert&company=AmeriSteel`) — dynamic OG image edge function
-
-**Admin tool** `/dwa-admin/trial-hub-builder`:
-- Form: company, CEO contact, product checkboxes
-- "Send trial email" button (idempotent)
-- "Generate SMS draft" button → returns ready-to-paste SMS + short link
-
-**AmeriSteel one-shot script**: seeds AmeriSteel CEO, sends teaser email, returns SMS text in admin UI for Matt to copy/paste.
+**Bug worth flagging now:** the page is branded "Tenant Intel" but the disclaimer correctly says "Not for commercial tenant screening without FCRA-compliant process." Tenant screening is the one use case the disclaimer excludes. If a customer uses this for screening and gets sued, the brand name is exhibit A. Rename before any sale.
 
 ---
 
-## Phase 4 — Teaser Email Templates + 250-Lead List Builder
+## Competitor reality check
 
-**Templates** (`_shared/email-templates/teaser-{product}.tsx`):
-- TechAlert, SiteRadar, Missed-Call, Buyer Radar, Reputation
-- Personalization fields: `company`, `ceo_first_name`, `industry`, `recent_signal` (e.g. "we noticed 3 welder hires in 30 days"), `peer_company`
-- 7-day trial CTA → `/trial-hub?token=...`
-- DWA-branded (electric teal #00d4ff)
+This is what lawyers and PIs actually use today (verified pricing, May 2026):
 
-**Edge function** `build-talent-prospect-list`:
-- Pulls from new 50-source pipeline filtered for: hiring signal in last 30d + 50–500 employees + MI/OH/IN/IL
-- Apollo + Hunter waterfall for CEO email
-- Generates 250 rows in `talent_prospect_list` table with `cold_email_draft` (Opus-generated, personalized)
-- Admin page `/dwa-admin/prospect-list` — review, approve, send
 
----
+| Tool                              | Audience                        | Pricing                                                       | What we can't match                                                  |
+| --------------------------------- | ------------------------------- | ------------------------------------------------------------- | -------------------------------------------------------------------- |
+| **LexisNexis Accurint for Legal** | Mid/large firms                 | $5.37 / person search, $7.05 advanced, ~$99–500/mo + per-pull | Credit headers, SSN trace, DPPA DMV data, 50-state eviction database |
+| **TLOxp (TransUnion)**            | PIs, attorneys                  | ~$0.25–$1.00/pull, $50+/mo, requires credentialing            | Same as above + utility connections, real-time address updates       |
+| **IRBsearch**                     | PIs, debt collectors, attorneys | Transactional or $99–200/mo                                   | GLBA-credentialed data                                               |
+| **Tracers**                       | PIs, skip-tracers               | $50–150/mo + per-pull                                         | Same                                                                 |
+| **BeenVerified**                  | Consumer (not legal)            | $36.89/mo unlimited                                           | Nothing we don't have, but not lawyer-grade either                   |
+| **Perplexity Pro**                | Anyone                          | $20/mo                                                        | This is our actual competitor for the Sonar layer of our product     |
 
-## Phase 5 — Lead-Card Persistence + LeadDetailDrawer Rollout
 
-**Lead actions** (already partially built per Phase 37 — verify and complete):
-- `LeadActionBar` component on every radar card: Contacted / Won / Lost / Pass / Snooze / Notes
-- Persists to `{product}_lead_actions` table per radar
-- Optimistic UI + toast on success/failure
+**The unbridgeable gap:** TLO/Accurint/IRB/Tracers all have **GLBA/DPPA-credentialed access** to credit headers, DMV, and SSN-linked data. That requires the company to be vetted, audited, and bonded as a "consumer reporting agency" or equivalent. We can't self-onboard into that. Any lawyer who needs SSN-trace or DMV records will buy TLO regardless of our price.
 
-**LeadDetailDrawer rollout**:
-- Add to `MyDemandRadar`, `MyBuyerRadar`, `MyGrowthRadar` (currently only on TradeRadar/Mortgage)
-- Generic `<RadarLeadDrawer product=... leadId=...>` reading from per-product table
+**Where competitors are weak — our actual opening:**
+
+- TLO/Accurint are **expensive** and have **per-pull fees** that scare solo/small-firm lawyers
+- Their UIs are **clunky** (1990s-feeling), no permalink sharing, no modern UX
+- They have **shallow MI county/city coverage** — they don't pull Detroit blight tickets, Wayne/Oakland parcels with sale history, or LARA business filings in one view
+- They don't combine **federal court records + MI public records + AI web research** in a single result
+- Solo lawyers don't want to commit to $200/mo + per-pull fees for the 4 searches they run a month
 
 ---
 
-## Phase 6 — Admin Polish + Magic-Login Consolidation
+## Should we even try? My honest answer
 
-- `/dwa-admin/talent-ingest` — recent runs table, "Replay last run" per source, raw payload viewer
-- "📧 Send Matt all dashboard links" button — single email with 23 magic-login buttons, idempotent (debounced 5min)
-- `radar-fit-explainer` edge function (deploy + wire into `MyDemandRadar`/`MyBuyerRadar`)
-- New routes: `/buyer-radar/setup`, `/demand-radar/setup`
-- Fix `dashboard_token` TypeScript error in `MyTechAlert.tsx`
+**Don't try to sell this product as-is.** It loses to Perplexity Pro on AI research and loses to TLO/Accurint on data depth. Selling it would be embarrassing on the second search.
 
----
+**Do consider rebuilding it narrow** as a **Michigan Litigation Records Search** for solo and small-firm MI attorneys, priced low enough that the per-pull crowd can't justify staying with TLO. Concretely:
 
-## Phase 7 — QA + Quality Report
+- **$49/mo** flat (or $79/mo for unlimited + monitoring)
+- **7-search free trial** (your idea — yes, do this)
+- **Positioning:** "Everything a Michigan attorney needs to vet a defendant, debtor, or witness — in one click. Federal court + MI county + state corrections + business filings + AI corroboration."
+- **Audience:** ~9,000 active MI attorneys, target the 60% in solo/small firms who don't carry a TLO subscription
+- **Distribution:** your existing client(s) → bar association referrals → State Bar of Michigan vendor listings
 
-- E2E browser test (Playwright): setup → launch → dashboard nav → lead card click → drawer → action button → DB persistence
-- Run test scan via new pipeline, backfill, generate `quality-report-{date}.md`:
-  - Per-source yield, dedupe %, score distribution histogram, top 10 candidates with full provenance
-- Idempotency checker script: re-runs all scanners, asserts <1% new rows, 0 dup fingerprints
-- Magic-link audit: every `/my-*` page loads correctly with token
+This is monetizable. But it requires the rebuild below.
 
 ---
 
-## Out of Scope / Won't Do This Round
+## Proposed rebuild plan (if you want to ship)
 
-- New radar products (only polish existing)
-- Migrating off Lovable-managed primary project
-- Replacing Apollo/Hunter (waterfall stays)
+### Phase 1 — Strip and rebrand (small, ~1 day)
+
+- Rename product to **"Counsel Records Search"** (or "MI Litigation Intel"). Drop "Tenant" from page, edge function, table.
+- New route `/counsel-search`, keep `/tenant-intel` as a 301 for any in-flight links.
+- Remove the FCRA-risky tenant-screening framing. Keep the §1681b(a)(4) litigation-use disclaimer. Add a **permissible-purpose attestation checkbox** ("I will use this only for litigation, fraud investigation, or bona-fide legal proceedings") gated before search.
+- Rip out the 4 fragile consumer scrapers: FastPeopleSearch, TruePeopleSearch, Whitepages, USPhoneBook. They're more risk than value.
+- Drop one of the duplicate migrations.
+
+### Phase 2 — Auth + 7-search trial + Stripe ($49/mo)
+
+- Require auth before search (use existing `useAuth`).
+- New table `counsel_search_quota(user_id, free_searches_used, plan, period_start)`.
+- Edge function reads quota, denies after 7 free searches if not subscribed.
+- New `create-counsel-search-checkout` edge function (subscription, $49/mo, inline `price_data`).
+- `stripe-webhook` handler for `counsel_search_subscription` type → upserts `counsel_clients` row.
+- New `MyCounselSearch.tsx` portal showing search history + plan status + cancel via existing `customer-portal` function.
+
+### Phase 3 — Strengthen MI moat (the actual product value)
+
+- Add **MI state court docket scrape** via `mi-courts.gov` / MiCOA — this is the biggest gap competitors don't fill cheaply. Start with 3rd Circuit (Wayne County) and 6th Circuit (Oakland) civil + criminal indexes.
+- Add **36th District Court Detroit** docket lookup (eviction-heavy court, perfect for MI landlord-side attorneys).
+- Add **Macomb County** parcels + civil docket.
+- Replace consumer-site scrapes with **a single Sonar query that has explicit "cite a public-record URL or return nothing" rule** — and validate every returned URL with a HEAD check before showing it. Cuts hallucinations to near-zero.
+- Add 20 more sources
+
+### Phase 4 — The workflow features lawyers actually pay for
+
+- **Case-matter tagging:** every search tied to a case # / matter name (audit log).
+- **PDF export** of the result set (use existing Browserless setup from marketplace) → "save to client file."
+- **Saved subjects / monitoring:** weekly recheck on saved names, email if new hits land. This is the upsell from $49 to $79.
+- **AKA / alias support:** accept comma-separated aliases, run all variants in one shot.
+
+### Phase 5 — Quality gate before any sale
+
+- Deno test for each MI ArcGIS source (assert response shape, smoke-test with a known-positive name).
+- Playwright spec for the search → result → PDF-export flow.
+- Manual QA pass with 10 real MI names (mix: known-clean, known-defendant, known-business-owner). Document false positives, fix or filter them.
+
+### Phase 6 — Soft launch with Pat / your one client
+
+- Hand the trial to your existing lawyer client. Have them run 20 real searches over 2 weeks. Capture every "this is wrong" or "I wish it did X."
+- Iterate. Then ask them for one referral to another MI lawyer.
+- Only after that → State Bar of Michigan vendor listing + paid ads.
 
 ---
 
-## Clarifying Questions
+## Technical notes (for the implementer)
 
-1. **AmeriSteel CEO contact** — do you have name + email + phone, or should the prospect-list builder find them? (Affects whether Phase 3 ships standalone or waits on Phase 4.)
-2. **50-source list** — are the 5 buckets I proposed acceptable, or do you have a specific source list you want me to use? (I can swap any bucket.)
-3. **Trial Hub auth** — magic link only (no password), or full Supabase auth account with password setup at end of trial?
-4. **Welder/fabricator vertical** — new vertical alongside HVAC/electrical/plumbing, or sub-tag under existing "industrial" trade?
+- Per-search cost today: 7× Sonar calls @ ~$0.005 each + Firecrawl scrapes @ ~$0.002 each + free APIs = ~$0.05–0.10/search. After Phase 3 (drop 4 scrapes, consolidate Sonar to 2 calls), drops to ~$0.03/search. At $49/mo with avg 30 searches/user = $1/user/mo cost → ~98% gross margin.
+- Trial-counter check must be **server-side in the edge function**, not client-side (otherwise trivially bypassed).
+- The duplicate migration (`20260508100000` and `20260509001150`) won't break anything — the second uses `IF NOT EXISTS` — but should be cleaned up.
+- Existing `tenant_intel_searches` table can be renamed via migration, no data loss.
 
-If you answer these I'll refine the plan; otherwise I'll proceed with the defaults shown above (CEO lookup via prospect builder; the 5 buckets as listed; magic-link only; new vertical).
+---
+
+## Decision points for you
+
+1. **Kill it, or rebuild narrow as MI Counsel Records Search?** I recommend rebuild — your MI ArcGIS coverage is genuinely a moat in this niche. Rebuild it. 
+2. **$49/mo flat, or $49/$79 two-tier (unlimited + monitoring)?** I recommend two-tier; monitoring is the sticky upsell. Perfect
+3. **Soft-launch with Pat first, or build out fully then launch?** I strongly recommend soft-launch with Pat after Phase 4. He'll find the gaps no audit can. Full build and my lawyer friends name is Jess not pat 
+
+If you give me a green light on the rebuild path and the pricing, I'll execute Phase 1 + 2 first (rebrand, auth, paywall, 7-search trial) — that gets you something demo-able to Pat in one build cycle. Phases 3–5 follow once you've validated demand.
