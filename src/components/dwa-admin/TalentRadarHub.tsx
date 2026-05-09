@@ -4,6 +4,7 @@ import TalentRadarLiveLog from "./TalentRadarLiveLog";
 import WaterfallDiagnostics from "./WaterfallDiagnostics";
 
 const AdminHireAlertClients = lazy(() => import("@/components/admin/AdminHireAlertClients"));
+const AdminTalentIngest = lazy(() => import("./AdminTalentIngest"));
 
 export default function TalentRadarHub() {
   const [tab, setTab] = useState("clients");
