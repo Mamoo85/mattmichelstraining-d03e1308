@@ -629,10 +629,6 @@ export default function MySiteRadar() {
               <div className="pt-2">
                 <ManageBillingButton email={client.email} />
               </div>
-
-              <div className="pt-4">
-                <LeadGuaranteeBar productName="SiteRadar" />
-              </div>
             </div>
           )}
         </div>
