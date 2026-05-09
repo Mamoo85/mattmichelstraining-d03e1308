@@ -1,6 +1,7 @@
 // Generate-signal-dossier — returns a printable HTML 1-pager for a Growth Signal.
 // Admin-only (no JWT verify in config; protected by knowledge of signal_id + admin tab).
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { requireAdmin, escapeHtml, safeHttpsUrl } from "../_shared/admin-auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
