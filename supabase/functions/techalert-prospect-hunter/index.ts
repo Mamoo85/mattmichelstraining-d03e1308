@@ -1184,9 +1184,28 @@ serve(async (req) => {
       getWeatherHiringBonus(),
       fetchHireSignals(sb, { state: "MI", naics: "238220" }).catch(() => []),
       runAll50Sources().catch(() => ({ postings: [], bySource: {} })),
+      runExtraTalentSources().catch(() => ({ postings: [], bySource: {} })),
     ])).map((r) => (r.status === "fulfilled" ? r.value : []) as any) as any;
     const extras50Postings = (extras50Result?.postings ?? []) as any[];
-    const supplemental = [...githubSignals, ...edgarSignals, ...usptoSignals, ...samSignals, ...samEntitySignals, ...blsSignals, ...eventbriteSignals, ...usaSpendingSignals, ...googleMapsSignals, ...oshaSignals, ...laraNewSignals, ...laraDissolvedSignals, ...laraExpiringSignals, ...nlrbSignals, ...cfpbSignals, ...ch7Signals, ...detroitCertifiedSignals, ...detroitOpenBizSignals, ...councilSurveyedSignals, ...detroitCityContractSignals, ...multifamilySignals, ...demoContractorSignals, ...demoPipelineSignals, ...billionDollarSignals, ...detroitBizLicenseSignals, ...commercialRedSignals, ...extras50Postings];
+    const extras100Raw = (extras100Result?.postings ?? []) as any[];
+    // Adapter: ExtraPosting (candidate-level) → Posting (company-level).
+    // Drop rows lacking current_employer — they're licensee names without employer enrichment yet.
+    const extras100Postings: any[] = [];
+    for (const e of extras100Raw) {
+      try {
+        const employer = (e?.current_employer || "").trim();
+        if (!employer || employer.length < 2) continue;
+        extras100Postings.push({
+          company_name: employer,
+          city: e.city,
+          role: e.current_title || e.trade || "Trade Worker",
+          is_boiler: false,
+          source_url: e?.raw_data?.url,
+          source_label: `extras100_${e.source || "unknown"}`,
+        });
+      } catch { /* skip malformed row */ }
+    }
+    const supplemental = [...githubSignals, ...edgarSignals, ...usptoSignals, ...samSignals, ...samEntitySignals, ...blsSignals, ...eventbriteSignals, ...usaSpendingSignals, ...googleMapsSignals, ...oshaSignals, ...laraNewSignals, ...laraDissolvedSignals, ...laraExpiringSignals, ...nlrbSignals, ...cfpbSignals, ...ch7Signals, ...detroitCertifiedSignals, ...detroitOpenBizSignals, ...councilSurveyedSignals, ...detroitCityContractSignals, ...multifamilySignals, ...demoContractorSignals, ...demoPipelineSignals, ...billionDollarSignals, ...detroitBizLicenseSignals, ...commercialRedSignals, ...extras50Postings, ...extras100Postings];
     all.push(...supplemental);
     scanned += supplemental.length;
     // Log waterfall signal volume to heartbeat metadata (don't insert as job postings — different shape)
