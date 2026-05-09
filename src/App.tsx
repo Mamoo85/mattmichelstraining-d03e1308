@@ -89,6 +89,7 @@ const DWAAdmin = lazyRetry(() => import("./pages/DWAAdmin"));
 const DataSourcesHealth = lazyRetry(() => import("./pages/admin/DataSourcesHealth"));
 const OutreachAuditLog = lazyRetry(() => import("./pages/admin/OutreachAuditLog"));
 const OutreachQueuePage = lazyRetry(() => import("./pages/admin/OutreachQueue"));
+const TeaserEmailsAdmin = lazyRetry(() => import("./pages/dwa-admin/TeaserEmailsAdmin"));
 const OutreachObservabilityPage = lazyRetry(() => import("./pages/admin/OutreachObservability"));
 const Wave5Dashboard = lazyRetry(() => import("./pages/admin/Wave5Dashboard"));
 const AuditTimeline = lazyRetry(() => import("./pages/admin/AuditTimeline"));
