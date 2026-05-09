@@ -267,7 +267,35 @@
 }
 
 /* DWA Command Center Print Styles */
+/* Radar card animations */
+@keyframes radar-halo-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes radar-urgency-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 212, 255, 0.55); }
+  50% { box-shadow: 0 0 0 6px rgba(0, 212, 255, 0); }
+}
+.radar-urgency-pulse {
+  animation: radar-urgency-pulse 2s ease-in-out infinite;
+  border-radius: 4px;
+}
+.radar-fade-mask {
+  -webkit-mask-image: linear-gradient(to bottom, #000 60%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 60%, transparent 100%);
+}
+
+/* Dossier print sheet */
 @media print {
+  body * { visibility: hidden !important; }
+  .dossier-print, .dossier-print * { visibility: visible !important; }
+  .dossier-print {
+    position: absolute !important;
+    inset: 0 !important;
+    padding: 1cm !important;
+    color: #111 !important;
+    background: #fff !important;
+    font-family: Georgia, "Times New Roman", serif !important;
+  }
   .print\:block { display: block !important; }
   .print\:hidden { display: none !important; }
   header, nav, aside, .print-hide { display: none !important; }

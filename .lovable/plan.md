@@ -1,48 +1,84 @@
-## Goal
-Wire `_shared/talent-signals/extras-100.ts` (50-source `runExtraTalentSources` orchestrator) into `techalert-prospect-hunter` alongside the already-wired `extras-50`, so all 50 candidate sources are invoked every run with fail-soft behavior, and their counts appear in the `signals` payload of the run response + `techalert_hunter_runs` log.
+## Why "1000% conf"
+`confidence` is a 0–10 integer. The card renders it with a `%` suffix and no division, so `10 → "1000%"`. Replaced entirely by a 5-bar Signal Strength indicator + `{confidence}/10` label.
 
-## Current state
-- `extras-50.ts` (`runAll50Sources`) — already wired (line 1155, 1185–1188). Returns `Posting[]` (company-level: `company_name`, `role`, `is_boiler`). Adds directly into the `supplemental` array → flows into `techalert_prospect_targets` upsert.
-- `extras-100.ts` (`runExtraTalentSources`) — exists, exports a `Promise.allSettled` orchestrator over 50 scanners, but is **not imported** anywhere. Returns `ExtraPosting[]` (candidate-level: `full_name`, `current_employer`, `current_title`, `trade`, etc.). Most scanners are stubs returning `[]` until keys/credentials are added — that's the documented design (registered = discoverable).
-- Shape mismatch is the blocker: an `ExtraPosting` cannot go into `techalert_prospect_targets` directly (no `company_name`/`role`).
+**Constraints**
+- Frontend only. No edge functions, migrations, or data-shape changes.
+- Zero "AI" wording in UI copy. Use "Automated Intel" / "Signal Strength" / "Proprietary Data".
+- Brand teal `#00d4ff`, navy `#0a1628`. Tailwind tokens only.
 
-## Plan
+---
 
-### 1. Adapter: ExtraPosting → Posting (in `techalert-prospect-hunter/index.ts`)
-Add a small inline mapper that converts an `ExtraPosting` to the existing `Posting` shape only when minimum fields are present:
-- `company_name` ← `current_employer` (skip if missing/empty)
-- `role` ← `current_title || trade || "Trade Worker"`
-- `city` ← `city`
-- `is_boiler` ← `false` (extras-100 sources don't carry boiler signal; safe default)
-- `source_url` ← `raw_data?.url` if present, else `undefined`
-- `source_label` ← `extras100_<source>` for traceability
-- `days_posted` ← omitted
+## Files touched
+- `src/components/radar/RadarFitCard.tsx` — presentation rewrite (data wiring untouched).
+- `src/components/radar/LeadDetailDrawer.tsx` — tabs → accordion + responsive bottom-sheet.
+- `src/components/radar/SignalStrengthBars.tsx` — **new**, 5-bar component.
+- `src/components/radar/DossierPrintSheet.tsx` — **new**, print-only A4 layout.
+- `src/index.css` — halo `@keyframes`, gradient-fade utility, `urgency-pulse`, `dossier-print` print scope.
+- `src/assets/dwa-mark.svg` — **new** if absent (reuse `public/demo-logos/djc-shield.svg` styling).
 
-Candidates without `current_employer` are dropped at the adapter (license-board licensee names with no employer aren't useful as company-level prospects yet — they'll start contributing once those scanners gain employer enrichment).
+No package additions. `Accordion` and `Drawer` (vaul) primitives already in `src/components/ui/`.
 
-### 2. Wire into the parallel block
-- Add `import { runExtraTalentSources }` lazy-import next to extras-50 import (line ~1155).
-- Add a 51st entry to the `Promise.allSettled` array: `runExtraTalentSources().catch(() => ({ postings: [], bySource: {} }))`.
-- Destructure `extras100Result` at the tail of the result tuple.
-- Map its `postings` through the adapter → push survivors into `supplemental`.
-- Add `extras100: extras100Postings.length` and `extras100_by_source: extras100Result?.bySource ?? {}` to the `signals` object (line ~1253) so per-source counts land in `techalert_hunter_runs.signals` and the HTTP response.
+---
 
-### 3. Fail-soft guarantees (already mostly inherent)
-- `runExtraTalentSources` is internally `Promise.allSettled` per scanner — one source failing returns `[]`, never throws.
-- Outer `.catch(() => ({ postings: [], bySource: {} }))` on the import call covers the (theoretical) module-load failure.
-- Adapter wraps each mapping in a `try/catch` and skips the row on any error.
-- No new env var required; no new secrets.
+## Phase A — `RadarFitCard.tsx`
 
-### 4. Verify
-After deploy:
-1. `supabase--curl_edge_functions` POST `/techalert-prospect-hunter` (manual run).
-2. Confirm response JSON `signals.extras100` is a number and `signals.extras100_by_source` lists all 50 source keys (most `0`, since they're stubs — that's the expected fail-soft state).
-3. Spot-check `techalert_hunter_runs` latest row → `signals` JSONB contains the same keys.
-4. Note in CLAUDE.md "Current Session State" which extras-100 sources returned non-zero, so future work can prioritize promoting stubs to live scanners.
+1. **Signal Strength bars** (replaces `1000% conf` bug). New `<SignalStrengthBars value={confidence} />` — 5 vertical bars filled by `Math.round(confidence/2)`. Color: red `0–4`, amber `5–6`, teal `7–8`, emerald `9–10`. Trailing `{confidence}/10` micro-label.
+2. **Urgency pulse** — if `detected_at` within 24 h, the date label gets `urgency-pulse` class (teal box-shadow keyframe, 2 s loop). No red — red reads as error.
+3. **Compact 2-line header** — row 1: signal-type chip + Next-action chip + Signal Strength bars. Row 2: company name (bold) · industry · city · hiring count.
+4. **Gradient-fade "Why"** — first 140 chars of `fit_reason`, CSS `mask-image: linear-gradient(...)` fades last 24 px to `#0a1628`. Trailing `Read more →` button toggles full text.
+5. **Collapsed body** — visible by default: header, Why (faded), Revenue × Window pill row. Hidden behind `Show details ▾`: opener, objection, predicted needs, source links.
+6. **Editorial pull-quote** — opener uses `font-serif`, left rule `border-l-2 border-[#00d4ff]/60`, subtle indent. No italics, no quotes auto-curled.
+7. **Hot halo** — `fit_score ≥ 75` adds a `::before` ring with `conic-gradient` rotating 6 s linear infinite (single brand palette, no industry branching).
+8. **DWA watermark** — when hot, `<img src={dwaMark}>` absolute `top-3 right-3 w-12 h-12 opacity-[0.05] pointer-events-none`.
+9. **Haptic depress** — entire card gets `active:scale-[0.98] transition-transform duration-150`.
+10. **No fabricated scarcity** — *"X contractors viewing" deferred until real `signal_views` table exists. Building fake counts is FTC risk — rejected.*
 
-### Files to edit
-- `supabase/functions/techalert-prospect-hunter/index.ts` — only file changed (~25 lines added).
+Keep `OutreachActionBar` mounted (Call/Email/LinkedIn already wired).
 
-### Out of scope
-- Promoting any extras-100 stubs to real implementations (separate work; sources need API keys/scrapers).
-- Storing raw `ExtraPosting` candidates in a new candidates table (would require migration; flag if the user wants this instead of the company-level adapter).
+---
+
+## Phase B — `LeadDetailDrawer.tsx`
+
+11. **Responsive shell** — `useIsMobile()` hook (already in `src/hooks/use-mobile.tsx`). Mobile (`< 768 px`) → `Drawer` (vaul, swipe-down). Desktop → `Sheet side="right"`. Identical body component shared.
+12. **Accordion sections** — `<Accordion type="single" collapsible defaultValue="dossier">` with items: Dossier, Outreach, Contacts, Intel. Smooth `accordion-down` keyframes (already in tailwind config).
+13. **Sticky action header** — pinned `top-0` bar with Call · Email · Copy-link · **Send to CRM** (primary teal). "Send to CRM" calls existing `crm-webhook` push helper with the lead. *No "Claim Lead" button — these aren't marketplace leads, that wording would mislead.*
+14. **Segmented Outreach** — three-way segmented control (Email / SMS / LinkedIn). Active draft renders in a single panel with **Copy** button → `sonner` green toast `"Copied to clipboard"`.
+15. **Favicon citations** — each source URL prefixed with `<img src={`https://s2.googleusercontent.com/s2/favicons?domain=${hostname}&sz=32`} className="w-3.5 h-3.5">`, hostname (truncated 28 ch), opens `target="_blank" rel="noopener noreferrer"`.
+16. **Predicted needs as chips** — clean teal-outline chips with the need label. (Count suffix omitted — data shape doesn't carry per-need counts; faking would be dishonest.)
+17. **Intel/Contacts mini-buttons** — leading colored icon block, label + sublabel, trailing `Open ↗`. Strict `rel="noopener noreferrer"`.
+18. **Skeleton hydration** — while `radar-fit-explainer` resolves, render Dossier skeleton matching final layout (header strip, fit pill, 2-line summary, revenue/window grid). Uses `<Skeleton>` from `src/components/ui/skeleton.tsx`.
+19. **Trust footer** — single line: `Flag incorrect data →` opens `mailto:matt@detroitwebagent.com?subject=Incorrect data: {company}&body={lead URL}`. *No "refunds available" claim — only ship when there's a real policy.*
+20. **Keyboard polish** — `Esc` closes (Sheet/Drawer native), tab order: header actions → accordion triggers → first action of open section → footer link. Visible focus ring `ring-2 ring-[#00d4ff] ring-offset-2 ring-offset-[#0a1628]`.
+
+**Rename to remove "AI"** — `AI-recommended angle` → `Automated Intel`. `Analyzing fit for…` → `Reading signal strength for…`.
+
+---
+
+## Phase C — Print to PDF
+
+- New `<DossierPrintSheet />` rendered inside drawer, hidden screen / visible print:
+  - Header: DWA logo + "Lead Dossier" + generated date.
+  - Body: Company, signal type, signal strength, location, industry, predicted needs, full opener, full source URLs.
+  - Footer: QR code placeholder box (`<div class="qr-placeholder">`) — empty 80×80 px box with `Scan to reopen` caption. Real QR generation deferred (no library install in this sprint).
+- "Save as PDF" button in Dossier accordion header → `window.print()`.
+- `@media print` in `src/index.css`:
+  ```
+  body * { visibility: hidden; }
+  .dossier-print, .dossier-print * { visibility: visible; }
+  .dossier-print { position: absolute; inset: 0; padding: 1cm; color: #111; background: #fff; }
+  @page { margin: 1.2cm; size: Letter; }
+  ```
+
+---
+
+## Verification
+- Build passes (auto).
+- Manual: `/my-demand-radar` and `/my-buyer-radar` at 396 px (current viewport) and 1280 px.
+- Click each card button + each drawer link + Save as PDF.
+- Confirm no string `% conf` and no string `AI` anywhere in rendered radar UI.
+- Toast fires on Copy. CRM button posts (network tab).
+
+## Deferred for a future ticket (intentionally not in this sprint)
+- Real `signal_views` counter table → live "watching now" badge.
+- Real QR code generation (needs `qrcode` package install).
+- Refund policy copy — only after Matt confirms terms.
