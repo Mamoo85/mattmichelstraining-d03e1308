@@ -2380,3 +2380,6 @@ verify_jwt = false
 
 [functions.send-teaser-email]
 verify_jwt = false
+
+[functions.build-talent-prospect-list]
+verify_jwt = false

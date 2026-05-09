@@ -9863,6 +9863,7 @@ export type Database = {
           territory_counties: string[] | null
           tos_accepted_at: string | null
           tos_version: string | null
+          trade_focus: string[] | null
           trial_ends_at: string | null
           trial_started_at: string | null
           trial_status: string | null
@@ -9896,6 +9897,7 @@ export type Database = {
           territory_counties?: string[] | null
           tos_accepted_at?: string | null
           tos_version?: string | null
+          trade_focus?: string[] | null
           trial_ends_at?: string | null
           trial_started_at?: string | null
           trial_status?: string | null
@@ -9929,6 +9931,7 @@ export type Database = {
           territory_counties?: string[] | null
           tos_accepted_at?: string | null
           tos_version?: string | null
+          trade_focus?: string[] | null
           trial_ends_at?: string | null
           trial_started_at?: string | null
           trial_status?: string | null
@@ -21759,6 +21762,87 @@ export type Database = {
           threshold?: number
           threshold_met_at?: string | null
           trade_group?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      talent_prospect_list: {
+        Row: {
+          ceo_email: string | null
+          ceo_first_name: string | null
+          ceo_name: string | null
+          ceo_phone: string | null
+          city: string | null
+          cold_email_draft: string | null
+          cold_email_subject: string | null
+          company: string
+          created_at: string
+          domain: string | null
+          employee_count: number | null
+          fingerprint: string | null
+          id: string
+          industry: string | null
+          meta: Json | null
+          recent_signal: string | null
+          run_id: string | null
+          score: number | null
+          sent_at: string | null
+          source: string | null
+          state: string | null
+          status: string
+          trade_focus: string | null
+          updated_at: string
+        }
+        Insert: {
+          ceo_email?: string | null
+          ceo_first_name?: string | null
+          ceo_name?: string | null
+          ceo_phone?: string | null
+          city?: string | null
+          cold_email_draft?: string | null
+          cold_email_subject?: string | null
+          company: string
+          created_at?: string
+          domain?: string | null
+          employee_count?: number | null
+          fingerprint?: string | null
+          id?: string
+          industry?: string | null
+          meta?: Json | null
+          recent_signal?: string | null
+          run_id?: string | null
+          score?: number | null
+          sent_at?: string | null
+          source?: string | null
+          state?: string | null
+          status?: string
+          trade_focus?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ceo_email?: string | null
+          ceo_first_name?: string | null
+          ceo_name?: string | null
+          ceo_phone?: string | null
+          city?: string | null
+          cold_email_draft?: string | null
+          cold_email_subject?: string | null
+          company?: string
+          created_at?: string
+          domain?: string | null
+          employee_count?: number | null
+          fingerprint?: string | null
+          id?: string
+          industry?: string | null
+          meta?: Json | null
+          recent_signal?: string | null
+          run_id?: string | null
+          score?: number | null
+          sent_at?: string | null
+          source?: string | null
+          state?: string | null
+          status?: string
+          trade_focus?: string | null
           updated_at?: string
         }
         Relationships: []
