@@ -46,6 +46,8 @@ Deno.serve(async (req) => {
   const limit = Math.max(1, Math.min(HARD_MAX, isFinite(requestedLimit) ? requestedLimit : DEFAULT_LIMIT));
   const source: Source = ["no_data", "partial", "dlq", "all"].includes(body.source as string)
     ? body.source as Source : "all";
+  const reqMinScore = Number(body.min_quality_score ?? DEFAULT_MIN_QUALITY_SCORE);
+  const minScore = Math.max(0, Math.min(100, isFinite(reqMinScore) ? reqMinScore : DEFAULT_MIN_QUALITY_SCORE));
 
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
