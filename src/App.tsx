@@ -90,6 +90,7 @@ const DataSourcesHealth = lazyRetry(() => import("./pages/admin/DataSourcesHealt
 const OutreachAuditLog = lazyRetry(() => import("./pages/admin/OutreachAuditLog"));
 const OutreachQueuePage = lazyRetry(() => import("./pages/admin/OutreachQueue"));
 const TeaserEmailsAdmin = lazyRetry(() => import("./pages/dwa-admin/TeaserEmailsAdmin"));
+const TalentIngestAdmin = lazyRetry(() => import("./pages/dwa-admin/TalentIngestAdmin"));
 const OutreachObservabilityPage = lazyRetry(() => import("./pages/admin/OutreachObservability"));
 const Wave5Dashboard = lazyRetry(() => import("./pages/admin/Wave5Dashboard"));
 const AuditTimeline = lazyRetry(() => import("./pages/admin/AuditTimeline"));
