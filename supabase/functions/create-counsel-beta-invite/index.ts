@@ -83,7 +83,17 @@ Deno.serve(async (req) => {
     <p style="font-size:13px;line-height:1.5;color:#64748b;margin:24px 0 0;padding:16px;background:#f1f5f9;border-radius:6px;border-left:3px solid #00d4ff">
       <strong>Court-citable output:</strong> Every search now includes a complete source list (Bluebook-formatted) and a one-click <strong>Print PDF</strong> button so you can drop results straight into a brief or hand them to opposing counsel.
     </p>
-    <p style="font-size:12px;color:#94a3b8;margin:24px 0 0">Trial ends ${new Date(trialEndsAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}. Need help? Text Matt at (313) 992-1219.</p>
+    <div style="margin:28px 0 0;padding:20px;background:#fff7ed;border:2px solid #fb923c;border-radius:8px">
+      <h2 style="font-size:16px;margin:0 0 8px;color:#9a3412;font-weight:800">Does it work? What's missing?</h2>
+      <p style="font-size:14px;line-height:1.55;color:#7c2d12;margin:0 0 14px">
+        I built this for you${contactName ? `, ${contactName.split(" ")[0]}` : ""} — please tell me if anything is broken, confusing, or missing. Hit the button below and the email will pre-fill with a quick form (what worked, what broke, what you'd like added or done differently).
+      </p>
+      <p style="margin:0 0 10px">
+        <a href="${feedbackMailto}" style="display:inline-block;background:#ea580c;color:#ffffff;font-weight:700;padding:12px 22px;border-radius:6px;text-decoration:none;font-size:14px">Reply with feedback →</a>
+      </p>
+      <p style="font-size:12px;color:#9a3412;margin:8px 0 0">Or text me direct: <strong>(313) 992-1219</strong></p>
+    </div>
+    <p style="font-size:12px;color:#94a3b8;margin:24px 0 0">Trial ends ${new Date(trialEndsAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}.</p>
   </div>
   <div style="background:#f1f5f9;padding:16px;text-align:center;font-size:11px;color:#94a3b8">
     Detroit Web Agency · Counsel Records Search · Not a Consumer Reporting Agency. For permissible litigation use only (FCRA §1681b(a)(4)).
