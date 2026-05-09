@@ -125,43 +125,56 @@ export default function TrialHub() {
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-              {data.products.map((p) => (
-                <a
-                  key={p.key}
-                  href={p.href}
-                  className="group block rounded-xl border border-white/10 bg-[#0f1f35] p-5 hover:border-[#00d4ff]/60 transition-colors"
-                >
+              {data.products.map((p) => {
+                const isFocused = focusedTile?.key === p.key;
+                return (
                   <div
-                    className="text-[11px] uppercase tracking-widest font-semibold mb-2"
-                    style={{ color: p.accent }}
+                    key={p.key}
+                    className={`group rounded-xl border bg-[#0f1f35] p-5 transition-colors ${
+                      isFocused ? "border-[#00d4ff]" : "border-white/10 hover:border-[#00d4ff]/60"
+                    }`}
                   >
-                    Trial · Active
-                  </div>
-                  <div className="flex items-baseline justify-between">
-                    <h2 className="text-lg sm:text-xl font-bold">{p.label}</h2>
-                    {typeof p.count === "number" && (
-                      <span
-                        className="text-2xl font-extrabold tabular-nums"
+                    <a href={p.href} className="block">
+                      <div
+                        className="text-[11px] uppercase tracking-widest font-semibold mb-2"
                         style={{ color: p.accent }}
                       >
-                        {p.count}
-                      </span>
-                    )}
+                        Trial · Active{isFocused ? " · Featured" : ""}
+                      </div>
+                      <div className="flex items-baseline justify-between">
+                        <h2 className="text-lg sm:text-xl font-bold">{p.label}</h2>
+                        {typeof p.count === "number" && (
+                          <span
+                            className="text-2xl font-extrabold tabular-nums"
+                            style={{ color: p.accent }}
+                          >
+                            {p.count}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-sm text-white/80 mt-1">{p.tagline}</div>
+                      {typeof p.count === "number" && (
+                        <div className="text-xs text-white/40 mt-1">
+                          {p.count === 0 ? "no new items in last 7 days" : `new in last 7 days`}
+                        </div>
+                      )}
+                      <div
+                        className="text-sm font-semibold mt-4 group-hover:underline"
+                        style={{ color: p.accent }}
+                      >
+                        Open full dashboard →
+                      </div>
+                    </a>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); shareTile(p.key, p.label); }}
+                      className="mt-3 text-xs text-white/50 hover:text-white underline underline-offset-2"
+                    >
+                      Share this tile →
+                    </button>
                   </div>
-                  <div className="text-sm text-white/80 mt-1">{p.tagline}</div>
-                  {typeof p.count === "number" && (
-                    <div className="text-xs text-white/40 mt-1">
-                      {p.count === 0 ? "no new items in last 7 days" : `new in last 7 days`}
-                    </div>
-                  )}
-                  <div
-                    className="text-sm font-semibold mt-4 group-hover:underline"
-                    style={{ color: p.accent }}
-                  >
-                    Open full dashboard →
-                  </div>
-                </a>
-              ))}
+                );
+              })}
             </div>
 
             <div className="rounded-xl border border-white/10 bg-[#0f1f35] p-5 mt-8">
