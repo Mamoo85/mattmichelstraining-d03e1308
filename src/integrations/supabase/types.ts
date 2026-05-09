@@ -4739,6 +4739,8 @@ export type Database = {
           email: string
           firm_name: string | null
           id: string
+          invite_note: string | null
+          invited_by_admin: string | null
           monitoring_enabled: boolean
           permissible_purpose_ack_at: string | null
           phone: string | null
@@ -4747,6 +4749,7 @@ export type Database = {
           stripe_subscription_id: string | null
           tier: string
           trial_active: boolean
+          trial_ends_at: string | null
           updated_at: string
           user_id: string | null
         }
@@ -4759,6 +4762,8 @@ export type Database = {
           email: string
           firm_name?: string | null
           id?: string
+          invite_note?: string | null
+          invited_by_admin?: string | null
           monitoring_enabled?: boolean
           permissible_purpose_ack_at?: string | null
           phone?: string | null
@@ -4767,6 +4772,7 @@ export type Database = {
           stripe_subscription_id?: string | null
           tier?: string
           trial_active?: boolean
+          trial_ends_at?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -4779,6 +4785,8 @@ export type Database = {
           email?: string
           firm_name?: string | null
           id?: string
+          invite_note?: string | null
+          invited_by_admin?: string | null
           monitoring_enabled?: boolean
           permissible_purpose_ack_at?: string | null
           phone?: string | null
@@ -4787,8 +4795,87 @@ export type Database = {
           stripe_subscription_id?: string | null
           tier?: string
           trial_active?: boolean
+          trial_ends_at?: string | null
           updated_at?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      counsel_search_prospects: {
+        Row: {
+          bar_number: string | null
+          blocked: boolean | null
+          city: string | null
+          cold_emailed_at: string | null
+          converted_at: string | null
+          created_at: string
+          email: string | null
+          enriched_at: string | null
+          firm_name: string | null
+          followup_d14_sent_at: string | null
+          followup_d3_sent_at: string | null
+          followup_d7_sent_at: string | null
+          full_name: string | null
+          id: string
+          notes: string | null
+          owner_phone: string | null
+          practice_area: string | null
+          replied_at: string | null
+          reply_positive: boolean | null
+          source: string | null
+          state: string | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          bar_number?: string | null
+          blocked?: boolean | null
+          city?: string | null
+          cold_emailed_at?: string | null
+          converted_at?: string | null
+          created_at?: string
+          email?: string | null
+          enriched_at?: string | null
+          firm_name?: string | null
+          followup_d14_sent_at?: string | null
+          followup_d3_sent_at?: string | null
+          followup_d7_sent_at?: string | null
+          full_name?: string | null
+          id?: string
+          notes?: string | null
+          owner_phone?: string | null
+          practice_area?: string | null
+          replied_at?: string | null
+          reply_positive?: boolean | null
+          source?: string | null
+          state?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          bar_number?: string | null
+          blocked?: boolean | null
+          city?: string | null
+          cold_emailed_at?: string | null
+          converted_at?: string | null
+          created_at?: string
+          email?: string | null
+          enriched_at?: string | null
+          firm_name?: string | null
+          followup_d14_sent_at?: string | null
+          followup_d3_sent_at?: string | null
+          followup_d7_sent_at?: string | null
+          full_name?: string | null
+          id?: string
+          notes?: string | null
+          owner_phone?: string | null
+          practice_area?: string | null
+          replied_at?: string | null
+          reply_positive?: boolean | null
+          source?: string | null
+          state?: string | null
+          updated_at?: string
+          website?: string | null
         }
         Relationships: []
       }
@@ -4823,6 +4910,7 @@ export type Database = {
         Row: {
           aliases: string[] | null
           case_matter: string | null
+          citations: Json | null
           created_at: string
           elapsed_ms: number | null
           email: string | null
@@ -4838,11 +4926,13 @@ export type Database = {
           sources_returned: number | null
           total_hits: number | null
           user_id: string | null
+          verification_failed: Json | null
           was_paid: boolean
         }
         Insert: {
           aliases?: string[] | null
           case_matter?: string | null
+          citations?: Json | null
           created_at?: string
           elapsed_ms?: number | null
           email?: string | null
@@ -4858,11 +4948,13 @@ export type Database = {
           sources_returned?: number | null
           total_hits?: number | null
           user_id?: string | null
+          verification_failed?: Json | null
           was_paid?: boolean
         }
         Update: {
           aliases?: string[] | null
           case_matter?: string | null
+          citations?: Json | null
           created_at?: string
           elapsed_ms?: number | null
           email?: string | null
@@ -4878,6 +4970,7 @@ export type Database = {
           sources_returned?: number | null
           total_hits?: number | null
           user_id?: string | null
+          verification_failed?: Json | null
           was_paid?: boolean
         }
         Relationships: []
