@@ -21,6 +21,8 @@ type HubData = {
 
 export default function TrialHub() {
   const { token } = useParams<{ token: string }>();
+  const [searchParams] = useSearchParams();
+  const focusedKey = searchParams.get("tile");
   const [data, setData] = useState<HubData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,11 +41,51 @@ export default function TrialHub() {
     ? Math.max(0, Math.ceil((new Date(data.bundle.expires_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
     : null;
 
+  // Per-tile OG: when ?tile=key is present, OG meta features that one product.
+  const focusedTile = useMemo(
+    () => data?.products.find((p) => p.key === focusedKey) ?? null,
+    [data, focusedKey],
+  );
+
+  const ogTitle = focusedTile && data
+    ? `${focusedTile.label} — ${data.bundle.company_name}`
+    : data
+      ? `${data.bundle.company_name} — Trial Hub`
+      : "Trial Hub";
+
+  const ogDescription = focusedTile
+    ? `${focusedTile.tagline}${typeof focusedTile.count === "number" ? ` · ${focusedTile.count} new in last 7 days` : ""}`
+    : data
+      ? `All active trials for ${data.bundle.company_name}, in one place.`
+      : "Detroit Web Agency private trial dashboard.";
+
+  const shareTile = async (tileKey: string, label: string) => {
+    const url = `${window.location.origin}/trial-hub/${token}?tile=${encodeURIComponent(tileKey)}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: label, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast.success("Share link copied");
+      }
+    } catch {
+      // user cancelled — silent
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#0a1628] text-white">
       <Helmet>
-        <title>{data ? `${data.bundle.company_name} — Trial Hub` : "Trial Hub"} · Detroit Web Agency</title>
+        <title>{ogTitle} · Detroit Web Agency</title>
+        <meta name="description" content={ogDescription} />
         <meta name="robots" content="noindex,nofollow" />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={ogTitle} />
+        <meta property="og:description" content={ogDescription} />
+        <meta property="og:site_name" content="Detroit Web Agency" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={ogTitle} />
+        <meta name="twitter:description" content={ogDescription} />
       </Helmet>
 
       <header className="border-b border-white/10 bg-[#061021]">
