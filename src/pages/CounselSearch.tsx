@@ -97,6 +97,7 @@ export default function CounselSearch() {
         throw new Error(data.message || data.error);
       }
       setResult(data as SearchResult);
+      trackCounselFirstSearch();
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Search failed";
       toast.error(msg);
