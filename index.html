@@ -145,11 +145,12 @@
     (function(){
       var h=location.hostname;
       var p=location.pathname||'/';
-      // CRITICAL: Demo pages must never load on M² hostnames — redirect to DWA before any rendering
-      // to prevent the M² strength splash from flashing on contractor demo links.
-      var isDemoPath=p.indexOf('/demo-')===0;
+      // CRITICAL: DWA tool/demo paths must never load on M² hostnames — redirect to DWA before any rendering
+      // to prevent the M² strength splash from flashing on shared links (counsel beta, demos, admin, etc.).
+      var DWA_REDIRECT_PREFIXES=['/demo-','/counsel','/admin','/dwa-admin','/my-','/agency','/talent-radar','/mortgage-radar','/trade-radar','/site-radar','/buyer-radar','/demand-radar','/industry-pulse','/contractor-leads','/contractor-marketplace','/marketplace','/missed-call','/field-service','/hire-alert','/dead-lead','/roofing-radar','/hvac-radar','/plumbing-radar','/electrical-radar','/pest-control-radar','/gutters-radar','/painting-radar','/exterior-radar','/tree-radar','/restoration-radar','/foundation-radar','/claim-lead','/lead-unlocked','/lead-claimed','/ai-phone-answering','/free-tools','/free-site-scanner','/web-design-services','/detroit-web-design','/seo-guard','/bundle-revenue-suite','/all-services','/get-started','/start-trial','/billing','/manufacturing-web-design','/real-estate-web-design','/roi'];
+      var isDwaRedirectPath=DWA_REDIRECT_PREFIXES.some(function(pre){return p.indexOf(pre)===0;});
       var isM2Host=(h==='mattmichelstraining.com'||h==='www.mattmichelstraining.com'||h==='m2training.lovable.app');
-      if(isDemoPath && isM2Host){
+      if(isDwaRedirectPath && isM2Host){
         location.replace('https://www.detroitwebagent.com'+p+location.search+location.hash);
         return;
       }
