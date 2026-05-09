@@ -77,8 +77,8 @@ const DRIP_SCHEDULE = [
   { step: 4, delayDays: 14, subject: "Last message from me", label: "4_Day_15_Sent" },
 ];
 
-const BANNER_URL = "https://mattmichelstraining.com/images/dwa-email-banner.png";
-const BOAT_PHOTO_URL = "https://mattmichelstraining.com/images/matt-boat.jpg";
+const BANNER_URL = "https://www.detroitwebagent.com/images/dwa-email-banner.png";
+const BOAT_PHOTO_URL = "https://www.detroitwebagent.com/images/matt-boat.jpg";
 
 const EMAIL_SIGNATURE = `
 <div style="margin-top:32px;padding-top:20px;border-top:1px solid #1e293b;">
