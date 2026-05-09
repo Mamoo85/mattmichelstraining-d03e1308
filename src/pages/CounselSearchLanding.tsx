@@ -40,9 +40,18 @@ const TIERS = [
 ];
 
 export default function CounselSearchLanding() {
+  const [variant, setVariant] = useState<"highlight_solo" | "highlight_monitoring">("highlight_monitoring");
   const [tier, setTier] = useState<"solo" | "monitoring">("monitoring");
   const [form, setForm] = useState({ email: "", contact_name: "", firm_name: "", bar_number: "", phone: "" });
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const v = getCounselVariant();
+    setVariant(v);
+    setTier(v === "highlight_solo" ? "solo" : "monitoring");
+  }, []);
+
+  const featuredKey = variant === "highlight_solo" ? "solo" : "monitoring";
 
   const checkout = async () => {
     if (!form.email) {
@@ -51,6 +60,7 @@ export default function CounselSearchLanding() {
     }
     setLoading(true);
     try {
+      trackCounselCheckoutStarted(tier);
       const { data, error } = await supabase.functions.invoke("create-counsel-search-checkout", {
         body: { ...form, tier },
       });
