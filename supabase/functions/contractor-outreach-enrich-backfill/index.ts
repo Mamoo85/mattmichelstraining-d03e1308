@@ -121,11 +121,13 @@ Deno.serve(async (req) => {
     const remaining = limit - candidates.length;
     const { data } = await sb
       .from("contractor_outreach_prospects")
-      .select("id")
+      .select("id, quality_score")
       .eq("enrichment_status", "enriched")
       .is("suppressed_at", null) // Wave 5
       .is("email", null)
       .is("phone", null)
+      .gte("quality_score", minScore) // budget guard
+      .order("quality_score", { ascending: false, nullsFirst: false })
       .order("enrichment_confidence", { ascending: false }) // Wave 5
       .limit(remaining);
     for (const r of data ?? []) {
