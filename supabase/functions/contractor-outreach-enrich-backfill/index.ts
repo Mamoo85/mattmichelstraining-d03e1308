@@ -104,10 +104,12 @@ Deno.serve(async (req) => {
   if (source === "no_data" || source === "all") {
     const { data } = await sb
       .from("contractor_outreach_prospects")
-      .select("id")
+      .select("id, quality_score")
       .eq("enrichment_status", "no_data")
       .is("suppressed_at", null) // Wave 5: skip aged-out prospects
+      .gte("quality_score", minScore) // budget guard: don't enrich low-quality
       .lt("enriched_at", new Date(Date.now() - 14 * 86400_000).toISOString())
+      .order("quality_score", { ascending: false, nullsFirst: false })
       .order("enrichment_confidence", { ascending: false }) // Wave 5: high-confidence first
       .limit(limit);
     for (const r of data ?? []) {
