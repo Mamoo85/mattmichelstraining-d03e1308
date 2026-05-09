@@ -41,6 +41,17 @@ serve(async (req) => {
   try {
     const text = await req.text();
     const params = new URLSearchParams(text);
+
+    // Verify Twilio signature — fail closed
+    const formObj: Record<string, string> = {};
+    params.forEach((v, k) => { formObj[k] = v; });
+    const sig = req.headers.get("x-twilio-signature");
+    const fullUrl = req.url;
+    if (!TWILIO_AUTH_TOKEN || !(await verifyTwilioSignature(fullUrl, formObj, sig, TWILIO_AUTH_TOKEN))) {
+      console.warn("[inbound-sms-relay] invalid Twilio signature");
+      return new Response("Forbidden", { status: 403 });
+    }
+
     const from = params.get("From") || "Unknown";
     const to = params.get("To") || TWILIO_PHONE_NUMBER;
     const body = params.get("Body") || "";
