@@ -55,8 +55,13 @@ async function aiBlurb(s: Signal): Promise<string> {
 function renderHtml(s: Signal, blurb: string): string {
   const date = new Date(s.detected_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
   const conf = s.confidence >= 8 ? "HIGH" : s.confidence >= 5 ? "MEDIUM" : "LOW";
+  const company = escapeHtml(s.company_name);
+  const location = escapeHtml(s.location || "Metro Detroit");
+  const industry = escapeHtml(s.industry || "Industrial");
+  const roles = escapeHtml((s.hiring_roles || []).join(" · "));
+  const pitch = escapeHtml(s.recommended_pitch || "");
   return `<!DOCTYPE html>
-<html><head><meta charset="utf-8"><title>${s.company_name} — Industrial Growth Signal</title>
+<html><head><meta charset="utf-8"><title>${company} — Industrial Growth Signal</title>
 <style>
   @page { size: letter; margin: 0.6in; }
   * { box-sizing: border-box; }
@@ -92,31 +97,31 @@ function renderHtml(s: Signal, blurb: string): string {
   <div class="hdr">
     <div>
       <div class="brand">DETROIT WEB AGENCY · INDUSTRIAL GROWTH SIGNAL</div>
-      <h1>${s.company_name}<span class="conf-badge conf-${conf}">${conf} CONFIDENCE · ${s.confidence}/10</span></h1>
-      <p class="sub">${s.location || "Metro Detroit"} · ${s.industry || "Industrial"} · Detected ${date}</p>
+      <h1>${company}<span class="conf-badge conf-${conf}">${conf} CONFIDENCE · ${Number(s.confidence) || 0}/10</span></h1>
+      <p class="sub">${location} · ${industry} · Detected ${escapeHtml(date)}</p>
     </div>
-    <div class="doc-id">DOC #${s.id.slice(0, 8).toUpperCase()}<br/>${date}</div>
+    <div class="doc-id">DOC #${escapeHtml(String(s.id).slice(0, 8).toUpperCase())}<br/>${escapeHtml(date)}</div>
   </div>
 
   <div class="meta">
-    <div><strong>Hiring Volume</strong><span>${s.hiring_count}+ openings</span></div>
-    <div><strong>Confidence</strong><span>${s.confidence}/10</span></div>
-    <div><strong>Industry</strong><span>${s.industry || "—"}</span></div>
-    <div><strong>Location</strong><span>${s.location || "Michigan"}</span></div>
+    <div><strong>Hiring Volume</strong><span>${Number(s.hiring_count) || 0}+ openings</span></div>
+    <div><strong>Confidence</strong><span>${Number(s.confidence) || 0}/10</span></div>
+    <div><strong>Industry</strong><span>${industry}</span></div>
+    <div><strong>Location</strong><span>${location}</span></div>
   </div>
 
   <h2>Intelligence Summary</h2>
-  <p class="blurb">${blurb}</p>
+  <p class="blurb">${escapeHtml(blurb)}</p>
 
   <h2>Roles Being Hired</h2>
-  <div class="roles"><strong>${s.hiring_count}× ${s.hiring_roles.join(" · ")}</strong></div>
+  <div class="roles"><strong>${Number(s.hiring_count) || 0}× ${roles}</strong></div>
 
   <h2>Predicted Supplier Spend</h2>
-  <div class="needs">${s.predicted_needs.map(n => `<span class="need">${n}</span>`).join("")}</div>
+  <div class="needs">${(s.predicted_needs || []).map(n => `<span class="need">${escapeHtml(n)}</span>`).join("")}</div>
 
-  ${s.recommended_pitch ? `<h2>Recommended Approach</h2><p class="blurb" style="font-style:italic;">${s.recommended_pitch}</p>` : ""}
+  ${pitch ? `<h2>Recommended Approach</h2><p class="blurb" style="font-style:italic;">${pitch}</p>` : ""}
 
-  ${s.source_urls?.length ? `<div class="sources"><strong>Sources:</strong> ${s.source_urls.slice(0, 4).map((u, i) => `<a href="${u.startsWith("http") ? u : "https://" + u}">[${i + 1}]</a>`).join("")}</div>` : ""}
+  ${s.source_urls?.length ? `<div class="sources"><strong>Sources:</strong> ${s.source_urls.slice(0, 4).map((u, i) => `<a href="${safeHttpsUrl(u)}">[${i + 1}]</a>`).join("")}</div>` : ""}
 
   <div class="cta">
     <strong>Want 5 more like this?</strong>
@@ -125,7 +130,7 @@ function renderHtml(s: Signal, blurb: string): string {
 
   <div class="ftr">
     <span>Detroit Web Agency · detroitwebagent.com</span>
-    <span>Compiled from public hiring data · ${date}</span>
+    <span>Compiled from public hiring data · ${escapeHtml(date)}</span>
   </div>
 </div>
 </body></html>`;
