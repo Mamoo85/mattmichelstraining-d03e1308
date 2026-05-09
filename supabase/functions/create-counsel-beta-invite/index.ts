@@ -66,6 +66,9 @@ Deno.serve(async (req) => {
 
   // Branded welcome email
   if (RESEND_API_KEY) {
+    const firstName = contactName ? contactName.split(" ")[0] : "there";
+    const feedbackBody = `Hi Matt,\n\nWhat worked:\n\n\nWhat broke or felt off:\n\n\nThings I'd like added or done differently:\n\n\n— ${contactName || email}`;
+    const feedbackMailto = `mailto:matt@detroitwebagent.com?subject=${encodeURIComponent(`Counsel Search feedback — ${firstName}`)}&body=${encodeURIComponent(feedbackBody)}`;
     const html = `<!doctype html><html><body style="font-family:Arial,sans-serif;background:#f5f7fa;margin:0;padding:32px 16px;color:#0a1628">
 <div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08)">
   <div style="background:#030711;padding:24px;text-align:center">
