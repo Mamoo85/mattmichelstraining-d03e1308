@@ -21044,6 +21044,7 @@ export type Database = {
           last_result_count: number | null
           notes: string | null
           product: string
+          promoted_at: string | null
           required_secret: string | null
           source_key: string
           source_name: string
@@ -21059,6 +21060,7 @@ export type Database = {
           last_result_count?: number | null
           notes?: string | null
           product: string
+          promoted_at?: string | null
           required_secret?: string | null
           source_key: string
           source_name: string
@@ -21074,6 +21076,7 @@ export type Database = {
           last_result_count?: number | null
           notes?: string | null
           product?: string
+          promoted_at?: string | null
           required_secret?: string | null
           source_key?: string
           source_name?: string
