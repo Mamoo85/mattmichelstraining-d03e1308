@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
       status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
-  const { source, candidates = [], replay_url } = body;
+  const { source, candidates = [], replay_url, suppress_sms = false, max_hot_sms = 3 } = body;
   if (!source || !Array.isArray(candidates)) {
     return new Response(JSON.stringify({ ok: false, error: "source + candidates[] required" }), {
       status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -149,8 +149,8 @@ Deno.serve(async (req) => {
           dedupe_outcome: "new", candidate_id: ins?.id,
         });
 
-        // Hot-candidate SMS
-        if (score >= 8 && n.phone_e164 && TWILIO_FROM) {
+        // Hot-candidate SMS — capped at max_hot_sms per run, skipped in seed mode
+        if (!suppress_sms && hot_alerts < max_hot_sms && score >= 8 && n.phone_e164 && TWILIO_FROM) {
           try {
             await sendSMS(
               ADMIN_PHONE, TWILIO_FROM,

@@ -2366,5 +2366,14 @@ verify_jwt = false
 [functions.talent-ingest]
 verify_jwt = false
 
+[functions.talent-seed-bulk]
+verify_jwt = false
+
+[functions.talent-state-prospect-hunter]
+verify_jwt = false
+
+[functions.talent-outreach-threshold-check]
+verify_jwt = false
+
 [functions.talent-ingest-digest]
 verify_jwt = false

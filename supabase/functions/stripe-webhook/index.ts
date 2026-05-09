@@ -1151,6 +1151,25 @@ serve(async (req) => {
             if (insertErr) throw new Error(`hire_alert_clients upsert: ${insertErr.message}`);
             dashboardToken = insertedClient?.dashboard_token ?? null;
 
+            // Minimum-guarantee seed: ensure >=50 candidates exist for this client's state/trade
+            const targetState = (meta.target_state || "MI").toUpperCase();
+            const seedTrades = ["nursing", "home_health", "cdl_trucking"];
+            (async () => {
+              try {
+                const { count } = await sb.from("hire_alert_candidates")
+                  .select("id", { count: "exact", head: true })
+                  .in("trade", seedTrades)
+                  .eq("state", targetState);
+                if ((count ?? 0) < 50) {
+                  await fetch(`${SUPABASE_URL}/functions/v1/talent-seed-bulk`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${SUPABASE_SERVICE_KEY}` },
+                    body: JSON.stringify({ states: [targetState], limit_per_state: 200 }),
+                  });
+                }
+              } catch (_e) { /* non-blocking */ }
+            })();
+
             // Track postcard conversion if ref=postcard
             if (meta.ref === "postcard") {
               await (sb.from as any)("postcard_conversions").insert({

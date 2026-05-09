@@ -103,7 +103,7 @@ Deno.serve(async (req) => {
     const r = await fetch(`${SUPABASE_URL}/functions/v1/talent-ingest`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "Authorization": `Bearer ${SUPABASE_SERVICE_KEY}` },
-      body: JSON.stringify({ source: "npi_registry", replay_url: "talent-radar-nurse-scanner", candidates }),
+      body: JSON.stringify({ source: "npi_registry", replay_url: "talent-radar-nurse-scanner", suppress_sms: true, candidates }),
     });
     ingest = await r.json().catch(() => null);
   }

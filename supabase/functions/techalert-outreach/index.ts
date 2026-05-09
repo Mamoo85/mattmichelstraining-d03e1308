@@ -64,50 +64,76 @@ async function fireLinkedInConnect(companyName: string, ownerName: string | null
   } catch (_) { /* fire-and-forget */ }
 }
 
-function buildEmailBody(ownerName: string | null, companyName: string, role: string, isBoiler: boolean, score: number, recipientEmail = ""): string {
+const STATE_NAMES: Record<string, string> = {
+  AL:"Alabama",AK:"Alaska",AZ:"Arizona",AR:"Arkansas",CA:"California",CO:"Colorado",
+  CT:"Connecticut",DE:"Delaware",FL:"Florida",GA:"Georgia",HI:"Hawaii",ID:"Idaho",
+  IL:"Illinois",IN:"Indiana",IA:"Iowa",KS:"Kansas",KY:"Kentucky",LA:"Louisiana",
+  ME:"Maine",MD:"Maryland",MA:"Massachusetts",MI:"Michigan",MN:"Minnesota",MS:"Mississippi",
+  MO:"Missouri",MT:"Montana",NE:"Nebraska",NV:"Nevada",NH:"New Hampshire",NJ:"New Jersey",
+  NM:"New Mexico",NY:"New York",NC:"North Carolina",ND:"North Dakota",OH:"Ohio",
+  OK:"Oklahoma",OR:"Oregon",PA:"Pennsylvania",RI:"Rhode Island",SC:"South Carolina",
+  SD:"South Dakota",TN:"Tennessee",TX:"Texas",UT:"Utah",VT:"Vermont",VA:"Virginia",
+  WA:"Washington",WV:"West Virginia",WI:"Wisconsin",WY:"Wyoming",
+};
+
+function buildEmailBody(ownerName: string | null, companyName: string, role: string, isBoiler: boolean, score: number, recipientEmail = "", stateAbr = "MI", candidateCount = 0): string {
   const greeting = ownerName ? ownerName.split(" ")[0] : "there";
   const tradeLabel = isBoiler ? "boiler/stationary engineer" : role.replace(/_/g, " ");
   const jobType = isBoiler ? "licensed boiler operators" : `qualified ${tradeLabel}s`;
+  const stateName = STATE_NAMES[stateAbr] || stateAbr;
+  const isDetroit = stateAbr === "MI";
+
+  const marketLine = isDetroit
+    ? "Detroit's labor market is the tightest it's been in 5 years"
+    : `${stateName}'s labor market for ${tradeLabel}s is moving fast`;
+
+  const candidateLine = candidateCount >= 10
+    ? `We already have <strong>${candidateCount} verified ${tradeLabel}s</strong> in our ${stateName} database — `
+    : "";
 
   const card = teaserCardHtml({
     badge: "TALENT RADAR · LIVE SIGNAL",
-    headline: `${companyName} is hiring — ${jobType} are entering the market this week`,
+    headline: `${companyName} is hiring — ${jobType} are entering the ${stateName} market this week`,
     scoreLabel: `Score ${score}/10 · Active hiring signal`,
     bullets: [
-      `Live job postings detected on Indeed/ZipRecruiter for ${tradeLabel}`,
+      candidateCount >= 10
+        ? `${candidateCount} verified ${tradeLabel}s already in our ${stateName} database`
+        : `Live job postings detected for ${tradeLabel} roles in ${stateName}`,
       "Same-day candidate alerts the moment a licensed tech goes on the market",
-      "Direct contact info — call them before your competitor sees the resume",
+      "Direct contact info — reach them before your competitor sees the resume",
     ],
     ctaText: "See sample alerts →",
-    ctaUrl: `https://detroitwebagent.com/start-trial?product=techalert&email=${encodeURIComponent(recipientEmail)}&utm_source=cold_email&utm_medium=email&utm_campaign=techalert_d0`,
+    ctaUrl: `https://detroitwebagent.com/start-trial?product=techalert&email=${encodeURIComponent(recipientEmail)}&state=${stateAbr}&utm_source=cold_email&utm_medium=email&utm_campaign=techalert_d0`,
     blurContact: true,
   });
 
   return `
 <p style="color:#e6f1ff;">Hi ${greeting},</p>
-<p style="color:#e6f1ff;">I noticed <strong>${companyName}</strong> is actively hiring ${jobType} — Detroit's labor market is the tightest it's been in 5 years and the best candidates get picked up in 48 hours.</p>
-<p style="color:#e6f1ff;">I run <strong>Talent Radar</strong> (formerly TechAlert). We monitor job boards, MI licensing databases, and contractor networks 24/7 and ping you the moment a qualified candidate enters the market within 30 miles of you.</p>
+<p style="color:#e6f1ff;">I noticed <strong>${companyName}</strong> is actively hiring ${jobType} — ${marketLine} and the best candidates get picked up in 48 hours.</p>
+<p style="color:#e6f1ff;">${candidateLine}I run <strong>Talent Radar</strong>. We monitor licensing databases, job boards, and contractor networks 24/7 and ping you the moment a qualified candidate enters the market in your area.</p>
 ${card}
 <p style="color:#e6f1ff;">Most clients fill their open role within 3 weeks. Want me to send a free sample alert for ${companyName}'s area?</p>
 <p style="color:#e6f1ff;">Just reply or call/text (313) 992-1219.</p>
 <p style="color:#e6f1ff;">— Matt Michels<br>Detroit Web Agency</p>
-<p style="color:#94a3b8;font-size:13px;border-top:1px solid #1e3a5f;padding-top:12px;margin-top:16px;">P.S. — Just published a free Trades Hiring Blueprint: how to find licensed HVAC, electrical, and plumbing techs in SE Michigan before they post their resume. <a href="https://detroitwebagent.com/blueprint/hiring-blueprint.html" style="color:#00d4ff;">Get it free here →</a></p>
-<p style="color:#94a3b8;font-size:13px;padding-top:8px;margin-top:4px;">P.S. #2 — Also: 27% of contractor calls go unanswered. We built Missed-Call Catch — texts every missed caller back in 60 seconds. <a href="https://detroitwebagent.com/start-trial?product=missed_call" style="color:#00d4ff;">Start free 7-day trial →</a></p>
+<p style="color:#94a3b8;font-size:13px;border-top:1px solid #1e3a5f;padding-top:12px;margin-top:16px;">P.S. — Free Trades Hiring Blueprint: how to find licensed ${tradeLabel}s in ${stateName} before they post their resume. <a href="https://detroitwebagent.com/blueprint/hiring-blueprint.html" style="color:#00d4ff;">Get it free here →</a></p>
+<p style="color:#94a3b8;font-size:13px;padding-top:8px;margin-top:4px;">P.S. #2 — 27% of contractor calls go unanswered. We built Missed-Call Catch — texts every missed caller back in 60 seconds. <a href="https://detroitwebagent.com/start-trial?product=missed_call" style="color:#00d4ff;">Start free 7-day trial →</a></p>
 `;
 }
 
-async function sendEmail(sb: ReturnType<typeof createClient>, to: string, ownerName: string | null, companyName: string, role: string, isBoiler: boolean, score: number) {
+async function sendEmail(sb: ReturnType<typeof createClient>, to: string, ownerName: string | null, companyName: string, role: string, isBoiler: boolean, score: number, stateAbr = "MI", candidateCount = 0) {
   const firstName = ownerName ? ownerName.split(" ")[0] : null;
+  const stateName = STATE_NAMES[stateAbr] || stateAbr;
+  const tradeLabel = isBoiler ? "boiler/stationary engineer" : role.replace(/_/g, " ");
   const subject = firstName
-    ? `${firstName} — still hiring ${role.replace(/_/g, " ")}s?`
-    : `${companyName} — still hiring ${role.replace(/_/g, " ")}s?`;
+    ? `${firstName} — ${candidateCount >= 10 ? `${candidateCount} ${tradeLabel}s available in ${stateName}` : `still hiring ${tradeLabel}s?`}`
+    : `${companyName} — ${candidateCount >= 10 ? `${candidateCount} ${tradeLabel}s available in ${stateName}` : `still hiring ${tradeLabel}s?`}`;
 
   const r = await dwaColdEmail({
     to,
     subject,
-    bodyHtml: buildEmailBody(ownerName, companyName, role, isBoiler, score, to),
+    bodyHtml: buildEmailBody(ownerName, companyName, role, isBoiler, score, to, stateAbr, candidateCount),
     product: "TechAlert",
-    ctaUrl: `https://detroitwebagent.com/start-trial?product=techalert&email=${encodeURIComponent(to)}&utm_source=cold_email&utm_medium=email&utm_campaign=techalert_d0`,
+    ctaUrl: `https://detroitwebagent.com/start-trial?product=techalert&email=${encodeURIComponent(to)}&state=${stateAbr}&utm_source=cold_email&utm_medium=email&utm_campaign=techalert_d0`,
     templateName: "techalert_cold_d0",
   }, sb);
   return { ok: r.ok, err: r.error };
@@ -137,9 +163,19 @@ serve(async (req) => {
       );
     }
 
+    // Load candidate counts by state+trade_group once — used to personalize all emails this run
+    const { data: outreachStates } = await sb
+      .from("talent_outreach_states")
+      .select("state, trade_group, candidate_count")
+      .eq("outreach_active", true);
+    const candidateCountMap = new Map<string, number>();
+    for (const row of outreachStates || []) {
+      candidateCountMap.set(`${row.state}|${row.trade_group}`, row.candidate_count ?? 0);
+    }
+
     const { data: targets, error } = await sb
       .from("techalert_prospect_targets")
-      .select("id, company_name, role, is_boiler, owner_name, owner_email, score")
+      .select("id, company_name, role, is_boiler, owner_name, owner_email, score, state, city")
       .is("outreach_sent_at", null)
       .not("enriched_at", "is", null)
       .not("owner_email", "is", null)
@@ -195,7 +231,11 @@ serve(async (req) => {
         continue;
       }
 
-      const result = await sendEmail(sb, t.owner_email, t.owner_name, t.company_name, t.role, t.is_boiler, t.score ?? 5);
+      const stateAbr = (t.state || "MI").toUpperCase();
+      const tradeGroup = (t.role || "").includes("nurse") || (t.role || "").includes("rn") || (t.role || "").includes("nursing")
+        ? "nursing" : "cdl_trucking";
+      const candidateCount = candidateCountMap.get(`${stateAbr}|${tradeGroup}`) ?? 0;
+      const result = await sendEmail(sb, t.owner_email, t.owner_name, t.company_name, t.role, t.is_boiler, t.score ?? 5, stateAbr, candidateCount);
 
       if (!result.ok) {
         console.error(`[outreach] ${t.company_name}: ${result.err}`);
