@@ -52,6 +52,9 @@ export default function InvoiceGenerator({ job, contractorName, onClose }: Invoi
   const fmt = (n: number) => n.toLocaleString("en-US", { style: "currency", currency: "USD" });
 
   const handlePrint = () => {
+    const esc = (s: unknown) => String(s ?? "")
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
     const itemRows = lineItems
       .filter((item) => item.description.trim())
       .map((item) => {
@@ -60,7 +63,7 @@ export default function InvoiceGenerator({ job, contractorName, onClose }: Invoi
         const total = qty * rate;
         return `
           <tr>
-            <td>${item.description}</td>
+            <td>${esc(item.description)}</td>
             <td style="text-align:center">${qty}</td>
             <td style="text-align:right">${rate ? fmt(rate) : "—"}</td>
             <td style="text-align:right">${total ? fmt(total) : "—"}</td>
@@ -106,20 +109,20 @@ export default function InvoiceGenerator({ job, contractorName, onClose }: Invoi
 <body>
   <div class="header">
     <div>
-      <div class="brand">${contractorName || "Your Company"}</div>
+      <div class="brand">${esc(contractorName || "Your Company")}</div>
       <div class="brand-sub">Powered by FieldDesk · Detroit Web Agency</div>
     </div>
     <div class="invoice-meta">
       <div class="invoice-title">INVOICE</div>
-      <div class="invoice-num">${invoiceNumber}</div>
+      <div class="invoice-num">${esc(invoiceNumber)}</div>
     </div>
   </div>
 
   <div style="display:flex;justify-content:space-between;margin-bottom:36px">
     <div>
       <div class="section-label">Bill To</div>
-      <div class="bill-to">${clientName || "Client Name"}</div>
-      ${clientAddress ? `<div class="bill-sub">${clientAddress.replace(/\n/g, "<br>")}</div>` : ""}
+      <div class="bill-to">${esc(clientName || "Client Name")}</div>
+      ${clientAddress ? `<div class="bill-sub">${esc(clientAddress).replace(/\n/g, "<br>")}</div>` : ""}
     </div>
     <div class="dates" style="text-align:right">
       <div>
@@ -151,7 +154,7 @@ export default function InvoiceGenerator({ job, contractorName, onClose }: Invoi
     </tbody>
   </table>
 
-  ${notes ? `<div class="notes"><div class="section-label" style="margin-bottom:6px">Job Reference / Notes</div><p>${notes}</p></div>` : ""}
+  ${notes ? `<div class="notes"><div class="section-label" style="margin-bottom:6px">Job Reference / Notes</div><p>${esc(notes)}</p></div>` : ""}
 
   <div class="footer">
     Thank you for your business. Please remit payment by ${new Date(dueDate + "T12:00:00").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}.

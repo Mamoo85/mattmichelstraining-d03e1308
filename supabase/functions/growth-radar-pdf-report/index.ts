@@ -1,11 +1,19 @@
 // GR-20: Weekly client-branded PDF report (returns HTML for browser print-to-PDF)
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { requireAdmin, escapeHtml } from "../_shared/admin-auth.ts";
 
 const corsHeaders = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const auth = await requireAdmin(req);
+  if (!auth.ok) {
+    return new Response(JSON.stringify({ error: auth.error }), {
+      status: auth.status,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
   try {
     const { client_id, business_name } = await req.json().catch(() => ({}));
     const since = new Date(Date.now() - 7 * 86400_000).toISOString();
@@ -21,9 +29,9 @@ Deno.serve(async (req) => {
     const rows = ((signals as any[]) || [])
       .map(
         (s) => `<tr>
-          <td style="padding:10px;border-bottom:1px solid #1f2937;"><strong>${s.company_name}</strong><br/><span style="color:#64748b;font-size:11px">${s.county || "MI"} · ${s.signal_type}</span></td>
-          <td style="padding:10px;border-bottom:1px solid #1f2937;color:#22d3ee;font-weight:bold;text-align:center">${s.confidence}/10</td>
-          <td style="padding:10px;border-bottom:1px solid #1f2937;color:#cbd5e1;font-size:12px">${(s.recommended_pitch || "").slice(0, 200)}</td>
+          <td style="padding:10px;border-bottom:1px solid #1f2937;"><strong>${escapeHtml(s.company_name)}</strong><br/><span style="color:#64748b;font-size:11px">${escapeHtml(s.county || "MI")} · ${escapeHtml(s.signal_type)}</span></td>
+          <td style="padding:10px;border-bottom:1px solid #1f2937;color:#22d3ee;font-weight:bold;text-align:center">${Number(s.confidence) || 0}/10</td>
+          <td style="padding:10px;border-bottom:1px solid #1f2937;color:#cbd5e1;font-size:12px">${escapeHtml((s.recommended_pitch || "").slice(0, 200))}</td>
         </tr>`
       )
       .join("");
@@ -38,7 +46,7 @@ th{background:#1e3a5f;color:#22d3ee;padding:12px;text-align:left;font-size:12px;
 </style></head><body>
 <div class="hero">
   <h1 style="margin:0;border:none;color:white">Growth Radar — Weekly Intelligence</h1>
-  <p style="margin:8px 0 0 0;opacity:0.9">Prepared for ${business_name || "your team"} · Week of ${new Date().toLocaleDateString()}</p>
+  <p style="margin:8px 0 0 0;opacity:0.9">Prepared for ${escapeHtml(business_name || "your team")} · Week of ${escapeHtml(new Date().toLocaleDateString())}</p>
 </div>
 <p style="color:#94a3b8">${(signals || []).length} qualified expansion signals (confidence ≥ 7) detected across Michigan.</p>
 <table>
