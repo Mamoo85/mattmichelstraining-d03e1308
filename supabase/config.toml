@@ -2392,3 +2392,18 @@ verify_jwt = false
 
 [functions.create-counsel-search-checkout]
 verify_jwt = false
+
+[functions.create-counsel-beta-invite]
+verify_jwt = false
+
+[functions.counsel-prospect-hunter]
+verify_jwt = false
+
+[functions.counsel-prospect-enrich]
+verify_jwt = false
+
+[functions.counsel-cold-outreach]
+verify_jwt = false
+
+[functions.counsel-followup-drip]
+verify_jwt = false
