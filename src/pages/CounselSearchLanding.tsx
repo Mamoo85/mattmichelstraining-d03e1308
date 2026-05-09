@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
+import { getCounselVariant, trackCounselCheckoutStarted } from "@/lib/counselSearchAB";
 
 const TIERS = [
   {
