@@ -154,7 +154,7 @@ export default function InvoiceGenerator({ job, contractorName, onClose }: Invoi
     </tbody>
   </table>
 
-  ${notes ? `<div class="notes"><div class="section-label" style="margin-bottom:6px">Job Reference / Notes</div><p>${notes}</p></div>` : ""}
+  ${notes ? `<div class="notes"><div class="section-label" style="margin-bottom:6px">Job Reference / Notes</div><p>${esc(notes)}</p></div>` : ""}
 
   <div class="footer">
     Thank you for your business. Please remit payment by ${new Date(dueDate + "T12:00:00").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}.
