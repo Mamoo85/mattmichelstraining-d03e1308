@@ -455,8 +455,13 @@ Deno.serve(async (req) => {
 
   // Quota gate (service role for DB writes)
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-  const { data: client } = await sb.from("counsel_search_clients").select("id,active,tier,monitoring_enabled").eq("user_id", user.id).maybeSingle();
-  const isPaid = !!(client && client.active);
+  // Match client by user_id OR email (beta invitees may not have user_id linked yet)
+  const { data: clientByUser } = await sb.from("counsel_search_clients").select("id,active,tier,monitoring_enabled,trial_ends_at,email").eq("user_id", user.id).maybeSingle();
+  const { data: clientByEmail } = clientByUser ? { data: null } : await sb.from("counsel_search_clients").select("id,active,tier,monitoring_enabled,trial_ends_at,email").eq("email", (user.email || "").toLowerCase()).maybeSingle();
+  const client = clientByUser || clientByEmail;
+  // Beta tier: active until trial_ends_at; treat as paid (unlimited) while valid
+  const betaActive = client?.tier === "beta" && client?.active && client?.trial_ends_at && new Date(client.trial_ends_at).getTime() > Date.now();
+  const isPaid = !!(client && client.active && (client.tier !== "beta" || betaActive));
 
   let quotaRow: any = null;
   if (!isPaid) {
@@ -510,6 +515,20 @@ Deno.serve(async (req) => {
 
   const elapsed = Date.now() - started;
 
+  // Build court-citable citation bundle (Bluebook-style)
+  const accessedDate = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+  const citations = allHits.filter(h => h.source_url).map((h) => {
+    const blueLine = `${h.source}, ${h.title}${h.date ? ` (${h.date})` : ""} (last visited ${accessedDate}), ${h.source_url}.`;
+    return {
+      source_name: h.source,
+      source_type: h.category,
+      title: h.title,
+      url: h.source_url,
+      accessed_at: new Date().toISOString(),
+      bluebook_cite: blueLine,
+    };
+  });
+
   // Audit log
   await sb.from("counsel_searches").insert({
     user_id: user.id,
@@ -528,6 +547,7 @@ Deno.serve(async (req) => {
     high_priority_hits: highPriorityHits.length,
     elapsed_ms: elapsed,
     was_paid: isPaid,
+    citations,
   });
 
   // Quota increment for free trial users (only after successful search)
@@ -554,7 +574,10 @@ Deno.serve(async (req) => {
     high_priority_hits: highPriorityHits.length,
     summary,
     results: byCategory,
-    quota: isPaid ? { unlimited: true, tier: client?.tier } : { free_searches_used: freeSearchesUsedAfter, free_trial_limit: FREE_TRIAL_LIMIT, remaining: FREE_TRIAL_LIMIT - (freeSearchesUsedAfter || 0) },
+    citations,
+    accessed_at: new Date().toISOString(),
+    quota: isPaid ? { unlimited: true, tier: client?.tier, trial_ends_at: client?.trial_ends_at || null } : { free_searches_used: freeSearchesUsedAfter, free_trial_limit: FREE_TRIAL_LIMIT, remaining: FREE_TRIAL_LIMIT - (freeSearchesUsedAfter || 0) },
+    evidentiary_notice: "Sources are public records verified at time of access via HEAD/GET URL validation. Each citation includes a Bluebook-formatted reference. Counsel must independently authenticate per FRE 901–902 before offering any source as evidence; this report is not a substitute for certified copies for trial.",
     disclaimer: "All data is from public records. For litigation use, fraud investigation, or other bona-fide legal proceedings (FCRA §1681b(a)(4) exempt). NOT for tenant screening or employment screening without an FCRA-compliant consumer reporting agency.",
   }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 });
