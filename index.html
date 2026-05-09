@@ -223,7 +223,9 @@
         (function(){
           var h=window.location.hostname;
           var p=window.location.pathname||'/';
-          window.__isDWA=(h==='detroitwebagent.com'||h==='www.detroitwebagent.com');
+          // Treat /demo-* paths as DWA so contractor demo links never flash M² strength branding.
+          var isDemoPath=p.indexOf('/demo-')===0;
+          window.__isDWA=(h==='detroitwebagent.com'||h==='www.detroitwebagent.com'||isDemoPath);
           window.__isDJConley=(h==='pat.detroitwebagent.com');
 
           // Multi-app manifest selector — same codebase, different installable PWAs by URL.
