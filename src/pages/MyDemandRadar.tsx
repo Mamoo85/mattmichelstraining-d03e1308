@@ -99,7 +99,7 @@ export default function MyDemandRadar() {
       }
 
       const { data: c } = await (supabase.from as any)("industry_pulse_clients")
-        .select("id, email, company_name, territory_counties")
+        .select("id, email, company_name, territory_counties, target_buyer_titles, sender_name, sender_phone, sender_email")
         .eq("email", clientEmail.toLowerCase())
         .eq("active", true)
         .maybeSingle();
