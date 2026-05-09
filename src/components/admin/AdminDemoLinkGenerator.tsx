@@ -126,7 +126,7 @@ ${demo.priceRange} to get started, includes everything.
 
 Matt
 (313) 992-1219
-matt@mattmichelstraining.com`;
+matt@detroitwebagent.com`;
   return { subject, body };
 }
 
