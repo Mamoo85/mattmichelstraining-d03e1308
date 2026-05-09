@@ -223,67 +223,23 @@ export default function MyBuyerRadar() {
             </div>
           ) : (
             <div className="grid gap-3">
-              {signals.map((s) => {
-                const conf = s.confidence ?? 0;
-                const isHot = conf >= 8;
-                const isWarm = conf >= 5 && conf < 8;
-                const color = isHot ? "#22c55e" : isWarm ? "#00d4ff" : "#94a3b8";
-                return (
-                  <button
-                    type="button"
-                    key={s.id}
-                    onClick={() => setSelectedLead({
-                      id: s.id,
-                      company_name: s.company_name,
-                      location: s.location,
-                      industry: s.industry,
-                      confidence: s.confidence,
-                      predicted_needs: s.predicted_needs,
-                      detected_at: (s as any).detected_at,
-                    })}
-                    className={`group relative bg-[#0a1628] border rounded-xl p-4 transition-all hover:border-[#00d4ff]/40 hover:-translate-y-0.5 text-left w-full ${
-                      isHot ? "border-[#22c55e]/40" : "border-[#1e3a5f]"
-                    }`}
-                    style={isHot ? { boxShadow: "0 0 0 1px rgba(34,197,94,0.08), 0 0 24px -8px rgba(34,197,94,0.25)" } : undefined}
-                  >
-                    {/* Left accent bar */}
-                    <span
-                      className="absolute left-0 top-3 bottom-3 w-0.5 rounded-r"
-                      style={{ background: color }}
-                    />
-                    <div className="flex items-start justify-between gap-4 pl-2">
-                      <div className="min-w-0 flex-1">
-                        <h3 className="font-bold text-white truncate text-[15px]">{s.company_name}</h3>
-                        <p className="text-[11px] text-[#94a3b8] mt-0.5">{[s.industry, s.location].filter(Boolean).join(" · ")}</p>
-                        {s.source_summary && <p className="text-sm text-[#cbd5e1] mt-2 leading-relaxed">{s.source_summary}</p>}
-                        {s.predicted_needs && s.predicted_needs.length > 0 && (
-                          <div className="flex flex-wrap gap-1.5 mt-2.5">
-                            {s.predicted_needs.slice(0, 5).map((n) => (
-                              <span
-                                key={n}
-                                className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#00d4ff]/10 text-[#00d4ff] border border-[#00d4ff]/20"
-                              >
-                                {n}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex flex-col items-end gap-1 shrink-0">
-                        <span
-                          style={{ background: `${color}1a`, color, borderColor: `${color}40` }}
-                          className="text-[11px] font-extrabold px-2.5 py-1 rounded-md whitespace-nowrap border tabular-nums"
-                        >
-                          {conf}/10
-                        </span>
-                        {isHot && (
-                          <span className="text-[9px] uppercase tracking-widest font-bold text-[#22c55e]">● HOT</span>
-                        )}
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
+              {signals.map((s) => (
+                <RadarFitCard
+                  key={s.id}
+                  radar="buyer"
+                  signal={s as any}
+                  client={client as any}
+                  onClick={() => setSelectedLead({
+                    id: s.id,
+                    company_name: s.company_name,
+                    location: s.location,
+                    industry: s.industry,
+                    confidence: s.confidence,
+                    predicted_needs: s.predicted_needs,
+                    detected_at: (s as any).detected_at,
+                  })}
+                />
+              ))}
             </div>
           )}
         </section>
