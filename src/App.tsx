@@ -412,6 +412,7 @@ const TenantIntel = lazyRetry(() => import("./pages/TenantIntel"));
 const CounselSearchLanding = lazyRetry(() => import("./pages/CounselSearchLanding"));
 const CounselSearch = lazyRetry(() => import("./pages/CounselSearch"));
 const MyCounselSearch = lazyRetry(() => import("./pages/MyCounselSearch"));
+const AdminCounselBeta = lazyRetry(() => import("./pages/AdminCounselBeta"));
 
 const AgencyPortal = lazyRetry(() => import("./pages/AgencyPortal"));
 const LicenseMonitor = lazyRetry(() => import("./pages/LicenseMonitor"));
