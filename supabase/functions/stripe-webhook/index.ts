@@ -1689,6 +1689,65 @@ serve(async (req) => {
         await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      // === Counsel Records Search — lawyer subscription ===
+      if (meta.type === "counsel_search_subscription") {
+        const email = (meta.email || customerEmail || "").toLowerCase();
+        try {
+          if (!email) throw new Error("missing email");
+          const tier = (meta.tier === "monitoring") ? "monitoring" : "solo";
+          const dashToken = crypto.randomUUID().replace(/-/g, "");
+          const { error: upErr } = await (sb.from as any)("counsel_search_clients").upsert({
+            email,
+            contact_name: meta.contact_name || null,
+            firm_name: meta.firm_name || null,
+            bar_number: meta.bar_number || null,
+            phone: meta.phone || null,
+            tier,
+            monitoring_enabled: tier === "monitoring",
+            stripe_customer_id: session.customer as string || null,
+            stripe_subscription_id: session.subscription as string || null,
+            active: true,
+            dashboard_token: dashToken,
+            permissible_purpose_ack_at: new Date().toISOString(),
+          }, { onConflict: "email" });
+          if (upErr) throw new Error(`counsel_search_clients upsert: ${upErr.message}`);
+
+          const siteUrl = "https://detroitwebagent.com";
+          const dashLink = `${siteUrl}/my-counsel-search?email=${encodeURIComponent(email)}&token=${dashToken}`;
+          const tierLabel = tier === "monitoring" ? "$79/mo Monitoring" : "$49/mo Solo";
+
+          if (RESEND_API_KEY) {
+            await dwaEmail(email, "⚖️ Counsel Records Search is Live", `<!DOCTYPE html><html><body style="margin:0;background:#030711;font-family:-apple-system,sans-serif;">
+<div style="max-width:600px;margin:0 auto;padding:32px 16px;">
+  <div style="background:#0a1628;border:1px solid #1e3a5f;border-radius:16px;padding:32px;text-align:center;">
+    <p style="color:#00d4ff;font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase;margin:0;">⚖️ COUNSEL RECORDS SEARCH</p>
+    <h1 style="color:#fff;font-size:24px;margin:12px 0 8px;">You're In, ${meta.contact_name || "Counselor"}.</h1>
+    <p style="color:#94a3b8;font-size:14px;margin:0 0 24px;">Federal court + MI county dockets + state corrections + business filings + AI-corroborated web research, all in one click. Every result cites a verifiable public-record URL.</p>
+    <a href="${dashLink}" style="display:inline-block;background:#00d4ff;color:#000;font-weight:700;padding:14px 40px;border-radius:8px;text-decoration:none;font-size:15px;">⚖️ Open Your Search Console</a>
+    <p style="color:#64748b;font-size:12px;margin:20px 0 0;">Plan: ${tierLabel}</p>
+  </div>
+  <p style="color:#64748b;font-size:11px;text-align:center;margin-top:16px;">This tool is not a Consumer Reporting Agency. Results may not be used for FCRA-permissible purposes (employment, housing, credit). For permissible legal-research, due-diligence, and litigation-support purposes only.</p>
+  <p style="color:#475569;font-size:12px;text-align:center;margin-top:16px;">Matt Michels · Detroit Web Agency · <a href="tel:+13139921219" style="color:#00d4ff;">(313) 992-1219</a></p>
+</div></body></html>`);
+            await notifyMatt(
+              `⚖️ New Counsel Search Client — ${meta.firm_name || email} (${tierLabel})`,
+              `<p><strong>${meta.firm_name || email}</strong><br>Contact: ${meta.contact_name || "n/a"}<br>Bar #: ${meta.bar_number || "n/a"}<br>Email: ${email}<br>Phone: ${meta.phone || "n/a"}<br>Tier: ${tierLabel}</p>`
+            );
+          }
+          if (meta.phone) {
+            const firstName = ((meta.contact_name as string) || "").trim().split(/\s+/)[0] || "Counselor";
+            await sendSMS(meta.phone, "+13139921219",
+              `Hey ${firstName} — Matt at DWA. Your Counsel Records Search is live. Console: ${dashLink} — Reply STOP to opt out.`,
+              "counsel_search_welcome");
+          }
+        } catch (e) {
+          console.error("[WEBHOOK] counsel_search_subscription error:", e);
+          await notifyMatt(`🚨 Counsel Search provision FAILED — ${email || "unknown"}`, `<p>Error: ${e instanceof Error ? e.message : String(e)}</p>`).catch(() => {});
+          return new Response(JSON.stringify({ error: "provisioning failed" }), { status: 500 });
+        }
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
       // === Golden Ticket Marketplace — a la carte lead purchase ===
       if (meta.type === "marketplace_lead_purchase") {
         const email = (meta.buyer_email || customerEmail || "").toLowerCase();
