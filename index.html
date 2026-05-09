@@ -145,6 +145,14 @@
     (function(){
       var h=location.hostname;
       var p=location.pathname||'/';
+      // CRITICAL: Demo pages must never load on M² hostnames — redirect to DWA before any rendering
+      // to prevent the M² strength splash from flashing on contractor demo links.
+      var isDemoPath=p.indexOf('/demo-')===0;
+      var isM2Host=(h==='mattmichelstraining.com'||h==='www.mattmichelstraining.com'||h==='m2training.lovable.app');
+      if(isDemoPath && isM2Host){
+        location.replace('https://www.detroitwebagent.com'+p+location.search+location.hash);
+        return;
+      }
       if(h==='pat.detroitwebagent.com' || p.indexOf('/sandbox/djconley')===0){
         var dj={title:'D.J. Conley Associates, Inc.',desc:'D.J. Conley Associates, Inc. — A name you can trust for steam, hot water, heat recovery, service, parts, and products.',img:'https://pat.detroitwebagent.com/demo-djconley-current/djc-51-logo.png',url:'https://pat.detroitwebagent.com/',site:'D.J. Conley Associates, Inc.'};
         document.title=dj.title;
@@ -158,7 +166,8 @@
         return;
       }
       // DWA product paths — never show M² branding even on M² hostnames (preview/lovable.app).
-      var DWA_PATH_PREFIXES=['/agency','/hire-alert','/field-service','/contractor-leads','/dead-lead','/missed-call','/my-','/talent-radar','/mortgage-radar','/trade-radar','/site-radar','/buyer-radar','/growth-radar','/demand-radar','/industry-pulse','/roofing-radar','/hvac-radar','/plumbing-radar','/electrical-radar','/pest-control-radar','/gutters-radar','/painting-radar','/exterior-radar','/tree-radar','/restoration-radar','/demo-junk-radar','/foundation-radar','/claim-lead','/contractor-marketplace','/marketplace','/start-trial','/billing','/bundle-revenue-suite','/all-services','/free-tools','/free-site-scanner','/web-design-services','/detroit-web-design','/get-started','/seo-guard','/lead-unlocked','/lead-claimed','/ai-phone-answering','/manufacturing-web-design','/real-estate-web-design','/dwa-admin','/roi','/my-techalert'];
+      // /demo- prefix added so all contractor demos (demo-roofing, demo-restaurant, etc.) are DWA.
+      var DWA_PATH_PREFIXES=['/demo-','/agency','/hire-alert','/field-service','/contractor-leads','/dead-lead','/missed-call','/my-','/talent-radar','/mortgage-radar','/trade-radar','/site-radar','/buyer-radar','/growth-radar','/demand-radar','/industry-pulse','/roofing-radar','/hvac-radar','/plumbing-radar','/electrical-radar','/pest-control-radar','/gutters-radar','/painting-radar','/exterior-radar','/tree-radar','/restoration-radar','/foundation-radar','/claim-lead','/contractor-marketplace','/marketplace','/start-trial','/billing','/bundle-revenue-suite','/all-services','/free-tools','/free-site-scanner','/web-design-services','/detroit-web-design','/get-started','/seo-guard','/lead-unlocked','/lead-claimed','/ai-phone-answering','/manufacturing-web-design','/real-estate-web-design','/dwa-admin','/roi','/my-techalert'];
       var isDwaPath=DWA_PATH_PREFIXES.some(function(pre){return p.indexOf(pre)===0;});
       // Default static tags are DWA. Swap to M² only on M² hostnames AND non-DWA paths.
       if(!isDwaPath && (h==='mattmichelstraining.com'||h==='www.mattmichelstraining.com'||h==='m2training.lovable.app')){
@@ -214,7 +223,9 @@
         (function(){
           var h=window.location.hostname;
           var p=window.location.pathname||'/';
-          window.__isDWA=(h==='detroitwebagent.com'||h==='www.detroitwebagent.com');
+          // Treat /demo-* paths as DWA so contractor demo links never flash M² strength branding.
+          var isDemoPath=p.indexOf('/demo-')===0;
+          window.__isDWA=(h==='detroitwebagent.com'||h==='www.detroitwebagent.com'||isDemoPath);
           window.__isDJConley=(h==='pat.detroitwebagent.com');
 
           // Multi-app manifest selector — same codebase, different installable PWAs by URL.
