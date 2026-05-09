@@ -44,6 +44,16 @@ serve(async (req) => {
   // Twilio sends form-encoded POST
   const body = await req.text();
   const params = new URLSearchParams(body);
+
+  // Verify Twilio signature — fail closed
+  const formObj: Record<string, string> = {};
+  params.forEach((v, k) => { formObj[k] = v; });
+  const sig = req.headers.get("x-twilio-signature");
+  if (!TWILIO_AUTH_TOKEN || !(await verifyTwilioSignature(req.url, formObj, sig, TWILIO_AUTH_TOKEN))) {
+    console.warn("[slow-day-trigger] invalid Twilio signature");
+    return new Response("Forbidden", { status: 403 });
+  }
+
   const fromPhone = params.get("From") || "";
   const messageBody = params.get("Body")?.trim().toUpperCase() || "";
 
