@@ -2383,3 +2383,6 @@ verify_jwt = false
 
 [functions.build-talent-prospect-list]
 verify_jwt = false
+
+[functions.notify-source-promoted]
+verify_jwt = false

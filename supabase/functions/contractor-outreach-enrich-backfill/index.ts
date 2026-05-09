@@ -28,6 +28,9 @@ const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const HARD_MAX = 250;
 const DEFAULT_LIMIT = 50;
 const MAX_REPLAYS_PER_PROSPECT = 3;
+// Score-threshold cap: refuse to burn enrichment budget on low-quality prospects.
+// Override per-call via body.min_quality_score (0–100).
+const DEFAULT_MIN_QUALITY_SCORE = 40;
 
 type Source = "no_data" | "partial" | "dlq" | "all";
 
@@ -43,6 +46,8 @@ Deno.serve(async (req) => {
   const limit = Math.max(1, Math.min(HARD_MAX, isFinite(requestedLimit) ? requestedLimit : DEFAULT_LIMIT));
   const source: Source = ["no_data", "partial", "dlq", "all"].includes(body.source as string)
     ? body.source as Source : "all";
+  const reqMinScore = Number(body.min_quality_score ?? DEFAULT_MIN_QUALITY_SCORE);
+  const minScore = Math.max(0, Math.min(100, isFinite(reqMinScore) ? reqMinScore : DEFAULT_MIN_QUALITY_SCORE));
 
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
@@ -99,10 +104,12 @@ Deno.serve(async (req) => {
   if (source === "no_data" || source === "all") {
     const { data } = await sb
       .from("contractor_outreach_prospects")
-      .select("id")
+      .select("id, quality_score")
       .eq("enrichment_status", "no_data")
       .is("suppressed_at", null) // Wave 5: skip aged-out prospects
+      .gte("quality_score", minScore) // budget guard: don't enrich low-quality
       .lt("enriched_at", new Date(Date.now() - 14 * 86400_000).toISOString())
+      .order("quality_score", { ascending: false, nullsFirst: false })
       .order("enrichment_confidence", { ascending: false }) // Wave 5: high-confidence first
       .limit(limit);
     for (const r of data ?? []) {
@@ -114,11 +121,13 @@ Deno.serve(async (req) => {
     const remaining = limit - candidates.length;
     const { data } = await sb
       .from("contractor_outreach_prospects")
-      .select("id")
+      .select("id, quality_score")
       .eq("enrichment_status", "enriched")
       .is("suppressed_at", null) // Wave 5
       .is("email", null)
       .is("phone", null)
+      .gte("quality_score", minScore) // budget guard
+      .order("quality_score", { ascending: false, nullsFirst: false })
       .order("enrichment_confidence", { ascending: false }) // Wave 5
       .limit(remaining);
     for (const r of data ?? []) {
@@ -165,6 +174,7 @@ Deno.serve(async (req) => {
       total_candidates: candidates.length,
       eligible: eligible.length,
       skipped_max_replays,
+      min_quality_score: minScore,
       aged_count,
       preview: eligible.slice(0, 10),
       duration_ms: Date.now() - startedAt,
@@ -216,6 +226,7 @@ Deno.serve(async (req) => {
     succeeded,
     failed,
     skipped_max_replays,
+    min_quality_score: minScore,
     aged_count,
     errors: errors.slice(0, 20),
     duration_ms: Date.now() - startedAt,

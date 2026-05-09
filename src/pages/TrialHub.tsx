@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useParams, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
+import { toast } from "sonner";
 
 const SUPABASE_URL = "https://eauvubfpanpeuxsrqesu.supabase.co";
 
@@ -20,6 +21,8 @@ type HubData = {
 
 export default function TrialHub() {
   const { token } = useParams<{ token: string }>();
+  const [searchParams] = useSearchParams();
+  const focusedKey = searchParams.get("tile");
   const [data, setData] = useState<HubData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,11 +41,51 @@ export default function TrialHub() {
     ? Math.max(0, Math.ceil((new Date(data.bundle.expires_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
     : null;
 
+  // Per-tile OG: when ?tile=key is present, OG meta features that one product.
+  const focusedTile = useMemo(
+    () => data?.products.find((p) => p.key === focusedKey) ?? null,
+    [data, focusedKey],
+  );
+
+  const ogTitle = focusedTile && data
+    ? `${focusedTile.label} — ${data.bundle.company_name}`
+    : data
+      ? `${data.bundle.company_name} — Trial Hub`
+      : "Trial Hub";
+
+  const ogDescription = focusedTile
+    ? `${focusedTile.tagline}${typeof focusedTile.count === "number" ? ` · ${focusedTile.count} new in last 7 days` : ""}`
+    : data
+      ? `All active trials for ${data.bundle.company_name}, in one place.`
+      : "Detroit Web Agency private trial dashboard.";
+
+  const shareTile = async (tileKey: string, label: string) => {
+    const url = `${window.location.origin}/trial-hub/${token}?tile=${encodeURIComponent(tileKey)}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: label, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast.success("Share link copied");
+      }
+    } catch {
+      // user cancelled — silent
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#0a1628] text-white">
       <Helmet>
-        <title>{data ? `${data.bundle.company_name} — Trial Hub` : "Trial Hub"} · Detroit Web Agency</title>
+        <title>{ogTitle} · Detroit Web Agency</title>
+        <meta name="description" content={ogDescription} />
         <meta name="robots" content="noindex,nofollow" />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={ogTitle} />
+        <meta property="og:description" content={ogDescription} />
+        <meta property="og:site_name" content="Detroit Web Agency" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={ogTitle} />
+        <meta name="twitter:description" content={ogDescription} />
       </Helmet>
 
       <header className="border-b border-white/10 bg-[#061021]">
@@ -82,43 +125,56 @@ export default function TrialHub() {
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-              {data.products.map((p) => (
-                <a
-                  key={p.key}
-                  href={p.href}
-                  className="group block rounded-xl border border-white/10 bg-[#0f1f35] p-5 hover:border-[#00d4ff]/60 transition-colors"
-                >
+              {data.products.map((p) => {
+                const isFocused = focusedTile?.key === p.key;
+                return (
                   <div
-                    className="text-[11px] uppercase tracking-widest font-semibold mb-2"
-                    style={{ color: p.accent }}
+                    key={p.key}
+                    className={`group rounded-xl border bg-[#0f1f35] p-5 transition-colors ${
+                      isFocused ? "border-[#00d4ff]" : "border-white/10 hover:border-[#00d4ff]/60"
+                    }`}
                   >
-                    Trial · Active
-                  </div>
-                  <div className="flex items-baseline justify-between">
-                    <h2 className="text-lg sm:text-xl font-bold">{p.label}</h2>
-                    {typeof p.count === "number" && (
-                      <span
-                        className="text-2xl font-extrabold tabular-nums"
+                    <a href={p.href} className="block">
+                      <div
+                        className="text-[11px] uppercase tracking-widest font-semibold mb-2"
                         style={{ color: p.accent }}
                       >
-                        {p.count}
-                      </span>
-                    )}
+                        Trial · Active{isFocused ? " · Featured" : ""}
+                      </div>
+                      <div className="flex items-baseline justify-between">
+                        <h2 className="text-lg sm:text-xl font-bold">{p.label}</h2>
+                        {typeof p.count === "number" && (
+                          <span
+                            className="text-2xl font-extrabold tabular-nums"
+                            style={{ color: p.accent }}
+                          >
+                            {p.count}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-sm text-white/80 mt-1">{p.tagline}</div>
+                      {typeof p.count === "number" && (
+                        <div className="text-xs text-white/40 mt-1">
+                          {p.count === 0 ? "no new items in last 7 days" : `new in last 7 days`}
+                        </div>
+                      )}
+                      <div
+                        className="text-sm font-semibold mt-4 group-hover:underline"
+                        style={{ color: p.accent }}
+                      >
+                        Open full dashboard →
+                      </div>
+                    </a>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); shareTile(p.key, p.label); }}
+                      className="mt-3 text-xs text-white/50 hover:text-white underline underline-offset-2"
+                    >
+                      Share this tile →
+                    </button>
                   </div>
-                  <div className="text-sm text-white/80 mt-1">{p.tagline}</div>
-                  {typeof p.count === "number" && (
-                    <div className="text-xs text-white/40 mt-1">
-                      {p.count === 0 ? "no new items in last 7 days" : `new in last 7 days`}
-                    </div>
-                  )}
-                  <div
-                    className="text-sm font-semibold mt-4 group-hover:underline"
-                    style={{ color: p.accent }}
-                  >
-                    Open full dashboard →
-                  </div>
-                </a>
-              ))}
+                );
+              })}
             </div>
 
             <div className="rounded-xl border border-white/10 bg-[#0f1f35] p-5 mt-8">
