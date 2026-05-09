@@ -20,7 +20,7 @@ const MAX_LEADS_PER_RUN = 35;
 const SEND_DELAY_MS = 500;
 
 // ── INDUSTRY → DEMO LINK MAPPING ──
-const SITE_BASE = "https://www.mattmichelstraining.com";
+const SITE_BASE = "https://www.detroitwebagent.com";
 const DEMO_MAP: { keywords: string[]; path: string; label: string }[] = [
   { keywords: ["dental", "dentist", "orthodont", "prosthodont", "oral"], path: "/demo-dental", label: "dental practice" },
   { keywords: ["medical", "clinic", "doctor", "physician", "health", "urgent care", "chiropr"], path: "/demo-clinic", label: "medical clinic" },
