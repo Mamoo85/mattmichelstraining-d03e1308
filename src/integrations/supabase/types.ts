@@ -21715,6 +21715,54 @@ export type Database = {
           },
         ]
       }
+      talent_outreach_states: {
+        Row: {
+          candidate_count: number
+          created_at: string
+          emails_sent: number
+          id: string
+          last_count_at: string | null
+          last_hunt_at: string | null
+          outreach_active: boolean
+          prospects_added: number
+          state: string
+          threshold: number
+          threshold_met_at: string | null
+          trade_group: string
+          updated_at: string
+        }
+        Insert: {
+          candidate_count?: number
+          created_at?: string
+          emails_sent?: number
+          id?: string
+          last_count_at?: string | null
+          last_hunt_at?: string | null
+          outreach_active?: boolean
+          prospects_added?: number
+          state: string
+          threshold?: number
+          threshold_met_at?: string | null
+          trade_group: string
+          updated_at?: string
+        }
+        Update: {
+          candidate_count?: number
+          created_at?: string
+          emails_sent?: number
+          id?: string
+          last_count_at?: string | null
+          last_hunt_at?: string | null
+          outreach_active?: boolean
+          prospects_added?: number
+          state?: string
+          threshold?: number
+          threshold_met_at?: string | null
+          trade_group?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       team_feed: {
         Row: {
           content: string
