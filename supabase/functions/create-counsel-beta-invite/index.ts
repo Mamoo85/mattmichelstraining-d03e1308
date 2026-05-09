@@ -66,6 +66,9 @@ Deno.serve(async (req) => {
 
   // Branded welcome email
   if (RESEND_API_KEY) {
+    const firstName = contactName ? contactName.split(" ")[0] : "there";
+    const feedbackBody = `Hi Matt,\n\nWhat worked:\n\n\nWhat broke or felt off:\n\n\nThings I'd like added or done differently:\n\n\n— ${contactName || email}`;
+    const feedbackMailto = `mailto:matt@detroitwebagent.com?subject=${encodeURIComponent(`Counsel Search feedback — ${firstName}`)}&body=${encodeURIComponent(feedbackBody)}`;
     const html = `<!doctype html><html><body style="font-family:Arial,sans-serif;background:#f5f7fa;margin:0;padding:32px 16px;color:#0a1628">
 <div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08)">
   <div style="background:#030711;padding:24px;text-align:center">
@@ -83,7 +86,17 @@ Deno.serve(async (req) => {
     <p style="font-size:13px;line-height:1.5;color:#64748b;margin:24px 0 0;padding:16px;background:#f1f5f9;border-radius:6px;border-left:3px solid #00d4ff">
       <strong>Court-citable output:</strong> Every search now includes a complete source list (Bluebook-formatted) and a one-click <strong>Print PDF</strong> button so you can drop results straight into a brief or hand them to opposing counsel.
     </p>
-    <p style="font-size:12px;color:#94a3b8;margin:24px 0 0">Trial ends ${new Date(trialEndsAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}. Need help? Text Matt at (313) 992-1219.</p>
+    <div style="margin:28px 0 0;padding:20px;background:#fff7ed;border:2px solid #fb923c;border-radius:8px">
+      <h2 style="font-size:16px;margin:0 0 8px;color:#9a3412;font-weight:800">Does it work? What's missing?</h2>
+      <p style="font-size:14px;line-height:1.55;color:#7c2d12;margin:0 0 14px">
+        I built this for you${contactName ? `, ${contactName.split(" ")[0]}` : ""} — please tell me if anything is broken, confusing, or missing. Hit the button below and the email will pre-fill with a quick form (what worked, what broke, what you'd like added or done differently).
+      </p>
+      <p style="margin:0 0 10px">
+        <a href="${feedbackMailto}" style="display:inline-block;background:#ea580c;color:#ffffff;font-weight:700;padding:12px 22px;border-radius:6px;text-decoration:none;font-size:14px">Reply with feedback →</a>
+      </p>
+      <p style="font-size:12px;color:#9a3412;margin:8px 0 0">Or text me direct: <strong>(313) 992-1219</strong></p>
+    </div>
+    <p style="font-size:12px;color:#94a3b8;margin:24px 0 0">Trial ends ${new Date(trialEndsAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}.</p>
   </div>
   <div style="background:#f1f5f9;padding:16px;text-align:center;font-size:11px;color:#94a3b8">
     Detroit Web Agency · Counsel Records Search · Not a Consumer Reporting Agency. For permissible litigation use only (FCRA §1681b(a)(4)).

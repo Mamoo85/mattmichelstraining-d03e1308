@@ -2407,3 +2407,4 @@ verify_jwt = false
 
 [functions.counsel-followup-drip]
 verify_jwt = false
+
