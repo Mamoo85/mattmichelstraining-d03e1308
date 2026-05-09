@@ -126,7 +126,7 @@ This is monetizable. But it requires the rebuild below.
 - Playwright spec for the search → result → PDF-export flow.
 - Manual QA pass with 10 real MI names (mix: known-clean, known-defendant, known-business-owner). Document false positives, fix or filter them.
 
-### Phase 6 — Soft launch with Pat / your one client
+### Phase 6 — Soft launch with Jess / your one client
 
 - Hand the trial to your existing lawyer client. Have them run 20 real searches over 2 weeks. Capture every "this is wrong" or "I wish it did X."
 - Iterate. Then ask them for one referral to another MI lawyer.
@@ -147,6 +147,6 @@ This is monetizable. But it requires the rebuild below.
 
 1. **Kill it, or rebuild narrow as MI Counsel Records Search?** I recommend rebuild — your MI ArcGIS coverage is genuinely a moat in this niche. Rebuild it. 
 2. **$49/mo flat, or $49/$79 two-tier (unlimited + monitoring)?** I recommend two-tier; monitoring is the sticky upsell. Perfect
-3. **Soft-launch with Pat first, or build out fully then launch?** I strongly recommend soft-launch with Pat after Phase 4. He'll find the gaps no audit can. Full build and my lawyer friends name is Jess not pat 
+3. **Soft-launch with Jess first, or build out fully then launch?** I strongly recommend soft-launch with Pat after Phase 4. She'll find the gaps no audit can. Full build and my lawyer friends name is Jess not pat 
 
-If you give me a green light on the rebuild path and the pricing, I'll execute Phase 1 + 2 first (rebrand, auth, paywall, 7-search trial) — that gets you something demo-able to Pat in one build cycle. Phases 3–5 follow once you've validated demand.
+If you give me a green light on the rebuild path and the pricing, I'll execute Phase 1 + 2 first (rebrand, auth, paywall, 7-search trial) — that gets you something demo-able to Jess in one build cycle. Phases 3–5 follow once you've validated demand.
