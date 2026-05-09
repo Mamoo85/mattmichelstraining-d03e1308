@@ -9517,13 +9517,16 @@ export type Database = {
           days_on_radar: number | null
           do_not_contact: boolean
           do_not_contact_at: string | null
+          domain_normalized: string | null
           email: string | null
+          email_normalized: string | null
           embedding: string | null
           employer_domain_breached_recently: boolean | null
           employer_headcount_delta: number | null
           enriched_at: string | null
           enrichment_status: string | null
           facebook_url: string | null
+          fingerprint: string | null
           first_eligible_at: string | null
           first_seen_at: string | null
           flight_risk: string | null
@@ -9533,11 +9536,13 @@ export type Database = {
           hiring_recommendation: string | null
           human_summary: string | null
           id: string
+          ingest_confidence: number | null
           is_company_name: boolean | null
           is_demo_record: boolean | null
           job_stability_index: number | null
           last_dispatched_at: string | null
           last_seen_at: string | null
+          last_source: string | null
           lat: number | null
           license_expiry: string | null
           license_issued_at: string | null
@@ -9549,7 +9554,9 @@ export type Database = {
           marketplace_enriched_at: string | null
           metro: string | null
           name: string
+          name_normalized: string | null
           nearby_signal_count: number | null
+          needs_review: boolean | null
           nursys_enrolled: boolean
           nursys_enrolled_at: string | null
           nursys_last_checked_at: string | null
@@ -9557,7 +9564,9 @@ export type Database = {
           password_compromised: boolean | null
           personal_email_primary: boolean | null
           phone: string | null
+          phone_e164: string | null
           profile_photo_url: string | null
+          provenance: Json | null
           provenance_screenshot_paths: Json | null
           provenance_source_urls: Json | null
           qualifications_summary: string | null
@@ -9571,6 +9580,7 @@ export type Database = {
           social_profiles: Json | null
           source: string | null
           source_count: number | null
+          sources: string[] | null
           state: string | null
           status: string | null
           suggested_opener: Json | null
@@ -9599,13 +9609,16 @@ export type Database = {
           days_on_radar?: number | null
           do_not_contact?: boolean
           do_not_contact_at?: string | null
+          domain_normalized?: string | null
           email?: string | null
+          email_normalized?: string | null
           embedding?: string | null
           employer_domain_breached_recently?: boolean | null
           employer_headcount_delta?: number | null
           enriched_at?: string | null
           enrichment_status?: string | null
           facebook_url?: string | null
+          fingerprint?: string | null
           first_eligible_at?: string | null
           first_seen_at?: string | null
           flight_risk?: string | null
@@ -9615,11 +9628,13 @@ export type Database = {
           hiring_recommendation?: string | null
           human_summary?: string | null
           id?: string
+          ingest_confidence?: number | null
           is_company_name?: boolean | null
           is_demo_record?: boolean | null
           job_stability_index?: number | null
           last_dispatched_at?: string | null
           last_seen_at?: string | null
+          last_source?: string | null
           lat?: number | null
           license_expiry?: string | null
           license_issued_at?: string | null
@@ -9631,7 +9646,9 @@ export type Database = {
           marketplace_enriched_at?: string | null
           metro?: string | null
           name: string
+          name_normalized?: string | null
           nearby_signal_count?: number | null
+          needs_review?: boolean | null
           nursys_enrolled?: boolean
           nursys_enrolled_at?: string | null
           nursys_last_checked_at?: string | null
@@ -9639,7 +9656,9 @@ export type Database = {
           password_compromised?: boolean | null
           personal_email_primary?: boolean | null
           phone?: string | null
+          phone_e164?: string | null
           profile_photo_url?: string | null
+          provenance?: Json | null
           provenance_screenshot_paths?: Json | null
           provenance_source_urls?: Json | null
           qualifications_summary?: string | null
@@ -9653,6 +9672,7 @@ export type Database = {
           social_profiles?: Json | null
           source?: string | null
           source_count?: number | null
+          sources?: string[] | null
           state?: string | null
           status?: string | null
           suggested_opener?: Json | null
@@ -9681,13 +9701,16 @@ export type Database = {
           days_on_radar?: number | null
           do_not_contact?: boolean
           do_not_contact_at?: string | null
+          domain_normalized?: string | null
           email?: string | null
+          email_normalized?: string | null
           embedding?: string | null
           employer_domain_breached_recently?: boolean | null
           employer_headcount_delta?: number | null
           enriched_at?: string | null
           enrichment_status?: string | null
           facebook_url?: string | null
+          fingerprint?: string | null
           first_eligible_at?: string | null
           first_seen_at?: string | null
           flight_risk?: string | null
@@ -9697,11 +9720,13 @@ export type Database = {
           hiring_recommendation?: string | null
           human_summary?: string | null
           id?: string
+          ingest_confidence?: number | null
           is_company_name?: boolean | null
           is_demo_record?: boolean | null
           job_stability_index?: number | null
           last_dispatched_at?: string | null
           last_seen_at?: string | null
+          last_source?: string | null
           lat?: number | null
           license_expiry?: string | null
           license_issued_at?: string | null
@@ -9713,7 +9738,9 @@ export type Database = {
           marketplace_enriched_at?: string | null
           metro?: string | null
           name?: string
+          name_normalized?: string | null
           nearby_signal_count?: number | null
+          needs_review?: boolean | null
           nursys_enrolled?: boolean
           nursys_enrolled_at?: string | null
           nursys_last_checked_at?: string | null
@@ -9721,7 +9748,9 @@ export type Database = {
           password_compromised?: boolean | null
           personal_email_primary?: boolean | null
           phone?: string | null
+          phone_e164?: string | null
           profile_photo_url?: string | null
+          provenance?: Json | null
           provenance_screenshot_paths?: Json | null
           provenance_source_urls?: Json | null
           qualifications_summary?: string | null
@@ -9735,6 +9764,7 @@ export type Database = {
           social_profiles?: Json | null
           source?: string | null
           source_count?: number | null
+          sources?: string[] | null
           state?: string | null
           status?: string | null
           suggested_opener?: Json | null
@@ -9914,11 +9944,17 @@ export type Database = {
           created_at: string | null
           error_message: string | null
           errors: Json | null
+          errors_detail: Json | null
           id: string
           lara_status: string | null
+          merged: number | null
           new_candidates: number | null
+          rejected: number | null
+          replay_url: string | null
           run_at: string | null
+          skipped: number | null
           source: string | null
+          source_label: string | null
           started_at: string | null
           status: string | null
         }
@@ -9930,11 +9966,17 @@ export type Database = {
           created_at?: string | null
           error_message?: string | null
           errors?: Json | null
+          errors_detail?: Json | null
           id?: string
           lara_status?: string | null
+          merged?: number | null
           new_candidates?: number | null
+          rejected?: number | null
+          replay_url?: string | null
           run_at?: string | null
+          skipped?: number | null
           source?: string | null
+          source_label?: string | null
           started_at?: string | null
           status?: string | null
         }
@@ -9946,11 +9988,17 @@ export type Database = {
           created_at?: string | null
           error_message?: string | null
           errors?: Json | null
+          errors_detail?: Json | null
           id?: string
           lara_status?: string | null
+          merged?: number | null
           new_candidates?: number | null
+          rejected?: number | null
+          replay_url?: string | null
           run_at?: string | null
+          skipped?: number | null
           source?: string | null
+          source_label?: string | null
           started_at?: string | null
           status?: string | null
         }
@@ -21612,6 +21660,60 @@ export type Database = {
           status?: string
         }
         Relationships: []
+      }
+      talent_ingest_raw: {
+        Row: {
+          candidate_id: string | null
+          dedupe_outcome: string | null
+          fingerprint: string | null
+          id: string
+          payload: Json
+          received_at: string
+          rejection_reason: string | null
+          run_id: string | null
+          source: string
+          source_record_id: string | null
+        }
+        Insert: {
+          candidate_id?: string | null
+          dedupe_outcome?: string | null
+          fingerprint?: string | null
+          id?: string
+          payload?: Json
+          received_at?: string
+          rejection_reason?: string | null
+          run_id?: string | null
+          source: string
+          source_record_id?: string | null
+        }
+        Update: {
+          candidate_id?: string | null
+          dedupe_outcome?: string | null
+          fingerprint?: string | null
+          id?: string
+          payload?: Json
+          received_at?: string
+          rejection_reason?: string | null
+          run_id?: string | null
+          source?: string
+          source_record_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "talent_ingest_raw_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "hire_alert_candidates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "talent_ingest_raw_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "hire_alert_runs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       team_feed: {
         Row: {
