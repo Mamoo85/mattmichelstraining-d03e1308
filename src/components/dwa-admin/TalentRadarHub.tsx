@@ -28,6 +28,9 @@ export default function TalentRadarHub() {
           <TabsTrigger value="waterfall" className="data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-300">
             💧 Waterfall
           </TabsTrigger>
+          <TabsTrigger value="ingest" className="data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-300">
+            🔄 Ingest Pipeline
+          </TabsTrigger>
           <TabsTrigger value="live-log" className="data-[state=active]:bg-rose-500/20 data-[state=active]:text-rose-300">
             🔴 Live Log
           </TabsTrigger>
@@ -41,6 +44,12 @@ export default function TalentRadarHub() {
 
         <TabsContent value="waterfall" className="mt-4">
           <WaterfallDiagnostics scannerFilter={["hire-alert-scanner"]} />
+        </TabsContent>
+
+        <TabsContent value="ingest" className="mt-4">
+          <Suspense fallback={<div className="text-white/40 p-6">Loading ingest…</div>}>
+            <AdminTalentIngest />
+          </Suspense>
         </TabsContent>
 
         <TabsContent value="live-log" className="mt-4">
