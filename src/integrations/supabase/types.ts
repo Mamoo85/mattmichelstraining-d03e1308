@@ -4684,6 +4684,204 @@ export type Database = {
         }
         Relationships: []
       }
+      counsel_saved_subjects: {
+        Row: {
+          active: boolean
+          aliases: string[] | null
+          case_matter: string | null
+          city: string | null
+          created_at: string
+          email: string | null
+          id: string
+          last_checked_at: string | null
+          last_hit_count: number | null
+          state: string | null
+          subject_name: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          aliases?: string[] | null
+          case_matter?: string | null
+          city?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          last_checked_at?: string | null
+          last_hit_count?: number | null
+          state?: string | null
+          subject_name: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          aliases?: string[] | null
+          case_matter?: string | null
+          city?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          last_checked_at?: string | null
+          last_hit_count?: number | null
+          state?: string | null
+          subject_name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      counsel_search_clients: {
+        Row: {
+          active: boolean
+          bar_number: string | null
+          contact_name: string | null
+          created_at: string
+          dashboard_token: string | null
+          email: string
+          firm_name: string | null
+          id: string
+          monitoring_enabled: boolean
+          permissible_purpose_ack_at: string | null
+          phone: string | null
+          state: string | null
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          tier: string
+          trial_active: boolean
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          active?: boolean
+          bar_number?: string | null
+          contact_name?: string | null
+          created_at?: string
+          dashboard_token?: string | null
+          email: string
+          firm_name?: string | null
+          id?: string
+          monitoring_enabled?: boolean
+          permissible_purpose_ack_at?: string | null
+          phone?: string | null
+          state?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          tier?: string
+          trial_active?: boolean
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          active?: boolean
+          bar_number?: string | null
+          contact_name?: string | null
+          created_at?: string
+          dashboard_token?: string | null
+          email?: string
+          firm_name?: string | null
+          id?: string
+          monitoring_enabled?: boolean
+          permissible_purpose_ack_at?: string | null
+          phone?: string | null
+          state?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          tier?: string
+          trial_active?: boolean
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      counsel_search_quota: {
+        Row: {
+          created_at: string
+          email: string | null
+          free_searches_used: number
+          permissible_purpose_ack_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          free_searches_used?: number
+          permissible_purpose_ack_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          free_searches_used?: number
+          permissible_purpose_ack_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      counsel_searches: {
+        Row: {
+          aliases: string[] | null
+          case_matter: string | null
+          created_at: string
+          elapsed_ms: number | null
+          email: string | null
+          full_results: Json | null
+          high_priority_hits: number | null
+          id: string
+          permissible_purpose: string | null
+          query_city: string | null
+          query_name: string
+          query_state: string | null
+          result_summary: Json | null
+          sources_hit: number | null
+          sources_returned: number | null
+          total_hits: number | null
+          user_id: string | null
+          was_paid: boolean
+        }
+        Insert: {
+          aliases?: string[] | null
+          case_matter?: string | null
+          created_at?: string
+          elapsed_ms?: number | null
+          email?: string | null
+          full_results?: Json | null
+          high_priority_hits?: number | null
+          id?: string
+          permissible_purpose?: string | null
+          query_city?: string | null
+          query_name: string
+          query_state?: string | null
+          result_summary?: Json | null
+          sources_hit?: number | null
+          sources_returned?: number | null
+          total_hits?: number | null
+          user_id?: string | null
+          was_paid?: boolean
+        }
+        Update: {
+          aliases?: string[] | null
+          case_matter?: string | null
+          created_at?: string
+          elapsed_ms?: number | null
+          email?: string | null
+          full_results?: Json | null
+          high_priority_hits?: number | null
+          id?: string
+          permissible_purpose?: string | null
+          query_city?: string | null
+          query_name?: string
+          query_state?: string | null
+          result_summary?: Json | null
+          sources_hit?: number | null
+          sources_returned?: number | null
+          total_hits?: number | null
+          user_id?: string | null
+          was_paid?: boolean
+        }
+        Relationships: []
+      }
       court_cases: {
         Row: {
           attorney_name: string | null
