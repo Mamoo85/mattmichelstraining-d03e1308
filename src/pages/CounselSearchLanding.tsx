@@ -102,10 +102,10 @@ export default function CounselSearchLanding() {
               key={t.key}
               className={`bg-[#0a1628] border-2 cursor-pointer transition ${
                 tier === t.key ? "border-[#00d4ff]" : "border-[#1e3a5f]"
-              } ${t.featured ? "relative" : ""}`}
+              } ${t.key === featuredKey ? "relative" : ""}`}
               onClick={() => setTier(t.key)}
             >
-              {t.featured && (
+              {t.key === featuredKey && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#00d4ff] text-black text-[10px] font-bold px-3 py-1 rounded-full">RECOMMENDED</div>
               )}
               <CardContent className="p-6">
