@@ -1013,6 +1013,7 @@ const App = () => {
                       <Route path="/dwa-admin/outreach-audit" element={<AgencyAdminRoute><OutreachAuditLog /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/outreach-queue" element={<AgencyAdminRoute><OutreachQueuePage /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/teaser-emails" element={<AgencyAdminRoute><TeaserEmailsAdmin /></AgencyAdminRoute>} />
+                      <Route path="/dwa-admin/talent-ingest" element={<AgencyAdminRoute><TalentIngestAdmin /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/trial-reactivation" element={<AgencyAdminRoute><TrialReactivationCampaign /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/outreach-observability" element={<AgencyAdminRoute><OutreachObservabilityPage /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/wave5" element={<AgencyAdminRoute><Wave5Dashboard /></AgencyAdminRoute>} />
