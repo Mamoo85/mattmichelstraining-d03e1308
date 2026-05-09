@@ -2362,3 +2362,9 @@ verify_jwt = false
 
 [functions.tenant-intel-search]
 verify_jwt = false
+
+[functions.talent-ingest]
+verify_jwt = false
+
+[functions.talent-ingest-digest]
+verify_jwt = false
