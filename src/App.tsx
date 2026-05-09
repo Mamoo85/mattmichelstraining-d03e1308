@@ -960,6 +960,8 @@ const App = () => {
                     <Route path="/my-exterior-radar" element={<MyExteriorRadar />} />
                     <Route path="/my-field-desk" element={<MyFieldDesk />} />
                     <Route path="/my-demand-radar" element={<MyDemandRadar />} />
+                    <Route path="/demand-radar/setup" element={<RadarSetup radar="demand" />} />
+                    <Route path="/buyer-radar/setup" element={<RadarSetup radar="buyer" />} />
                     <Route path="/my-tree-radar" element={<MyTreeRadar />} />
                     <Route path="/my-restoration-radar" element={<MyRestorationRadar />} />
                     <Route path="/my-demo-junk-radar" element={<MyDemoJunkRadar />} />
