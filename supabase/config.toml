@@ -2377,3 +2377,6 @@ verify_jwt = false
 
 [functions.talent-ingest-digest]
 verify_jwt = false
+
+[functions.send-teaser-email]
+verify_jwt = false

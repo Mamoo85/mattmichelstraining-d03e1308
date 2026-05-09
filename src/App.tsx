@@ -89,6 +89,7 @@ const DWAAdmin = lazyRetry(() => import("./pages/DWAAdmin"));
 const DataSourcesHealth = lazyRetry(() => import("./pages/admin/DataSourcesHealth"));
 const OutreachAuditLog = lazyRetry(() => import("./pages/admin/OutreachAuditLog"));
 const OutreachQueuePage = lazyRetry(() => import("./pages/admin/OutreachQueue"));
+const TeaserEmailsAdmin = lazyRetry(() => import("./pages/dwa-admin/TeaserEmailsAdmin"));
 const OutreachObservabilityPage = lazyRetry(() => import("./pages/admin/OutreachObservability"));
 const Wave5Dashboard = lazyRetry(() => import("./pages/admin/Wave5Dashboard"));
 const AuditTimeline = lazyRetry(() => import("./pages/admin/AuditTimeline"));
@@ -1010,6 +1011,7 @@ const App = () => {
                        <Route path="/owner/dashboard" element={<OwnerDashboard />} />
                       <Route path="/dwa-admin/outreach-audit" element={<AgencyAdminRoute><OutreachAuditLog /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/outreach-queue" element={<AgencyAdminRoute><OutreachQueuePage /></AgencyAdminRoute>} />
+                      <Route path="/dwa-admin/teaser-emails" element={<AgencyAdminRoute><TeaserEmailsAdmin /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/trial-reactivation" element={<AgencyAdminRoute><TrialReactivationCampaign /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/outreach-observability" element={<AgencyAdminRoute><OutreachObservabilityPage /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/wave5" element={<AgencyAdminRoute><Wave5Dashboard /></AgencyAdminRoute>} />
