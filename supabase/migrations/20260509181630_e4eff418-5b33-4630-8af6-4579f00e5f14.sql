@@ -1,0 +1,1 @@
+ALTER TABLE public.counsel_search_clients DROP CONSTRAINT counsel_search_clients_tier_check; ALTER TABLE public.counsel_search_clients ADD CONSTRAINT counsel_search_clients_tier_check CHECK (tier = ANY (ARRAY['solo'::text, 'monitoring'::text, 'beta'::text, 'trial'::text]));
