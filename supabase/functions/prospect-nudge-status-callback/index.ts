@@ -24,6 +24,16 @@ serve(async (req) => {
   try {
     const text = await req.text();
     const params = new URLSearchParams(text);
+
+    // Verify Twilio signature — fail closed
+    const formObj: Record<string, string> = {};
+    params.forEach((v, k) => { formObj[k] = v; });
+    const sig = req.headers.get("x-twilio-signature");
+    if (!TWILIO_AUTH_TOKEN || !(await verifyTwilioSignature(req.url, formObj, sig, TWILIO_AUTH_TOKEN))) {
+      console.warn("[prospect-nudge-status-callback] invalid Twilio signature");
+      return new Response("Forbidden", { status: 403 });
+    }
+
     const sid = params.get("MessageSid") || params.get("SmsSid") || "";
     const status = params.get("MessageStatus") || params.get("SmsStatus") || "";
     const errorCode = params.get("ErrorCode") || null;
