@@ -976,6 +976,7 @@ const App = () => {
                     <Route path="/counsel-search" element={<CounselSearchLanding />} />
                     <Route path="/counsel-search/console" element={<CounselSearch />} />
                     <Route path="/my-counsel-search" element={<MyCounselSearch />} />
+                    <Route path="/admin/counsel-beta" element={<AgencyAdminRoute><AdminCounselBeta /></AgencyAdminRoute>} />
                     <Route path="/agency-portal" element={<AgencyPortal />} />
                     <Route path="/license-monitor" element={<LicenseMonitor />} />
                     <Route path="/regulatory-filing-monitor" element={<RegulatoryFilingMonitor />} />
