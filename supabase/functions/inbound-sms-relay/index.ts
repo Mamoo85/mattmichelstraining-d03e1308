@@ -15,9 +15,11 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { sendSMS } from "../_shared/twilio.ts";
+import { verifyTwilioSignature } from "../_shared/webhook-verify.ts";
 
 const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219";
-const MATT_PERSONAL = Deno.env.get("MATT_PERSONAL_PHONE") || "+13138064952";
+const MATT_PERSONAL = Deno.env.get("MATT_PERSONAL_PHONE") || "";
+const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN") || "";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
@@ -39,6 +41,17 @@ serve(async (req) => {
   try {
     const text = await req.text();
     const params = new URLSearchParams(text);
+
+    // Verify Twilio signature — fail closed
+    const formObj: Record<string, string> = {};
+    params.forEach((v, k) => { formObj[k] = v; });
+    const sig = req.headers.get("x-twilio-signature");
+    const fullUrl = req.url;
+    if (!TWILIO_AUTH_TOKEN || !(await verifyTwilioSignature(fullUrl, formObj, sig, TWILIO_AUTH_TOKEN))) {
+      console.warn("[inbound-sms-relay] invalid Twilio signature");
+      return new Response("Forbidden", { status: 403 });
+    }
+
     const from = params.get("From") || "Unknown";
     const to = params.get("To") || TWILIO_PHONE_NUMBER;
     const body = params.get("Body") || "";
@@ -77,7 +90,7 @@ serve(async (req) => {
     const editMatch = trimmed.match(/^e\s+([\s\S]+)$/i);
     const isEdit = !!editMatch;
 
-    if (sb && fromNormalized === MATT_PERSONAL && (isApprove || isEdit || isCancel)) {
+    if (sb && MATT_PERSONAL && fromNormalized === MATT_PERSONAL && (isApprove || isEdit || isCancel)) {
       const { data: pending } = await sb
         .from("sms_reply_drafts")
         .select("id, phone, draft_body, metadata")
@@ -178,7 +191,7 @@ serve(async (req) => {
     }
 
     // 3. Fixer SMS commands — only from Matt's personal cell
-    if (sb && fromNormalized === MATT_PERSONAL) {
+    if (sb && MATT_PERSONAL && fromNormalized === MATT_PERSONAL) {
       const cmd = trimmed.toUpperCase();
 
       if (cmd === "HELP" || cmd === "COMMANDS" || cmd === "?") {

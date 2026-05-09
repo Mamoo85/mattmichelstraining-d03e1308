@@ -10,9 +10,11 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { verifyTwilioSignature } from "../_shared/webhook-verify.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN") || "";
 
 serve(async (req) => {
   if (req.method !== "POST") {
@@ -22,6 +24,16 @@ serve(async (req) => {
   try {
     const text = await req.text();
     const params = new URLSearchParams(text);
+
+    // Verify Twilio signature — fail closed
+    const formObj: Record<string, string> = {};
+    params.forEach((v, k) => { formObj[k] = v; });
+    const sig = req.headers.get("x-twilio-signature");
+    if (!TWILIO_AUTH_TOKEN || !(await verifyTwilioSignature(req.url, formObj, sig, TWILIO_AUTH_TOKEN))) {
+      console.warn("[prospect-nudge-status-callback] invalid Twilio signature");
+      return new Response("Forbidden", { status: 403 });
+    }
+
     const sid = params.get("MessageSid") || params.get("SmsSid") || "";
     const status = params.get("MessageStatus") || params.get("SmsStatus") || "";
     const errorCode = params.get("ErrorCode") || null;
