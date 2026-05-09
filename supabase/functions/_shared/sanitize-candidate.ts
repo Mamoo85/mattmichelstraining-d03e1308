@@ -1,7 +1,38 @@
 // Navigation/UI phrases that get scraped as names from Manta/PHCC/MIOSHA pages
 const JUNK_NAME_PATTERNS = [
   /^\s*(go\s+back|uh\s+oh|search|loading|submit|sign\s+in|log\s+in|log\s+out|sign\s+out|next|previous|prev|view\s+all|see\s+all|learn\s+more|read\s+more|coming\s+soon|not\s+found|error|menu|home|homepage|click\s+here|back|continue|skip|cancel|close|accept|decline|verify|confirm)\b/i,
+  // Form field labels ("First Name", "Last Name", "Full Name", "Company Name", etc.)
+  /^(first|last|full|middle|user|company|business|trade|email|phone|contact|display|account)\s+name$/i,
+  // Page/section fragments that begin with an article ("The Michigan", "Our Issues")
+  /^(our|your|their|his|her|my|the|a|an|this|that|these|those)\s+/i,
 ];
+
+// Vocabulary that should never appear as a token in a real human name.
+// Scraped page headings ("Building Trades", "Joint Apprenticeship", "Air Rail",
+// "Trades Directory", "Sheet Metal Workers") get blocked here.
+const NON_NAME_TOKENS = new Set([
+  "trades","trade","directory","apprenticeship","apprentice","workers","worker",
+  "union","local","council","association","alliance","federation","society",
+  "issues","news","blog","article","articles","resources","resource","contact",
+  "about","privacy","terms","policy","sitemap","support","help","faq","faqs",
+  "department","division","office","bureau","agency","commission","committee",
+  "building","buildings","construction","architectural","architecture","engineering",
+  "occupational","industrial","mechanical","electrical","plumbing","roofing",
+  "hvac","sheet","metal","metals","pipe","piping","welding","carpentry",
+  "health","safety","training","education","journeyman","master",
+  "rail","road","roads","highway","transit","transport","transportation",
+  "joint","central","national","state","county","city","regional",
+  "north","south","east","west","northern","southern","eastern","western",
+  "michigan","detroit","wayne","oakland","macomb","ohio","indiana","illinois",
+  "page","section","chapter","title","header","footer","menu","navigation",
+  "search","results","filter","filters","login","logout","signup",
+  "service","services","product","products","solution","solutions","industry",
+  "industries","business","businesses","company","companies","corporation",
+  "incorporated","inc","llc","ltd","corp","group","team","teams",
+  "center","centers","centre","institute","university","college","school",
+  "professional","professionals","specialist","specialists","technician","technicians",
+  "manager","management","director","directors","officer","officers",
+]);
 
 const JUNK_CHARS = /[?:!@#$%/\[\]{}|<>]/;
 const URL_PATTERN = /(https?:\/\/|www\.|\.com|\.org|@)/i;
@@ -16,8 +47,19 @@ export function isPlausibleHumanName(name: string): boolean {
     if (pat.test(trimmed)) return false;
   }
   const tokens = trimmed.split(/\s+/).filter(t => t.length > 0);
-  if (tokens.length < 2) return false;
+  if (tokens.length < 2 || tokens.length > 5) return false;
   if (tokens.some(t => t.length < 2)) return false;
+  for (const t of tokens) {
+    // Each token must be alphabetic (allow apostrophes, hyphens, periods for initials)
+    if (!/^[A-Za-z][A-Za-z'’\-\.]*$/.test(t)) return false;
+    // Reject all-caps tokens longer than 3 chars (likely acronyms / page headers)
+    if (t.length > 3 && t === t.toUpperCase()) return false;
+  }
+  // First token must be capitalized — real first names always are
+  if (!/^[A-Z]/.test(tokens[0])) return false;
+  // Reject if ANY token is a known non-name vocabulary word
+  const lowerTokens = tokens.map(t => t.toLowerCase().replace(/[.'’\-]/g, ""));
+  if (lowerTokens.some(t => NON_NAME_TOKENS.has(t))) return false;
   return true;
 }
 
