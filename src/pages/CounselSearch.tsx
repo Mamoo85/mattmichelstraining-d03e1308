@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { Helmet } from "react-helmet-async";
+import { trackCounselFirstSearch } from "@/lib/counselSearchAB";
 
 interface IntelHit {
   source: string;
