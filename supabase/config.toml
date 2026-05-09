@@ -2408,5 +2408,5 @@ verify_jwt = false
 [functions.counsel-followup-drip]
 verify_jwt = false
 
-[functions._test-counsel-invite]
+[functions.test-counsel-invite-once]
 verify_jwt = false
