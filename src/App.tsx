@@ -409,6 +409,9 @@ const MyRestorationRadar = lazyRetry(() => import("./pages/MyRestorationRadar"))
 const MyDemoJunkRadar = lazyRetry(() => import("./pages/MyDemoJunkRadar"));
 const MyFoundationRadar = lazyRetry(() => import("./pages/MyFoundationRadar"));
 const TenantIntel = lazyRetry(() => import("./pages/TenantIntel"));
+const CounselSearchLanding = lazyRetry(() => import("./pages/CounselSearchLanding"));
+const CounselSearch = lazyRetry(() => import("./pages/CounselSearch"));
+const MyCounselSearch = lazyRetry(() => import("./pages/MyCounselSearch"));
 
 const AgencyPortal = lazyRetry(() => import("./pages/AgencyPortal"));
 const LicenseMonitor = lazyRetry(() => import("./pages/LicenseMonitor"));
