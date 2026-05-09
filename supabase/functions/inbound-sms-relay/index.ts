@@ -90,7 +90,7 @@ serve(async (req) => {
     const editMatch = trimmed.match(/^e\s+([\s\S]+)$/i);
     const isEdit = !!editMatch;
 
-    if (sb && fromNormalized === MATT_PERSONAL && (isApprove || isEdit || isCancel)) {
+    if (sb && MATT_PERSONAL && fromNormalized === MATT_PERSONAL && (isApprove || isEdit || isCancel)) {
       const { data: pending } = await sb
         .from("sms_reply_drafts")
         .select("id, phone, draft_body, metadata")
@@ -191,7 +191,7 @@ serve(async (req) => {
     }
 
     // 3. Fixer SMS commands — only from Matt's personal cell
-    if (sb && fromNormalized === MATT_PERSONAL) {
+    if (sb && MATT_PERSONAL && fromNormalized === MATT_PERSONAL) {
       const cmd = trimmed.toUpperCase();
 
       if (cmd === "HELP" || cmd === "COMMANDS" || cmd === "?") {
