@@ -28,6 +28,9 @@ const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const HARD_MAX = 250;
 const DEFAULT_LIMIT = 50;
 const MAX_REPLAYS_PER_PROSPECT = 3;
+// Score-threshold cap: refuse to burn enrichment budget on low-quality prospects.
+// Override per-call via body.min_quality_score (0–100).
+const DEFAULT_MIN_QUALITY_SCORE = 40;
 
 type Source = "no_data" | "partial" | "dlq" | "all";
 
