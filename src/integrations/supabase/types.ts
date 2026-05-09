@@ -22170,6 +22170,48 @@ export type Database = {
           },
         ]
       }
+      tenant_intel_searches: {
+        Row: {
+          created_at: string
+          full_results: Json | null
+          id: string
+          query_city: string | null
+          query_dob: string | null
+          query_name: string
+          query_state: string | null
+          result_summary: Json | null
+          searched_by: string | null
+          sources_hit: number | null
+          sources_returned: number | null
+        }
+        Insert: {
+          created_at?: string
+          full_results?: Json | null
+          id?: string
+          query_city?: string | null
+          query_dob?: string | null
+          query_name: string
+          query_state?: string | null
+          result_summary?: Json | null
+          searched_by?: string | null
+          sources_hit?: number | null
+          sources_returned?: number | null
+        }
+        Update: {
+          created_at?: string
+          full_results?: Json | null
+          id?: string
+          query_city?: string | null
+          query_dob?: string | null
+          query_name?: string
+          query_state?: string | null
+          result_summary?: Json | null
+          searched_by?: string | null
+          sources_hit?: number | null
+          sources_returned?: number | null
+        }
+        Relationships: []
+      }
       tenant_leads: {
         Row: {
           company_name: string | null
