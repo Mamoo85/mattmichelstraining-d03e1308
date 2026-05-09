@@ -1297,6 +1297,11 @@ serve(async (req) => {
       commercial_compliance_red: commercialRedSignals.length,
       sam_entities: samEntitySignals.length,
       hire_waterfall: waterfallCount,
+      extras50: extras50Postings.length,
+      extras50_by_source: extras50Result?.bySource ?? {},
+      extras100: extras100Postings.length,
+      extras100_raw: extras100Raw.length,
+      extras100_by_source: extras100Result?.bySource ?? {},
       sonar_disabled: SONAR_DISABLED_REASON,
     };
 
