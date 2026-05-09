@@ -126,7 +126,7 @@ ${demo.priceRange} to get started, includes everything.
 
 Matt
 (313) 992-1219
-matt@mattmichelstraining.com`;
+matt@detroitwebagent.com`;
   return { subject, body };
 }
 
@@ -185,7 +185,7 @@ export default function AdminDemoLinkGenerator() {
   const [bizName, setBizName] = useState("");
   const { copied, copy } = useCopy();
 
-  const baseUrl = "https://www.mattmichelstraining.com";
+  const baseUrl = "https://www.detroitwebagent.com";
 
   const allDemos = DEMO_GROUPS.flatMap(g => g.demos);
   const demo = allDemos.find(d => d.key === selectedKey) ?? allDemos[0];
