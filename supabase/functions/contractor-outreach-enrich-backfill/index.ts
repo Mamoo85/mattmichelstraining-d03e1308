@@ -226,6 +226,7 @@ Deno.serve(async (req) => {
     succeeded,
     failed,
     skipped_max_replays,
+    min_quality_score: minScore,
     aged_count,
     errors: errors.slice(0, 20),
     duration_ms: Date.now() - startedAt,
