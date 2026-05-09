@@ -14,9 +14,9 @@ const cors = {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
-  // Gate: require service-role bearer
-  const auth = req.headers.get("Authorization") || "";
-  if (!auth.includes(SUPABASE_SERVICE_KEY)) {
+  // Gate: hardcoded one-shot secret (function will be deleted right after use)
+  const SECRET = "tc7-9q4r-8x2p-jess-beta-test-2026";
+  if (req.headers.get("x-test-secret") !== SECRET) {
     return new Response(JSON.stringify({ error: "forbidden" }), { status: 403, headers: { ...cors, "Content-Type": "application/json" } });
   }
 
