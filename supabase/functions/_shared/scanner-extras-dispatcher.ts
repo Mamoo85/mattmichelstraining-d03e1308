@@ -120,17 +120,36 @@ const PRODUCT_JOBS: Record<string, () => Job[]> = {
   ],
 };
 
-export async function runPhaseAExtras(product: string): Promise<{
+export async function runPhaseAExtras(product: string, opts: { segment?: string; onlySource?: string } = {}): Promise<{
   product: string;
-  results: Array<{ source: string; count: number; ms: number; error?: string }>;
+  segment: string;
+  results: Array<{ source: string; count: number; ms: number; error?: string; skipped?: boolean }>;
 }> {
-  const jobs = PRODUCT_JOBS[product]?.() || [];
+  const segment = opts.segment || "all";
+  let jobs = PRODUCT_JOBS[product]?.() || [];
+  if (opts.onlySource) jobs = jobs.filter((j) => j.source === opts.onlySource);
   const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
   const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-  const results: Array<{ source: string; count: number; ms: number; error?: string }> = [];
+  // Load toggles: a row with enabled=false for (product, source, segment) OR (product, source, 'all') disables.
+  const { data: toggleRows } = await sb
+    .from("scanner_source_toggles")
+    .select("source, segment, enabled")
+    .eq("product", product);
+  const disabled = new Set<string>();
+  for (const t of (toggleRows as any[]) || []) {
+    if (t.enabled === false && (t.segment === segment || t.segment === "all")) {
+      disabled.add(t.source);
+    }
+  }
+
+  const results: Array<{ source: string; count: number; ms: number; error?: string; skipped?: boolean }> = [];
   for (const j of jobs) {
+    if (disabled.has(j.source)) {
+      results.push({ source: j.source, count: 0, ms: 0, skipped: true });
+      continue;
+    }
     const t0 = Date.now();
     let count = 0;
     let error: string | undefined;
@@ -150,13 +169,16 @@ export async function runPhaseAExtras(product: string): Promise<{
     const ms = Date.now() - t0;
     results.push({ source: j.source, count, ms, error });
 
-    // Fire-and-forget audit insert
     sb.from("scanner_extras_runs")
-      .insert({ product, source: j.source, count, ms, error, sample: sample as any })
+      .insert({ product, source: j.source, count, ms, error, sample: sample as any, segment })
       .then(() => {})
       .catch(() => {});
   }
-  return { product, results };
+  return { product, segment, results };
 }
 
 export const SUPPORTED_PRODUCTS = Object.keys(PRODUCT_JOBS);
+
+export function listProductSources(product: string): string[] {
+  return (PRODUCT_JOBS[product]?.() || []).map((j) => j.source);
+}

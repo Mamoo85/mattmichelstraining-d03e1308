@@ -19869,6 +19869,78 @@ export type Database = {
         }
         Relationships: []
       }
+      scanner_extras_runs: {
+        Row: {
+          count: number
+          created_at: string
+          error: string | null
+          id: string
+          ms: number
+          product: string
+          sample: Json | null
+          segment: string | null
+          source: string
+        }
+        Insert: {
+          count?: number
+          created_at?: string
+          error?: string | null
+          id?: string
+          ms?: number
+          product: string
+          sample?: Json | null
+          segment?: string | null
+          source: string
+        }
+        Update: {
+          count?: number
+          created_at?: string
+          error?: string | null
+          id?: string
+          ms?: number
+          product?: string
+          sample?: Json | null
+          segment?: string | null
+          source?: string
+        }
+        Relationships: []
+      }
+      scanner_source_toggles: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          id: string
+          notes: string | null
+          product: string
+          segment: string
+          source: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          notes?: string | null
+          product: string
+          segment?: string
+          source: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          notes?: string | null
+          product?: string
+          segment?: string
+          source?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       schedule_slots: {
         Row: {
           booked_by: string | null

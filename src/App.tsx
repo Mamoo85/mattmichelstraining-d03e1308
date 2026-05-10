@@ -86,6 +86,7 @@ const Auth = lazyRetry(() => import("./pages/Auth"));
 const ResetPassword = lazyRetry(() => import("./pages/ResetPassword"));
 const Admin = lazyRetry(() => import("./pages/Admin"));
 const DWAAdmin = lazyRetry(() => import("./pages/DWAAdmin"));
+const AdminScannerSources = lazyRetry(() => import("./pages/AdminScannerSources"));
 const DataSourcesHealth = lazyRetry(() => import("./pages/admin/DataSourcesHealth"));
 const OutreachAuditLog = lazyRetry(() => import("./pages/admin/OutreachAuditLog"));
 const OutreachQueuePage = lazyRetry(() => import("./pages/admin/OutreachQueue"));
@@ -1016,6 +1017,7 @@ const App = () => {
                       <Route path="/admin" element={<AgencyAdminRoute><Admin /></AgencyAdminRoute>} />
                       <Route path="/admin/health" element={<AgencyAdminRoute><AdminHealth /></AgencyAdminRoute>} />
                        <Route path="/dwa-admin" element={<AgencyAdminRoute><DWAAdmin /></AgencyAdminRoute>} />
+                      <Route path="/dwa-admin/scanner-sources" element={<AgencyAdminRoute><AdminScannerSources /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/data-sources" element={<AgencyAdminRoute><DataSourcesHealth /></AgencyAdminRoute>} />
                        <Route path="/owner/login" element={<OwnerLogin />} />
                        <Route path="/owner/verify" element={<OwnerVerify />} />
