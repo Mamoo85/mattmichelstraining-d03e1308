@@ -57,6 +57,11 @@ const PRODUCT_JOBS: Record<string, () => Job[]> = {
     { source: "macomb_sheriff_sales", run: () => exd.fetchMacombSheriffSales() },
     { source: "mi_sos_ucc_filings", run: () => exd.fetchMISOSUCCFilings() },
     { source: "cfpb_hmda_mi", run: () => exd.fetchCFPBHMDA() },
+    // Phase E
+    { source: "realtor_sold_detroit", run: () => exe.fetchATTOMRealtorSold() },
+    { source: "trulia_crime_detroit", run: () => exe.fetchTruliaCrime() },
+    { source: "pacer_ch13_mieb", run: () => exe.fetchPACERCh13() },
+    { source: "tax_court_foreclosure", run: () => exe.fetchTaxCourtForeclosure() },
   ],
   techalert: () => [
     { source: "usajobs_trades", run: () => ex.fetchUSAJobsTrades() },
