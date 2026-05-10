@@ -239,6 +239,11 @@ const PRODUCT_JOBS: Record<string, () => Job[]> = {
     { source: "crossref_authors_construction", run: () => exd.fetchCrossrefAuthors("construction") },
     { source: "npi_registry_mi", run: () => exd.fetchNPIRegistry("MI") },
     { source: "nsf_awards_pi", run: () => exd.fetchNSFAwardsPI("construction") },
+    // Phase E
+    { source: "nih_reporter_construction", run: () => exe.fetchNIHReporter("construction") },
+    { source: "sec_form_adv", run: () => exe.fetchSECFormADV() },
+    { source: "sec_edgar_recent_mi", run: () => exe.fetchSECEdgarRecent() },
+    { source: "nitter_bio_dwa", run: () => exe.fetchTwitterBioScrape("detroitwebagent") },
   ],
   siteradar_visitor: () => [
     { source: "ipapi_co", run: () => ex.fetchIPAPIco("8.8.8.8") },
