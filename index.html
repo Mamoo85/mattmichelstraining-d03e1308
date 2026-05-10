@@ -452,5 +452,17 @@
         }, 2000);
       }, { once: true });
     </script>
+    <!-- SiteRadar visitor tracking — DWA hostnames only -->
+    <script>
+      (function(){
+        var h = location.hostname;
+        if (h === 'detroitwebagent.com' || h === 'www.detroitwebagent.com') {
+          var s = document.createElement('script');
+          s.async = true;
+          s.src = 'https://eauvubfpanpeuxsrqesu.supabase.co/functions/v1/visitor-identify?key=b5a20a39-8970-4d65-8c0e-52936f7d15f6';
+          document.body.appendChild(s);
+        }
+      })();
+    </script>
   </body>
 </html>
