@@ -135,6 +135,11 @@ const PRODUCT_JOBS: Record<string, () => Job[]> = {
     { source: "agc_inflation", run: () => exd.fetchAGCInflation() },
     { source: "nahb_releases", run: () => exd.fetchNAHBReleases() },
     { source: "enr_top400", run: () => exd.fetchENRTop400() },
+    // Phase E
+    { source: "dodge_summaries", run: () => exe.fetchDodgeSummaries() },
+    { source: "constructconnect_news", run: () => exe.fetchConstructConnect() },
+    { source: "mi_mfg_association", run: () => exe.fetchMIMfgAssociation() },
+    { source: "crains_detroit_rss", run: () => exe.fetchCrainsDetroitRSS() },
   ],
   dead_lead_pool: () => [
     { source: "detroit_contractors_expiring", run: () => ex.fetchDetroitContractorsExpiringSoon() },
