@@ -19,6 +19,8 @@ export interface DwaEmailOpts {
   to: string | string[];
   subject: string;
   html: string;
+  /** Optional plain-text fallback (recommended when HTML contains code/script-like content). */
+  text?: string;
   bcc?: string;
   /** Override sender display name (for white-label agency digests). */
   fromName?: string;
