@@ -31,6 +31,11 @@ const PRODUCT_JOBS: Record<string, () => Job[]> = {
     { source: "semcog_construction", run: () => exd.fetchSEMCOGConstruction() },
     { source: "egle_pfas_sites", run: () => exd.fetchMichiganEGLEPFAS() },
     { source: "oakland_schools_bids", run: () => exd.fetchOaklandSchoolsBids() },
+    // Phase E
+    { source: "noaa_lightning_archive", run: () => exe.fetchNOAALightningArchive() },
+    { source: "hud_chas", run: () => exe.fetchHUDCHAS() },
+    { source: "census_acs_housing_age", run: () => exe.fetchCensusACSHousingAge() },
+    { source: "detroit_landbank_grants", run: () => exe.fetchDetroitLandBankGrants() },
   ],
   mortgage_radar: () => [
     { source: "hud_usps_vacancy", run: () => ex.fetchHUDVacancyByZip([]) },
