@@ -71,6 +71,7 @@ Detroit Web Agency
       to: webmaster_email,
       subject: `Quick favor — SiteRadar install for ${client.business_name}`,
       html,
+      text,
     });
 
     await sb.from("field_crm_clients")
