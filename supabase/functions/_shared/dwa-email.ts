@@ -19,6 +19,8 @@ export interface DwaEmailOpts {
   to: string | string[];
   subject: string;
   html: string;
+  /** Optional plain-text fallback (recommended when HTML contains code/script-like content). */
+  text?: string;
   bcc?: string;
   /** Override sender display name (for white-label agency digests). */
   fromName?: string;
@@ -51,6 +53,7 @@ export async function dwaEmail(opts: DwaEmailOpts): Promise<{ ok: boolean; error
         bcc: [opts.bcc || DWA_BCC],
         subject: opts.subject,
         html: opts.html,
+        ...(opts.text ? { text: opts.text } : {}),
         ...(opts.headers ? { headers: opts.headers } : {}),
       }),
     });

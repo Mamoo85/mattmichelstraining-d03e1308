@@ -33,6 +33,12 @@ serve(async (req) => {
       });
     }
     const snippet = `<script async src="${SUPABASE_URL}/functions/v1/visitor-identify?key=${client.visitor_script_key}"></script>`;
+    // CRITICAL: Gmail/Outlook strip raw <script> tags from HTML email bodies, even inside <pre>.
+    // Must HTML-encode angle brackets so the snippet renders as text, not be silently dropped.
+    const escapedSnippet = snippet
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
 
     const html = `
 <div style="font-family:-apple-system,sans-serif;max-width:560px;margin:0 auto;background:#0a1628;color:#fff;padding:32px;border-radius:8px;">
@@ -40,16 +46,32 @@ serve(async (req) => {
   <h2 style="color:#fff;margin:0 0 12px;">Quick install request from ${client.owner_name || client.business_name}</h2>
   <p style="color:#cbd5e1;line-height:1.6;font-size:14px;">Hi${webmaster_name ? " " + webmaster_name : ""},</p>
   <p style="color:#cbd5e1;line-height:1.6;font-size:14px;">${client.owner_name || client.business_name} just signed up for <strong>SiteRadar</strong> — a tool that identifies which businesses visit ${client.business_name}'s website (no personal data, fully GDPR/CCPA-safe).</p>
-  <p style="color:#cbd5e1;line-height:1.6;font-size:14px;">Could you paste this one-line snippet just before the closing <code style="color:#00d4ff;">&lt;/body&gt;</code> tag (or add it as a custom HTML block in ${platform || "the site builder"})?</p>
-  <pre style="background:#030711;color:#94a3b8;padding:14px;border-radius:6px;font-size:11px;overflow-x:auto;border:1px solid #1e3a5f;">${snippet}</pre>
+  <p style="color:#cbd5e1;line-height:1.6;font-size:14px;">Please paste this one-line snippet just before the closing <code style="color:#00d4ff;">&lt;/body&gt;</code> tag (or drop it into a custom HTML block in ${platform || "the site builder"}):</p>
+  <pre style="background:#030711;color:#7dd3fc;padding:14px;border-radius:6px;font-size:12px;line-height:1.5;overflow-x:auto;border:1px solid #1e3a5f;white-space:pre-wrap;word-break:break-all;font-family:Menlo,Consolas,monospace;">${escapedSnippet}</pre>
+  <p style="color:#94a3b8;font-size:12px;margin-top:-4px;">If your email client hides the snippet above, copy it from here:<br/><span style="color:#7dd3fc;font-family:monospace;font-size:12px;word-break:break-all;">${escapedSnippet}</span></p>
   <p style="color:#cbd5e1;line-height:1.6;font-size:14px;">It's about 30 seconds of work. Reply once it's live and we'll verify on our end. Any questions, hit reply — I'm Matt at Detroit Web Agency.</p>
   <p style="color:#94a3b8;font-size:13px;margin-top:24px;">Thanks!<br/>Matt Michels<br/>Detroit Web Agency<br/>(313) 992-1219</p>
 </div>`;
+    const text = `Hi${webmaster_name ? " " + webmaster_name : ""},
+
+${client.owner_name || client.business_name} just signed up for SiteRadar — a tool that identifies which businesses visit ${client.business_name}'s website (no personal data, fully GDPR/CCPA-safe).
+
+Please paste this one-line snippet just before the closing </body> tag (or as a custom HTML block in ${platform || "the site builder"}):
+
+${snippet}
+
+About 30 seconds of work. Reply once it's live and we'll verify on our end.
+
+Thanks!
+Matt Michels
+Detroit Web Agency
+(313) 992-1219`;
 
     await dwaEmail({
       to: webmaster_email,
       subject: `Quick favor — SiteRadar install for ${client.business_name}`,
       html,
+      text,
     });
 
     await sb.from("field_crm_clients")
