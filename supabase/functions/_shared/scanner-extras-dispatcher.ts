@@ -83,6 +83,11 @@ const PRODUCT_JOBS: Record<string, () => Job[]> = {
     { source: "simplyhired_rss_electrician", run: () => exd.fetchSimplyHiredRSS("electrician") },
     { source: "glassdoor_probe_dte", run: () => exd.fetchGlassdoorReviewsProbe("DTE-Energy") },
     { source: "reddit_hvac_hiring", run: () => exd.fetchRedditHiring("HVAC") },
+    // Phase E
+    { source: "ziprecruiter_rss_hvac", run: () => exe.fetchZipRecruiterRSS("hvac") },
+    { source: "dol_5500_pensions", run: () => exe.fetchPensionFund5500() },
+    { source: "michigan_works_events", run: () => exe.fetchMichiganWorksEvents() },
+    { source: "ohio_warn", run: () => exe.fetchOhioWARN() },
   ],
   demand_radar: () => [
     { source: "bidnet_rss", run: () => ex.fetchBidNetRSS("MI") },
