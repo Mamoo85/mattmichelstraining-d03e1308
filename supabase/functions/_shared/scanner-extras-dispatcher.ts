@@ -161,6 +161,11 @@ const PRODUCT_JOBS: Record<string, () => Job[]> = {
     { source: "oakland_biz_expirations", run: () => exd.fetchOaklandBizExpirations() },
     { source: "lansing_biz_expirations", run: () => exd.fetchLansingBizExpirations() },
     { source: "defunct_domains_probe", run: () => exd.fetchDefunctDomains(["detroitwebagent.com"]) },
+    // Phase E
+    { source: "wayne_biz_expirations", run: () => exe.fetchWayneBizExpirations() },
+    { source: "annarbor_biz_expirations", run: () => exe.fetchAARBizExpirations() },
+    { source: "flint_biz_expirations", run: () => exe.fetchFlintBizExpirations() },
+    { source: "mi_tax_revocations", run: () => exe.fetchMITaxRevocations() },
   ],
   counsel_records: () => [
     { source: "lara_disciplinary", run: () => ex.fetchLARADisciplinaryRSS() },
