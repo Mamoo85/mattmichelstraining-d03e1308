@@ -86,6 +86,7 @@ const Auth = lazyRetry(() => import("./pages/Auth"));
 const ResetPassword = lazyRetry(() => import("./pages/ResetPassword"));
 const Admin = lazyRetry(() => import("./pages/Admin"));
 const DWAAdmin = lazyRetry(() => import("./pages/DWAAdmin"));
+const AdminScannerSources = lazyRetry(() => import("./pages/AdminScannerSources"));
 const DataSourcesHealth = lazyRetry(() => import("./pages/admin/DataSourcesHealth"));
 const OutreachAuditLog = lazyRetry(() => import("./pages/admin/OutreachAuditLog"));
 const OutreachQueuePage = lazyRetry(() => import("./pages/admin/OutreachQueue"));
