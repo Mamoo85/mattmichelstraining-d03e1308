@@ -40,26 +40,16 @@ export default function MyCounselSearch() {
     }
     (async () => {
       try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const sb = supabase as any;
-        const { data, error } = await sb
-          .from("counsel_search_clients")
-          .select("email,contact_name,firm_name,tier,monitoring_enabled,active,dashboard_token")
-          .eq("email", email.toLowerCase())
-          .maybeSingle();
+        const { data, error } = await supabase.functions.invoke("counsel-dashboard-load", {
+          body: { email: email.toLowerCase(), token },
+        });
         if (error) throw error;
-        if (!data || data.dashboard_token !== token) {
-          setErr("Invalid or expired access token.");
+        if (!data?.ok) {
+          setErr(data?.error === "invalid_token" ? "Invalid or expired access token." : "Failed to load dashboard.");
           return;
         }
-        setClient(data as Client);
-        const { data: rows } = await sb
-          .from("counsel_searches")
-          .select("id,query_name,case_matter,total_hits,high_priority_hits,created_at")
-          .eq("email", email.toLowerCase())
-          .order("created_at", { ascending: false })
-          .limit(50);
-        setSearches((rows as SearchRow[]) || []);
+        setClient(data.client as Client);
+        setSearches((data.searches as SearchRow[]) || []);
       } catch (e: unknown) {
         setErr(e instanceof Error ? e.message : "Failed to load");
       } finally {
