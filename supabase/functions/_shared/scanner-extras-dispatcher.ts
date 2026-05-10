@@ -5,6 +5,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import * as ex from "./scanner-extras-2026.ts";
 import * as exb from "./scanner-extras-2026-b.ts";
 import * as exc from "./scanner-extras-2026-c.ts";
+import * as exd from "./scanner-extras-2026-d.ts";
 
 type Job = { source: string; run: () => Promise<unknown> };
 
