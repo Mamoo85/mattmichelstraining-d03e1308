@@ -1,124 +1,131 @@
-## Part 1 — DEAD PIPE alert upgrade (`cron-sentinel/index.ts`)
+# Scanner Upgrade — 20 New Free/No-Key Sources Per Main Product
 
-Current message: `🚨 TechAlert DEAD PIPE: Last 3 scanner runs (source=all) returned 0 candidates within 6h. N active client(s). Investigate.`
+## Goal
+Add 20 new data sources to each main scanner. Constraint: **zero new API keys from Matt** — only sources usable with what's already in Supabase secrets, or fully open (no auth / public APIs / scrapeable via existing Firecrawl key).
 
-Upgrade the dead-pipe block (lines 296–351) so the SMS + the `error_logs` row both include:
-- **Failing step**: pull `last_step` / `error_step` from the most recent `hire_alert_runs` row (fall back to `"unknown_step"` if not set). Also surface the `source` value of the most recent run.
-- **Error code**: pull the latest matching row from `error_logs` (function_name=`hire-alert-scanner`, severity in `error|critical`, last 6h) and include its `error_code` (or first 80 chars of `error_message` if no code field).
-- **Timestamp**: ISO timestamp of the most recent `hire_alert_runs.run_at` AND the alert generation time, formatted as ET (`America/Detroit`) for readability.
+## What "main products" means here
 
-New SMS shape (≤ 320 chars, fits 2 segments):
-```
-🚨 TechAlert DEAD PIPE @ {alertTimeET}
-Step: {step} | Code: {errCode}
-Last run: {lastRunET} (source={source}, age {ageHr}h)
-3× zero-candidate runs · {N} active client(s)
-View: /dwa-admin → Cron Sentinel
-```
+Lead-generating scanners (11):
+1. **Trade Radar** — 11 verticals share scanner; sources go into `_shared/trade-signals/signals-*.ts`. Treated as ONE product (sources distributed across verticals where relevant).
+2. **Mortgage Radar** — `mortgage-radar-scanner`
+3. **TechAlert** (talent intel) — `techalert-prospect-hunter`
+4. **Demand Radar** — `demand-radar-enhanced-scan`
+5. **Buyer Radar / Industry Pulse** — `industry-pulse-scanner`
+6. **Dead Lead Pool** — `dead-lead-pool-refresh`
+7. **Counsel Records Search** — `counsel-search` + `_shared/counsel-sources/*`
+8. **Channel Prospector** (customer targeting) — `channel-prospector`
+9. **Outreach Leads Enrichment** (email/owner waterfall) — `_shared/email-waterfall.ts` chain
+10. **SiteRadar Visitor Enrichment** — `visitor-identify` (IP→company, no scanner cron, but enrichable)
 
-`error_logs` insert gets the same fields in structured form (`error_code`, `last_step`, `last_run_at`, `last_run_age_hours`, `metadata` JSON) so the fixer watchdog can route on `error_code` directly.
+= **10 product surfaces × 20 sources = 200 sources.**
 
-If `hire_alert_runs` has no `last_step` / `error_step` columns yet, add a tiny migration to add them (`text`, nullable) and patch `hire-alert-scanner` to write them at each major stage (`fetch_sonar`, `enrich_apollo`, `score`, `dispatch`). I'll only add the migration if the columns are missing — I'll check first before writing it.
+## Reality check on volume
 
----
+200 net-new integrations in one pass = high risk of breakage and bloat. Recommend phased delivery:
 
-## Part 2 — 50 new sources for Counsel Search
+- **Phase A (this turn):** Build the source catalog (200 entries with URL, auth model, parser sketch, target product) and ship batch 1: **40 highest-ROI sources** (4 per product) with full code + wiring. Verify they return data.
+- **Phase B (next turn):** Batches 2–5 = remaining 160 sources, 40 per turn.
 
-The current scanner has ~22 sources (federal courts, NSOPW, FBI, SAM, OSHA, Wayne/Oakland/Macomb/Detroit property, OpenCorporates, plus 6 Sonar prompts). Below are 50 net-new sources organized by tier. Each entry notes **cost / setup**: 🟢 free no-key · 🟡 free key (Matt signs up, no card) · 🔴 paid or PACER-style credentials (Matt helps set up).
+If you'd rather I just blast all 200 in one go without verification, say so and I will — but I'll warn that 30–50% are likely to silently fail and need a follow-up sweep.
 
-### A. Federal courts & corrections (8)
-1. 🟢 **CourtListener Opinions** endpoint (`/api/rest/v3/opinions/`) — written rulings naming the party, separate from dockets
-2. 🟢 **CourtListener RECAP archive** (`/api/rest/v3/recap/`) — millions of free PACER-cached docs
-3. 🟢 **U.S. Tax Court DAWSON** docket search (HTTP, no key)
-4. 🟢 **BOP Inmate Locator** (free public site)
-5. 🟢 **U.S. Marshals 15 Most Wanted**
-6. 🟢 **DEA Major Fugitives** list
-7. 🟢 **ICE Most Wanted**
-8. 🔴 **PACER Case Locator** (full federal cross-court) — requires PACER account + PSC credentials. Setup needed from Matt.
+## Phase A deliverables (this turn)
 
-### B. Federal regulatory / enforcement (10)
-9. 🟢 **SEC EDGAR Litigation Releases** (`/litigation/litreleases/`)
-10. 🟢 **CFTC Enforcement Actions** index
-11. 🟢 **FTC Cases & Proceedings** search
-12. 🟢 **CFPB Consumer Complaint DB** (Socrata API)
-13. 🟢 **DOJ Press Release search** (`justice.gov/news/press-release-feed`)
-14. 🟢 **HHS-OIG LEIE** (Excluded Individuals — bulk CSV, free)
-15. 🟢 **Treasury OFAC SDN** consolidated list (XML)
-16. 🟢 **NTSB CAROL accident DB**
-17. 🟡 **FINRA BrokerCheck** — official "free use" but rate-limited; needs minor User-Agent + key request from FINRA
-18. 🟡 **NMLS Consumer Access** (mortgage originator licenses) — bulk feed, requires free registration
+### Source catalog
+New file `knowledge/scanner-source-catalog-2026.md` listing all 200 sources organized by product, with:
+- URL + auth model (none / existing key)
+- Data shape + parser approach
+- Mapped signal type / target table
+- Implementation tier (1=easy ArcGIS-style JSON, 2=HTML scrape via Firecrawl, 3=multi-step)
 
-### C. State of Michigan (12)
-19. 🟢 **MDOC OTIS** (Offender Tracking Info System) — direct scraper (currently only via Sonar)
-20. 🟢 **Michigan PSOR** (Public Sex Offender Registry direct, separate from federal NSOPW)
-21. 🟢 **LARA Professional License Verification** (occupational license + disciplinary status)
-22. 🟢 **LARA Corporations Online Filing** direct entity search
-23. 🟢 **Michigan SOS UCC filings** lookup
-24. 🟢 **Michigan Court of Appeals opinions** RSS
-25. 🟢 **Michigan Supreme Court opinions** feed
-26. 🟢 **Michigan AG press releases** + consumer enforcement
-27. 🟢 **Michigan Dept of Insurance** producer disciplinary actions
-28. 🟢 **MIOSHA citations** (state OSHA)
-29. 🟢 **State Bar of Michigan** member directory + discipline (ADB)
-30. 🟢 **Michigan Treasury tax lien** index (where exposed)
+### Code: 40 sources shipped (4 per product)
 
-### D. County courts & local Michigan (10)
-31. 🟢 **36th District Court Detroit** civil/eviction case search (direct, replaces Sonar prompt)
-32. 🟢 **Wayne 3rd Circuit Court** docket lookup
-33. 🟢 **Oakland 6th Circuit** docket lookup
-34. 🟢 **Macomb 16th Circuit** docket lookup
-35. 🟢 **Washtenaw 22nd Circuit / 14B / 15th District** case search
-36. 🟢 **Kent County 17th Circuit** (Grand Rapids) case lookup
-37. 🟢 **Genesee 7th Circuit** case lookup
-38. 🟢 **Wayne County Register of Deeds** (mortgages, liens, lis pendens)
-39. 🟢 **Oakland Register of Deeds** ("Super Index")
-40. 🟢 **Macomb Register of Deeds**
+**Trade Radar (4 new, distributed across verticals)**
+- USDA Drought Monitor county-level (already have D1+ — extending to per-county breakdown for HVAC + foundation)
+- USGS Water Services water level alerts (foundation, restoration)
+- NWS Severe Thunderstorm Watch zones (gutters, roofing)
+- Detroit ArcGIS `bseed_business_licenses` — new business openings (commercial HVAC/electrical/plumbing)
 
-### E. Property / land / parcel (extending coverage) (4)
-41. 🟢 **Genesee County parcel viewer** (Flint metro)
-42. 🟢 **Washtenaw County parcel** (Ann Arbor)
-43. 🟢 **Kent County parcel** (Grand Rapids)
-44. 🟢 **Detroit Land Bank Authority** dispositions
+**Mortgage Radar (4 new)**
+- USPS NCOA-equivalent: USPS Vacant Address dataset via HUD (per-ZIP vacancy %)
+- US Census Building Permits Survey (new construction velocity)
+- BLS Local Area Unemployment (refi pressure indicator)
+- Realtor.com price-cut RSS by ZIP
 
-### F. Professional / asset registries (3)
-45. 🟢 **NPI Registry** (medical providers — useful for malpractice suits)
-46. 🟢 **FAA Airmen Registry + Aircraft owner**
-47. 🟢 **USPTO TESS / Trademark Assignment** (party as assignor / owner)
+**TechAlert (4 new)**
+- USA.gov contractor data (FedScope SAM expansions)
+- BLS Quarterly Census of Employment & Wages (NAICS hiring trends)
+- USAJobs API (federal trade postings — competitor for talent)
+- ProPublica Nonprofit Explorer (Form 990 leadership turnover)
 
-### G. Open-source intelligence aggregates (3)
-48. 🟢 **OpenSanctions consolidated** (PEPs + sanctions, unified)
-49. 🟢 **ICIJ Offshore Leaks DB** (Panama / Pandora / Paradise Papers)
-50. 🟡 **GDELT Global News** v2 (research API, free key)
+**Demand Radar (4 new)**
+- BidNet Direct RSS feeds (per-state)
+- DemandStar bid summaries
+- MITN-equivalent: Michigan public bid postings ArcGIS
+- USAspending.gov contract opportunities API
 
-### Setup-needed summary for Matt
-- 🟡 light setup (free, just register): FINRA BrokerCheck terms, NMLS Consumer Access, GDELT API key
-- 🔴 needs help: PACER account (one-time $10 hold, then per-page fees) — biggest unlock for Jess (federal civil/criminal/bankruptcy across all 94 districts, not just MIED/MIWD)
+**Buyer/Industry Pulse (4 new)**
+- BLS Employment Situation by metro
+- Census Business Formation Statistics weekly
+- FRED economic indicators (housing starts, durable goods)
+- LinkedIn company growth via existing token (already have)
 
-### Implementation approach
-- Each source becomes a `scanXxx(name, state)` function returning `IntelHit[]`, fail-soft via try/catch (matches existing pattern).
-- Add to `runScansForName()` `Promise.allSettled` array — they all run in parallel so latency stays flat.
-- Group output into existing categories (`Court Records`, `Criminal Records`, `Property Records`, `Business Records`, `Government Records`, `Financial Records`, `News & Public Notices`) — no UI changes required.
-- New secrets to add (after Matt registers):
-  - `FINRA_API_KEY` (optional)
-  - `NMLS_API_KEY` (optional)
-  - `GDELT_API_KEY` (optional)
-  - `PACER_USERNAME` + `PACER_PASSWORD` (high value)
-- Sources behind keys gracefully no-op until the key exists, so the scanner gets richer over time as Matt finishes setup.
+**Dead Lead Pool (4 new)**
+- Detroit BSEED contractor registry (already partially mined — extend to license-expiration soon set)
+- Michigan LARA active builder list
+- Better Business Bureau accredited member directory (Michigan, scrape)
+- Google Places "permanently closed" filter (re-engage owners with new ventures)
 
-### Code structure
-To keep `counsel-search/index.ts` from becoming unmanageable (~600 → ~2000 lines), split scanners into shared modules:
-- `_shared/counsel-sources/federal.ts`
-- `_shared/counsel-sources/regulatory.ts`
-- `_shared/counsel-sources/michigan.ts`
-- `_shared/counsel-sources/county.ts`
-- `_shared/counsel-sources/professional.ts`
-- `_shared/counsel-sources/osint.ts`
+**Counsel Records Search (4 new)**
+- Michigan Department of Licensing & Regulatory Affairs disciplinary actions RSS
+- Michigan Attorney Discipline Board public orders
+- US Tax Court opinions search
+- Federal Election Commission individual contributions (lawyer political profile)
 
-Each exports `scanXxx` functions; `counsel-search/index.ts` imports and composes.
+**Channel Prospector (4 new)**
+- OpenStreetMap Overpass API (trade businesses by Michigan polygon)
+- Wikidata SPARQL (Michigan companies by industry)
+- Michigan Secretary of State business entity filings
+- Detroit Open Business Registry (already have — extending to all 6 trade NAICS)
 
-### What I'll deliver in build mode
-1. Edit `cron-sentinel/index.ts` (DEAD PIPE block) + optional scanner step-tracking patch.
-2. Create the 6 `_shared/counsel-sources/*.ts` modules with all 50 scanners.
-3. Wire into `runScansForName()`.
-4. Deploy `cron-sentinel` and `counsel-search`.
-5. Provide a short Matt action list for the 5 optional API keys (with signup links).
+**Email/Owner Waterfall (4 new)**
+- DNS TXT records (SPF often contains email infrastructure clues)
+- Whois API via existing pattern (registrant email — public for many older domains)
+- Schema.org `org:email` JSON-LD parser (new)
+- Sitemap.xml → contact-page discovery (already partial — add multi-language paths)
+
+**SiteRadar Visitor Enrichment (4 new)**
+- IPAPI.co free tier (no key, 1k/day) — fallback ASN lookup
+- AbuseIPDB free reputation (no key needed for low volume)
+- DNS reverse lookup (PTR records) — corporate IPs often resolve to company subdomain
+- BGP.tools ASN-to-company mapping (free JSON endpoint)
+
+### Files touched (Phase A)
+- `knowledge/scanner-source-catalog-2026.md` (new, ~200 entries)
+- `supabase/functions/_shared/trade-signals/signals-{hvac,foundation,gutters,roofing}.ts` — 4 new sources
+- `supabase/functions/mortgage-radar-scanner/index.ts` — 4 new sources
+- `supabase/functions/techalert-prospect-hunter/index.ts` — 4 new sources
+- `supabase/functions/demand-radar-enhanced-scan/index.ts` — 4 new sources
+- `supabase/functions/industry-pulse-scanner/index.ts` — 4 new sources
+- `supabase/functions/dead-lead-pool-refresh/index.ts` — 4 new sources
+- `supabase/functions/_shared/counsel-sources/{michigan,federal,regulatory}.ts` — 4 new sources
+- `supabase/functions/channel-prospector/index.ts` — 4 new sources
+- `supabase/functions/_shared/email-extras-6.ts` (new) — 4 new waterfall tiers + wired into `email-waterfall.ts`
+- `supabase/functions/visitor-identify/index.ts` — 4 new enrichment fallbacks
+- Deploy edge functions after batch
+
+### Verification
+- After ship: curl each scanner once, count new-source rows in DB, fix any zero-result sources before declaring done.
+
+## Phase B+ (future turns)
+- 40 more sources per turn × 4 turns
+- Same verification gate per batch
+
+## Constraints
+- No new secrets requested.
+- Sources that turn out to require auth get dropped from the list and noted in the catalog with reason.
+- All scrapes go through existing `FIRECRAWL_API_KEY` (already in Supabase).
+- All county GIS sources use try/catch fail-graceful pattern (per Phase 42 lessons).
+
+## Risk
+- ~30% of "free" sources will silently rate-limit or return empty in production. Mitigated by per-batch verification.
+- Schema growth: adding 200 sources means 200 new signal-type strings — will keep them grouped under existing signal types where possible to avoid digest bloat.
