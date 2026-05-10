@@ -4,6 +4,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import * as ex from "./scanner-extras-2026.ts";
 import * as exb from "./scanner-extras-2026-b.ts";
+import * as exc from "./scanner-extras-2026-c.ts";
 
 type Job = { source: string; run: () => Promise<unknown> };
 
@@ -18,6 +19,11 @@ const PRODUCT_JOBS: Record<string, () => Job[]> = {
     { source: "epa_air_quality", run: () => exb.fetchEPAAirQuality("26") },
     { source: "nws_heat_advisories", run: () => exb.fetchNWSHeatAdvisories("MI") },
     { source: "detroit_311_water", run: () => exb.fetchDetroit311Trade("water") },
+    // Phase C
+    { source: "spc_day2_outlook", run: () => exc.fetchSPCDay2Outlook() },
+    { source: "epa_ust_leaks_mi", run: () => exc.fetchEPAUSTLeaks("MI") },
+    { source: "detroit_311_fire", run: () => exc.fetchDetroit311Fire() },
+    { source: "wayne_tax_delinquent", run: () => exc.fetchWayneTaxDelinquent() },
   ],
   mortgage_radar: () => [
     { source: "hud_usps_vacancy", run: () => ex.fetchHUDVacancyByZip([]) },
@@ -29,6 +35,11 @@ const PRODUCT_JOBS: Record<string, () => Job[]> = {
     { source: "fhfa_hpi_detroit", run: () => exb.fetchFHFAHPI() },
     { source: "cfpb_complaints_mi", run: () => exb.fetchCFPBComplaints("MI") },
     { source: "wayne_sheriff_sales", run: () => exb.fetchWayneSheriffSales() },
+    // Phase C
+    { source: "zillow_zhvi", run: () => exc.fetchZillowZHVI() },
+    { source: "redfin_weekly", run: () => exc.fetchRedfinWeekly() },
+    { source: "nmls_public_registry", run: () => exc.fetchNMLSPublicRegistry() },
+    { source: "fdic_failed_banks_mi", run: () => exc.fetchFDICFailedBanks() },
   ],
   techalert: () => [
     { source: "usajobs_trades", run: () => ex.fetchUSAJobsTrades() },
@@ -40,6 +51,11 @@ const PRODUCT_JOBS: Record<string, () => Job[]> = {
     { source: "michigan_warn", run: () => exb.fetchMichiganWARN() },
     { source: "nlrb_petitions_mi", run: () => exb.fetchNLRBPetitions("MI") },
     { source: "osha_accidents_hvac", run: () => exb.fetchOSHAAccidents("238220") },
+    // Phase C
+    { source: "dol_perm_mi", run: () => exc.fetchDOLPerm("MI") },
+    { source: "miosha_citations", run: () => exc.fetchMIOSHACitations() },
+    { source: "sba_7a_loans_mi", run: () => exc.fetchSBA7aLoans() },
+    { source: "epa_echo_enforcement_mi", run: () => exc.fetchEPAECHOEnforcement("MI") },
   ],
   demand_radar: () => [
     { source: "bidnet_rss", run: () => ex.fetchBidNetRSS("MI") },
@@ -51,6 +67,11 @@ const PRODUCT_JOBS: Record<string, () => Job[]> = {
     { source: "wayne_county_purchasing", run: () => exb.fetchWayneCountyPurchasing() },
     { source: "mdot_bid_letting", run: () => exb.fetchMDOTBidLetting() },
     { source: "grants_gov", run: () => exb.fetchGrantsGov() },
+    // Phase C
+    { source: "ohio_buyspeed", run: () => exc.fetchOhioBuyspeed() },
+    { source: "illinois_cms_bids", run: () => exc.fetchIllinoisCMSBids() },
+    { source: "detroit_ocp_contracts", run: () => exc.fetchDetroitOCPContracts() },
+    { source: "nsf_sbir_mi", run: () => exc.fetchNSFSBIR() },
   ],
   industry_pulse: () => [
     { source: "bls_employment_situation", run: () => ex.fetchBLSEmploymentSituation() },
@@ -62,6 +83,11 @@ const PRODUCT_JOBS: Record<string, () => Job[]> = {
     { source: "nahb_hmi", run: () => exb.fetchNAHBHMI() },
     { source: "nfib_optimism", run: () => exb.fetchNFIBOptimism() },
     { source: "aia_abi", run: () => exb.fetchAIAABI() },
+    // Phase C
+    { source: "ism_releases", run: () => exc.fetchISMReleases() },
+    { source: "conference_board_lei", run: () => exc.fetchConferenceBoardLEI() },
+    { source: "census_aces", run: () => exc.fetchCensusACES() },
+    { source: "beige_book_chicago", run: () => exc.fetchBeigeBookChicago() },
   ],
   dead_lead_pool: () => [
     { source: "detroit_contractors_expiring", run: () => ex.fetchDetroitContractorsExpiringSoon() },
@@ -73,6 +99,11 @@ const PRODUCT_JOBS: Record<string, () => Job[]> = {
     { source: "irs_exempt_revocations_mi", run: () => exb.fetchIRSExemptRevocations("MI") },
     { source: "yelp_closed_hvac_detroit", run: () => exb.fetchYelpClosed("hvac", "Detroit") },
     { source: "manta_defunct_hvac", run: () => exb.fetchMantaDefunct("238220") },
+    // Phase C
+    { source: "yp_defunct_hvac_detroit", run: () => exc.fetchYPDefunct("hvac", "Detroit") },
+    { source: "courtlistener_bankruptcy_mieb", run: () => exc.fetchCourtListenerBankruptcy("mieb") },
+    { source: "mi_ucc_terminations", run: () => exc.fetchMISOSUCCTerminations() },
+    { source: "bbb_revocations", run: () => exc.fetchBBBRevocations() },
   ],
   counsel_records: () => [
     { source: "lara_disciplinary", run: () => ex.fetchLARADisciplinaryRSS() },
@@ -84,6 +115,11 @@ const PRODUCT_JOBS: Record<string, () => Job[]> = {
     { source: "mi_coa_opinions", run: () => exb.fetchMICourtOfAppeals() },
     { source: "sixth_circuit_opinions", run: () => exb.fetchSixthCircuitOpinions() },
     { source: "sec_litigation_releases", run: () => exb.fetchSECLitigationReleases() },
+    // Phase C
+    { source: "mi_supreme_court", run: () => exc.fetchMISupremeCourt() },
+    { source: "doj_edmi_releases", run: () => exc.fetchDOJEDMIReleases() },
+    { source: "sbm_directory", run: () => exc.fetchSBMDirectory() },
+    { source: "justia_dockets_mi", run: () => exc.fetchJustiaDockets() },
   ],
   channel_prospector: () => [
     { source: "osm_overpass_trades_hvac", run: () => ex.fetchOSMOverpassTrades("hvac") },
@@ -95,6 +131,11 @@ const PRODUCT_JOBS: Record<string, () => Job[]> = {
     { source: "foursquare_places_hvac", run: () => exb.fetchFoursquarePlaces("hvac", "Detroit,MI") },
     { source: "nominatim_hvac_detroit", run: () => exb.fetchNominatimSearch("hvac contractor Detroit") },
     { source: "opencage_detroit", run: () => exb.fetchOpenCageGeocode("Detroit MI") },
+    // Phase C
+    { source: "here_places_hvac", run: () => exc.fetchHEREPlaces() },
+    { source: "mapquest_places_hvac", run: () => exc.fetchMapQuestPlaces() },
+    { source: "superpages_hvac_48201", run: () => exc.fetchSuperpages("48201", "hvac") },
+    { source: "merchantcircle_detroit_hvac", run: () => exc.fetchMerchantCircle("Detroit-MI", "hvac") },
   ],
   email_waterfall: () => [
     { source: "dns_txt_spf_dwa", run: () => ex.fetchDNSTextSPF("detroitwebagent.com") },
@@ -106,6 +147,11 @@ const PRODUCT_JOBS: Record<string, () => Job[]> = {
     { source: "github_commit_emails_demo", run: () => exb.fetchGitHubCommitEmails("supabase") },
     { source: "wayback_contact_dwa", run: () => exb.fetchWaybackContact("detroitwebagent.com") },
     { source: "orcid_search_demo", run: () => exb.fetchORCIDEmail("Smith") },
+    // Phase C
+    { source: "common_crawl_emails_dwa", run: () => exc.fetchCommonCrawlEmails("detroitwebagent.com") },
+    { source: "bing_cache_emails_dwa", run: () => exc.fetchBingCacheEmails("detroitwebagent.com") },
+    { source: "scholar_profiles_demo", run: () => exc.fetchScholarProfiles("Matt Michels") },
+    { source: "sec_filer_tickers", run: () => exc.fetchSECFilerEmails() },
   ],
   siteradar_visitor: () => [
     { source: "ipapi_co", run: () => ex.fetchIPAPIco("8.8.8.8") },
@@ -117,6 +163,11 @@ const PRODUCT_JOBS: Record<string, () => Job[]> = {
     { source: "peeringdb_org", run: () => exb.fetchPeeringDBOrg("15169") },
     { source: "team_cymru_ipinfo", run: () => exb.fetchTeamCymruIPInfo("8.8.8.8") },
     { source: "crt_sh_certs", run: () => exb.fetchCrtShCerts("detroitwebagent.com") },
+    // Phase C
+    { source: "he_bgp_15169", run: () => exc.fetchHEBGP("15169") },
+    { source: "arin_rdap_8888", run: () => exc.fetchARINRDAP("8.8.8.8") },
+    { source: "shodan_internetdb_8888", run: () => exc.fetchShodanInternetDB("8.8.8.8") },
+    { source: "ipinfo_extended_8888", run: () => exc.fetchIPInfoExtended("8.8.8.8") },
   ],
 };
 
