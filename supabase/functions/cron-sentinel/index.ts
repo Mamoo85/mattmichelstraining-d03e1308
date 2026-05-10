@@ -308,13 +308,14 @@ serve(wrapServe("cron-sentinel", async (req) => {
     } else {
       const { data: recentRuns } = await sb
         .from('hire_alert_runs')
-        .select('candidates_found, run_at, source')
+        .select('candidates_found, run_at, source, status, error_message, errors_detail')
         .eq('source', 'all')
         .order('run_at', { ascending: false })
         .limit(3);
       const rows = recentRuns ?? [];
-      const mostRecentAgeHr = rows[0]?.run_at
-        ? (Date.now() - new Date(rows[0].run_at as string).getTime()) / 3_600_000
+      const mostRecent: any = rows[0] ?? {};
+      const mostRecentAgeHr = mostRecent.run_at
+        ? (Date.now() - new Date(mostRecent.run_at as string).getTime()) / 3_600_000
         : 9999;
       const allZero = rows.length >= 3 && rows.every((r: any) => (r.candidates_found ?? 0) === 0);
 
@@ -330,17 +331,77 @@ serve(wrapServe("cron-sentinel", async (req) => {
           .maybeSingle();
 
         if (!recentAlert) {
+          // Pull most recent matching error_logs row for richer context
+          const since6h = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString();
+          const { data: lastErr } = await sb
+            .from('error_logs')
+            .select('error_message, payload, http_status, created_at, severity')
+            .eq('function_name', 'hire-alert-scanner')
+            .in('severity', ['error', 'critical'])
+            .gte('created_at', since6h)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          // Derive failing step + error code from available signals
+          const detail = Array.isArray(mostRecent.errors_detail) ? mostRecent.errors_detail : [];
+          const lastDetail: any = detail.length ? detail[detail.length - 1] : null;
+          const step =
+            lastDetail?.step ||
+            lastDetail?.stage ||
+            (mostRecent.status && mostRecent.status !== 'completed' ? mostRecent.status : null) ||
+            'unknown_step';
+          const errCode =
+            (lastErr?.payload as any)?.code ||
+            (lastDetail?.code) ||
+            (lastErr?.http_status ? `HTTP_${lastErr.http_status}` : null) ||
+            (mostRecent.error_message ? String(mostRecent.error_message).slice(0, 60) : null) ||
+            (lastErr?.error_message ? String(lastErr.error_message).slice(0, 60) : null) ||
+            'NO_ERROR_LOGGED';
+
+          const fmtET = (d: string | Date) =>
+            new Date(d).toLocaleString('en-US', {
+              timeZone: 'America/Detroit',
+              month: 'short', day: 'numeric',
+              hour: 'numeric', minute: '2-digit', hour12: true,
+            }) + ' ET';
+          const alertTimeET = fmtET(new Date());
+          const lastRunET = mostRecent.run_at ? fmtET(mostRecent.run_at) : 'unknown';
+          const ageHr = Math.round(mostRecentAgeHr * 10) / 10;
+          const source = mostRecent.source || 'all';
+
+          const smsBody =
+`🚨 TechAlert DEAD PIPE @ ${alertTimeET}
+Step: ${step} | Code: ${errCode}
+Last run: ${lastRunET} (src=${source}, ${ageHr}h ago)
+3× zero-candidate runs · ${activeClientCount} active client(s)
+View: /dwa-admin → Cron Sentinel`;
+
           await sendSMS(
             ADMIN_PHONE, TWILIO_FROM,
-            `🚨 TechAlert DEAD PIPE: Last 3 scanner runs (source=all) returned 0 candidates within 6h. ${activeClientCount} active client(s). Investigate.`,
+            smsBody,
             'cron_sentinel_zero_pipe'
           ).catch(() => {});
+
           // Write to error_logs so code-fixer-watchdog can pick it up when Matt texts "Fix"
           await sb.from("error_logs").insert({
             source: "edge_function",
             function_name: "hire-alert-scanner",
             severity: "critical",
-            error_message: `DEAD PIPE: 0 candidates within 6h. ${activeClientCount} active client(s). Scanner appears silently dead.`,
+            error_message: `DEAD PIPE: 0 candidates within 6h. step=${step} code=${errCode}. last_run=${mostRecent.run_at || 'unknown'} (${ageHr}h ago, source=${source}). ${activeClientCount} active client(s).`,
+            payload: {
+              alert_type: 'dead_pipe',
+              step,
+              error_code: errCode,
+              last_run_at: mostRecent.run_at,
+              last_run_age_hours: ageHr,
+              last_run_source: source,
+              last_run_status: mostRecent.status,
+              last_run_error_message: mostRecent.error_message,
+              last_error_log: lastErr || null,
+              active_clients: activeClientCount,
+              alert_generated_at: new Date().toISOString(),
+            },
             created_at: new Date().toISOString(),
           }).catch(() => {});
         }
