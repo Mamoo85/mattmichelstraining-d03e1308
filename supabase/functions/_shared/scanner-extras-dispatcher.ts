@@ -193,6 +193,11 @@ const PRODUCT_JOBS: Record<string, () => Job[]> = {
     { source: "bing_cache_emails_dwa", run: () => exc.fetchBingCacheEmails("detroitwebagent.com") },
     { source: "scholar_profiles_demo", run: () => exc.fetchScholarProfiles("Matt Michels") },
     { source: "sec_filer_tickers", run: () => exc.fetchSECFilerEmails() },
+    // Phase D
+    { source: "researchgate_probe", run: () => exd.fetchResearchGate("Matt Michels") },
+    { source: "crossref_authors_construction", run: () => exd.fetchCrossrefAuthors("construction") },
+    { source: "npi_registry_mi", run: () => exd.fetchNPIRegistry("MI") },
+    { source: "nsf_awards_pi", run: () => exd.fetchNSFAwardsPI("construction") },
   ],
   siteradar_visitor: () => [
     { source: "ipapi_co", run: () => ex.fetchIPAPIco("8.8.8.8") },
@@ -209,6 +214,11 @@ const PRODUCT_JOBS: Record<string, () => Job[]> = {
     { source: "arin_rdap_8888", run: () => exc.fetchARINRDAP("8.8.8.8") },
     { source: "shodan_internetdb_8888", run: () => exc.fetchShodanInternetDB("8.8.8.8") },
     { source: "ipinfo_extended_8888", run: () => exc.fetchIPInfoExtended("8.8.8.8") },
+    // Phase D
+    { source: "censys_certs_dwa", run: () => exd.fetchCensysCerts("detroitwebagent.com") },
+    { source: "cloudflare_doh_ptr", run: () => exd.fetchCloudflareDoHPTR("8.8.8.8") },
+    { source: "ipstack_probe", run: () => exd.fetchIPStack("8.8.8.8") },
+    { source: "ipgeolocation_free", run: () => exd.fetchIPGeolocationFree("8.8.8.8") },
   ],
 };
 
