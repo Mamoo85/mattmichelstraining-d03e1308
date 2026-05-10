@@ -21,6 +21,7 @@ import OnboardingChecklist from "@/components/shared/OnboardingChecklist";
 
 import AlertWebhookConfig from "@/components/site-radar/AlertWebhookConfig";
 import InstallConcierge from "@/components/site-radar/InstallConcierge";
+import SelfInstallGuide from "@/components/site-radar/SelfInstallGuide";
 import JustPurchasedScreen, { isJustPurchased } from "@/components/shared/JustPurchasedScreen";
 
 type Client = {
