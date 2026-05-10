@@ -6,6 +6,7 @@ import * as ex from "./scanner-extras-2026.ts";
 import * as exb from "./scanner-extras-2026-b.ts";
 import * as exc from "./scanner-extras-2026-c.ts";
 import * as exd from "./scanner-extras-2026-d.ts";
+import * as exe from "./scanner-extras-2026-e.ts";
 
 type Job = { source: string; run: () => Promise<unknown> };
 
@@ -30,6 +31,11 @@ const PRODUCT_JOBS: Record<string, () => Job[]> = {
     { source: "semcog_construction", run: () => exd.fetchSEMCOGConstruction() },
     { source: "egle_pfas_sites", run: () => exd.fetchMichiganEGLEPFAS() },
     { source: "oakland_schools_bids", run: () => exd.fetchOaklandSchoolsBids() },
+    // Phase E
+    { source: "noaa_lightning_archive", run: () => exe.fetchNOAALightningArchive() },
+    { source: "hud_chas", run: () => exe.fetchHUDCHAS() },
+    { source: "census_acs_housing_age", run: () => exe.fetchCensusACSHousingAge() },
+    { source: "detroit_landbank_grants", run: () => exe.fetchDetroitLandBankGrants() },
   ],
   mortgage_radar: () => [
     { source: "hud_usps_vacancy", run: () => ex.fetchHUDVacancyByZip([]) },
@@ -51,6 +57,11 @@ const PRODUCT_JOBS: Record<string, () => Job[]> = {
     { source: "macomb_sheriff_sales", run: () => exd.fetchMacombSheriffSales() },
     { source: "mi_sos_ucc_filings", run: () => exd.fetchMISOSUCCFilings() },
     { source: "cfpb_hmda_mi", run: () => exd.fetchCFPBHMDA() },
+    // Phase E
+    { source: "realtor_sold_detroit", run: () => exe.fetchATTOMRealtorSold() },
+    { source: "trulia_crime_detroit", run: () => exe.fetchTruliaCrime() },
+    { source: "pacer_ch13_mieb", run: () => exe.fetchPACERCh13() },
+    { source: "tax_court_foreclosure", run: () => exe.fetchTaxCourtForeclosure() },
   ],
   techalert: () => [
     { source: "usajobs_trades", run: () => ex.fetchUSAJobsTrades() },
@@ -72,6 +83,11 @@ const PRODUCT_JOBS: Record<string, () => Job[]> = {
     { source: "simplyhired_rss_electrician", run: () => exd.fetchSimplyHiredRSS("electrician") },
     { source: "glassdoor_probe_dte", run: () => exd.fetchGlassdoorReviewsProbe("DTE-Energy") },
     { source: "reddit_hvac_hiring", run: () => exd.fetchRedditHiring("HVAC") },
+    // Phase E
+    { source: "ziprecruiter_rss_hvac", run: () => exe.fetchZipRecruiterRSS("hvac") },
+    { source: "dol_5500_pensions", run: () => exe.fetchPensionFund5500() },
+    { source: "michigan_works_events", run: () => exe.fetchMichiganWorksEvents() },
+    { source: "ohio_warn", run: () => exe.fetchOhioWARN() },
   ],
   demand_radar: () => [
     { source: "bidnet_rss", run: () => ex.fetchBidNetRSS("MI") },
@@ -93,6 +109,11 @@ const PRODUCT_JOBS: Record<string, () => Job[]> = {
     { source: "macomb_purchasing", run: () => exd.fetchMacombCountyPurchasing() },
     { source: "mi_sigma_vss", run: () => exd.fetchMISIGMAVSS() },
     { source: "k12_isd_bids", run: () => exd.fetchK12ISDBids() },
+    // Phase E
+    { source: "govwin_rss", run: () => exe.fetchGovWinRSS() },
+    { source: "indiana_bids", run: () => exe.fetchIndianaBids() },
+    { source: "sbir_solicitations", run: () => exe.fetchSBIRSolicitations() },
+    { source: "sam_opps_beta", run: () => exe.fetchFedBizOppsBeta() },
   ],
   industry_pulse: () => [
     { source: "bls_employment_situation", run: () => ex.fetchBLSEmploymentSituation() },
@@ -114,6 +135,11 @@ const PRODUCT_JOBS: Record<string, () => Job[]> = {
     { source: "agc_inflation", run: () => exd.fetchAGCInflation() },
     { source: "nahb_releases", run: () => exd.fetchNAHBReleases() },
     { source: "enr_top400", run: () => exd.fetchENRTop400() },
+    // Phase E
+    { source: "dodge_summaries", run: () => exe.fetchDodgeSummaries() },
+    { source: "constructconnect_news", run: () => exe.fetchConstructConnect() },
+    { source: "mi_mfg_association", run: () => exe.fetchMIMfgAssociation() },
+    { source: "crains_detroit_rss", run: () => exe.fetchCrainsDetroitRSS() },
   ],
   dead_lead_pool: () => [
     { source: "detroit_contractors_expiring", run: () => ex.fetchDetroitContractorsExpiringSoon() },
@@ -135,6 +161,11 @@ const PRODUCT_JOBS: Record<string, () => Job[]> = {
     { source: "oakland_biz_expirations", run: () => exd.fetchOaklandBizExpirations() },
     { source: "lansing_biz_expirations", run: () => exd.fetchLansingBizExpirations() },
     { source: "defunct_domains_probe", run: () => exd.fetchDefunctDomains(["detroitwebagent.com"]) },
+    // Phase E
+    { source: "wayne_biz_expirations", run: () => exe.fetchWayneBizExpirations() },
+    { source: "annarbor_biz_expirations", run: () => exe.fetchAARBizExpirations() },
+    { source: "flint_biz_expirations", run: () => exe.fetchFlintBizExpirations() },
+    { source: "mi_tax_revocations", run: () => exe.fetchMITaxRevocations() },
   ],
   counsel_records: () => [
     { source: "lara_disciplinary", run: () => ex.fetchLARADisciplinaryRSS() },
@@ -156,6 +187,11 @@ const PRODUCT_JOBS: Record<string, () => Job[]> = {
     { source: "law360_rss", run: () => exd.fetchLaw360RSS() },
     { source: "legaltech_news_rss", run: () => exd.fetchLegaltechNewsRSS() },
     { source: "mi_lawyers_weekly", run: () => exd.fetchMichiganLawyersWeekly() },
+    // Phase E
+    { source: "mi_trial_courts", run: () => exe.fetchMITrialCourts() },
+    { source: "bankruptcy_ecf_mieb", run: () => exe.fetchBankruptcyECF() },
+    { source: "alm_law_rss", run: () => exe.fetchALMLawNews() },
+    { source: "detroit_legal_news", run: () => exe.fetchDetroitLegalNews() },
   ],
   channel_prospector: () => [
     { source: "osm_overpass_trades_hvac", run: () => ex.fetchOSMOverpassTrades("hvac") },
@@ -177,6 +213,11 @@ const PRODUCT_JOBS: Record<string, () => Job[]> = {
     { source: "citysquares_detroit_hvac", run: () => exd.fetchCitySquares("Detroit-MI", "hvac") },
     { source: "bgp_tools_dwa", run: () => exd.fetchBGPToolsCompany("detroitwebagent.com") },
     { source: "crunchbase_dwa", run: () => exd.fetchCrunchbaseProfile("detroit-web-agency") },
+    // Phase E
+    { source: "wellfound_dwa", run: () => exe.fetchAngelListProfile("detroit-web-agency") },
+    { source: "indeed_companies_hvac", run: () => exe.fetchIndeedCompanyDir("hvac") },
+    { source: "glassdoor_dir_hvac", run: () => exe.fetchGlassdoorCompanyDir("hvac") },
+    { source: "opencage_reverse_detroit", run: () => exe.fetchOpenCageRev() },
   ],
   email_waterfall: () => [
     { source: "dns_txt_spf_dwa", run: () => ex.fetchDNSTextSPF("detroitwebagent.com") },
@@ -198,6 +239,11 @@ const PRODUCT_JOBS: Record<string, () => Job[]> = {
     { source: "crossref_authors_construction", run: () => exd.fetchCrossrefAuthors("construction") },
     { source: "npi_registry_mi", run: () => exd.fetchNPIRegistry("MI") },
     { source: "nsf_awards_pi", run: () => exd.fetchNSFAwardsPI("construction") },
+    // Phase E
+    { source: "nih_reporter_construction", run: () => exe.fetchNIHReporter("construction") },
+    { source: "sec_form_adv", run: () => exe.fetchSECFormADV() },
+    { source: "sec_edgar_recent_mi", run: () => exe.fetchSECEdgarRecent() },
+    { source: "nitter_bio_dwa", run: () => exe.fetchTwitterBioScrape("detroitwebagent") },
   ],
   siteradar_visitor: () => [
     { source: "ipapi_co", run: () => ex.fetchIPAPIco("8.8.8.8") },
@@ -219,6 +265,11 @@ const PRODUCT_JOBS: Record<string, () => Job[]> = {
     { source: "cloudflare_doh_ptr", run: () => exd.fetchCloudflareDoHPTR("8.8.8.8") },
     { source: "ipstack_probe", run: () => exd.fetchIPStack("8.8.8.8") },
     { source: "ipgeolocation_free", run: () => exd.fetchIPGeolocationFree("8.8.8.8") },
+    // Phase E
+    { source: "maxmind_probe", run: () => exe.fetchMaxMindGeoLite() },
+    { source: "spamhaus_drop", run: () => exe.fetchSpamhausDROP() },
+    { source: "iplocation_net", run: () => exe.fetchIPLocationNet("8.8.8.8") },
+    { source: "ipwhois", run: () => exe.fetchIPWhoIs("8.8.8.8") },
   ],
 };
 
