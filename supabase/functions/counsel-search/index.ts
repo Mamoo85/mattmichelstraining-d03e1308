@@ -15,6 +15,12 @@
 //   - Logs every search to counsel_searches with case_matter for audit
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import * as Federal from "../_shared/counsel-sources/federal.ts";
+import * as Reg from "../_shared/counsel-sources/regulatory.ts";
+import * as MI from "../_shared/counsel-sources/michigan.ts";
+import * as County from "../_shared/counsel-sources/county.ts";
+import * as Pro from "../_shared/counsel-sources/professional.ts";
+import * as OSINT from "../_shared/counsel-sources/osint.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
@@ -412,6 +418,68 @@ async function runScansForName(name: string, city: string, state: string): Promi
     sonarSearch(`Search for tax liens, mechanic's liens, UCC filings, or judgment liens against "${name}" in ${state}. Each item must cite the filing record's public URL. CITE OR OMIT.`, "Liens & Judgments", "Financial Records", "high", name),
     sonarSearch(`Search Michigan probate court filings, estate proceedings, or guardianship cases involving "${name}". Each item must cite a court URL. CITE OR OMIT.`, "MI Probate Records", "Court Records", "info", name),
     sonarSearch(`Search Michigan LARA business registry and SOS records for businesses owned, registered, or operated by "${name}". Include LARA dissolution and BBB complaints. Each item must cite a verifiable URL. CITE OR OMIT.`, "MI Business Background", "Business Records", "medium", name),
+
+    // ── Federal courts & corrections (8) ─────────────────────────────────
+    Federal.scanCLOpinions(name),
+    Federal.scanCLRecap(name),
+    Federal.scanTaxCourt(name),
+    Federal.scanBOP(name),
+    Federal.scanUSMarshals(name),
+    Federal.scanDEAFugitives(name),
+    Federal.scanICEWanted(name),
+    Federal.scanPACER(name),
+
+    // ── Federal regulatory & enforcement (10) ───────────────────────────
+    Reg.scanSECLitigation(name),
+    Reg.scanCFTC(name),
+    Reg.scanFTC(name),
+    Reg.scanCFPB(name),
+    Reg.scanDOJ(name),
+    Reg.scanLEIE(name),
+    Reg.scanOFAC(name),
+    Reg.scanNTSB(name),
+    Reg.scanFINRA(name),
+    Reg.scanNMLS(name),
+
+    // ── Michigan state (12) ──────────────────────────────────────────────
+    MI.scanMDOC_OTIS(name),
+    MI.scanMIPSOR(name),
+    MI.scanLARALicense(name),
+    MI.scanLARACorp(name),
+    MI.scanMI_UCC(name),
+    MI.scanMICOA(name),
+    MI.scanMISCT(name),
+    MI.scanMIAG(name),
+    MI.scanMIDIFS(name),
+    MI.scanMIOSHA(name),
+    MI.scanMIStateBar(name),
+    MI.scanMITaxLien(name),
+
+    // ── Michigan county courts & deeds (10) ──────────────────────────────
+    County.scan36thDistrict(name),
+    County.scanWayne3rd(name),
+    County.scanOakland6th(name),
+    County.scanMacomb16th(name),
+    County.scanWashtenaw(name),
+    County.scanKent17th(name),
+    County.scanGenesee7th(name),
+    County.scanWayneROD(name),
+    County.scanOaklandROD(name),
+    County.scanMacombROD(name),
+
+    // ── Property/parcel + professional registries (7) ────────────────────
+    Pro.scanGeneseeParcel(name),
+    Pro.scanWashtenawParcel(name),
+    Pro.scanKentParcel(name),
+    Pro.scanDLBA(name),
+    Pro.scanNPI(name),
+    Pro.scanFAA(name),
+    Pro.scanUSPTO(name),
+
+    // ── OSINT aggregates (3) ─────────────────────────────────────────────
+    OSINT.scanOpenSanctions(name),
+    OSINT.scanICIJ(name),
+    OSINT.scanGDELT(name),
   ]).then(arr => arr.map(r => r.status === "fulfilled" ? r.value : []));
 }
 
