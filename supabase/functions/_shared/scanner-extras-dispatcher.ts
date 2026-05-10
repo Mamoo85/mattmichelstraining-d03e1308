@@ -265,6 +265,11 @@ const PRODUCT_JOBS: Record<string, () => Job[]> = {
     { source: "cloudflare_doh_ptr", run: () => exd.fetchCloudflareDoHPTR("8.8.8.8") },
     { source: "ipstack_probe", run: () => exd.fetchIPStack("8.8.8.8") },
     { source: "ipgeolocation_free", run: () => exd.fetchIPGeolocationFree("8.8.8.8") },
+    // Phase E
+    { source: "maxmind_probe", run: () => exe.fetchMaxMindGeoLite() },
+    { source: "spamhaus_drop", run: () => exe.fetchSpamhausDROP() },
+    { source: "iplocation_net", run: () => exe.fetchIPLocationNet("8.8.8.8") },
+    { source: "ipwhois", run: () => exe.fetchIPWhoIs("8.8.8.8") },
   ],
 };
 
