@@ -1,7 +1,10 @@
 // Admin endpoint: list sources, get toggles/health, run a source.
 // Auth: requires caller to be admin (uses anon key + user JWT + has_role check).
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { corsHeaders } from "../_shared/cors.ts";
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
 import { runPhaseAExtras, SUPPORTED_PRODUCTS, listProductSources } from "../_shared/scanner-extras-dispatcher.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
