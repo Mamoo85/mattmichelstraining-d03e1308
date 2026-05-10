@@ -2408,3 +2408,6 @@ verify_jwt = false
 [functions.counsel-followup-drip]
 verify_jwt = false
 
+
+[functions.counsel-dashboard-load]
+verify_jwt = false
