@@ -169,13 +169,16 @@ export async function runPhaseAExtras(product: string, opts: { segment?: string;
     const ms = Date.now() - t0;
     results.push({ source: j.source, count, ms, error });
 
-    // Fire-and-forget audit insert
     sb.from("scanner_extras_runs")
-      .insert({ product, source: j.source, count, ms, error, sample: sample as any })
+      .insert({ product, source: j.source, count, ms, error, sample: sample as any, segment })
       .then(() => {})
       .catch(() => {});
   }
-  return { product, results };
+  return { product, segment, results };
 }
 
 export const SUPPORTED_PRODUCTS = Object.keys(PRODUCT_JOBS);
+
+export function listProductSources(product: string): string[] {
+  return (PRODUCT_JOBS[product]?.() || []).map((j) => j.source);
+}
