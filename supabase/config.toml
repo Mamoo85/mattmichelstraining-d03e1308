@@ -2411,3 +2411,6 @@ verify_jwt = false
 
 [functions.counsel-dashboard-load]
 verify_jwt = false
+
+[functions.scanner-extras-verify]
+verify_jwt = false
