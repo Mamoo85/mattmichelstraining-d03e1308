@@ -587,21 +587,13 @@ export default function MySiteRadar() {
                 )}
               </Card>
 
-              {/* Snippet (collapsed footer-style — install concierge teaser) */}
-              <Card className="border-cyan-900/40 bg-gradient-to-br from-[#0a1628] to-[#0d2547] p-5">
-                <div className="mb-2 flex items-center justify-between gap-2">
-                  <div>
-                    <p className="text-[11px] font-bold uppercase tracking-wider text-cyan-400">⚙️ Tracking snippet</p>
-                    <p className="mt-1 text-xs text-slate-400">
-                      Paste before <code className="text-cyan-400">&lt;/body&gt;</code>. Or reply to your welcome email — we'll install it for you.
-                    </p>
-                  </div>
-                  <Button onClick={copySnippet} size="sm" className="bg-cyan-400 text-slate-900 hover:bg-cyan-300">
-                    {copied ? <><Check className="mr-1 h-3 w-3" /> Copied</> : <><Copy className="mr-1 h-3 w-3" /> Copy</>}
-                  </Button>
-                </div>
-                <pre className="overflow-x-auto rounded-md bg-[#030711] p-3 text-[11px] text-slate-400">{snippet}</pre>
-              </Card>
+              {/* Self-install guide — primary path: pick your platform, copy snippet, follow steps */}
+              {client?.visitor_script_key && (
+                <SelfInstallGuide
+                  snippet={snippet}
+                  installed={(client as any).install_status === "live"}
+                />
+              )}
 
               {/* Export */}
               <Card className="border-cyan-900/40 bg-[#0a1628]/80 p-5">
