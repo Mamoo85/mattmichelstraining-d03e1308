@@ -187,6 +187,11 @@ const PRODUCT_JOBS: Record<string, () => Job[]> = {
     { source: "law360_rss", run: () => exd.fetchLaw360RSS() },
     { source: "legaltech_news_rss", run: () => exd.fetchLegaltechNewsRSS() },
     { source: "mi_lawyers_weekly", run: () => exd.fetchMichiganLawyersWeekly() },
+    // Phase E
+    { source: "mi_trial_courts", run: () => exe.fetchMITrialCourts() },
+    { source: "bankruptcy_ecf_mieb", run: () => exe.fetchBankruptcyECF() },
+    { source: "alm_law_rss", run: () => exe.fetchALMLawNews() },
+    { source: "detroit_legal_news", run: () => exe.fetchDetroitLegalNews() },
   ],
   channel_prospector: () => [
     { source: "osm_overpass_trades_hvac", run: () => ex.fetchOSMOverpassTrades("hvac") },
