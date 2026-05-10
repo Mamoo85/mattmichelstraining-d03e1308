@@ -51,21 +51,6 @@ const PRODUCT_JOBS: Record<string, () => Job[]> = {
     { source: "macomb_sheriff_sales", run: () => exd.fetchMacombSheriffSales() },
     { source: "mi_sos_ucc_filings", run: () => exd.fetchMISOSUCCFilings() },
     { source: "cfpb_hmda_mi", run: () => exd.fetchCFPBHMDA() },
-  mortgage_radar: () => [
-    { source: "hud_usps_vacancy", run: () => ex.fetchHUDVacancyByZip([]) },
-    { source: "census_building_permits", run: () => ex.fetchCensusBuildingPermits("26") },
-    { source: "bls_unemployment", run: () => ex.fetchBLSUnemployment() },
-    { source: "realtor_price_cuts_48201", run: () => ex.fetchRealtorPriceCuts("48201") },
-    // Phase B
-    { source: "fred_30yr_rate", run: () => exb.fetchFRED30YR() },
-    { source: "fhfa_hpi_detroit", run: () => exb.fetchFHFAHPI() },
-    { source: "cfpb_complaints_mi", run: () => exb.fetchCFPBComplaints("MI") },
-    { source: "wayne_sheriff_sales", run: () => exb.fetchWayneSheriffSales() },
-    // Phase C
-    { source: "zillow_zhvi", run: () => exc.fetchZillowZHVI() },
-    { source: "redfin_weekly", run: () => exc.fetchRedfinWeekly() },
-    { source: "nmls_public_registry", run: () => exc.fetchNMLSPublicRegistry() },
-    { source: "fdic_failed_banks_mi", run: () => exc.fetchFDICFailedBanks() },
   ],
   techalert: () => [
     { source: "usajobs_trades", run: () => ex.fetchUSAJobsTrades() },
