@@ -109,6 +109,11 @@ const PRODUCT_JOBS: Record<string, () => Job[]> = {
     { source: "macomb_purchasing", run: () => exd.fetchMacombCountyPurchasing() },
     { source: "mi_sigma_vss", run: () => exd.fetchMISIGMAVSS() },
     { source: "k12_isd_bids", run: () => exd.fetchK12ISDBids() },
+    // Phase E
+    { source: "govwin_rss", run: () => exe.fetchGovWinRSS() },
+    { source: "indiana_bids", run: () => exe.fetchIndianaBids() },
+    { source: "sbir_solicitations", run: () => exe.fetchSBIRSolicitations() },
+    { source: "sam_opps_beta", run: () => exe.fetchFedBizOppsBeta() },
   ],
   industry_pulse: () => [
     { source: "bls_employment_situation", run: () => ex.fetchBLSEmploymentSituation() },
