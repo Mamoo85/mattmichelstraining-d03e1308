@@ -438,14 +438,19 @@ Deno.serve(async (req) => {
     ({ error: e }) => { if (e) console.error("[start-radar-trial] trial_signups upsert", e); },
   );
 
-  // 🔔 Ping Matt — every trial signup (fire-and-forget, never blocks).
+  // 🔔 Ping Matt — distinguish auto-provisioned teaser sends from REAL self-started trials.
+  // Auto/teaser/blast sources = outreach prospects we pre-provisioned (not a real human signup).
+  // Anything else (direct, paid ads, organic, referral) = a real person clicked through.
+  const src = (body.source || "direct").toLowerCase();
+  const isAutoProvisioned = /teaser|blast|auto|prospect_hunter|seed/.test(src);
+  const prefix = isAutoProvisioned ? "📨 TEASER SENT" : "🎯 NEW TRIAL STARTED";
   sendSMS(
     ADMIN_PHONE,
     TWILIO_FROM,
-    `🎯 NEW TRIAL — ${cfg.label}\n${email}${body.business_name ? `\n${body.business_name}` : ""}${body.phone ? `\n${body.phone}` : ""}${founder ? "\n(founder seat)" : ""}\nsrc: ${body.source || "direct"}`,
-    "trial_signup_alert",
+    `${prefix} — ${cfg.label}\n${email}${body.business_name ? `\n${body.business_name}` : ""}${body.phone ? `\n${body.phone}` : ""}${founder ? "\n(founder seat)" : ""}\nsrc: ${body.source || "direct"}`,
+    isAutoProvisioned ? "trial_teaser_alert" : "trial_signup_alert",
     false,
-    { bypassQuietHours: true },
+    { bypassQuietHours: !isAutoProvisioned },
   ).catch((e) => console.error("[start-radar-trial] admin SMS failed", e));
 
   return new Response(
