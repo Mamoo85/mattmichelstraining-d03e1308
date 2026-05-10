@@ -213,6 +213,11 @@ const PRODUCT_JOBS: Record<string, () => Job[]> = {
     { source: "citysquares_detroit_hvac", run: () => exd.fetchCitySquares("Detroit-MI", "hvac") },
     { source: "bgp_tools_dwa", run: () => exd.fetchBGPToolsCompany("detroitwebagent.com") },
     { source: "crunchbase_dwa", run: () => exd.fetchCrunchbaseProfile("detroit-web-agency") },
+    // Phase E
+    { source: "wellfound_dwa", run: () => exe.fetchAngelListProfile("detroit-web-agency") },
+    { source: "indeed_companies_hvac", run: () => exe.fetchIndeedCompanyDir("hvac") },
+    { source: "glassdoor_dir_hvac", run: () => exe.fetchGlassdoorCompanyDir("hvac") },
+    { source: "opencage_reverse_detroit", run: () => exe.fetchOpenCageRev() },
   ],
   email_waterfall: () => [
     { source: "dns_txt_spf_dwa", run: () => ex.fetchDNSTextSPF("detroitwebagent.com") },
