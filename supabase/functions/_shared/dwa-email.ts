@@ -53,6 +53,7 @@ export async function dwaEmail(opts: DwaEmailOpts): Promise<{ ok: boolean; error
         bcc: [opts.bcc || DWA_BCC],
         subject: opts.subject,
         html: opts.html,
+        ...(opts.text ? { text: opts.text } : {}),
         ...(opts.headers ? { headers: opts.headers } : {}),
       }),
     });
