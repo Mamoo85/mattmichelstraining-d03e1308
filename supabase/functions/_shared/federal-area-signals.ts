@@ -1,4 +1,7 @@
 // Batch 1C — Federal area signals for Trade Radar (Wave 1).
+// deno-lint-ignore-file no-explicit-any
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
+import { withSourceHealth } from "./source-health.ts";
 // Returns signal objects compatible with the trade-radar-scanner's
 // AREA_ALERT_TYPES upsert path (vertical, scope inferred from city/zip).
 //
