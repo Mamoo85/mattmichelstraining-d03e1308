@@ -106,7 +106,31 @@ export interface SourceRunResult {
   rows: number;
   durationMs: number;
   error?: string;
+  failingStep?: string;
+  errorCode?: string;
   skipped?: boolean; // breaker open
+}
+
+/**
+ * Infer a short error code from an error message — used by the monitoring
+ * dashboard so operators can group failures (HTTP_429, TIMEOUT, NO_KEY, …).
+ */
+export function classifyError(err: string | null | undefined): string {
+  if (!err) return "UNKNOWN";
+  const m = err.toLowerCase();
+  const httpMatch = err.match(/\b(4\d{2}|5\d{2})\b/);
+  if (httpMatch) return `HTTP_${httpMatch[1]}`;
+  if (m.includes("breaker")) return "BREAKER_OPEN";
+  if (m.includes("timeout") || m.includes("timed out")) return "TIMEOUT";
+  if (m.includes("abort")) return "ABORTED";
+  if (m.includes("dns") || m.includes("enotfound") || m.includes("getaddrinfo")) return "DNS";
+  if (m.includes("ssl") || m.includes("tls") || m.includes("certificate")) return "TLS";
+  if (m.includes("econnreset") || m.includes("network")) return "NETWORK";
+  if (m.includes("json") || m.includes("parse") || m.includes("unexpected token")) return "PARSE";
+  if (m.includes("rate") || m.includes("quota") || m.includes("limit")) return "RATE_LIMIT";
+  if (m.includes("unauthorized") || m.includes("forbidden") || m.includes("api key") || m.includes("apikey")) return "AUTH";
+  if (m.includes("not found")) return "NOT_FOUND";
+  return "OTHER";
 }
 
 // ────────────────────────────────────────────────────────────────────────────
