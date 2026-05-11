@@ -144,6 +144,82 @@ async function fetchCuyahogaSales(vertical: Vertical): Promise<DeedSignal[]> {
 }
 
 // ---------------------------------------------------------------------------
+// Oakland County (MI) deeds — ArcGIS parcel server
+// Note: Oakland/Macomb endpoints have a history of blocking edge runtime IPs.
+// Health wrapper turns any failure into an actionable last_error row.
+// ---------------------------------------------------------------------------
+async function fetchOaklandSales(vertical: Vertical): Promise<DeedSignal[]> {
+  const url =
+    "https://www.oakgov.com/egis/rest/services/Property/ParcelInfo/FeatureServer/0/query" +
+    "?where=" + encodeURIComponent("SALE_DATE >= CURRENT_DATE - 90 AND YEAR_BUILT < 1990 AND YEAR_BUILT > 0") +
+    "&outFields=SITUS_ADDRESS,SITUS_CITY,ZIP,SALE_DATE,YEAR_BUILT,OWNER_NAME" +
+    "&f=json&resultRecordCount=200&orderByFields=SALE_DATE+DESC";
+  const r = await fetch(url, { headers: { "User-Agent": "DWA-Trade-Radar/1.0" } });
+  if (!r.ok) throw new Error(`oakland gis ${r.status}`);
+  const j = await r.json();
+  const out: DeedSignal[] = [];
+  for (const f of (j?.features ?? [])) {
+    const a = f?.attributes ?? {};
+    const yr = Number(a.YEAR_BUILT);
+    if (!a.SITUS_ADDRESS || !yr || yr >= 1990) continue;
+    out.push({
+      address: String(a.SITUS_ADDRESS),
+      city: a.SITUS_CITY ? String(a.SITUS_CITY) : undefined,
+      zip: a.ZIP ? String(a.ZIP) : undefined,
+      state: "MI",
+      signal_type: "new_owner_old_home",
+      signal_detail: `New owner of ${yr}-built home (Oakland Co)`,
+      signal_date: a.SALE_DATE
+        ? new Date(a.SALE_DATE).toISOString().slice(0, 10)
+        : new Date().toISOString().slice(0, 10),
+      score: 7,
+      source_method: "scraper",
+      suggested_opener: OPENER_BY_VERTICAL[vertical],
+      estimated_value: ESTIMATED_VALUE[vertical],
+      raw_source_data: { source: "oakland_county_deeds", year_built: yr, owner: a.OWNER_NAME },
+    });
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------------------
+// Macomb County (MI) deeds — ArcGIS parcel server (best-known endpoint)
+// ---------------------------------------------------------------------------
+async function fetchMacombSales(vertical: Vertical): Promise<DeedSignal[]> {
+  const url =
+    "https://gis.macombcountymi.gov/arcgis/rest/services/Property/Parcels/FeatureServer/0/query" +
+    "?where=" + encodeURIComponent("SALE_DATE >= CURRENT_DATE - 90 AND YEAR_BUILT < 1990 AND YEAR_BUILT > 0") +
+    "&outFields=ADDRESS,CITY,ZIP,SALE_DATE,YEAR_BUILT,OWNER_NAME" +
+    "&f=json&resultRecordCount=200&orderByFields=SALE_DATE+DESC";
+  const r = await fetch(url, { headers: { "User-Agent": "DWA-Trade-Radar/1.0" } });
+  if (!r.ok) throw new Error(`macomb gis ${r.status}`);
+  const j = await r.json();
+  const out: DeedSignal[] = [];
+  for (const f of (j?.features ?? [])) {
+    const a = f?.attributes ?? {};
+    const yr = Number(a.YEAR_BUILT);
+    if (!a.ADDRESS || !yr || yr >= 1990) continue;
+    out.push({
+      address: String(a.ADDRESS),
+      city: a.CITY ? String(a.CITY) : undefined,
+      zip: a.ZIP ? String(a.ZIP) : undefined,
+      state: "MI",
+      signal_type: "new_owner_old_home",
+      signal_detail: `New owner of ${yr}-built home (Macomb Co)`,
+      signal_date: a.SALE_DATE
+        ? new Date(a.SALE_DATE).toISOString().slice(0, 10)
+        : new Date().toISOString().slice(0, 10),
+      score: 7,
+      source_method: "scraper",
+      suggested_opener: OPENER_BY_VERTICAL[vertical],
+      estimated_value: ESTIMATED_VALUE[vertical],
+      raw_source_data: { source: "macomb_county_deeds", year_built: yr, owner: a.OWNER_NAME },
+    });
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------------------
 // #41 — Wayne County tax foreclosure auction — Firecrawl scrape (RS + DJ)
 // ---------------------------------------------------------------------------
 async function fetchWayneTaxForeclosure(vertical: Vertical): Promise<DeedSignal[]> {
@@ -163,7 +239,6 @@ async function fetchWayneTaxForeclosure(vertical: Vertical): Promise<DeedSignal[
     if (!r.ok) return [];
     const j = await r.json();
     const md: string = j?.data?.markdown || j?.markdown || "";
-    // Crude address line extraction: lines containing a number-prefix + street word
     const lines = md.split("\n")
       .map((s) => s.trim())
       .filter((s) =>
@@ -209,6 +284,8 @@ export async function runCountyDeedSignals(
   const tasks: Array<Promise<DeedSignal[]>> = [];
   if (/grand\s*rapids|kent/.test(joined)) tasks.push(wrap("kent_county_deeds", () => fetchKentDeeds(vertical)));
   if (/cleveland|cuyahoga/.test(joined)) tasks.push(wrap("cuyahoga_county_sales", () => fetchCuyahogaSales(vertical)));
+  if (/oakland|se\s*michigan/.test(joined)) tasks.push(wrap("oakland_county_deeds", () => fetchOaklandSales(vertical)));
+  if (/macomb|se\s*michigan/.test(joined)) tasks.push(wrap("macomb_county_deeds", () => fetchMacombSales(vertical)));
   if (/detroit|wayne/.test(joined)) tasks.push(wrap("wayne_tax_foreclosure", () => fetchWayneTaxForeclosure(vertical)));
 
   if (tasks.length === 0) return [];

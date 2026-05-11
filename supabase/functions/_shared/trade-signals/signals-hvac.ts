@@ -1,5 +1,19 @@
 // HVAC Radar signal scanner.
 // Sources: NOAA NWS Alerts (extreme heat/cold/ice), FEMA declarations, BSEED/Oakland aging-system permits.
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
+import { recordSourceRun } from "../source-health.ts";
+
+// Every source this file is expected to touch. Used to record per-source yield
+// (including zeros) so source_health surfaces dead sources, not just live ones.
+const EXPECTED_SOURCES = [
+  "noaa_nws_alerts","fema_api","bseed_trades_permits_hvac","fema_nfip_api","drought_monitor",
+  "ffiec_hmda","noaa_nws_forecast","detroit_assessor_sales","bseed_rental_registrations",
+  "wayne_county_parcel","oakland_county_parcel","detroit_assessment_roll",
+  "bseed_residential_cert_expiry","bseed_presale_inspection","bseed_commercial_compliance",
+  "bseed_commercial_cert_expiry","multifamily_construction_sites","existing_multifamily_sites",
+  "energy_benchmarking_ordinance","bseed_arcgis","bseed_rental_compliance_view",
+  "bseed_cofc_expiring","bseed_plan_reviews","macomb_county_parcel",
+];
 
 export interface RawSignal {
   address: string; city: string; zip: string;
@@ -38,7 +52,7 @@ export const OPENERS: Record<string, { opener: string; window: string }> = {
 
 const HVAC_WEATHER_EVENTS = ["Excessive Heat", "Wind Chill", "Freeze", "Ice Storm", "Winter Storm", "Extreme Cold"];
 
-export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<RawSignal[]> {
+export async function scanSignals(state = "MI", zipFilter?: string[], sb?: SupabaseClient): Promise<RawSignal[]> {
   const signals: RawSignal[] = [];
 
   // 1. NOAA NWS extreme weather alerts
@@ -802,6 +816,22 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
       }
     }
   } catch (e) { console.error("[hvac] Macomb County parcel:", e); }
+
+  // Source-health rollup: record yield per expected source so source_health
+  // surfaces every slug each run (including zero-yield ones).
+  if (sb) {
+    const counts: Record<string, number> = {};
+    for (const s of signals) {
+      const k = s.source_method || "unknown";
+      counts[k] = (counts[k] ?? 0) + 1;
+    }
+    await Promise.allSettled(EXPECTED_SOURCES.map((slug) =>
+      recordSourceRun(sb, slug, counts[slug] ?? 0, undefined, {
+        product: "trade_radar", source_type: "scraper",
+      })
+    ));
+    console.info(`[trade-scanner:yield] hvac-internal sources=${EXPECTED_SOURCES.length} rows=${signals.length}`);
+  }
 
   return signals;
 }
