@@ -2321,3 +2321,9 @@ verify_jwt = false
 
 [functions.scanner-source-admin]
 verify_jwt = false
+
+[functions.checkout-dispatcher]
+verify_jwt = false
+
+[functions.ai-writer-dispatcher]
+verify_jwt = false
