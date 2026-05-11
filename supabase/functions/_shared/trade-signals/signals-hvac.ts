@@ -52,7 +52,7 @@ export const OPENERS: Record<string, { opener: string; window: string }> = {
 
 const HVAC_WEATHER_EVENTS = ["Excessive Heat", "Wind Chill", "Freeze", "Ice Storm", "Winter Storm", "Extreme Cold"];
 
-export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<RawSignal[]> {
+export async function scanSignals(state = "MI", zipFilter?: string[], sb?: SupabaseClient): Promise<RawSignal[]> {
   const signals: RawSignal[] = [];
 
   // 1. NOAA NWS extreme weather alerts
