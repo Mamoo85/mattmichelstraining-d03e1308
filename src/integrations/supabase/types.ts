@@ -21933,6 +21933,60 @@ export type Database = {
         }
         Relationships: []
       }
+      source_health: {
+        Row: {
+          consecutive_zero_days: number
+          created_at: string
+          daily_cap: number
+          id: string
+          last_error: string | null
+          last_run_at: string | null
+          last_yield: number | null
+          notes: string | null
+          paused: boolean
+          paused_reason: string | null
+          product: string | null
+          source_name: string
+          source_type: string | null
+          total_runs: number
+          updated_at: string
+        }
+        Insert: {
+          consecutive_zero_days?: number
+          created_at?: string
+          daily_cap?: number
+          id?: string
+          last_error?: string | null
+          last_run_at?: string | null
+          last_yield?: number | null
+          notes?: string | null
+          paused?: boolean
+          paused_reason?: string | null
+          product?: string | null
+          source_name: string
+          source_type?: string | null
+          total_runs?: number
+          updated_at?: string
+        }
+        Update: {
+          consecutive_zero_days?: number
+          created_at?: string
+          daily_cap?: number
+          id?: string
+          last_error?: string | null
+          last_run_at?: string | null
+          last_yield?: number | null
+          notes?: string | null
+          paused?: boolean
+          paused_reason?: string | null
+          product?: string | null
+          source_name?: string
+          source_type?: string | null
+          total_runs?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       source_registry: {
         Row: {
           blocker: string | null
