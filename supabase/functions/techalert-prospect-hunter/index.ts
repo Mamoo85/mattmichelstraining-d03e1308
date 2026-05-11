@@ -249,7 +249,8 @@ async function scanUSPTOPatents(): Promise<Posting[]> {
   const ninetyDaysAgo = new Date(Date.now() - 90 * 86400000).toISOString().slice(0, 10);
 
   // CPC subclasses relevant to HVAC/boiler/plumbing/electrical
-  const cpcSubclasses = ["F24F", "F22B", "E03C", "H02B"]; // HVAC, boilers, plumbing, electrical panels
+  // Wave 1 #67 — added F16L (pipe/fittings), H02G (electrical install)
+  const cpcSubclasses = ["F24F", "F22B", "E03C", "H02B", "F16L", "H02G"];
 
   const usptoKey = Deno.env.get("USPTO_API_KEY") || "";
   for (const cpc of cpcSubclasses) {
