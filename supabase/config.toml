@@ -6,6 +6,9 @@ verify_jwt = false
 [functions.scanner-sources-run-batch-1]
 verify_jwt = false
 
+[functions.scanner-sources-run-batch-2]
+verify_jwt = false
+
 [functions.claim-trade-radar-lead]
 verify_jwt = false
 
