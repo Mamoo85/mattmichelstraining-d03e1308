@@ -45,6 +45,8 @@ const AREA_ALERT_TYPES = new Set<string>([
   "historical_hail_county", "storm_tree_damage_area",
   // CourtListener foreclosure filings — case names not street addresses
   "courtlistener_foreclosure",
+  // Wave 1 Batch 1C — federal area signals
+  "aging_housing_tract", "epa_water_violation_area", "nfip_repeat_loss_zip",
 ]);
 
 // Verticals where home turnover (FSBO listing, estate sale) is a high-quality
