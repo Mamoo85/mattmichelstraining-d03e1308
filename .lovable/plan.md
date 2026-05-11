@@ -1,100 +1,74 @@
+# Debug Plan — Wave 1 Batches 1C–1F Silent Failure
 
-# 100-Source Expansion Plan
+## What the data actually shows
 
-## Recommendation on scrape budget
+Querying `trade_radar_area_signals` + `trade_radar_leads` reveals the problem is **bigger than 48h**:
 
-You asked what I'd recommend — this is for business, not hobby, so my answer is **Tier 2: Moderate-aggressive Firecrawl scraping with hard per-source budget guards**, not "API only" and not "scrape everything."
+| Finding | Evidence |
+|---|---|
+| `trade_radar_area_signals` last write: **May 4 19:01 UTC** (7 days stale, not 48h) | `SELECT MAX(created_at)` |
+| Only **`tree`** vertical has produced leads since May 5; all 10 other verticals froze on May 4–5 | `trade_radar_leads` group-by vertical |
+| Batch 1C (federal-area-signals) **did work through May 4** — `ffiec_hmda`, `fema_nfip_api`, `noaa_nws_alerts`, `fema_repetitive_loss` all visible | source column on area_signals |
+| Batch 1D / 1E / 1F sources have **never** written a row — no `socrata_*`, `kent_arcgis`, `cuyahoga_arcgis`, `wayne_county_deeds`, `pacer_*` rows in `trade_radar_area_signals` or `trade_radar_leads` | source column query |
+| Zero source_health rows for any 1C/1D/1E/1F source — only TechAlert 1A federal scanners report health | `SELECT * FROM source_health` |
 
-Reasoning:
-- API-only caps you at ~55 of the 100. You'd leave the highest-intent sources (trade-association member directories, chamber rosters, ATS job boards, RFP boards) on the table — those are exactly where competitors aren't looking.
-- Scrape-everything risks a $300–$800/mo Firecrawl bill spike with no ceiling.
-- Moderate + budget guards = ~85–90 of the 100 sources wired, with a hard `enrichment-budget.ts` ceiling per source per day (you already have this primitive — I'd extend it). Expected Firecrawl burn: +$60–$120/mo, fully attributable per source so you can kill anything underperforming.
+So there are two distinct problems stacked on top of each other:
+1. **Cron / scanner regression on May 4** — 10 of 11 verticals stopped. Tree alone is still firing (last hit May 11 11:39).
+2. **1D/1E/1F have never produced data** — masked because we have no per-source telemetry and `Promise.all` `.catch(()=>[])` swallows failures.
 
-Every scrape-based source gets:
-1. Daily row-cap per source (e.g. 200 scrapes/day max)
-2. ROI tag (which product it feeds)
-3. Auto-pause after 7 days of zero-yield (writes to `source_health` table)
+## Why 1D/1E/1F return empty even when they "succeed"
 
-## Scope (confirmed)
+- `runMetroPermitSignals` filters metros against `coverage_regions` via `m.matches.test(coverageRegions.join(" "))`. If `trade_radar_clients.coverage_regions` is empty or doesn't match the regex (e.g. metro expects "grand rapids" but client row has `"michigan"`), every metro is skipped silently → 0 rows, no error.
+- `runCountyDeedSignals` & `runPacerBankruptcySignals` also gate on `coverage_regions`. Same risk.
+- Metro/county emit `new_owner_old_home`, `foreclosure_vacant`, `cofc_<vertical>_inspection` — these are **per-address** signal types (correctly NOT in `AREA_ALERT_TYPES`), so they go through `validateLead`. If Google validation fails-closed or the address is malformed, they're quarantined silently — never appear in `trade_radar_area_signals` even when working.
+- PACER emits `bankruptcy_distress` (IS in `AREA_ALERT_TYPES`) so it should land directly — its zero count means the RSS fetch itself is failing or returning empty.
 
-- **Priority products:** Trade Radar (11 verticals), TechAlert, email/contact waterfall
-- **Geo:** Michigan deep + top-10 US metros (Chicago, Indianapolis, Cleveland, Columbus, Cincinnati, Milwaukee, Toledo, Pittsburgh, Nashville, Louisville — adjustable)
-- **Output:** Plan-only first. You approve the catalog before any code lands.
+## Plan
 
-## Deliverable
+### Step 1 — Wrap every 1C/1D/1E/1F source in `withSourceHealth`
 
-A single committed document — `knowledge/100_New_Sources_Catalog_2026.md` — containing all 100 sources, each row with:
+Refactor the four aggregators so each individual source call goes through the existing `withSourceHealth(sb, source_name, fetcher, {product, source_type})` wrapper from `_shared/source-health.ts`:
 
-```text
-# | Name | Product fed | Vertical(s) | Type (api/arcgis/socrata/scrape) | Auth | Geo | Signal type written | Expected daily volume | Confidence (H/M/L) | Notes
+- `federal-area-signals.ts` → HUD ACS, FFIEC HMDA, FEMA NFIP repeat-loss, EPA ECHO, NOAA SPC mesoscale
+- `metro-permits.ts` → per-metro scanners (kent_arcgis, a2_opendata, socrata_chicago, socrata_columbus, socrata_indy, socrata_milwaukee, socrata_nashville, cuyahoga_arcgis)
+- `county-deeds.ts` → kent_county_deeds, cuyahoga_county_deeds, wayne_county_deeds_firecrawl
+- `pacer-bankruptcy.ts` → pacer_ilnb, pacer_ohnb, pacer_insb
+
+Pass `sb` down through the function signatures (today they only take `vertical` + region/state/zip). This unblocks per-source yield + error visibility without changing routing behavior.
+
+### Step 2 — Add a `source_yield_log` row per scanner run
+
+Add one debug log entry per (vertical, source) per run with `{vertical, source, count, error, duration_ms}`. Use the existing `source_health` table plus a new lightweight `console.info` line tagged `[trade-scanner:yield]` so we can grep edge function logs.
+
+### Step 3 — Audit `trade_radar_clients.coverage_regions` content
+
+```sql
+SELECT vertical, name, coverage_regions FROM trade_radar_clients WHERE active=true;
 ```
+Confirm at least one Matt-enrolled row has region strings that match the `METROS[].matches` regex in `metro-permits.ts` (e.g. "grand rapids", "chicago", "cleveland"). If they're all `"michigan"` or empty, **every metro/county/pacer scanner is being filtered to zero** before any HTTP call happens — that alone explains the 1D/1E/1F silence.
 
-Plus a one-page exec summary at top: confidence distribution, est. monthly cost, which 30 are "ship immediately" vs. which 70 need a judgment call from you.
+### Step 4 — Investigate the May 4 vertical freeze (separate root cause)
 
-## The 100 — high-level breakdown
+Pull last 7 days of edge logs for `trade-radar-scanner` (HTTP 200 / 500 / timeout) and the cron schedule for the daily run. Hypotheses to confirm/rule out:
+- Per-vertical timeout that crashes the run before reaching `roofing`/`hvac`/etc. but after `tree` (alphabetical or array-order dependency)
+- Cron auth/vault key regression on May 5 affecting all verticals except a manually-invoked tree run
+- Increased aggregator latency from new 1C/1D/1E/1F calls pushing total runtime past 150s edge function ceiling
 
-### Trade Radar (≈55 sources)
+### Step 5 — One smoke run + confirmation
 
-**Permit / CofC / inspection layers from new metros (~22)**
-ArcGIS or Socrata portals for: Grand Rapids, Lansing, Ann Arbor, Flint (MI); Cleveland, Columbus, Cincinnati, Toledo (OH); Indianapolis (IN); Chicago, Milwaukee (IL/WI); Pittsburgh (PA); Nashville (TN); Louisville (KY). Each contributes 1–3 of: building permits, demolition permits, rental registrations, occupancy/CofC, fire incidents, code violations.
+After Steps 1–3 land:
+1. Curl `trade-radar-scanner` for one stale vertical (e.g. `hvac`).
+2. `SELECT source_name, last_yield, last_error FROM source_health WHERE source_name LIKE '%pacer%' OR source_name LIKE '%socrata%' OR source_name LIKE '%kent%' OR source_name LIKE '%cuyahoga%' OR source_name LIKE '%wayne_county_deeds%' OR source_name LIKE '%ffiec%' OR source_name LIKE '%fema%' OR source_name LIKE '%epa_echo%';`
+3. Each previously-silent source should now have either a non-zero yield OR a captured error message we can act on.
 
-**Federal / national area signals (~10)**
-HUD CHAS housing condition by tract, FFIEC HMDA loan originations, FEMA NFIP repeat-loss zones (extended beyond current usage), USGS landslide hazard, USDA SAM exclusions cross-ref, NOAA CDO historical (extend beyond current MI use to top-10 metros), EPA ECHO water-system violations, DOT FMCSA fleet registrations (for fleet-truck repair signals), USPS vacancy data via HUD aggregate, OSHA enforcement.
+### Out of scope for this debug pass
 
-**County deeds / sales (~12)**
-Wayne (you have), Oakland, Macomb, Kent (Grand Rapids), Genesee (Flint), Washtenaw (Ann Arbor), Cuyahoga (Cleveland), Franklin (Columbus), Hamilton (Cincinnati), Marion (Indy), Cook (Chicago) — new-owner-of-old-home detection across all 11 trade verticals.
+- Adding new sources (Batch 1G / Wave 2)
+- Refactoring `validateLead` quarantine behavior — only do this if Step 5 shows metro/county per-address rows being quarantined en masse.
 
-**Open-data per-address scrapes (~7)**
-Public auctioneer listings (estate/probate beyond EstateSales.net), county sheriff foreclosure docket pages, BBB complaint pages (homeowner-side, identifies un-served markets), Nextdoor business reviews, local-news fire/storm RSS feeds, NOAA SPC mesoscale archive, USGS National Map roof-age proxy.
+## Technical notes
 
-**Court & legal (~4)**
-PACER bankruptcy RSS expanded (you have CourtListener — adding court-by-court RSS for MIWD/MIED/NDIL/NDOH/SDIN), state UCC filings (MI + top-10), state mechanics lien filings where public, probate court RSS where public.
-
-### TechAlert (≈20 sources)
-
-- **State contractor license boards (~9):** LARA (you have), Ohio (OCILB), Indiana, Illinois IDFPR, Wisconsin DSPS, Tennessee BCLB, Kentucky DHBC, Pennsylvania, plus federal NPI cross-ref for medical trades.
-- **Funding / growth (~5):** Crunchbase free RSS, SEC EDGAR D filings (you have — extend SIC codes), USPTO assignee (you have — extend to industrial/HVAC), Census BFS new-business formations, NSF SBIR awards.
-- **Public ATS scrapes (~3):** Greenhouse public boards, Lever public boards, Workable public boards — for funded trades cos hiring (signals scale, not poaching).
-- **Labor & enforcement (~3):** OSHA Establishment Search, NLRB petitions (you have — extend), DOL WHD violations.
-
-### Email / contact waterfall (≈25 sources, Tiers 90–115)
-
-Extending `email-extras-1.ts` → `email-extras-5.ts`:
-
-- **Trade association member directories (~8):** NAHB local chapters, ABC chapters, ASA, PHCC chapters, NECA chapters, SMACNA, MCAA, NRCA.
-- **Chamber rosters (~6):** Detroit Regional Chamber, Grand Rapids Chamber, top-10 metro chambers' public member directories.
-- **Industry pubs lead lists (~4):** ENR Top 400, Roofing Contractor Top 100, Plumbing & Mechanical 50, Contracting Business 100.
-- **Tech footprint enrichment (~4):** BuiltWith free tier, crt.sh subdomain history, SecurityTrails free tier, Wayback CDX rebuild-detection (extends existing usage).
-- **Long-tail registries (~3):** Wikidata SPARQL businesses-by-locality, OpenStreetMap business POIs by tag (extend current usage), Common Crawl WET indices for email extraction by domain.
-
-## Workflow
-
-1. I produce `knowledge/100_New_Sources_Catalog_2026.md` (no code yet).
-2. You review — strike, swap, or approve.
-3. After approval, I ship in **5 waves of ~20 sources each**, mirroring the Phase 33 pattern (each wave = its own commit batch, with `source_health` rows seeded and `enrichment-budget` caps wired). Each wave includes:
-   - New signal-file additions or extras-file (`email-extras-6.ts`, `-7.ts`)
-   - `trade-radar-scanner` / `techalert-prospect-hunter` Promise.all extension
-   - `source_health` migration entries
-   - Per-source budget cap in `enrichment-budget.ts`
-4. After all 5 waves, one verification edge function (`new-sources-smoke-test`) curls each source once and reports yield to a `SourcesSmokeReport` admin page row.
-
-## What this plan does NOT include
-
-- No new paid keys (no Costar, no MLS/RESO, no Experian/TU/EQ — H.R. 2808 forbids anyway).
-- No partner-gated APIs (LinkedIn Jobs, Indeed, ZoomInfo paid).
-- No frontend portal changes — sources feed existing portals.
-- No changes to existing 11 trade verticals' core scoring logic.
-
-## Risks I want to flag
-
-1. **Firecrawl monthly burn** could spike if a scraped source returns way more than expected. Mitigated by per-source daily caps, but worth watching the first 2 weeks.
-2. **Some county ArcGIS endpoints block edge-function IPs** (Wayne/Oakland sometimes do — see Phase 42 note). I'll fail-graceful and not count them against the 100 if they're confirmed blocked.
-3. **Per-state SOS / license boards vary wildly** — some are clean JSON, some require Firecrawl scraping of paginated HTML. Estimated 7 of 9 license boards work cleanly; 2 may be skipped or replaced.
-
-## Confidence
-
-- **~70 sources:** high confidence — open APIs or proven Firecrawl scrape patterns I've already used.
-- **~20 sources:** medium — endpoint exists, format needs verification.
-- **~10 sources:** low — may swap during catalog drafting if the API turns out to be gated or empty.
-
-Final deliverable target: catalog doc in `knowledge/` within one build session, then wave-by-wave implementation after your approval.
+- `_shared/source-health.ts` already exists and is wired for Batch 1A — reuse it verbatim.
+- Pass `sb` (SupabaseClient) as the first arg to each aggregator. Today they don't take it, which is exactly why no one wired health tracking.
+- Keep `Promise.all(...).catch` swallowing at the scanner level (preserves resilience) — health tracking moves the visibility down one layer, where it belongs.
+- No migration needed; `source_health` is already in production.
