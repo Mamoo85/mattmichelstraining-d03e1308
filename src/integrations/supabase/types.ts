@@ -2344,6 +2344,347 @@ export type Database = {
           },
         ]
       }
+      canonical_companies: {
+        Row: {
+          city: string | null
+          created_at: string
+          domain: string | null
+          ein: string | null
+          employee_count: number | null
+          first_seen_at: string
+          first_seen_source: string | null
+          id: string
+          industry: string | null
+          last_seen_at: string
+          license_number: string | null
+          meta: Json
+          naics: string | null
+          name: string
+          phone: string | null
+          state: string | null
+          updated_at: string
+          website: string | null
+          zip: string | null
+        }
+        Insert: {
+          city?: string | null
+          created_at?: string
+          domain?: string | null
+          ein?: string | null
+          employee_count?: number | null
+          first_seen_at?: string
+          first_seen_source?: string | null
+          id?: string
+          industry?: string | null
+          last_seen_at?: string
+          license_number?: string | null
+          meta?: Json
+          naics?: string | null
+          name: string
+          phone?: string | null
+          state?: string | null
+          updated_at?: string
+          website?: string | null
+          zip?: string | null
+        }
+        Update: {
+          city?: string | null
+          created_at?: string
+          domain?: string | null
+          ein?: string | null
+          employee_count?: number | null
+          first_seen_at?: string
+          first_seen_source?: string | null
+          id?: string
+          industry?: string | null
+          last_seen_at?: string
+          license_number?: string | null
+          meta?: Json
+          naics?: string | null
+          name?: string
+          phone?: string | null
+          state?: string | null
+          updated_at?: string
+          website?: string | null
+          zip?: string | null
+        }
+        Relationships: []
+      }
+      canonical_events: {
+        Row: {
+          company_id: string | null
+          description: string | null
+          estimated_value: number | null
+          event_category: string
+          event_type: string
+          external_id: string | null
+          id: string
+          ingested_at: string
+          meta: Json
+          occurred_at: string
+          person_id: string | null
+          place_id: string | null
+          product: string
+          raw: Json
+          source: string
+          title: string | null
+          url: string | null
+        }
+        Insert: {
+          company_id?: string | null
+          description?: string | null
+          estimated_value?: number | null
+          event_category: string
+          event_type: string
+          external_id?: string | null
+          id?: string
+          ingested_at?: string
+          meta?: Json
+          occurred_at: string
+          person_id?: string | null
+          place_id?: string | null
+          product: string
+          raw?: Json
+          source: string
+          title?: string | null
+          url?: string | null
+        }
+        Update: {
+          company_id?: string | null
+          description?: string | null
+          estimated_value?: number | null
+          event_category?: string
+          event_type?: string
+          external_id?: string | null
+          id?: string
+          ingested_at?: string
+          meta?: Json
+          occurred_at?: string
+          person_id?: string | null
+          place_id?: string | null
+          product?: string
+          raw?: Json
+          source?: string
+          title?: string | null
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "canonical_events_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "canonical_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "canonical_events_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "canonical_people"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "canonical_events_place_id_fkey"
+            columns: ["place_id"]
+            isOneToOne: false
+            referencedRelation: "canonical_places"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      canonical_people: {
+        Row: {
+          city: string | null
+          company_id: string | null
+          created_at: string
+          email: string | null
+          first_seen_at: string
+          first_seen_source: string | null
+          full_name: string
+          id: string
+          last_seen_at: string
+          linkedin_url: string | null
+          meta: Json
+          phone: string | null
+          state: string | null
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          city?: string | null
+          company_id?: string | null
+          created_at?: string
+          email?: string | null
+          first_seen_at?: string
+          first_seen_source?: string | null
+          full_name: string
+          id?: string
+          last_seen_at?: string
+          linkedin_url?: string | null
+          meta?: Json
+          phone?: string | null
+          state?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          city?: string | null
+          company_id?: string | null
+          created_at?: string
+          email?: string | null
+          first_seen_at?: string
+          first_seen_source?: string | null
+          full_name?: string
+          id?: string
+          last_seen_at?: string
+          linkedin_url?: string | null
+          meta?: Json
+          phone?: string | null
+          state?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "canonical_people_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "canonical_companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      canonical_places: {
+        Row: {
+          address_line1: string | null
+          city: string | null
+          county: string | null
+          created_at: string
+          formatted_address: string | null
+          id: string
+          lat: number | null
+          lon: number | null
+          meta: Json
+          parcel_id: string | null
+          region: string | null
+          scope: string
+          state: string | null
+          zip: string | null
+        }
+        Insert: {
+          address_line1?: string | null
+          city?: string | null
+          county?: string | null
+          created_at?: string
+          formatted_address?: string | null
+          id?: string
+          lat?: number | null
+          lon?: number | null
+          meta?: Json
+          parcel_id?: string | null
+          region?: string | null
+          scope?: string
+          state?: string | null
+          zip?: string | null
+        }
+        Update: {
+          address_line1?: string | null
+          city?: string | null
+          county?: string | null
+          created_at?: string
+          formatted_address?: string | null
+          id?: string
+          lat?: number | null
+          lon?: number | null
+          meta?: Json
+          parcel_id?: string | null
+          region?: string | null
+          scope?: string
+          state?: string | null
+          zip?: string | null
+        }
+        Relationships: []
+      }
+      canonical_signals: {
+        Row: {
+          created_at: string
+          delivered_at: string | null
+          delivered_to_client_id: string | null
+          event_id: string
+          expires_at: string | null
+          id: string
+          product: string
+          scope: string
+          score: number
+          segment: string | null
+          target_company_id: string | null
+          target_person_id: string | null
+          target_place_id: string | null
+          urgency: string
+        }
+        Insert: {
+          created_at?: string
+          delivered_at?: string | null
+          delivered_to_client_id?: string | null
+          event_id: string
+          expires_at?: string | null
+          id?: string
+          product: string
+          scope?: string
+          score?: number
+          segment?: string | null
+          target_company_id?: string | null
+          target_person_id?: string | null
+          target_place_id?: string | null
+          urgency?: string
+        }
+        Update: {
+          created_at?: string
+          delivered_at?: string | null
+          delivered_to_client_id?: string | null
+          event_id?: string
+          expires_at?: string | null
+          id?: string
+          product?: string
+          scope?: string
+          score?: number
+          segment?: string | null
+          target_company_id?: string | null
+          target_person_id?: string | null
+          target_place_id?: string | null
+          urgency?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "canonical_signals_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "canonical_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "canonical_signals_target_company_id_fkey"
+            columns: ["target_company_id"]
+            isOneToOne: false
+            referencedRelation: "canonical_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "canonical_signals_target_person_id_fkey"
+            columns: ["target_person_id"]
+            isOneToOne: false
+            referencedRelation: "canonical_people"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "canonical_signals_target_place_id_fkey"
+            columns: ["target_place_id"]
+            isOneToOne: false
+            referencedRelation: "canonical_places"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       capture_submissions: {
         Row: {
           created_at: string
@@ -19905,6 +20246,60 @@ export type Database = {
         }
         Relationships: []
       }
+      scanner_source_mappings: {
+        Row: {
+          created_at: string
+          default_score: number
+          default_urgency: string
+          enabled: boolean
+          entity_type: string
+          event_category: string
+          event_type: string
+          field_map: Json
+          id: string
+          notes: string | null
+          product: string
+          scope: string
+          source: string
+          target_products: string[]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          default_score?: number
+          default_urgency?: string
+          enabled?: boolean
+          entity_type: string
+          event_category: string
+          event_type: string
+          field_map?: Json
+          id?: string
+          notes?: string | null
+          product: string
+          scope?: string
+          source: string
+          target_products?: string[]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          default_score?: number
+          default_urgency?: string
+          enabled?: boolean
+          entity_type?: string
+          event_category?: string
+          event_type?: string
+          field_map?: Json
+          id?: string
+          notes?: string | null
+          product?: string
+          scope?: string
+          source?: string
+          target_products?: string[]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       scanner_source_toggles: {
         Row: {
           created_at: string
@@ -25743,6 +26138,32 @@ export type Database = {
           state: string | null
           subtitle: string | null
           title: string | null
+        }
+        Relationships: []
+      }
+      v_canonical_targeting_feed: {
+        Row: {
+          company_domain: string | null
+          company_name: string | null
+          county: string | null
+          created_at: string | null
+          estimated_value: number | null
+          event_category: string | null
+          event_type: string | null
+          formatted_address: string | null
+          occurred_at: string | null
+          person_email: string | null
+          person_name: string | null
+          product: string | null
+          region: string | null
+          scope: string | null
+          score: number | null
+          signal_id: string | null
+          source: string | null
+          title: string | null
+          urgency: string | null
+          url: string | null
+          zip: string | null
         }
         Relationships: []
       }
