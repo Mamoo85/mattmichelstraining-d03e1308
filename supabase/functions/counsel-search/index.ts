@@ -599,20 +599,26 @@ Deno.serve(async (req) => {
     }, { onConflict: "user_id" });
   }
 
+  const emptyMessage = allHits.length === 0
+    ? `No court records found for "${name}"${aliases.length ? ` (or aliases: ${aliases.join(", ")})` : ""} across ${sourcesHit} federal and Michigan court sources. The subject may have no public court history under the searched name, or may file under a different alias. For full federal-court coverage including non-public dockets, subscribe to PACER directly at pacer.uscourts.gov.`
+    : null;
+
   return new Response(JSON.stringify({
     ok: true,
     query: { name, aliases, city, state, case_matter: caseMatter, mode: isPaid ? "paid" : "trial" },
     elapsed_ms: elapsed,
     sources_hit: sourcesHit,
     sources_returned: sourcesReturned,
+    filtered_by_surname: filteredBySurname,
     total_hits: allHits.length,
     high_priority_hits: highPriorityHits.length,
     summary,
     results: byCategory,
     citations,
+    empty_message: emptyMessage,
     accessed_at: new Date().toISOString(),
     quota: isPaid ? { unlimited: true, tier: client?.tier, trial_ends_at: client?.trial_ends_at || null } : { free_searches_used: freeSearchesUsedAfter, free_trial_limit: FREE_TRIAL_LIMIT, remaining: FREE_TRIAL_LIMIT - (freeSearchesUsedAfter || 0) },
-    evidentiary_notice: "Sources are public records verified at time of access via HEAD/GET URL validation. Each citation includes a Bluebook-formatted reference. Counsel must independently authenticate per FRE 901–902 before offering any source as evidence; this report is not a substitute for certified copies for trial.",
-    disclaimer: "All data is from public records. For litigation use, fraud investigation, or other bona-fide legal proceedings (FCRA §1681b(a)(4) exempt). NOT for tenant screening or employment screening without an FCRA-compliant consumer reporting agency.",
+    evidentiary_notice: "Sources are public court records verified at time of access via HEAD/GET URL validation. Every returned hit was filtered to require the searched surname to appear in the record. Each citation includes a Bluebook-formatted reference. Counsel must independently authenticate per FRE 901–902 before offering any source as evidence; this report is not a substitute for certified copies for trial.",
+    disclaimer: "Court records only. Sources: CourtListener (federal opinions/dockets/RECAP), U.S. Tax Court DAWSON, Federal BOP, Michigan Court of Appeals, Michigan Supreme Court, MDOC OTIS, Michigan PSOR, NSOPW, plus AI-corroborated Michigan trial-court search. For permissible litigation, fraud-investigation, and bona-fide legal-research purposes (FCRA §1681b(a)(4) exempt). NOT for tenant screening, employment screening, or credit decisions.",
   }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 });
