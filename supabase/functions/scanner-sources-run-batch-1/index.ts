@@ -4,9 +4,13 @@
 // curl -X POST $SUPABASE_URL/functions/v1/scanner-sources-run-batch-1
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { corsHeaders } from "../_shared/cors.ts";
 import { runSources } from "../_shared/source-framework.ts";
 import { BATCH_1_SOURCES } from "../_shared/scanner-sources-batch-1.ts";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
