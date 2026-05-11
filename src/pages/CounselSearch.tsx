@@ -135,7 +135,7 @@ export default function CounselSearch() {
       `}</style>
       <div className="max-w-5xl mx-auto px-4 py-8 print:py-2">
         <h1 className="text-2xl md:text-3xl font-bold mb-2 print-text">⚖️ Counsel Records Search</h1>
-        <p className="text-[#94a3b8] text-sm mb-6 print-muted">Federal + MI court dockets, MDOC, county parcels, AI research. Every cite HEAD-checked.</p>
+        <p className="text-[#94a3b8] text-sm mb-6 print-muted">Court records only — federal (CourtListener + Tax Court), MI appellate, MDOC/PSOR/NSOPW, plus AI-corroborated MI trial-court search. Every hit filtered to require the searched surname.</p>
 
         <Card className="bg-[#0a1628] border-[#1e3a5f] mb-6 no-print">
           <CardContent className="p-5 space-y-3">
