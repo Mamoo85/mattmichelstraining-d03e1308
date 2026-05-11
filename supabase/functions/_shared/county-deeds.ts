@@ -284,6 +284,8 @@ export async function runCountyDeedSignals(
   const tasks: Array<Promise<DeedSignal[]>> = [];
   if (/grand\s*rapids|kent/.test(joined)) tasks.push(wrap("kent_county_deeds", () => fetchKentDeeds(vertical)));
   if (/cleveland|cuyahoga/.test(joined)) tasks.push(wrap("cuyahoga_county_sales", () => fetchCuyahogaSales(vertical)));
+  if (/oakland|se\s*michigan/.test(joined)) tasks.push(wrap("oakland_county_deeds", () => fetchOaklandSales(vertical)));
+  if (/macomb|se\s*michigan/.test(joined)) tasks.push(wrap("macomb_county_deeds", () => fetchMacombSales(vertical)));
   if (/detroit|wayne/.test(joined)) tasks.push(wrap("wayne_tax_foreclosure", () => fetchWayneTaxForeclosure(vertical)));
 
   if (tasks.length === 0) return [];
