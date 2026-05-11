@@ -20300,6 +20300,39 @@ export type Database = {
         }
         Relationships: []
       }
+      scanner_source_runs: {
+        Row: {
+          duration_ms: number
+          error: string | null
+          id: number
+          ok: boolean
+          product: string
+          ran_at: string
+          rows_returned: number
+          source: string
+        }
+        Insert: {
+          duration_ms?: number
+          error?: string | null
+          id?: number
+          ok: boolean
+          product: string
+          ran_at?: string
+          rows_returned?: number
+          source: string
+        }
+        Update: {
+          duration_ms?: number
+          error?: string | null
+          id?: number
+          ok?: boolean
+          product?: string
+          ran_at?: string
+          rows_returned?: number
+          source?: string
+        }
+        Relationships: []
+      }
       scanner_source_toggles: {
         Row: {
           created_at: string
