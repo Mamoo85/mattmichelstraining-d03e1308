@@ -2605,6 +2605,54 @@ export type Database = {
         }
         Relationships: []
       }
+      canonical_qa_quarantine: {
+        Row: {
+          candidate: Json | null
+          completeness: number | null
+          created_at: string
+          event_category: string | null
+          event_type: string | null
+          id: string
+          product: string
+          raw: Json | null
+          reasons: string[]
+          scope: string | null
+          segment: string | null
+          severity: string
+          source: string
+        }
+        Insert: {
+          candidate?: Json | null
+          completeness?: number | null
+          created_at?: string
+          event_category?: string | null
+          event_type?: string | null
+          id?: string
+          product: string
+          raw?: Json | null
+          reasons?: string[]
+          scope?: string | null
+          segment?: string | null
+          severity?: string
+          source: string
+        }
+        Update: {
+          candidate?: Json | null
+          completeness?: number | null
+          created_at?: string
+          event_category?: string | null
+          event_type?: string | null
+          id?: string
+          product?: string
+          raw?: Json | null
+          reasons?: string[]
+          scope?: string | null
+          segment?: string | null
+          severity?: string
+          source?: string
+        }
+        Relationships: []
+      }
       canonical_signals: {
         Row: {
           created_at: string
