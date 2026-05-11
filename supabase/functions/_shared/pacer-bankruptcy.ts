@@ -1,4 +1,6 @@
 // Wave 1 Batch 1F — PACER bankruptcy court RSS for Trade Radar.
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
+import { withSourceHealth } from "./source-health.ts";
 //
 // Sources (all free, public RSS, no key):
 //   #45 PACER NDIL (N. District Illinois)  bankruptcy filings
