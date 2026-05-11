@@ -132,9 +132,6 @@ verify_jwt = false
 [functions.ai-automated-bots]
 verify_jwt = false
 
-[functions.ai-blog-post-writer]
-verify_jwt = false
-
 [functions.ai-business-intelligence]
 verify_jwt = false
 
@@ -145,9 +142,6 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.ai-direct-mail-writer]
-verify_jwt = false
-
-[functions.ai-directory-audit-sender]
 verify_jwt = false
 
 [functions.ai-estimate-generator]
@@ -177,12 +171,6 @@ verify_jwt = false
 [functions.ai-media-studio]
 verify_jwt = false
 
-[functions.ai-meeting-prep]
-verify_jwt = false
-
-[functions.ai-onboarding-agent-sender]
-verify_jwt = false
-
 [functions.ai-parent-report]
 verify_jwt = false
 
@@ -190,15 +178,6 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.ai-posture-analysis]
-verify_jwt = false
-
-[functions.ai-press-release-writer]
-verify_jwt = false
-
-[functions.ai-price-monitor-sender]
-verify_jwt = false
-
-[functions.ai-proposal-generator]
 verify_jwt = false
 
 [functions.ai-reply-detector]
@@ -270,9 +249,6 @@ verify_jwt = false
 [functions.ai-social-captions-generator]
 verify_jwt = false
 
-[functions.ai-social-proof-sender]
-verify_jwt = false
-
 [functions.ai-support-triage]
 verify_jwt = false
 
@@ -280,9 +256,6 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.ai-training-history]
-verify_jwt = false
-
-[functions.ai-upsell-sender]
 verify_jwt = false
 
 [functions.ai-video-form-review]
@@ -459,25 +432,13 @@ verify_jwt = false
 [functions.create-battlecard-checkout]
 verify_jwt = false
 
-[functions.create-bedtime-story-checkout]
-verify_jwt = false
-
 [functions.create-bid-intel-checkout]
 verify_jwt = false
 
 [functions.create-birthday-campaign-checkout]
 verify_jwt = false
 
-[functions.create-blog-post-checkout]
-verify_jwt = false
-
 [functions.create-camp-listing-checkout]
-verify_jwt = false
-
-[functions.create-caption-pack-checkout]
-verify_jwt = false
-
-[functions.create-chatbot-checkout]
 verify_jwt = false
 
 [functions.create-checkout]
@@ -525,9 +486,6 @@ verify_jwt = false
 [functions.create-direct-mail-checkout]
 verify_jwt = false
 
-[functions.create-directory-listing-checkout]
-verify_jwt = false
-
 [functions.create-directory-submitter-checkout]
 verify_jwt = false
 
@@ -541,9 +499,6 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.create-estimate-generator-checkout]
-verify_jwt = false
-
-[functions.create-faq-refresh-checkout]
 verify_jwt = false
 
 [functions.create-field-rep-checkout]
@@ -672,9 +627,6 @@ verify_jwt = false
 [functions.create-nutrition-plan-checkout]
 verify_jwt = false
 
-[functions.create-obituary-service-checkout]
-verify_jwt = false
-
 [functions.create-onboarding-agent-checkout]
 verify_jwt = false
 
@@ -705,9 +657,6 @@ verify_jwt = false
 [functions.create-podcast-show-notes-checkout]
 verify_jwt = false
 
-[functions.create-press-release-checkout]
-verify_jwt = false
-
 [functions.create-price-intelligence-checkout]
 verify_jwt = false
 
@@ -721,12 +670,6 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.create-promo-planner-checkout]
-verify_jwt = false
-
-[functions.create-property-mgmt-checkout]
-verify_jwt = false
-
-[functions.create-proposal-checkout]
 verify_jwt = false
 
 [functions.create-quote-followup-checkout]
@@ -771,28 +714,13 @@ verify_jwt = false
 [functions.create-review-request-checkout]
 verify_jwt = false
 
-[functions.create-review-responder-checkout]
-verify_jwt = false
-
-[functions.create-review-response-checkout]
-verify_jwt = false
-
 [functions.create-rfp-alerts-checkout]
-verify_jwt = false
-
-[functions.create-sales-script-checkout]
-verify_jwt = false
-
-[functions.create-satisfaction-survey-checkout]
 verify_jwt = false
 
 [functions.create-seo-package-checkout]
 verify_jwt = false
 
 [functions.create-seo-report-checkout]
-verify_jwt = false
-
-[functions.create-sermon-prep-checkout]
 verify_jwt = false
 
 [functions.create-session-checkout]
@@ -802,9 +730,6 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.create-sms-blast-checkout]
-verify_jwt = false
-
-[functions.create-social-captions-checkout]
 verify_jwt = false
 
 [functions.create-social-media-checkout]
@@ -840,9 +765,6 @@ verify_jwt = false
 [functions.create-testimonial-harvester-checkout]
 verify_jwt = false
 
-[functions.create-text-marketing-checkout]
-verify_jwt = false
-
 [functions.create-thank-you-sms-checkout]
 verify_jwt = false
 
@@ -862,9 +784,6 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.create-video-script-checkout]
-verify_jwt = false
-
-[functions.create-voicemail-checkout]
 verify_jwt = false
 
 [functions.create-warranty-reminder-checkout]
@@ -1557,7 +1476,6 @@ verify_jwt = false
 [functions.seo-guard-runner]
 verify_jwt = false
 
-
 [functions.create-commercial-lease-checkout]
 verify_jwt = false
 
@@ -1580,9 +1498,6 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.create-trade-association-checkout]
-verify_jwt = false
-
-[functions.create-childrens-story-checkout]
 verify_jwt = false
 
 [functions.create-luxury-re-checkout]
@@ -1616,9 +1531,6 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.create-hire-alert-checkout]
-verify_jwt = false
-
-[functions.create-techalert-sms-checkout]
 verify_jwt = false
 
 [functions.hire-alert-scanner]
@@ -1762,7 +1674,6 @@ verify_jwt = false
 [functions.supplier-outreach-draft]
 verify_jwt = false
 
-
 [functions.msp-inquiry-submit]
 verify_jwt = false
 
@@ -1831,7 +1742,6 @@ verify_jwt = false
 
 [functions.generate-signal-dossier]
 verify_jwt = false
-
 
 [functions.prospect-email-backfill]
 verify_jwt = false
@@ -2163,9 +2073,6 @@ verify_jwt = false
 [functions.haro-monitor]
 verify_jwt = false
 
-[functions.create-agency-whitelabel-checkout]
-verify_jwt = false
-
 [functions.sitemap-hire]
 verify_jwt = false
 
@@ -2232,9 +2139,6 @@ verify_jwt = false
 [functions.trade-radar-health-check]
 verify_jwt = false
 
-[functions.create-trade-radar-checkout]
-verify_jwt = false
-
 [functions.trade-radar-dashboard]
 verify_jwt = false
 
@@ -2253,7 +2157,6 @@ verify_jwt = false
 [functions.enrichment-kpi-monitor]
 verify_jwt = false
 
-
 [functions.cold-email-daily-economics]
 verify_jwt = false
 
@@ -2265,7 +2168,6 @@ verify_jwt = false
 
 [functions.hubspot-bootstrap-properties]
 verify_jwt = false
-
 
 [functions.trial-sla-watchdog]
 verify_jwt = false
@@ -2315,25 +2217,16 @@ verify_jwt = false
 [functions.dwa-abandoned-cart]
 verify_jwt = false
 
-[functions.create-dwa-annual-checkout]
-verify_jwt = false
-
 [functions.trade-radar-referral]
 verify_jwt = false
 
 [functions.trade-radar-api]
 verify_jwt = false
 
-[functions.create-trade-radar-api-checkout]
-verify_jwt = false
-
 [functions.create-dead-lead-campaign-checkout]
 verify_jwt = false
 
 [functions.admin-daily-clicks-digest]
-verify_jwt = false
-
-[functions.create-blueprint-checkout]
 verify_jwt = false
 
 [functions.trial-abandonment-sweeper]
@@ -2420,7 +2313,6 @@ verify_jwt = false
 [functions.counsel-followup-drip]
 verify_jwt = false
 
-
 [functions.counsel-dashboard-load]
 verify_jwt = false
 
@@ -2428,4 +2320,10 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.scanner-source-admin]
+verify_jwt = false
+
+[functions.checkout-dispatcher]
+verify_jwt = false
+
+[functions.ai-writer-dispatcher]
 verify_jwt = false
