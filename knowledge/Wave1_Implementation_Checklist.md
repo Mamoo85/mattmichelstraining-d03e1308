@@ -7,27 +7,25 @@
 
 ## Foundation (do first, used by all sources)
 
-- [ ] **Migration:** `source_health` table — tracks per-source daily yield, auto-pause flag, last_run, last_error
-- [ ] **Helper:** `_shared/source-health.ts` — `recordSourceRun(name, count, error?)` + `isSourcePaused(name)`
+- [x] **Migration:** `source_health` table — tracks per-source daily yield, auto-pause flag, last_run, last_error
+- [x] **Helper:** `_shared/source-health.ts` — `recordSourceRun(name, count, error?)` + `isSourcePaused(name)` (implemented as `withSourceHealth()` wrapper)
 - [ ] **Helper extension:** `_shared/enrichment-budget.ts` — add `enforceDailyCap(source, max)` returning bool
 - [ ] **Admin view (later wave):** `SourcesSmokeReport.tsx` — read-only table of `source_health`
 
-## Batch 1A — TechAlert federal APIs (5 sources, lowest-risk first)
+## Batch 1A — TechAlert federal APIs (5 sources, lowest-risk first) ✅ WIRED
 
-Extends `techalert-prospect-hunter/index.ts`. Each adds a new `scanXxx()` function appended to the `Promise.allSettled` block.
+All 5 implemented in `_shared/techalert-federal-scanners.ts` and wired into `techalert-prospect-hunter/index.ts` Promise.allSettled block via `runBatch1AFederal(sb)`.
 
-- [ ] **#36 DOT FMCSA carrier registrations** — `https://mobile.fmcsa.dot.gov/qc/services/carriers/...` — new MI/OH/IN/IL trucking carriers (fleet repair signal)
-- [ ] **#37 OSHA Establishment Search API** — `https://api.dol.gov/v1/...` (or DOL Enforcement API) — recent inspections in NAICS 23 (construction)
-- [ ] **#63 Federal NPI Registry** — `https://npiregistry.cms.hhs.gov/api/?...` — medical-trades cross-ref (HVAC/plumbing in healthcare facilities)
-- [ ] **#73 DOL WHD violations** — `https://enfxfr.dol.gov/data_catalog/WHD/...` — wage-violation enforcement = distress signal
-- [ ] **#59 Wisconsin DSPS credentials** — public JSON endpoint for new + expiring credentials (Milwaukee expansion)
+- [x] **#36 DOT FMCSA carrier registrations** — `scanFMCSACarriers` (fleet repair signals MI/OH/IN/IL)
+- [x] **#37 OSHA Establishment Search API** — `scanOSHAInspections` (NAICS 23 construction inspections)
+- [x] **#63 Federal NPI Registry** — `scanNPIMedicalTrades` (HVAC/plumbing in healthcare facilities)
+- [x] **#73 DOL WHD violations** — `scanDOLWHDViolations` (wage-violation distress signal)
+- [x] **#59 Wisconsin DSPS credentials** — `scanWisconsinDSPS` (Milwaukee expansion licenses)
 
-## Batch 1B — TechAlert extensions to existing scanners (3 sources)
+## Batch 1B — TechAlert extensions to existing scanners (3 sources) ✅ PARTIAL
 
-These extend existing functions rather than adding new ones.
-
-- [ ] **#66 SEC EDGAR Form D** — extend SIC code list in `scanEDGARFundings()` to include 1623 (water/sewer), 1629 (heavy const), 1731 (electrical), 1711 (plumbing/HVAC)
-- [ ] **#67 USPTO PatentsView** — extend assignee CPC filter in `scanUSPTOPatents()` to F24F (HVAC), F16L (pipe), H02G (electrical install)
+- [x] **#66 SEC EDGAR Form D** — `scanEDGARFundings()` industry terms expanded to include water/sewer, heavy construction
+- [x] **#67 USPTO PatentsView** — `scanUSPTOPatents()` CPC subclasses expanded to include F16L (pipe), H02G (electrical install)
 - [ ] **#64 LARA Michigan license expansions** — extend `scanLARANewLicenses()` to also fetch corporation/LLC formations with construction NAICS
 
 ## Batch 1C — Trade Radar federal area signals (5 sources)

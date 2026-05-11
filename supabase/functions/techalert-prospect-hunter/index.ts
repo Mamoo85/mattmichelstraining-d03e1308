@@ -210,7 +210,8 @@ async function scanEDGARFundings(): Promise<Posting[]> {
   const results: Posting[] = [];
   const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
 
-  const industryTerms = ["HVAC", "plumbing", "mechanical contractor", "boiler", "electrical contractor"];
+  // Wave 1 #66 — expanded SIC/term coverage: water/sewer, heavy const, electrical, plumbing/HVAC
+  const industryTerms = ["HVAC", "plumbing", "mechanical contractor", "boiler", "electrical contractor", "water sewer contractor", "heavy construction"];
 
   for (const term of industryTerms) {
     try {
@@ -248,7 +249,8 @@ async function scanUSPTOPatents(): Promise<Posting[]> {
   const ninetyDaysAgo = new Date(Date.now() - 90 * 86400000).toISOString().slice(0, 10);
 
   // CPC subclasses relevant to HVAC/boiler/plumbing/electrical
-  const cpcSubclasses = ["F24F", "F22B", "E03C", "H02B"]; // HVAC, boilers, plumbing, electrical panels
+  // Wave 1 #67 — added F16L (pipe/fittings), H02G (electrical install)
+  const cpcSubclasses = ["F24F", "F22B", "E03C", "H02B", "F16L", "H02G"];
 
   const usptoKey = Deno.env.get("USPTO_API_KEY") || "";
   for (const cpc of cpcSubclasses) {
@@ -1154,7 +1156,8 @@ serve(async (req) => {
     const { fetchHireSignals } = await import("../_shared/signal-waterfall.ts");
     const { runAll50Sources } = await import("../_shared/talent-signals/extras-50.ts");
     const { runExtraTalentSources } = await import("../_shared/talent-signals/extras-100.ts");
-    const [githubSignals, edgarSignals, usptoSignals, samSignals, samEntitySignals, blsSignals, eventbriteSignals, usaSpendingSignals, googleMapsSignals, oshaSignals, laraNewSignals, laraDissolvedSignals, laraExpiringSignals, nlrbSignals, cfpbSignals, ch7Signals, detroitCertifiedSignals, detroitOpenBizSignals, councilSurveyedSignals, detroitCityContractSignals, multifamilySignals, demoContractorSignals, demoPipelineSignals, billionDollarSignals, detroitBizLicenseSignals, commercialRedSignals, weatherBonus, hireWaterfallSignals, extras50Result, extras100Result] = (await Promise.allSettled([
+    const { runBatch1AFederal } = await import("../_shared/techalert-federal-scanners.ts");
+    const [githubSignals, edgarSignals, usptoSignals, samSignals, samEntitySignals, blsSignals, eventbriteSignals, usaSpendingSignals, googleMapsSignals, oshaSignals, laraNewSignals, laraDissolvedSignals, laraExpiringSignals, nlrbSignals, cfpbSignals, ch7Signals, detroitCertifiedSignals, detroitOpenBizSignals, councilSurveyedSignals, detroitCityContractSignals, multifamilySignals, demoContractorSignals, demoPipelineSignals, billionDollarSignals, detroitBizLicenseSignals, commercialRedSignals, weatherBonus, hireWaterfallSignals, extras50Result, extras100Result, batch1AResult] = (await Promise.allSettled([
       scanGitHubSignals(),
       scanEDGARFundings(),
       scanUSPTOPatents(),
@@ -1185,6 +1188,7 @@ serve(async (req) => {
       fetchHireSignals(sb, { state: "MI", naics: "238220" }).catch(() => []),
       runAll50Sources().catch(() => ({ postings: [], bySource: {} })),
       runExtraTalentSources().catch(() => ({ postings: [], bySource: {} })),
+      runBatch1AFederal(sb).catch(() => ({ postings: [], by_source: {} })),
     ])).map((r) => (r.status === "fulfilled" ? r.value : []) as any) as any;
     const extras50Postings = (extras50Result?.postings ?? []) as any[];
     const extras100Raw = (extras100Result?.postings ?? []) as any[];
@@ -1205,7 +1209,8 @@ serve(async (req) => {
         });
       } catch { /* skip malformed row */ }
     }
-    const supplemental = [...githubSignals, ...edgarSignals, ...usptoSignals, ...samSignals, ...samEntitySignals, ...blsSignals, ...eventbriteSignals, ...usaSpendingSignals, ...googleMapsSignals, ...oshaSignals, ...laraNewSignals, ...laraDissolvedSignals, ...laraExpiringSignals, ...nlrbSignals, ...cfpbSignals, ...ch7Signals, ...detroitCertifiedSignals, ...detroitOpenBizSignals, ...councilSurveyedSignals, ...detroitCityContractSignals, ...multifamilySignals, ...demoContractorSignals, ...demoPipelineSignals, ...billionDollarSignals, ...detroitBizLicenseSignals, ...commercialRedSignals, ...extras50Postings, ...extras100Postings];
+    const batch1APostings = (batch1AResult?.postings ?? []) as any[];
+    const supplemental = [...githubSignals, ...edgarSignals, ...usptoSignals, ...samSignals, ...samEntitySignals, ...blsSignals, ...eventbriteSignals, ...usaSpendingSignals, ...googleMapsSignals, ...oshaSignals, ...laraNewSignals, ...laraDissolvedSignals, ...laraExpiringSignals, ...nlrbSignals, ...cfpbSignals, ...ch7Signals, ...detroitCertifiedSignals, ...detroitOpenBizSignals, ...councilSurveyedSignals, ...detroitCityContractSignals, ...multifamilySignals, ...demoContractorSignals, ...demoPipelineSignals, ...billionDollarSignals, ...detroitBizLicenseSignals, ...commercialRedSignals, ...extras50Postings, ...extras100Postings, ...batch1APostings];
     all.push(...supplemental);
     scanned += supplemental.length;
     // Log waterfall signal volume to heartbeat metadata (don't insert as job postings — different shape)
