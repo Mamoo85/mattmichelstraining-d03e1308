@@ -9,6 +9,7 @@
 //   await persistCanonicalRows(sb, { source, product, rows });
 
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { validateCandidate, quarantine, type QaCandidate } from "./canonical-qa.ts";
 
 export type SourceMapping = {
   source: string;
