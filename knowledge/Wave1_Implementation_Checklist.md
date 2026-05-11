@@ -56,19 +56,21 @@ Implemented in `_shared/metro-permits.ts` (exports `runMetroPermitSignals(vertic
 
 **Note:** Socrata dataset IDs are best-known stable IDs. Each scanner is fail-graceful (try/catch per source) — if a city changes its dataset, that one source returns [] and the scan continues.
 
-## Batch 1E — Trade Radar county deeds (3 sources)
+## Batch 1E — Trade Radar county deeds (3 sources) ✅ WIRED
 
-- [ ] **#6 Kent County deeds** (Grand Rapids) — ArcGIS new-owner + pre-1990 → all 11 verticals (`new_owner_old_home` per-address)
-- [ ] **#24 Cuyahoga fiscal officer sales** (Cleveland) — ArcGIS → all 11 verticals
-- [ ] **#41 Wayne Co tax foreclosure auction** — scrape → RS/DJ (`foreclosure_vacant`)
+Implemented in `_shared/county-deeds.ts` (exports `runCountyDeedSignals(vertical, coverageRegions)`). Wired into `trade-radar-scanner/index.ts` per-vertical loop alongside the federal/metro Promise.all. Each county is gated by regex match against `coverage_regions`. All per-address signals flow through `validateLead` into `trade_radar_leads`.
 
-## Batch 1F — Court & legal RSS (3 sources)
+- [x] **#6 Kent County deeds** (Grand Rapids) — ArcGIS `Parcels_Public` 90-day sales + `YEAR_BUILT < 1990` → `new_owner_old_home` (score 7), all 11 verticals
+- [x] **#24 Cuyahoga fiscal officer sales** (Cleveland) — ArcGIS `Parcels` 90-day sales + `Year_Built < 1990` → `new_owner_old_home` (score 7), all 11 verticals
+- [x] **#41 Wayne Co tax foreclosure auction** — Firecrawl scrape of `waynecounty.com/elected/treasurer/foreclosure-auctions.aspx`, address-line regex extraction → `foreclosure_vacant` (score 8), restoration + demo_junk only
 
-Added to `signals-restoration.ts` + `signals-foundation.ts` as area signals.
+## Batch 1F — Court & legal RSS (3 sources) ✅ WIRED
 
-- [ ] **#45 PACER NDIL bankruptcy RSS** — Illinois Northern District → `bankruptcy_distress` area signal
-- [ ] **#46 PACER NDOH bankruptcy RSS** — Ohio Northern District → `bankruptcy_distress`
-- [ ] **#47 PACER SDIN bankruptcy RSS** — Indiana Southern District → `bankruptcy_distress`
+Implemented in `_shared/pacer-bankruptcy.ts` (exports `runPacerBankruptcySignals(vertical, coverageRegions)`). Wired into `trade-radar-scanner/index.ts` per-vertical loop. Returns ONE `bankruptcy_distress` area signal per active district, scored 5/7/8 by recent filing count (<10 / 10-24 / 25+). `bankruptcy_distress` added to `AREA_ALERT_TYPES`. PACER RSS is gated to target verticals: restoration, foundation, demo_junk, pest_control.
+
+- [x] **#45 PACER NDIL bankruptcy RSS** — `ecf.ilnb.uscourts.gov/cgi-bin/rss_outside.pl`, gated on Chicago/Illinois coverage_regions
+- [x] **#46 PACER NDOH bankruptcy RSS** — `ecf.ohnb.uscourts.gov/cgi-bin/rss_outside.pl`, gated on Cleveland/Columbus/Ohio
+- [x] **#47 PACER SDIN bankruptcy RSS** — `ecf.insb.uscourts.gov/cgi-bin/rss_outside.pl`, gated on Indianapolis/Indiana
 
 ## Wave 1 — Verification
 
