@@ -1186,6 +1186,7 @@ serve(async (req) => {
       fetchHireSignals(sb, { state: "MI", naics: "238220" }).catch(() => []),
       runAll50Sources().catch(() => ({ postings: [], bySource: {} })),
       runExtraTalentSources().catch(() => ({ postings: [], bySource: {} })),
+      runBatch1AFederal(sb).catch(() => ({ postings: [], by_source: {} })),
     ])).map((r) => (r.status === "fulfilled" ? r.value : []) as any) as any;
     const extras50Postings = (extras50Result?.postings ?? []) as any[];
     const extras100Raw = (extras100Result?.postings ?? []) as any[];
