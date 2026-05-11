@@ -1,92 +1,60 @@
-## Audit summary — what I verified
+## What I found
 
-I traced every source from definition → aggregator → scanner → DB.
+The `mortgage-radar-am-digest` cron is scheduled correctly (11:30 UTC daily, active), but **the last 2 days both failed at the pg_cron layer** before the function was even invoked:
 
-**✅ Correctly wired (Batches 1C–1F):**
-- Each source has a unique slug, is wrapped in `withSourceHealth(sb, slug, fn, …)`, and fails open on error.
-- The 4 aggregators each accept an optional `sb` arg — if passed, health tracking activates; if not, they still run.
-- `trade-radar-scanner/index.ts` (lines 571–608) passes `sb`, `allZips`, and `allRegions` (deduped union across active clients) into all 4 aggregators via `Promise.all` with individual `.catch` so one failure can't poison the others.
-- Every aggregator emits a `[trade-scanner:yield] … sources=N rows=M` log line.
-- `source_health` upserts are working end-to-end (last smoke confirmed 3 rows landed).
-
-**⚠️ Real gap #1 — Batches 1D/1F do nothing for Matt's coverage**
-
-Matt's `coverage_regions` for all 11 verticals = `{detroit, wayne, "se michigan"}`. The aggregators gate by regex against those strings:
-
-| Aggregator | Regex matches Matt? | Net effect |
-|---|---|---|
-| Federal-area (1C) | n/a — state-keyed | ✅ Runs (HUD ACS, FFIEC HMDA, NFIP, EPA, SPC) |
-| Metro-permits (1D) | GR / Ann Arbor / Chicago / Cleveland / Columbus / Indy / Milwaukee / Nashville | ❌ 0 of 8 metros match "detroit/wayne/se michigan" |
-| County-deeds (1E) | kent · cuyahoga · **wayne** | ✅ Only `wayne_tax_foreclosure` runs |
-| PACER (1F) | NDIL · NDOH · SDIN | ❌ No E.D. Michigan district configured |
-
-This isn't a bug in the wiring — it's a coverage gap. Matt sells in SE Michigan, but the new batches mostly target *other* metros.
-
-**⚠️ Real gap #2 — The 11 per-vertical `signals-*.ts` files have ZERO health tracking**
-
-The signals files Matt actually depends on (BSEED, DLBA, Wayne/Oakland/Macomb GIS, NOAA, Census, Detroit Fire, Drought Monitor, etc.) collectively make ~241 `fetch()` calls and **none are wrapped in `withSourceHealth`**. So when any of these sources break, we get the same silent failure pattern that hid the May 4 vertical freeze for a week.
-
-**⚠️ Real gap #3 — One orphan + one naming smell**
-
-- `signals-painting.ts` is still imported (as `scanExterior`) — file contents were rewritten in Phase 32 but the filename was never renamed. Functionally fine, just confusing during audits.
-- `trade_radar_clients` still has an `active=true` `painting` row alongside `exterior` (Phase 32 migration didn't actually flip it). Means scanner double-scans painting/exterior into the same client.
-
-No truly orphan/abandoned files were found in `_shared/`.
-
----
-
-## Plan — close the three gaps
-
-### Step 1 — Add E.D. Michigan PACER + Wayne/Oakland/Macomb deeds to Batches 1E/1F
-
-These are 4 new sources, all free, all matching Matt's existing `coverage_regions`. Result: county-deeds runs 2 more sources for Matt; PACER runs 1.
-
-- `_shared/pacer-bankruptcy.ts`:
-  - Add `mied` district (`https://ecf.mied.uscourts.gov/cgi-bin/rss_outside.pl`, scope "E.D. Michigan", state "MI").
-  - Match regex: `detroit|wayne|oakland|macomb|michigan|\bmi\b`.
-  - Slug: `pacer_mied`.
-- `_shared/county-deeds.ts`:
-  - Add `fetchOaklandSales(vertical)` → Oakland County GIS parcel server, 90-day sales + pre-1990, slug `oakland_county_deeds`.
-  - Add `fetchMacombSales(vertical)` → Macomb County GIS, same filter, slug `macomb_county_deeds`.
-  - Gate both on `/oakland|macomb|se\s*michigan/`.
-  - Note: these endpoints have a history of being blocked from Supabase edge runtime (see Phase 42 notes). Wrap in `withSourceHealth` so failures auto-log instead of silently zeroing — that's exactly the visibility this audit demanded.
-
-### Step 2 — Wrap the 241 fetches in `_shared/trade-signals/signals-*.ts`
-
-This is the biggest leverage. Without this, the May 4 freeze can recur and we won't see it.
-
-Strategy: don't rewrite each individual `fetch()`. Instead refactor each signal file to expose its internal scanners as named functions, then have `scanSignals(sb, vertical, ctx)` call them through `withSourceHealth`. Slugs follow the existing pattern (`bseed_*`, `dlba_*`, `wayne_arcgis_parcels`, `oakland_arcgis_parcels`, `macomb_arcgis_parcels`, `noaa_alerts`, `noaa_spc_csv`, `drought_monitor`, `census_acs_pre1960`, `seeclickfix`, etc.).
-
-Because each signal file is already structured around discrete async blocks (each `await fetch(...)` is its own logical source), this is a mechanical refactor — pull each block into a named `async function fetchXxx()`, then call it through `withSourceHealth`. No business-logic changes.
-
-Scope: do this in **one vertical first** (`hvac` — Matt's most active vertical) to validate the pattern, then apply to the other 10 in a follow-on pass. That keeps this PR reviewable.
-
-### Step 3 — Cleanup
-
-- Rename `_shared/trade-signals/signals-painting.ts` → `signals-exterior.ts`; update the one import in scanner.
-- Migration: `UPDATE trade_radar_clients SET active=false WHERE vertical='painting' AND email='matt@detroitwebagent.com';` (the Phase 32 migration filtered on `name` which didn't match).
-
-### Verification after deploy
-
-```sql
--- expect: pacer_mied + oakland_county_deeds + macomb_county_deeds rows
-SELECT source_name, last_run_at, last_yield, last_error
-FROM source_health
-WHERE source_name IN ('pacer_mied','oakland_county_deeds','macomb_county_deeds')
-   OR source_name LIKE 'bseed_%' OR source_name LIKE 'dlba_%'
-ORDER BY last_run_at DESC NULLS LAST;
+```
+2026-05-11 11:30  failed  "job startup timeout"   ← today
+2026-05-10 11:30  failed  "job startup timeout"   ← yesterday
+2026-05-09 11:30  succeeded
+2026-05-08 11:30  succeeded
+2026-05-07 11:30  succeeded
 ```
 
-After tomorrow's 12:00–12:20 UTC cron cycle, every source touched should have a row. If any are missing, the wrapper didn't get applied → fix immediately.
+This is **not a mortgage-radar bug**. It's a project-wide pg_cron background-worker exhaustion. In the last 36 hours, every high-frequency cron is failing with the same "job startup timeout" error:
 
-### Out of scope (deferred)
+| Job | Failures (36h) |
+|---|---|
+| process-email-queue | 547 |
+| queue-worker-enrich-1m | 305 |
+| queue-worker-scrape-1m | 304 |
+| release-pending-sms-every-minute | 295 |
+| outreach-queue-worker-every-minute | 285 |
+| auto-draft-on-inbound-every-minute | 260 |
+| …15+ more every-minute jobs | … |
 
-- Adding new metros to Batch 1D (Chicago/Cleveland/etc. don't serve Matt). When Matt enrolls a real client in those cities, we just add their `coverage_regions` — code is already ready.
-- The "span folders" check: confirmed no orphan files in `_shared/` — every `.ts` is imported somewhere. The `signals-painting.ts` filename is the only naming smell, addressed in Step 3.
+pg_cron has a fixed worker pool (`max_worker_processes` / `cron.max_running_jobs`). Once it's saturated by long-running `net.http_post` calls from every-minute workers, lower-frequency jobs like the daily 11:30 digest can't acquire a worker and Postgres reports "job startup timeout" — the SQL never runs at all. Once the daily slot is missed, pg_cron does not retry until the next scheduled time.
 
-### Technical notes
+## The fix
 
-- Each `signals-*.ts` file has 15–32 fetches. Total ~241 sources across 11 files. Step 2 done one-vertical-at-a-time keeps each PR ≤ 1 file refactor.
-- `withSourceHealth` already fails-open and returns `[]` on error, so wrapping is non-breaking even for sources that occasionally 404.
-- The `_shared/source-health.ts` table has `daily_cap` (default 200) — for high-volume sources like BSEED that legitimately return 200+ rows, we may want to bump caps. Will set per-source caps in Step 2 based on observed yield.
-- No DB migrations needed for Steps 1 & 2. Step 3 needs one tiny migration to deactivate the duplicate `painting` row.
+### Step 1 — Recover today's digest immediately
+Manually invoke `mortgage-radar-am-digest` via `supabase--curl_edge_functions` so today's email goes out now. This is a one-shot HTTP call, no migration required.
+
+### Step 2 — Stop the worker-pool saturation (root cause)
+Audit the every-minute / every-2-minute jobs above. Most of them are queue drainers that should either:
+- be consolidated (one orchestrator that fans out to multiple queues internally), or
+- be moved to fire-and-forget (`net.http_post` returns immediately; the timeout is happening because pg_cron is waiting on the worker slot, not the HTTP response, but the slot is held while `pg_net` waits on its response queue).
+
+Specifically, the worst offenders (`process-email-queue` at 547/36h = every ~4min failing, plus 6 every-minute workers all failing) should be:
+1. Verified that they actually need to run every minute (most queues are empty 95% of fires).
+2. Stretched to every 2–5 minutes where business-acceptable.
+3. Or migrated to a single "queue-orchestrator-1m" job that calls multiple drain endpoints in one SQL invocation.
+
+### Step 3 — Add a safety net for daily digests
+Add a second cron entry for `mortgage-radar-am-digest` that runs at 11:35 UTC as a retry, gated by a "did today's digest already send?" check inside the function (idempotent — the function already writes a log row per send). This way, even if 11:30 misses its worker, 11:35 catches it. Apply the same pattern to `trade-radar-am-digest` and `mortgage-radar-scanner-daily` (which I should verify also missed today).
+
+### Step 4 — Add cron-sentinel coverage for "job startup timeout"
+The existing `cron-sentinel` watchdog (per memory: 6h check, SMS Matt on critical failure) checks freshness + output pulse but likely doesn't classify "job startup timeout" as a critical class. Confirm and, if needed, add a rule: "if the same daily job hits startup-timeout 2 days in a row → SMS Matt."
+
+## Technical notes
+
+- Project-wide impact: today's missed digest is the visible symptom; underneath, hundreds of queue-worker fires are also missing. Email queue, SMS release, outreach drafts, and signal correlation are all degraded.
+- I'd verify `mortgage-radar-scanner-daily` (11:00 UTC today) also missed before invoking the digest — if both missed, scanner needs to run first so the digest has fresh leads.
+- No schema changes needed for Step 1 or Step 3 (cron-only migration). Step 2 likely requires editing 2–4 worker functions to consolidate.
+
+## Proposed order of operations
+1. Curl-invoke `mortgage-radar-scanner-daily` then `mortgage-radar-am-digest` → today's email goes out within ~5 min.
+2. Ship migration adding the 11:35 UTC retry job (+ same for trade-radar) and idempotency check.
+3. Audit + stretch / consolidate the every-minute drainers.
+4. Extend cron-sentinel rule and verify it fires on the next simulated miss.
+
+Approve and I'll execute in that order.

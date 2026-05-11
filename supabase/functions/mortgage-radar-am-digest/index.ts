@@ -212,6 +212,22 @@ serve(wrapServe("mortgage-radar-am-digest", async (req) => {
     return new Response(JSON.stringify({ ok: true, test_sms: summary }), { headers: corsHeaders });
   }
 
+  // ── Idempotency guard ────────────────────────────────────────────────────
+  // The primary cron fires at 11:30 UTC; a safety-net retry fires at 11:35 UTC
+  // in case pg_cron worker-pool exhaustion blocks the first fire (see
+  // 20260511_*_daily_digest_retries.sql). Skip if we've already sent today,
+  // unless `force=true` is passed (manual recovery).
+  if (!body.force) {
+    const todayStart = new Date(); todayStart.setUTCHours(0, 0, 0, 0);
+    const { data: hb } = await (sb.from as any)("agent_heartbeats")
+      .select("last_beat, metadata")
+      .eq("agent_name", "mortgage-radar-am-digest")
+      .maybeSingle();
+    if (hb?.last_beat && new Date(hb.last_beat) >= todayStart && (hb.metadata?.digests_sent ?? 0) > 0) {
+      return new Response(JSON.stringify({ ok: true, skipped: "already_sent_today", last_beat: hb.last_beat, digests_sent: hb.metadata?.digests_sent }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+  }
+
   const now = Date.now();
   const since24h = new Date(now - 24 * 3600_000).toISOString();
   const since7d  = new Date(now - 7 * 24 * 3600_000).toISOString();
