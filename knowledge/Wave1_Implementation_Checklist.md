@@ -39,20 +39,22 @@ Implemented in `_shared/federal-area-signals.ts` (exports `runFederalAreaSignals
 - [x] **#40 NOAA SPC mesoscale archive** — SPC mesoscale RSS filtered by state → `storm_wind_damage` (roofing, exterior, gutters, tree, restoration)
 
 
-## Batch 1D — Trade Radar metro permit ArcGIS layers (10 sources)
+## Batch 1D — Trade Radar metro permit ArcGIS layers (10 sources) ✅ WIRED
 
-These extend existing signal files. For each: add a `scanCityXyzPermits()` function gated by `coverage_regions` containing the metro name in client config.
+Implemented in `_shared/metro-permits.ts` (exports `runMetroPermitSignals(vertical, coverageRegions)`). Wired into `trade-radar-scanner/index.ts` per-vertical loop alongside `runFederalAreaSignals` via Promise.all. Each metro is gated by regex match against `trade_radar_clients.coverage_regions`. All per-address signals flow through `validateLead` into `trade_radar_leads`. Signal types: `metro_{vertical}_permit`, `cofc_{vertical}_inspection` (GR rentals), `foreclosure_vacant` (Chicago violations).
 
-- [ ] **#1 Grand Rapids permits** — extend signals-roofing/hvac/plumbing/electrical/gutters/exterior — Kent County ArcGIS
-- [ ] **#2 Grand Rapids CofC expirations** — all 11 verticals → `cofc_*_inspection` signal types
-- [ ] **#4 Ann Arbor permits** — A2OpenData Socrata → signals-roofing/hvac/plumbing/electrical/exterior
-- [ ] **#11 Chicago building permits** — `data.cityofchicago.org/resource/ydr8-5enu.json` → R/H/P/E/G/EX/F
-- [ ] **#12 Chicago code violations** — `data.cityofchicago.org/resource/22u3-xenr.json` → RS/DJ/X (`foreclosure_vacant`)
-- [ ] **#13 Cleveland building permits** — Cuyahoga ArcGIS → R/H/P/E
-- [ ] **#15 Columbus permits** — `opendata.columbus.gov` Socrata → all relevant verticals
-- [ ] **#18 Indianapolis permits** — `data.indy.gov` Socrata → all relevant verticals
-- [ ] **#19 Milwaukee permits** — `data.milwaukee.gov` Socrata → R/H/P/E
-- [ ] **#21 Nashville permits** — `data.nashville.gov` Socrata → all relevant verticals
+- [x] **#1 Grand Rapids permits** — Kent County ArcGIS (`GR_Permits_Public`), keyword-routed by vertical
+- [x] **#2 Grand Rapids CofC expirations** — `GR_Rental_Certificates` ≤90 days, score 7-9 by daysLeft, all 11 verticals
+- [x] **#4 Ann Arbor permits** — `data.a2gov.org/resource/6gnm-uern` Socrata
+- [x] **#11 Chicago building permits** — `data.cityofchicago.org/resource/ydr8-5enu`
+- [x] **#12 Chicago code violations** — `data.cityofchicago.org/resource/22u3-xenr` → `foreclosure_vacant` (restoration/demo_junk/pest)
+- [x] **#13 Cleveland building permits** — Cuyahoga ArcGIS
+- [x] **#15 Columbus permits** — `opendata.columbus.gov/resource/qbz4-d4kx`
+- [x] **#18 Indianapolis permits** — `data.indy.gov/resource/p2vj-jr2q`
+- [x] **#19 Milwaukee permits** — `data.milwaukee.gov/resource/x88s-kp4n`
+- [x] **#21 Nashville permits** — `data.nashville.gov/resource/3h5w-q8b7`
+
+**Note:** Socrata dataset IDs are best-known stable IDs. Each scanner is fail-graceful (try/catch per source) — if a city changes its dataset, that one source returns [] and the scan continues.
 
 ## Batch 1E — Trade Radar county deeds (3 sources)
 
