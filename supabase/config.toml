@@ -3,6 +3,9 @@ project_id = "zmyczlfuufhngzovkjdh"
 [functions.scanner-monitor-alert]
 verify_jwt = false
 
+[functions.scanner-sources-run-batch-1]
+verify_jwt = false
+
 [functions.claim-trade-radar-lead]
 verify_jwt = false
 
