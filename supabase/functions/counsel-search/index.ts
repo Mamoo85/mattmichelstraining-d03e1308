@@ -389,98 +389,58 @@ async function sonarSearch(query: string, label: string, category: string, sever
   } catch { return []; }
 }
 
-// ─── Per-name scanners (run for each alias) ────────────────────────────────
+// ─── Court-only scanners (run for each alias) ──────────────────────────────
+// Strictly limited to court records + name-verified offender registries.
+// All HTML-regex scrapers that produced false positives (MI AG nav links, FAA
+// captcha pages, county anchor scrapers, FBI/USMS/DEA/ICE substring matches,
+// OSHA establishments, property, business, news, liens) are intentionally
+// EXCLUDED. PACER is excluded — clients who need PACER should subscribe to
+// PACER directly.
 async function runScansForName(name: string, city: string, state: string): Promise<IntelHit[][]> {
   return await Promise.allSettled([
-    // Federal courts
+    // ── Federal court dockets by party (CourtListener live API) ──────────
     clDockets(name, state, "470,480", "Court Records", "high", "Bankruptcy"),
     clDockets(name, state, "320,190", "Court Records", "medium", "Civil Suit"),
-    clDockets(name, state, "950,540,530,550", "Criminal Records", "high", "Federal Criminal"),
-    clDockets(name, state, "870", "Financial Records", "high", "Federal Tax Suit"),
-    // Federal registries
-    scanNSOPW(name, state),
-    scanFBIWanted(name),
-    scanSAMExclusions(name),
-    scanOSHA(name),
-    // MI property
-    scanWayneProperty(name),
-    scanOaklandProperty(name),
-    scanMacombProperty(name),
-    scanDetroitAssessor(name),
-    scanDetroitBlight(name),
-    scanDetroitVacant(name),
-    // Business
-    scanOpenCorporates(name, state),
-    // Sonar (cite-or-die)
-    sonarSearch(`Search Michigan court records for evictions, eviction filings, or summary proceedings naming "${name}" in ${city}, ${state}. Look at 36th District Court Detroit, 3rd Circuit Wayne, 6th Circuit Oakland, Macomb 16th Circuit. Return JSON array with court website URL for each case. CITE OR OMIT.`, "MI Eviction Search", "Eviction Records", "high", name),
-    sonarSearch(`Search Michigan and federal court records for criminal arrests, charges, or convictions involving "${name}" in ${city}, ${state}. Include MI MDOC OTIS records. Each item must cite a public-record URL. CITE OR OMIT.`, "MI Criminal Background", "Criminal Records", "high", name),
-    sonarSearch(`Search news articles citing "${name}" from ${city}, ${state} involving fraud, lawsuits, evictions, arrests, or property disputes. Return only items with verifiable news URLs. CITE OR OMIT.`, "News & Media", "News & Public Notices", "medium", name),
-    sonarSearch(`Search for tax liens, mechanic's liens, UCC filings, or judgment liens against "${name}" in ${state}. Each item must cite the filing record's public URL. CITE OR OMIT.`, "Liens & Judgments", "Financial Records", "high", name),
-    sonarSearch(`Search Michigan probate court filings, estate proceedings, or guardianship cases involving "${name}". Each item must cite a court URL. CITE OR OMIT.`, "MI Probate Records", "Court Records", "info", name),
-    sonarSearch(`Search Michigan LARA business registry and SOS records for businesses owned, registered, or operated by "${name}". Include LARA dissolution and BBB complaints. Each item must cite a verifiable URL. CITE OR OMIT.`, "MI Business Background", "Business Records", "medium", name),
+    clDockets(name, state, "950,540,530,550", "Court Records", "high", "Federal Criminal"),
+    clDockets(name, state, "870", "Court Records", "high", "Federal Tax Suit"),
 
-    // ── Federal courts & corrections (8) ─────────────────────────────────
+    // ── Federal court opinions + RECAP archive (free PACER cache) ────────
     Federal.scanCLOpinions(name),
     Federal.scanCLRecap(name),
+
+    // ── U.S. Tax Court (DAWSON JSON) ─────────────────────────────────────
     Federal.scanTaxCourt(name),
+
+    // ── Federal corrections (BOP — exact first+last match) ───────────────
     Federal.scanBOP(name),
-    Federal.scanUSMarshals(name),
-    Federal.scanDEAFugitives(name),
-    Federal.scanICEWanted(name),
-    Federal.scanPACER(name),
 
-    // ── Federal regulatory & enforcement (10) ───────────────────────────
-    Reg.scanSECLitigation(name),
-    Reg.scanCFTC(name),
-    Reg.scanFTC(name),
-    Reg.scanCFPB(name),
-    Reg.scanDOJ(name),
-    Reg.scanLEIE(name),
-    Reg.scanOFAC(name),
-    Reg.scanNTSB(name),
-    Reg.scanFINRA(name),
-    Reg.scanNMLS(name),
-
-    // ── Michigan state (12) ──────────────────────────────────────────────
-    MI.scanMDOC_OTIS(name),
-    MI.scanMIPSOR(name),
-    MI.scanLARALicense(name),
-    MI.scanLARACorp(name),
-    MI.scanMI_UCC(name),
+    // ── Michigan state appellate (real JSON APIs) ────────────────────────
     MI.scanMICOA(name),
     MI.scanMISCT(name),
-    MI.scanMIAG(name),
-    MI.scanMIDIFS(name),
-    MI.scanMIOSHA(name),
-    MI.scanMIStateBar(name),
-    MI.scanMITaxLien(name),
 
-    // ── Michigan county courts & deeds (10) ──────────────────────────────
-    County.scan36thDistrict(name),
-    County.scanWayne3rd(name),
-    County.scanOakland6th(name),
-    County.scanMacomb16th(name),
-    County.scanWashtenaw(name),
-    County.scanKent17th(name),
-    County.scanGenesee7th(name),
-    County.scanWayneROD(name),
-    County.scanOaklandROD(name),
-    County.scanMacombROD(name),
+    // ── Michigan corrections / sex offender registries (name-verified) ───
+    MI.scanMDOC_OTIS(name),
+    MI.scanMIPSOR(name),
+    scanNSOPW(name, state),
 
-    // ── Property/parcel + professional registries (7) ────────────────────
-    Pro.scanGeneseeParcel(name),
-    Pro.scanWashtenawParcel(name),
-    Pro.scanKentParcel(name),
-    Pro.scanDLBA(name),
-    Pro.scanNPI(name),
-    Pro.scanFAA(name),
-    Pro.scanUSPTO(name),
-
-    // ── OSINT aggregates (3) ─────────────────────────────────────────────
-    OSINT.scanOpenSanctions(name),
-    OSINT.scanICIJ(name),
-    OSINT.scanGDELT(name),
+    // ── AI-corroborated court search (cite-or-die, HEAD-validated URLs) ──
+    sonarSearch(`Search Michigan court records for civil cases, evictions, summary proceedings, divorce, custody, probate, or guardianship naming "${name}" in ${city}, ${state}. Look at 36th District Court Detroit, 3rd Circuit Wayne, 6th Circuit Oakland, Macomb 16th Circuit, Kent 17th, Genesee 7th, Washtenaw. Each item MUST cite the court website URL for the case. The party name in the citation must include "${name}". CITE OR OMIT.`, "MI Court Search", "Court Records", "high", name),
+    sonarSearch(`Search Michigan and federal court records for criminal arrests, charges, or convictions involving "${name}" in ${city}, ${state}. Include MDOC OTIS and county criminal docket pages. Each item must cite a court or corrections public-record URL. The defendant name in the cited record must include "${name}". CITE OR OMIT.`, "MI Criminal Court Search", "Court Records", "high", name),
+    sonarSearch(`Search Michigan probate court filings, estate proceedings, or guardianship cases involving "${name}". Each item must cite a probate court URL where the case party name includes "${name}". CITE OR OMIT.`, "MI Probate Court Search", "Court Records", "medium", name),
   ]).then(arr => arr.map(r => r.status === "fulfilled" ? r.value : []));
+}
+
+// Surname-match validator: require the searched surname (last token) to appear
+// in the hit's title or summary. Kills "Latoya Grissom from Texarkana" class
+// of false positive where a substring matched but the person is unrelated.
+function passesSurnameGate(name: string, hit: IntelHit): boolean {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return true;
+  // Pick the longest token (usually the surname) as the required string.
+  const required = parts.sort((a, b) => b.length - a.length)[0].toLowerCase();
+  if (required.length < 3) return true; // too short to filter reliably
+  const haystack = `${hit.title || ""} ${hit.summary || ""} ${hit.location || ""}`.toLowerCase();
+  return haystack.includes(required);
 }
 
 // ─── Main handler ──────────────────────────────────────────────────────────
