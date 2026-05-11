@@ -438,7 +438,7 @@ async function notifyClients(
   }
 }
 
-const SCANNERS: Record<Vertical, (state: string, zips?: string[]) => Promise<any[]>> = {
+const SCANNERS: Record<Vertical, (state: string, zips?: string[], sb?: any) => Promise<any[]>> = {
   roofing: scanRoofing,
   hvac: scanHvac,
   plumbing: scanPlumbing,
