@@ -210,7 +210,8 @@ async function scanEDGARFundings(): Promise<Posting[]> {
   const results: Posting[] = [];
   const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
 
-  const industryTerms = ["HVAC", "plumbing", "mechanical contractor", "boiler", "electrical contractor"];
+  // Wave 1 #66 — expanded SIC/term coverage: water/sewer, heavy const, electrical, plumbing/HVAC
+  const industryTerms = ["HVAC", "plumbing", "mechanical contractor", "boiler", "electrical contractor", "water sewer contractor", "heavy construction"];
 
   for (const term of industryTerms) {
     try {
