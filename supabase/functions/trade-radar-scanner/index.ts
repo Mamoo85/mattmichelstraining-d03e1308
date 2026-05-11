@@ -20,6 +20,7 @@ import { scanSignals as scanDemoJunk } from "../_shared/trade-signals/signals-de
 import { scanSignals as scanFoundation } from "../_shared/trade-signals/signals-foundation.ts";
 import { fetchFreshBusinessSignals, fetchMortgageSignals, fetchHireSignals } from "../_shared/signal-waterfall.ts";
 import { scrapeZillowFSBO, scrapeEstateSales } from "../_shared/scrapers-public-listings.ts";
+import { runFederalAreaSignals } from "../_shared/federal-area-signals.ts";
 
 // Warn loudly at startup if FIRECRAWL_API_KEY is missing — half the per-address
 // signal sources (FSBO, estate sales, probate, foreclosure) depend on it.
