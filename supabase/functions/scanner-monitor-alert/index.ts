@@ -194,7 +194,7 @@ Deno.serve(async (req) => {
 
     try {
       const r = await sendSMS(ADMIN_PHONE, TWILIO_FROM, body, "scanner-monitor");
-      if (r.ok) {
+      if (r.success) {
         paged++;
         await sb.from("scanner_alerts").update({ alerted_at: new Date().toISOString() }).eq("id", ins.data!.id);
       }
