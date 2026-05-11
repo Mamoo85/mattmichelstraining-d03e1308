@@ -400,10 +400,30 @@ export default function AdminAgencyOutreach() {
                       const isPicked = pickedFor[agency.name] === c.id;
                       const tier = c.score >= 8 ? "exceptional" : c.score >= 6 ? "strong" : "moderate";
                       const tierColor = c.score >= 8 ? "text-emerald-300" : c.score >= 6 ? "text-[#00d4ff]" : "text-slate-400";
+                      const candidateHasContact = !!(c.email || c.phone);
                       return (
                         <button
                           key={c.id}
-                          onClick={() => setPickedFor(p => ({ ...p, [agency.name]: isPicked ? null : c.id }))}
+                          onClick={() => {
+                            setPickedFor(p => ({ ...p, [agency.name]: isPicked ? null : c.id }));
+                            // Option A: if candidate has email/phone and agency has no enrichment yet, seed it
+                            if (!isPicked && candidateHasContact && !enrichments[agency.name]?.contact_email) {
+                              setEnrichments(prev => ({
+                                ...prev,
+                                [agency.name]: {
+                                  contact_first_name: (c.full_name || c.name || "").split(" ")[0] || null,
+                                  contact_last_name: (c.full_name || c.name || "").split(" ").slice(1).join(" ") || null,
+                                  contact_full_name: c.full_name || c.name || null,
+                                  contact_title: c.current_title || c.trade || null,
+                                  contact_email: c.email || null,
+                                  email_status: c.email ? "candidate_record" : null,
+                                  source: "cherry_pick",
+                                  domain: agency.domain || null,
+                                },
+                              }));
+                              if (c.email) toast.success(`Using ${c.full_name || c.name}'s contact — click Draft to continue`);
+                            }
+                          }}
                           className={`w-full text-left px-3 py-2 rounded-lg border text-xs flex items-center justify-between transition-colors ${isPicked ? "bg-amber-500/10 border-amber-500/40" : "bg-[#0f1f35] border-white/5 hover:border-amber-500/30"}`}
                         >
                           <div className="min-w-0 flex-1">
