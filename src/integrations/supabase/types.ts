@@ -20210,11 +20210,61 @@ export type Database = {
         }
         Relationships: []
       }
+      scanner_alerts: {
+        Row: {
+          alerted_at: string | null
+          error_code: string | null
+          failing_step: string | null
+          fingerprint: string
+          first_seen_at: string
+          id: string
+          last_seen_at: string
+          occurrences: number
+          product: string
+          reason: string
+          resolved_at: string | null
+          severity: string
+          source: string
+        }
+        Insert: {
+          alerted_at?: string | null
+          error_code?: string | null
+          failing_step?: string | null
+          fingerprint: string
+          first_seen_at?: string
+          id?: string
+          last_seen_at?: string
+          occurrences?: number
+          product: string
+          reason: string
+          resolved_at?: string | null
+          severity: string
+          source: string
+        }
+        Update: {
+          alerted_at?: string | null
+          error_code?: string | null
+          failing_step?: string | null
+          fingerprint?: string
+          first_seen_at?: string
+          id?: string
+          last_seen_at?: string
+          occurrences?: number
+          product?: string
+          reason?: string
+          resolved_at?: string | null
+          severity?: string
+          source?: string
+        }
+        Relationships: []
+      }
       scanner_extras_runs: {
         Row: {
           count: number
           created_at: string
           error: string | null
+          error_code: string | null
+          failing_step: string | null
           id: string
           ms: number
           product: string
@@ -20226,6 +20276,8 @@ export type Database = {
           count?: number
           created_at?: string
           error?: string | null
+          error_code?: string | null
+          failing_step?: string | null
           id?: string
           ms?: number
           product: string
@@ -20237,6 +20289,8 @@ export type Database = {
           count?: number
           created_at?: string
           error?: string | null
+          error_code?: string | null
+          failing_step?: string | null
           id?: string
           ms?: number
           product?: string
@@ -20304,6 +20358,8 @@ export type Database = {
         Row: {
           duration_ms: number
           error: string | null
+          error_code: string | null
+          failing_step: string | null
           id: number
           ok: boolean
           product: string
@@ -20314,6 +20370,8 @@ export type Database = {
         Insert: {
           duration_ms?: number
           error?: string | null
+          error_code?: string | null
+          failing_step?: string | null
           id?: number
           ok: boolean
           product: string
@@ -20324,6 +20382,8 @@ export type Database = {
         Update: {
           duration_ms?: number
           error?: string | null
+          error_code?: string | null
+          failing_step?: string | null
           id?: number
           ok?: boolean
           product?: string
@@ -26220,6 +26280,23 @@ export type Database = {
           trajectory_delta_14d: number | null
           trajectory_delta_7d: number | null
           vertical: string | null
+        }
+        Relationships: []
+      }
+      v_scanner_runs_unified: {
+        Row: {
+          duration_ms: number | null
+          engine: string | null
+          error: string | null
+          error_code: string | null
+          failing_step: string | null
+          id: string | null
+          ok: boolean | null
+          product: string | null
+          ran_at: string | null
+          rows: number | null
+          segment: string | null
+          source: string | null
         }
         Relationships: []
       }
