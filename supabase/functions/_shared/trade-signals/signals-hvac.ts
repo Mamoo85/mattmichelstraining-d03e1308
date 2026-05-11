@@ -1,5 +1,19 @@
 // HVAC Radar signal scanner.
 // Sources: NOAA NWS Alerts (extreme heat/cold/ice), FEMA declarations, BSEED/Oakland aging-system permits.
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
+import { recordSourceRun } from "../source-health.ts";
+
+// Every source this file is expected to touch. Used to record per-source yield
+// (including zeros) so source_health surfaces dead sources, not just live ones.
+const EXPECTED_SOURCES = [
+  "noaa_nws_alerts","fema_api","bseed_trades_permits_hvac","fema_nfip_api","drought_monitor",
+  "ffiec_hmda","noaa_nws_forecast","detroit_assessor_sales","bseed_rental_registrations",
+  "wayne_county_parcel","oakland_county_parcel","detroit_assessment_roll",
+  "bseed_residential_cert_expiry","bseed_presale_inspection","bseed_commercial_compliance",
+  "bseed_commercial_cert_expiry","multifamily_construction_sites","existing_multifamily_sites",
+  "energy_benchmarking_ordinance","bseed_arcgis","bseed_rental_compliance_view",
+  "bseed_cofc_expiring","bseed_plan_reviews","macomb_county_parcel",
+];
 
 export interface RawSignal {
   address: string; city: string; zip: string;
