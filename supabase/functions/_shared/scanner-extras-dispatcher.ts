@@ -2,6 +2,7 @@
 // to scanner_extras_runs. Fail-graceful: any source error is captured per-source.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { persistCanonicalRows } from "./canonical-mapper.ts";
 import * as ex from "./scanner-extras-2026.ts";
 import * as exb from "./scanner-extras-2026-b.ts";
 import * as exc from "./scanner-extras-2026-c.ts";
