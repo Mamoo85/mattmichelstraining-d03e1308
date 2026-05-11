@@ -59,6 +59,13 @@ const DISTRICTS = [
     scope_value: "S.D. Indiana",
     url: "https://ecf.insb.uscourts.gov/cgi-bin/rss_outside.pl",
   },
+  {
+    slug: "mied",
+    name: "E.D. Michigan",
+    state: "MI",
+    scope_value: "E.D. Michigan",
+    url: "https://ecf.mieb.uscourts.gov/cgi-bin/rss_outside.pl",
+  },
 ];
 
 async function fetchDistrictCount(url: string): Promise<number> {
