@@ -516,13 +516,20 @@ Deno.serve(async (req) => {
   const allHits: IntelHit[] = [];
   let sourcesHit = 0;
   let sourcesReturned = 0;
+  let filteredBySurname = 0;
   const seen = new Set<string>();
-  for (const namesArr of perNameResults) {
+  for (let i = 0; i < perNameResults.length; i++) {
+    const nameForGate = allNames[i];
+    const namesArr = perNameResults[i];
     for (const arr of namesArr) {
       sourcesHit++;
       if (arr.length > 0) {
         sourcesReturned++;
         for (const h of arr) {
+          if (!passesSurnameGate(nameForGate, h)) {
+            filteredBySurname++;
+            continue;
+          }
           const key = `${h.source}|${h.title}|${h.source_url || ""}`;
           if (seen.has(key)) continue;
           seen.add(key);
