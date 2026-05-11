@@ -28,20 +28,16 @@ All 5 implemented in `_shared/techalert-federal-scanners.ts` and wired into `tec
 - [x] **#67 USPTO PatentsView** — `scanUSPTOPatents()` CPC subclasses expanded to include F16L (pipe), H02G (electrical install)
 - [ ] **#64 LARA Michigan license expansions** — extend `scanLARANewLicenses()` to also fetch corporation/LLC formations with construction NAICS
 
-## Batch 1C — Trade Radar federal area signals (5 sources)
+## Batch 1C — Trade Radar federal area signals (5 sources) ✅ WIRED
 
-These write to `trade_radar_area_signals` (already in AREA_ALERT_TYPES pattern). Added as new shared utility `_shared/federal-area-signals.ts` called by `trade-radar-scanner/index.ts`.
+Implemented in `_shared/federal-area-signals.ts` (exports `runFederalAreaSignals(vertical, state, zips)`). Wired into `trade-radar-scanner/index.ts` per-vertical loop after the registry augment block. New AREA_ALERT_TYPES added: `aging_housing_tract`, `epa_water_violation_area`, `nfip_repeat_loss_zip`.
 
-- [ ] **#31 HUD CHAS housing condition** — tract-level aging-housing area signal feeding R/H/P/E/G/EX
-- [ ] **#32 FFIEC HMDA loan originations** — refi/HI loan density by census tract → `home_improvement_loan_area` (extends current usage to all 11 verticals + top-10 metros)
-- [ ] **#33 FEMA NFIP repeat-loss zones** — zip-level → `nfip_flood_area` feeding F/RS/P (extend beyond current MI use)
-- [ ] **#35 EPA ECHO water-system violations** — facility/zip → `lead_line_area` feeding P
-- [ ] **#40 NOAA SPC mesoscale archive** — extend `signals-roofing.ts`/`signals-exterior.ts`/`signals-gutters.ts` with daily mesoscale convective archive (richer than current Day-1 outlook)
+- [x] **#31 HUD CHAS housing condition** — Census ACS B25034 pre-1980 share by ZIP → `aging_housing_tract` (≥60% threshold); feeds roofing/hvac/plumbing/electrical/gutters/exterior/pest
+- [x] **#32 FFIEC HMDA loan originations** — `home_improvement_loan_area` (≥15 HI loans) + `homeowner_equity_area` (≥25 refi); vertical-routed
+- [x] **#33 FEMA NFIP repeat-loss zones** — OpenFEMA NfipClaims 5-yr, ≥3 claims/zip → `nfip_repeat_loss_zip` (foundation, restoration, plumbing)
+- [x] **#35 EPA ECHO water-system violations** — SDWA active-violation systems → `epa_water_violation_area` (plumbing, foundation)
+- [x] **#40 NOAA SPC mesoscale archive** — SPC mesoscale RSS filtered by state → `storm_wind_damage` (roofing, exterior, gutters, tree, restoration)
 
-**New AREA_ALERT_TYPES to add:**
-- `aging_housing_tract` (#31)
-- `epa_water_violation_area` (#35)
-- `nfip_repeat_loss_zip` (#33 — variant of existing `nfip_flood_hvac`)
 
 ## Batch 1D — Trade Radar metro permit ArcGIS layers (10 sources)
 
