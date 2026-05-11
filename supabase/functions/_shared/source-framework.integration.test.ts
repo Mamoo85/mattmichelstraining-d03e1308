@@ -206,7 +206,8 @@ Deno.test("integration: runSources executes batch with bounded concurrency", asy
     }),
   );
 
-  const results = await runSources(sb, defs, { concurrency: 2 });
+  // deno-lint-ignore no-explicit-any
+  const results = await runSources(sb, defs as any, { concurrency: 2 });
   script.restore();
 
   assertEquals(results.length, 5);
