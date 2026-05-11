@@ -193,29 +193,37 @@ export async function runSource<P, R>(
       rows: 0,
       duration_ms: Date.now() - start,
       error: "breaker_open",
+      failing_step: "circuit_breaker",
+      error_code: "BREAKER_OPEN",
     });
-    return { ok: false, slug: def.slug, rows: 0, durationMs: Date.now() - start, skipped: true };
+    return {
+      ok: false, slug: def.slug, rows: 0, durationMs: Date.now() - start,
+      skipped: true, failingStep: "circuit_breaker", errorCode: "BREAKER_OPEN",
+      error: "breaker_open",
+    };
   }
 
   if (!breakerResult.ok) {
+    const errMsg = breakerResult.error ?? "unknown_error";
+    const code = classifyError(errMsg);
     await logRun(sb, {
       source: def.slug,
       product: def.product,
       ok: false,
       rows: 0,
       duration_ms: Date.now() - start,
-      error: breakerResult.error ?? "unknown_error",
+      error: errMsg,
+      failing_step: "fetch",
+      error_code: code,
     });
     return {
-      ok: false,
-      slug: def.slug,
-      rows: 0,
-      durationMs: Date.now() - start,
-      error: breakerResult.error,
+      ok: false, slug: def.slug, rows: 0, durationMs: Date.now() - start,
+      error: errMsg, failingStep: "fetch", errorCode: code,
     };
   }
 
   const rows = breakerResult.data ?? [];
+  let persistError: string | null = null;
 
   if (rows.length > 0 && !def.skipCanonical) {
     try {
@@ -225,7 +233,8 @@ export async function runSource<P, R>(
         rows,
       });
     } catch (e) {
-      console.warn(`[${label}] canonical persist failed:`, (e as Error).message);
+      persistError = (e as Error).message;
+      console.warn(`[${label}] canonical persist failed:`, persistError);
     }
   }
 
@@ -233,12 +242,23 @@ export async function runSource<P, R>(
   await logRun(sb, {
     source: def.slug,
     product: def.product,
-    ok: true,
+    ok: persistError === null,
     rows: rows.length,
     duration_ms: durationMs,
+    error: persistError ?? undefined,
+    failing_step: persistError ? "canonical_persist" : undefined,
+    error_code: persistError ? classifyError(persistError) : undefined,
   });
 
-  return { ok: true, slug: def.slug, rows: rows.length, durationMs };
+  return {
+    ok: persistError === null,
+    slug: def.slug,
+    rows: rows.length,
+    durationMs,
+    error: persistError ?? undefined,
+    failingStep: persistError ? "canonical_persist" : undefined,
+    errorCode: persistError ? classifyError(persistError) : undefined,
+  };
 }
 
 /** Run many sources in parallel with bounded concurrency. */
@@ -272,6 +292,8 @@ async function logRun(
     rows: number;
     duration_ms: number;
     error?: string;
+    failing_step?: string;
+    error_code?: string;
   },
 ): Promise<void> {
   try {
@@ -282,6 +304,8 @@ async function logRun(
       rows_returned: row.rows,
       duration_ms: row.duration_ms,
       error: row.error ?? null,
+      failing_step: row.failing_step ?? null,
+      error_code: row.error_code ?? null,
       ran_at: new Date().toISOString(),
     });
   } catch {
