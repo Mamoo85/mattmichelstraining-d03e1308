@@ -557,6 +557,25 @@ Deno.serve(async (req) => {
         console.warn(`[trade-scanner] ${vertical} registry augment failed:`, e instanceof Error ? e.message : String(e));
       }
 
+      // Wave 1 Batch 1C — federal area signals (HUD aging-housing, FFIEC HMDA,
+      // FEMA NFIP repeat-loss, EPA ECHO water violations, NOAA SPC mesoscale).
+      // Pull client zips across all active clients for this vertical to scope
+      // the ACS aging-housing fetch.
+      try {
+        const { data: clientsForZips } = await sb
+          .from("trade_radar_clients")
+          .select("zip_codes")
+          .eq("vertical", vertical)
+          .eq("active", true);
+        const allZips = Array.from(new Set(
+          (clientsForZips ?? []).flatMap((c: any) => (c.zip_codes as string[]) ?? []),
+        )).filter(Boolean).slice(0, 50);
+        const fedSignals = await runFederalAreaSignals(vertical, state, allZips);
+        for (const s of fedSignals) rawSignals.push(s);
+      } catch (e) {
+        console.warn(`[trade-scanner] ${vertical} federal-area-signals failed:`, e instanceof Error ? e.message : String(e));
+      }
+
       const insertedLeads: any[] = [];
 
       for (const sig of rawSignals) {
