@@ -86,6 +86,7 @@ export async function scanSignals(state = "MI", zipFilter?: string[], sb?: Supab
       }
     }
   } catch (e) { console.error("[hvac] NWS:", e); }
+  if (sb) await recordSourceRun(sb, "noaa_nws_alerts", signals.filter(s => s.source_method === "noaa_nws_alerts").length, undefined, { product: "trade_radar", source_type: "scraper" }).catch(() => {});
 
   // 2. FEMA disaster declarations
   try {
@@ -115,6 +116,7 @@ export async function scanSignals(state = "MI", zipFilter?: string[], sb?: Supab
       }
     }
   } catch (e) { console.error("[hvac] FEMA:", e); }
+  if (sb) await recordSourceRun(sb, "fema_api", signals.filter(s => s.source_method === "fema_api").length, undefined, { product: "trade_radar", source_type: "scraper" }).catch(() => {});
 
   // 3. BSEED Mechanical Permits (service: bseed_trades_permits, permit_type = Mechanical)
   try {
@@ -145,6 +147,7 @@ export async function scanSignals(state = "MI", zipFilter?: string[], sb?: Supab
       }
     }
   } catch (e) { console.error("[hvac] BSEED:", e); }
+  if (sb) await recordSourceRun(sb, "bseed_arcgis", signals.filter(s => s.source_method === "bseed_arcgis").length, undefined, { product: "trade_radar", source_type: "scraper" }).catch(() => {});
 
   // 4. OpenFEMA NfipMultipleLossProperties — flood-damaged homes need HVAC replacement.
   // nfipPolicies endpoint removed by FEMA (returns 404). Use NfipMultipleLossProperties
@@ -178,6 +181,7 @@ export async function scanSignals(state = "MI", zipFilter?: string[], sb?: Supab
       }
     }
   } catch (e) { console.error("[hvac] NFIP:", e); }
+  if (sb) await recordSourceRun(sb, "fema_nfip_api", signals.filter(s => s.source_method === "fema_nfip_api").length, undefined, { product: "trade_radar", source_type: "scraper" }).catch(() => {});
 
   // 5. US Drought Monitor — D1+ drought pushes AC/heating to continuous-run failure
   try {
@@ -204,6 +208,7 @@ export async function scanSignals(state = "MI", zipFilter?: string[], sb?: Supab
       }
     }
   } catch (e) { console.error("[hvac] drought monitor:", e); }
+  if (sb) await recordSourceRun(sb, "drought_monitor", signals.filter(s => s.source_method === "drought_monitor").length, undefined, { product: "trade_radar", source_type: "scraper" }).catch(() => {});
 
   // 6. CFPB HMDA Refinance Loans — equity-flush homeowners fund HVAC replacement
   try {
@@ -231,6 +236,7 @@ export async function scanSignals(state = "MI", zipFilter?: string[], sb?: Supab
       }
     }
   } catch (e) { console.error("[hvac] CFPB refi:", e); }
+  if (sb) await recordSourceRun(sb, "ffiec_hmda", signals.filter(s => s.source_method === "ffiec_hmda").length, undefined, { product: "trade_radar", source_type: "scraper" }).catch(() => {});
 
   // 7. NOAA NWS 7-Day Forecast — extreme temps incoming (advance outreach before the spike)
   try {
@@ -266,6 +272,7 @@ export async function scanSignals(state = "MI", zipFilter?: string[], sb?: Supab
       }
     }
   } catch (e) { console.error("[hvac] NWS 7-day forecast:", e); }
+  if (sb) await recordSourceRun(sb, "noaa_nws_forecast", signals.filter(s => s.source_method === "noaa_nws_forecast").length, undefined, { product: "trade_radar", source_type: "scraper" }).catch(() => {});
 
   // 8. Detroit Assessor property sales — new homeowners need HVAC assessment
   try {
@@ -298,6 +305,7 @@ export async function scanSignals(state = "MI", zipFilter?: string[], sb?: Supab
       }
     }
   } catch (e) { console.error("[hvac] assessor sales:", e); }
+  if (sb) await recordSourceRun(sb, "detroit_assessor_sales", signals.filter(s => s.source_method === "detroit_assessor_sales").length, undefined, { product: "trade_radar", source_type: "scraper" }).catch(() => {});
 
   // 9. BSEED Rental Registrations — landlords actively registering properties need HVAC service contracts
   try {
@@ -328,6 +336,7 @@ export async function scanSignals(state = "MI", zipFilter?: string[], sb?: Supab
       }
     }
   } catch (e) { console.error("[hvac] rental registrations:", e); }
+  if (sb) await recordSourceRun(sb, "bseed_rental_registrations", signals.filter(s => s.source_method === "bseed_rental_registrations").length, undefined, { product: "trade_radar", source_type: "scraper" }).catch(() => {});
 
   // 10. Wayne County Parcel Sales — new owner + old house in Wayne County suburbs (non-Detroit)
   try {
@@ -360,6 +369,7 @@ export async function scanSignals(state = "MI", zipFilter?: string[], sb?: Supab
       }
     }
   } catch (e) { console.error("[hvac] Wayne County parcel:", e); }
+  if (sb) await recordSourceRun(sb, "wayne_county_parcel", signals.filter(s => s.source_method === "wayne_county_parcel").length, undefined, { product: "trade_radar", source_type: "scraper" }).catch(() => {});
 
   // 11. Oakland County Parcel Sales — new owner + old house in Oakland County suburbs
   try {
@@ -391,6 +401,7 @@ export async function scanSignals(state = "MI", zipFilter?: string[], sb?: Supab
       }
     }
   } catch (e) { console.error("[hvac] Oakland County parcel:", e); }
+  if (sb) await recordSourceRun(sb, "oakland_county_parcel", signals.filter(s => s.source_method === "oakland_county_parcel").length, undefined, { product: "trade_radar", source_type: "scraper" }).catch(() => {});
 
   // 12. Detroit Assessment Roll 2026 — recently sold pre-1980 Detroit homes (aging HVAC)
   try {
@@ -425,6 +436,7 @@ export async function scanSignals(state = "MI", zipFilter?: string[], sb?: Supab
       }
     }
   } catch (e) { console.error("[hvac] Detroit assessment roll:", e); }
+  if (sb) await recordSourceRun(sb, "detroit_assessment_roll", signals.filter(s => s.source_method === "detroit_assessment_roll").length, undefined, { product: "trade_radar", source_type: "scraper" }).catch(() => {});
 
   // 13. BSEED Residential Compliance Certificates expiring in 60 days — pre-inspection HVAC window
   try {
@@ -457,6 +469,7 @@ export async function scanSignals(state = "MI", zipFilter?: string[], sb?: Supab
       }
     }
   } catch (e) { console.error("[hvac] residential cert expiry:", e); }
+  if (sb) await recordSourceRun(sb, "bseed_residential_cert_expiry", signals.filter(s => s.source_method === "bseed_residential_cert_expiry").length, undefined, { product: "trade_radar", source_type: "scraper" }).catch(() => {});
 
   // 14. BSEED Presale Inspections — FAIL results (HVAC is frequently cited)
   try {
@@ -489,6 +502,7 @@ export async function scanSignals(state = "MI", zipFilter?: string[], sb?: Supab
       }
     }
   } catch (e) { console.error("[hvac] presale inspections:", e); }
+  if (sb) await recordSourceRun(sb, "bseed_presale_inspection", signals.filter(s => s.source_method === "bseed_presale_inspection").length, undefined, { product: "trade_radar", source_type: "scraper" }).catch(() => {});
 
   // 14. Detroit commercial building compliance failures (YELLOW/RED) — commercial HVAC demand
   try {
@@ -521,6 +535,7 @@ export async function scanSignals(state = "MI", zipFilter?: string[], sb?: Supab
       }
     }
   } catch (e) { console.error("[hvac] commercial compliance:", e); }
+  if (sb) await recordSourceRun(sb, "bseed_commercial_compliance", signals.filter(s => s.source_method === "bseed_commercial_compliance").length, undefined, { product: "trade_radar", source_type: "scraper" }).catch(() => {});
 
   // 14. Detroit commercial compliance certificates expiring in 90 days — pre-inspection window
   try {
@@ -554,6 +569,7 @@ export async function scanSignals(state = "MI", zipFilter?: string[], sb?: Supab
       }
     }
   } catch (e) { console.error("[hvac] commercial cert expiry:", e); }
+  if (sb) await recordSourceRun(sb, "bseed_commercial_cert_expiry", signals.filter(s => s.source_method === "bseed_commercial_cert_expiry").length, undefined, { product: "trade_radar", source_type: "scraper" }).catch(() => {});
 
   // 15. Multifamily Housing Construction Sites — new builds needing fresh HVAC installs
   try {
@@ -586,6 +602,7 @@ export async function scanSignals(state = "MI", zipFilter?: string[], sb?: Supab
       }
     }
   } catch (e) { console.error("[hvac] multifamily construction:", e); }
+  if (sb) await recordSourceRun(sb, "multifamily_construction_sites", signals.filter(s => s.source_method === "multifamily_construction_sites").length, undefined, { product: "trade_radar", source_type: "scraper" }).catch(() => {});
 
   // 16. Existing Multifamily Housing — aging HVAC in regulated affordable housing
   try {
@@ -618,6 +635,7 @@ export async function scanSignals(state = "MI", zipFilter?: string[], sb?: Supab
       }
     }
   } catch (e) { console.error("[hvac] existing multifamily:", e); }
+  if (sb) await recordSourceRun(sb, "existing_multifamily_sites", signals.filter(s => s.source_method === "existing_multifamily_sites").length, undefined, { product: "trade_radar", source_type: "scraper" }).catch(() => {});
 
   // 17. Energy/Water Benchmarking — high EUI buildings need HVAC upgrades
   try {
@@ -651,6 +669,7 @@ export async function scanSignals(state = "MI", zipFilter?: string[], sb?: Supab
       }
     }
   } catch (e) { console.error("[hvac] energy benchmarking:", e); }
+  if (sb) await recordSourceRun(sb, "energy_benchmarking_ordinance", signals.filter(s => s.source_method === "energy_benchmarking_ordinance").length, undefined, { product: "trade_radar", source_type: "scraper" }).catch(() => {});
 
   // 18. BSEED Rental Compliance — non-compliant rentals need HVAC service contracts
   try {
@@ -679,6 +698,7 @@ export async function scanSignals(state = "MI", zipFilter?: string[], sb?: Supab
       }
     }
   } catch (e) { console.error("[hvac] rental compliance view:", e); }
+  if (sb) await recordSourceRun(sb, "bseed_rental_compliance_view", signals.filter(s => s.source_method === "bseed_rental_compliance_view").length, undefined, { product: "trade_radar", source_type: "scraper" }).catch(() => {});
 
   // 17. BSEED Plan Reviews — approved HVAC/mechanical plans (installation imminent)
   try {
@@ -712,6 +732,7 @@ export async function scanSignals(state = "MI", zipFilter?: string[], sb?: Supab
       }
     }
   } catch (e) { console.error("[hvac] plan reviews:", e); }
+  if (sb) await recordSourceRun(sb, "bseed_plan_reviews", signals.filter(s => s.source_method === "bseed_plan_reviews").length, undefined, { product: "trade_radar", source_type: "scraper" }).catch(() => {});
 
   // BSEED Trades Permits — Mechanical Permits (HVAC/furnace/AC replacements) with owner name
   // Separate service from bseed_building_permits — trade-specific permits only
@@ -750,6 +771,7 @@ export async function scanSignals(state = "MI", zipFilter?: string[], sb?: Supab
       }
     }
   } catch (e) { console.error("[hvac] trades permits:", e); }
+  if (sb) await recordSourceRun(sb, "bseed_trades_permits_hvac", signals.filter(s => s.source_method === "bseed_trades_permits_hvac").length, undefined, { product: "trade_radar", source_type: "scraper" }).catch(() => {});
 
   // --- BSEED Residential CofC Expiring ---
   try {
@@ -784,6 +806,7 @@ export async function scanSignals(state = "MI", zipFilter?: string[], sb?: Supab
       }
     }
   } catch (e) { console.error("[hvac] cofc expiring:", e); }
+  if (sb) await recordSourceRun(sb, "bseed_cofc_expiring", signals.filter(s => s.source_method === "bseed_cofc_expiring").length, undefined, { product: "trade_radar", source_type: "scraper" }).catch(() => {});
 
   // Macomb County Parcel Sales — new owner + old home (SE Michigan suburban expansion)
   try {
@@ -816,22 +839,9 @@ export async function scanSignals(state = "MI", zipFilter?: string[], sb?: Supab
       }
     }
   } catch (e) { console.error("[hvac] Macomb County parcel:", e); }
+  if (sb) await recordSourceRun(sb, "macomb_county_parcel", signals.filter(s => s.source_method === "macomb_county_parcel").length, undefined, { product: "trade_radar", source_type: "scraper" }).catch(() => {});
 
-  // Source-health rollup: record yield per expected source so source_health
-  // surfaces every slug each run (including zero-yield ones).
-  if (sb) {
-    const counts: Record<string, number> = {};
-    for (const s of signals) {
-      const k = s.source_method || "unknown";
-      counts[k] = (counts[k] ?? 0) + 1;
-    }
-    await Promise.allSettled(EXPECTED_SOURCES.map((slug) =>
-      recordSourceRun(sb, slug, counts[slug] ?? 0, undefined, {
-        product: "trade_radar", source_type: "scraper",
-      })
-    ));
-    console.info(`[trade-scanner:yield] hvac-internal sources=${EXPECTED_SOURCES.length} rows=${signals.length}`);
-  }
+  if (sb) console.info(`[trade-scanner:yield] hvac-internal sources=${EXPECTED_SOURCES.length} rows=${signals.length}`);
 
   return signals;
 }
