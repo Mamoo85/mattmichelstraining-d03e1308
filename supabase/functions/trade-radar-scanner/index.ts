@@ -20,6 +20,7 @@ import { scanSignals as scanDemoJunk } from "../_shared/trade-signals/signals-de
 import { scanSignals as scanFoundation } from "../_shared/trade-signals/signals-foundation.ts";
 import { fetchFreshBusinessSignals, fetchMortgageSignals, fetchHireSignals } from "../_shared/signal-waterfall.ts";
 import { scrapeZillowFSBO, scrapeEstateSales } from "../_shared/scrapers-public-listings.ts";
+import { runFederalAreaSignals } from "../_shared/federal-area-signals.ts";
 
 // Warn loudly at startup if FIRECRAWL_API_KEY is missing — half the per-address
 // signal sources (FSBO, estate sales, probate, foreclosure) depend on it.
@@ -44,6 +45,8 @@ const AREA_ALERT_TYPES = new Set<string>([
   "historical_hail_county", "storm_tree_damage_area",
   // CourtListener foreclosure filings — case names not street addresses
   "courtlistener_foreclosure",
+  // Wave 1 Batch 1C — federal area signals
+  "aging_housing_tract", "epa_water_violation_area", "nfip_repeat_loss_zip",
 ]);
 
 // Verticals where home turnover (FSBO listing, estate sale) is a high-quality
@@ -552,6 +555,25 @@ Deno.serve(async (req) => {
         }
       } catch (e) {
         console.warn(`[trade-scanner] ${vertical} registry augment failed:`, e instanceof Error ? e.message : String(e));
+      }
+
+      // Wave 1 Batch 1C — federal area signals (HUD aging-housing, FFIEC HMDA,
+      // FEMA NFIP repeat-loss, EPA ECHO water violations, NOAA SPC mesoscale).
+      // Pull client zips across all active clients for this vertical to scope
+      // the ACS aging-housing fetch.
+      try {
+        const { data: clientsForZips } = await sb
+          .from("trade_radar_clients")
+          .select("zip_codes")
+          .eq("vertical", vertical)
+          .eq("active", true);
+        const allZips = Array.from(new Set(
+          (clientsForZips ?? []).flatMap((c: any) => (c.zip_codes as string[]) ?? []),
+        )).filter(Boolean).slice(0, 50);
+        const fedSignals = await runFederalAreaSignals(vertical, state, allZips);
+        for (const s of fedSignals) rawSignals.push(s);
+      } catch (e) {
+        console.warn(`[trade-scanner] ${vertical} federal-area-signals failed:`, e instanceof Error ? e.message : String(e));
       }
 
       const insertedLeads: any[] = [];
