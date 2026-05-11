@@ -94,6 +94,7 @@ export async function runPacerBankruptcySignals(
     if (d.slug === "ndil" && /chicago|illinois|\bil\b/.test(joined)) return true;
     if (d.slug === "ndoh" && /cleveland|columbus|ohio|\boh\b/.test(joined)) return true;
     if (d.slug === "sdin" && /indianapolis|indiana|\bin\b/.test(joined)) return true;
+    if (d.slug === "mied" && /detroit|wayne|oakland|macomb|se\s*michigan|michigan|\bmi\b/.test(joined)) return true;
     return false;
   });
   if (active.length === 0) return [];
