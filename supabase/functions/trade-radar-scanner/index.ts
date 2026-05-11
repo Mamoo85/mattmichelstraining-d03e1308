@@ -50,6 +50,8 @@ const AREA_ALERT_TYPES = new Set<string>([
   "courtlistener_foreclosure",
   // Wave 1 Batch 1C — federal area signals
   "aging_housing_tract", "epa_water_violation_area", "nfip_repeat_loss_zip",
+  // Wave 1 Batch 1F — PACER bankruptcy court distress
+  "bankruptcy_distress",
 ]);
 
 // Verticals where home turnover (FSBO listing, estate sale) is a high-quality
