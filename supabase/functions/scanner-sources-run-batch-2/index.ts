@@ -33,16 +33,18 @@ Deno.serve(async (req) => {
     const floor = BATCH_2_MIN_ROWS[r.slug];
     if (floor != null && r.ok && r.rows < floor) {
       underFloor.push({ source: r.slug, rows: r.rows, floor });
+      const fingerprint = `min_rows_floor:${r.slug}`;
       try {
         await sb.from("scanner_alerts").upsert({
+          fingerprint,
+          product: "mortgage_radar",
           source: r.slug,
-          severity: "WARN",
+          severity: "warn",
           reason: "min_rows_floor",
-          message: `Returned ${r.rows} rows (floor ${floor}). DB may run thin.`,
-          status: "open",
+          error_code: "LOW_VOLUME",
           last_seen_at: new Date().toISOString(),
-        }, { onConflict: "source,reason" });
-      } catch { /* table may be permissive; ignore */ }
+        }, { onConflict: "fingerprint" });
+      } catch { /* table may not exist in some envs; ignore */ }
     }
   }
 
