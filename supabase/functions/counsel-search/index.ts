@@ -16,11 +16,7 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import * as Federal from "../_shared/counsel-sources/federal.ts";
-import * as Reg from "../_shared/counsel-sources/regulatory.ts";
 import * as MI from "../_shared/counsel-sources/michigan.ts";
-import * as County from "../_shared/counsel-sources/county.ts";
-import * as Pro from "../_shared/counsel-sources/professional.ts";
-import * as OSINT from "../_shared/counsel-sources/osint.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
