@@ -16,11 +16,7 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import * as Federal from "../_shared/counsel-sources/federal.ts";
-import * as Reg from "../_shared/counsel-sources/regulatory.ts";
 import * as MI from "../_shared/counsel-sources/michigan.ts";
-import * as County from "../_shared/counsel-sources/county.ts";
-import * as Pro from "../_shared/counsel-sources/professional.ts";
-import * as OSINT from "../_shared/counsel-sources/osint.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
@@ -101,225 +97,10 @@ async function scanNSOPW(name: string, state: string): Promise<IntelHit[]> {
   } catch { return []; }
 }
 
-async function scanFBIWanted(name: string): Promise<IntelHit[]> {
-  try {
-    const res = await fetch(`https://api.fbi.gov/wanted/v1/list?title=${encodeURIComponent(name)}&limit=5`, { headers: UA, signal: AbortSignal.timeout(8_000) });
-    if (!res.ok) return [];
-    const data = await res.json();
-    return (data.items || []).map((i: any): IntelHit => ({
-      source: "FBI Most Wanted",
-      source_url: i.url || "https://www.fbi.gov/wanted",
-      category: "Criminal Records",
-      title: `FBI Most Wanted — ${i.title || name}`,
-      summary: i.description || "Active FBI wanted person.",
-      severity: "high",
-      alias_match: name,
-    }));
-  } catch { return []; }
-}
+// (Removed: scanFBIWanted, scanSAMExclusions, scanOSHA, Wayne/Oakland/Macomb/
+// Detroit property scanners, scanDetroitBlight, scanDetroitVacant, scanOpenCorporates.
+// These produced false positives or non-court data and are no longer used.)
 
-async function scanSAMExclusions(name: string): Promise<IntelHit[]> {
-  try {
-    const SAM_KEY = Deno.env.get("SAM_GOV_API_KEY") || "";
-    if (!SAM_KEY) return [];
-    const url = `https://api.sam.gov/exclusions/v1/exclusions?api_key=${SAM_KEY}&exclusionName=${encodeURIComponent(name)}&limit=10`;
-    const res = await fetch(url, { headers: UA, ...COMMON_FETCH });
-    if (!res.ok) return [];
-    const data = await res.json();
-    const items: any[] = data?.exclusionDetails || data?.data || [];
-    return items.map((e: any): IntelHit => ({
-      source: "SAM.gov Federal Exclusions",
-      source_url: "https://www.sam.gov",
-      category: "Government Records",
-      title: `Federal Debarment — ${e.name || name}`,
-      summary: `Excluded from federal contracts. Agency: ${e.excludingAgencyName || "N/A"}. Active: ${e.activationDate || "N/A"} → ${e.terminationDate || "ongoing"}.`,
-      date: e.activationDate,
-      severity: "high",
-      alias_match: name,
-    }));
-  } catch { return []; }
-}
-
-async function scanOSHA(name: string): Promise<IntelHit[]> {
-  try {
-    const res = await fetch(`https://data.dol.gov/get/OshaInsp/format/json/limit/5/filter/estab_name=${encodeURIComponent(name)}`, { headers: UA, ...COMMON_FETCH });
-    if (!res.ok) return [];
-    const data = await res.json();
-    return (Array.isArray(data) ? data : []).slice(0, 5).map((r: any): IntelHit => ({
-      source: "OSHA Violations (DOL)",
-      source_url: "https://www.osha.gov/pls/imis/establishment.html",
-      category: "Government Records",
-      title: `OSHA Inspection — ${r.establishment_name || name}`,
-      summary: `Inspection ${r.activity_nr || "N/A"} at ${r.site_address || "N/A"}. Date: ${r.open_date || "N/A"}. Penalty: $${r.total_current_penalty || 0}.`,
-      date: r.open_date,
-      severity: "medium",
-      alias_match: name,
-    }));
-  } catch { return []; }
-}
-
-// ─── Michigan property + business records ──────────────────────────────────
-async function scanWayneProperty(name: string): Promise<IntelHit[]> {
-  try {
-    const where = `UPPER(OWNER) LIKE UPPER('%${name.replace(/'/g, "''")}%')`;
-    const url = `https://utility.waynecountymi.gov/arcgis/rest/services/Property/FeatureServer/0/query?where=${encodeURIComponent(where)}&outFields=ADDRESS,ZIPCODE,OWNER,SALE_DATE,SALE_PRICE&f=json&resultRecordCount=10`;
-    const res = await fetch(url, COMMON_FETCH);
-    if (!res.ok) return [];
-    const data = await res.json();
-    return (data.features || []).map((f: any): IntelHit => {
-      const a = f.attributes || {};
-      return {
-        source: "Wayne County Property Records",
-        source_url: "https://www.waynecounty.com/government/assessor",
-        category: "Property Records",
-        title: `Wayne County Property — ${a.ADDRESS || "Unknown"}`,
-        summary: `Owner: ${a.OWNER || name}. ${a.ADDRESS}, ${a.ZIPCODE}. Last sale: ${a.SALE_DATE ? new Date(a.SALE_DATE).toLocaleDateString() : "N/A"} for $${Number(a.SALE_PRICE || 0).toLocaleString()}.`,
-        location: `${a.ADDRESS}, ${a.ZIPCODE}`,
-        severity: "info",
-        alias_match: name,
-      };
-    });
-  } catch { return []; }
-}
-
-async function scanOaklandProperty(name: string): Promise<IntelHit[]> {
-  try {
-    const esc = name.replace(/'/g, "''");
-    const where = `UPPER(TAXPAYER_1) LIKE UPPER('%${esc}%') OR UPPER(TAXPAYER_2) LIKE UPPER('%${esc}%')`;
-    const url = `https://www.oakgov.com/egis/rest/services/Property/ParcelInfo/FeatureServer/0/query?where=${encodeURIComponent(where)}&outFields=SITUS_ADDRESS,ZIP,TAXPAYER_1,SALE_DATE,SALE_PRICE&f=json&resultRecordCount=10`;
-    const res = await fetch(url, COMMON_FETCH);
-    if (!res.ok) return [];
-    const data = await res.json();
-    return (data.features || []).map((f: any): IntelHit => {
-      const a = f.attributes || {};
-      return {
-        source: "Oakland County Property Records",
-        source_url: "https://www.oakgov.com",
-        category: "Property Records",
-        title: `Oakland County Property — ${a.SITUS_ADDRESS || "Unknown"}`,
-        summary: `Owner: ${a.TAXPAYER_1 || name}. ${a.SITUS_ADDRESS}, ${a.ZIP}. Last sale: ${a.SALE_DATE ? new Date(a.SALE_DATE).toLocaleDateString() : "N/A"} for $${Number(a.SALE_PRICE || 0).toLocaleString()}.`,
-        location: `${a.SITUS_ADDRESS}, ${a.ZIP}`,
-        severity: "info",
-        alias_match: name,
-      };
-    });
-  } catch { return []; }
-}
-
-async function scanMacombProperty(name: string): Promise<IntelHit[]> {
-  try {
-    const where = `UPPER(OWNER) LIKE UPPER('%${name.replace(/'/g, "''")}%')`;
-    const url = `https://gis.macombcountymi.gov/arcgis/rest/services/Property/Parcels/FeatureServer/0/query?where=${encodeURIComponent(where)}&outFields=ADDRESS,ZIP,OWNER,SALE_DATE,SALE_PRICE&f=json&resultRecordCount=10`;
-    const res = await fetch(url, COMMON_FETCH);
-    if (!res.ok) return [];
-    const data = await res.json();
-    return (data.features || []).map((f: any): IntelHit => {
-      const a = f.attributes || {};
-      return {
-        source: "Macomb County Property Records",
-        source_url: "https://www.macombgov.org",
-        category: "Property Records",
-        title: `Macomb County Property — ${a.ADDRESS || "Unknown"}`,
-        summary: `Owner: ${a.OWNER || name}. ${a.ADDRESS}, ${a.ZIP}. Last sale: ${a.SALE_DATE ? new Date(a.SALE_DATE).toLocaleDateString() : "N/A"} for $${Number(a.SALE_PRICE || 0).toLocaleString()}.`,
-        location: `${a.ADDRESS}, ${a.ZIP}`,
-        severity: "info",
-        alias_match: name,
-      };
-    });
-  } catch { return []; }
-}
-
-async function scanDetroitAssessor(name: string): Promise<IntelHit[]> {
-  try {
-    const where = `UPPER(taxpayer_name) LIKE UPPER('%${name.replace(/'/g, "''")}%')`;
-    const url = `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/assessor_property_sales_view/FeatureServer/0/query?where=${encodeURIComponent(where)}&outFields=address,zip_code,taxpayer_name,sale_date,sale_price&f=json&resultRecordCount=10`;
-    const res = await fetch(url, COMMON_FETCH);
-    if (!res.ok) return [];
-    const data = await res.json();
-    return (data.features || []).map((f: any): IntelHit => {
-      const a = f.attributes || {};
-      return {
-        source: "Detroit Assessor Records",
-        source_url: "https://detroitmi.gov/departments/office-chief-financial-officer/office-assessor",
-        category: "Property Records",
-        title: `Detroit Property — ${a.address || "Unknown"}`,
-        summary: `Owner: ${a.taxpayer_name || name}. ${a.address}, Detroit ${a.zip_code}. Sale: ${a.sale_date ? new Date(a.sale_date).toLocaleDateString() : "N/A"} for $${Number(a.sale_price || 0).toLocaleString()}.`,
-        location: `${a.address}, Detroit`,
-        severity: "info",
-        alias_match: name,
-      };
-    });
-  } catch { return []; }
-}
-
-async function scanDetroitBlight(name: string): Promise<IntelHit[]> {
-  try {
-    const where = `UPPER(name) LIKE UPPER('%${name.replace(/'/g, "''")}%')`;
-    const url = `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/blight_tickets/FeatureServer/0/query?where=${encodeURIComponent(where)}&outFields=name,address,violation_description,total_due&f=json&resultRecordCount=10&orderByFields=OBJECTID+DESC`;
-    const res = await fetch(url, COMMON_FETCH);
-    if (!res.ok) return [];
-    const data = await res.json();
-    return (data.features || []).map((f: any): IntelHit => {
-      const a = f.attributes || {};
-      return {
-        source: "Detroit Blight Violations",
-        source_url: "https://data.detroitmi.gov",
-        category: "Property Violations",
-        title: `Blight Violation — ${a.address || "Detroit"}`,
-        summary: `${a.violation_description || "N/A"}. Amount due: $${Number(a.total_due || 0).toLocaleString()}.`,
-        severity: "medium",
-        alias_match: name,
-      };
-    });
-  } catch { return []; }
-}
-
-async function scanDetroitVacant(name: string): Promise<IntelHit[]> {
-  try {
-    const where = `UPPER(owner_name) LIKE UPPER('%${name.replace(/'/g, "''")}%')`;
-    const url = `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_vacant_property_registrations/FeatureServer/0/query?where=${encodeURIComponent(where)}&outFields=owner_name,address,property_status,issued_date&f=json&resultRecordCount=10`;
-    const res = await fetch(url, COMMON_FETCH);
-    if (!res.ok) return [];
-    const data = await res.json();
-    return (data.features || []).map((f: any): IntelHit => {
-      const a = f.attributes || {};
-      return {
-        source: "Detroit Vacant Property Registry",
-        source_url: "https://data.detroitmi.gov",
-        category: "Property Records",
-        title: `Vacant Property — ${a.address || "Detroit"}`,
-        summary: `Owner: ${a.owner_name || name}. Status: ${a.property_status || "N/A"}.`,
-        severity: "low",
-        alias_match: name,
-      };
-    });
-  } catch { return []; }
-}
-
-async function scanOpenCorporates(name: string, state: string): Promise<IntelHit[]> {
-  try {
-    const url = `https://api.opencorporates.com/v0.4/officers/search?q=${encodeURIComponent(name)}&jurisdiction_code=us_${state.toLowerCase()}&per_page=10`;
-    const res = await fetch(url, { headers: UA, ...COMMON_FETCH });
-    if (!res.ok) return [];
-    const data = await res.json();
-    const officers: any[] = data?.results?.officers || [];
-    return officers.map((o: any): IntelHit => {
-      const officer = o.officer || o;
-      return {
-        source: "OpenCorporates",
-        source_url: officer.opencorporates_url,
-        category: "Business Records",
-        title: `Business Officer — ${officer.company?.name || "Unknown Company"}`,
-        summary: `${officer.name || name} listed as ${officer.position || "officer"} of ${officer.company?.name || "company"} (${officer.company?.jurisdiction_code || state}).`,
-        date: officer.start_date,
-        severity: "info",
-        alias_match: name,
-      };
-    });
-  } catch { return []; }
-}
-
-// ─── Sonar with cite-or-die URL validation ─────────────────────────────────
 async function headValidates(url: string): Promise<boolean> {
   if (!url || !/^https?:\/\//.test(url)) return false;
   try {
@@ -389,98 +170,58 @@ async function sonarSearch(query: string, label: string, category: string, sever
   } catch { return []; }
 }
 
-// ─── Per-name scanners (run for each alias) ────────────────────────────────
+// ─── Court-only scanners (run for each alias) ──────────────────────────────
+// Strictly limited to court records + name-verified offender registries.
+// All HTML-regex scrapers that produced false positives (MI AG nav links, FAA
+// captcha pages, county anchor scrapers, FBI/USMS/DEA/ICE substring matches,
+// OSHA establishments, property, business, news, liens) are intentionally
+// EXCLUDED. PACER is excluded — clients who need PACER should subscribe to
+// PACER directly.
 async function runScansForName(name: string, city: string, state: string): Promise<IntelHit[][]> {
   return await Promise.allSettled([
-    // Federal courts
+    // ── Federal court dockets by party (CourtListener live API) ──────────
     clDockets(name, state, "470,480", "Court Records", "high", "Bankruptcy"),
     clDockets(name, state, "320,190", "Court Records", "medium", "Civil Suit"),
-    clDockets(name, state, "950,540,530,550", "Criminal Records", "high", "Federal Criminal"),
-    clDockets(name, state, "870", "Financial Records", "high", "Federal Tax Suit"),
-    // Federal registries
-    scanNSOPW(name, state),
-    scanFBIWanted(name),
-    scanSAMExclusions(name),
-    scanOSHA(name),
-    // MI property
-    scanWayneProperty(name),
-    scanOaklandProperty(name),
-    scanMacombProperty(name),
-    scanDetroitAssessor(name),
-    scanDetroitBlight(name),
-    scanDetroitVacant(name),
-    // Business
-    scanOpenCorporates(name, state),
-    // Sonar (cite-or-die)
-    sonarSearch(`Search Michigan court records for evictions, eviction filings, or summary proceedings naming "${name}" in ${city}, ${state}. Look at 36th District Court Detroit, 3rd Circuit Wayne, 6th Circuit Oakland, Macomb 16th Circuit. Return JSON array with court website URL for each case. CITE OR OMIT.`, "MI Eviction Search", "Eviction Records", "high", name),
-    sonarSearch(`Search Michigan and federal court records for criminal arrests, charges, or convictions involving "${name}" in ${city}, ${state}. Include MI MDOC OTIS records. Each item must cite a public-record URL. CITE OR OMIT.`, "MI Criminal Background", "Criminal Records", "high", name),
-    sonarSearch(`Search news articles citing "${name}" from ${city}, ${state} involving fraud, lawsuits, evictions, arrests, or property disputes. Return only items with verifiable news URLs. CITE OR OMIT.`, "News & Media", "News & Public Notices", "medium", name),
-    sonarSearch(`Search for tax liens, mechanic's liens, UCC filings, or judgment liens against "${name}" in ${state}. Each item must cite the filing record's public URL. CITE OR OMIT.`, "Liens & Judgments", "Financial Records", "high", name),
-    sonarSearch(`Search Michigan probate court filings, estate proceedings, or guardianship cases involving "${name}". Each item must cite a court URL. CITE OR OMIT.`, "MI Probate Records", "Court Records", "info", name),
-    sonarSearch(`Search Michigan LARA business registry and SOS records for businesses owned, registered, or operated by "${name}". Include LARA dissolution and BBB complaints. Each item must cite a verifiable URL. CITE OR OMIT.`, "MI Business Background", "Business Records", "medium", name),
+    clDockets(name, state, "950,540,530,550", "Court Records", "high", "Federal Criminal"),
+    clDockets(name, state, "870", "Court Records", "high", "Federal Tax Suit"),
 
-    // ── Federal courts & corrections (8) ─────────────────────────────────
+    // ── Federal court opinions + RECAP archive (free PACER cache) ────────
     Federal.scanCLOpinions(name),
     Federal.scanCLRecap(name),
+
+    // ── U.S. Tax Court (DAWSON JSON) ─────────────────────────────────────
     Federal.scanTaxCourt(name),
+
+    // ── Federal corrections (BOP — exact first+last match) ───────────────
     Federal.scanBOP(name),
-    Federal.scanUSMarshals(name),
-    Federal.scanDEAFugitives(name),
-    Federal.scanICEWanted(name),
-    Federal.scanPACER(name),
 
-    // ── Federal regulatory & enforcement (10) ───────────────────────────
-    Reg.scanSECLitigation(name),
-    Reg.scanCFTC(name),
-    Reg.scanFTC(name),
-    Reg.scanCFPB(name),
-    Reg.scanDOJ(name),
-    Reg.scanLEIE(name),
-    Reg.scanOFAC(name),
-    Reg.scanNTSB(name),
-    Reg.scanFINRA(name),
-    Reg.scanNMLS(name),
-
-    // ── Michigan state (12) ──────────────────────────────────────────────
-    MI.scanMDOC_OTIS(name),
-    MI.scanMIPSOR(name),
-    MI.scanLARALicense(name),
-    MI.scanLARACorp(name),
-    MI.scanMI_UCC(name),
+    // ── Michigan state appellate (real JSON APIs) ────────────────────────
     MI.scanMICOA(name),
     MI.scanMISCT(name),
-    MI.scanMIAG(name),
-    MI.scanMIDIFS(name),
-    MI.scanMIOSHA(name),
-    MI.scanMIStateBar(name),
-    MI.scanMITaxLien(name),
 
-    // ── Michigan county courts & deeds (10) ──────────────────────────────
-    County.scan36thDistrict(name),
-    County.scanWayne3rd(name),
-    County.scanOakland6th(name),
-    County.scanMacomb16th(name),
-    County.scanWashtenaw(name),
-    County.scanKent17th(name),
-    County.scanGenesee7th(name),
-    County.scanWayneROD(name),
-    County.scanOaklandROD(name),
-    County.scanMacombROD(name),
+    // ── Michigan corrections / sex offender registries (name-verified) ───
+    MI.scanMDOC_OTIS(name),
+    MI.scanMIPSOR(name),
+    scanNSOPW(name, state),
 
-    // ── Property/parcel + professional registries (7) ────────────────────
-    Pro.scanGeneseeParcel(name),
-    Pro.scanWashtenawParcel(name),
-    Pro.scanKentParcel(name),
-    Pro.scanDLBA(name),
-    Pro.scanNPI(name),
-    Pro.scanFAA(name),
-    Pro.scanUSPTO(name),
-
-    // ── OSINT aggregates (3) ─────────────────────────────────────────────
-    OSINT.scanOpenSanctions(name),
-    OSINT.scanICIJ(name),
-    OSINT.scanGDELT(name),
+    // ── AI-corroborated court search (cite-or-die, HEAD-validated URLs) ──
+    sonarSearch(`Search Michigan court records for civil cases, evictions, summary proceedings, divorce, custody, probate, or guardianship naming "${name}" in ${city}, ${state}. Look at 36th District Court Detroit, 3rd Circuit Wayne, 6th Circuit Oakland, Macomb 16th Circuit, Kent 17th, Genesee 7th, Washtenaw. Each item MUST cite the court website URL for the case. The party name in the citation must include "${name}". CITE OR OMIT.`, "MI Court Search", "Court Records", "high", name),
+    sonarSearch(`Search Michigan and federal court records for criminal arrests, charges, or convictions involving "${name}" in ${city}, ${state}. Include MDOC OTIS and county criminal docket pages. Each item must cite a court or corrections public-record URL. The defendant name in the cited record must include "${name}". CITE OR OMIT.`, "MI Criminal Court Search", "Court Records", "high", name),
+    sonarSearch(`Search Michigan probate court filings, estate proceedings, or guardianship cases involving "${name}". Each item must cite a probate court URL where the case party name includes "${name}". CITE OR OMIT.`, "MI Probate Court Search", "Court Records", "medium", name),
   ]).then(arr => arr.map(r => r.status === "fulfilled" ? r.value : []));
+}
+
+// Surname-match validator: require the searched surname (last token) to appear
+// in the hit's title or summary. Kills "Latoya Grissom from Texarkana" class
+// of false positive where a substring matched but the person is unrelated.
+function passesSurnameGate(name: string, hit: IntelHit): boolean {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return true;
+  // Pick the longest token (usually the surname) as the required string.
+  const required = parts.sort((a, b) => b.length - a.length)[0].toLowerCase();
+  if (required.length < 3) return true; // too short to filter reliably
+  const haystack = `${hit.title || ""} ${hit.summary || ""} ${hit.location || ""}`.toLowerCase();
+  return haystack.includes(required);
 }
 
 // ─── Main handler ──────────────────────────────────────────────────────────
@@ -556,13 +297,20 @@ Deno.serve(async (req) => {
   const allHits: IntelHit[] = [];
   let sourcesHit = 0;
   let sourcesReturned = 0;
+  let filteredBySurname = 0;
   const seen = new Set<string>();
-  for (const namesArr of perNameResults) {
+  for (let i = 0; i < perNameResults.length; i++) {
+    const nameForGate = allNames[i];
+    const namesArr = perNameResults[i];
     for (const arr of namesArr) {
       sourcesHit++;
       if (arr.length > 0) {
         sourcesReturned++;
         for (const h of arr) {
+          if (!passesSurnameGate(nameForGate, h)) {
+            filteredBySurname++;
+            continue;
+          }
           const key = `${h.source}|${h.title}|${h.source_url || ""}`;
           if (seen.has(key)) continue;
           seen.add(key);
@@ -632,20 +380,26 @@ Deno.serve(async (req) => {
     }, { onConflict: "user_id" });
   }
 
+  const emptyMessage = allHits.length === 0
+    ? `No court records found for "${name}"${aliases.length ? ` (or aliases: ${aliases.join(", ")})` : ""} across ${sourcesHit} federal and Michigan court sources. The subject may have no public court history under the searched name, or may file under a different alias. For full federal-court coverage including non-public dockets, subscribe to PACER directly at pacer.uscourts.gov.`
+    : null;
+
   return new Response(JSON.stringify({
     ok: true,
     query: { name, aliases, city, state, case_matter: caseMatter, mode: isPaid ? "paid" : "trial" },
     elapsed_ms: elapsed,
     sources_hit: sourcesHit,
     sources_returned: sourcesReturned,
+    filtered_by_surname: filteredBySurname,
     total_hits: allHits.length,
     high_priority_hits: highPriorityHits.length,
     summary,
     results: byCategory,
     citations,
+    empty_message: emptyMessage,
     accessed_at: new Date().toISOString(),
     quota: isPaid ? { unlimited: true, tier: client?.tier, trial_ends_at: client?.trial_ends_at || null } : { free_searches_used: freeSearchesUsedAfter, free_trial_limit: FREE_TRIAL_LIMIT, remaining: FREE_TRIAL_LIMIT - (freeSearchesUsedAfter || 0) },
-    evidentiary_notice: "Sources are public records verified at time of access via HEAD/GET URL validation. Each citation includes a Bluebook-formatted reference. Counsel must independently authenticate per FRE 901–902 before offering any source as evidence; this report is not a substitute for certified copies for trial.",
-    disclaimer: "All data is from public records. For litigation use, fraud investigation, or other bona-fide legal proceedings (FCRA §1681b(a)(4) exempt). NOT for tenant screening or employment screening without an FCRA-compliant consumer reporting agency.",
+    evidentiary_notice: "Sources are public court records verified at time of access via HEAD/GET URL validation. Every returned hit was filtered to require the searched surname to appear in the record. Each citation includes a Bluebook-formatted reference. Counsel must independently authenticate per FRE 901–902 before offering any source as evidence; this report is not a substitute for certified copies for trial.",
+    disclaimer: "Court records only. Sources: CourtListener (federal opinions/dockets/RECAP), U.S. Tax Court DAWSON, Federal BOP, Michigan Court of Appeals, Michigan Supreme Court, MDOC OTIS, Michigan PSOR, NSOPW, plus AI-corroborated Michigan trial-court search. For permissible litigation, fraud-investigation, and bona-fide legal-research purposes (FCRA §1681b(a)(4) exempt). NOT for tenant screening, employment screening, or credit decisions.",
   }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 });

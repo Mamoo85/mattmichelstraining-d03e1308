@@ -40,6 +40,7 @@ interface SearchResult {
   summary: Record<string, number>;
   results: Record<string, IntelHit[]>;
   citations?: Citation[];
+  empty_message?: string | null;
   accessed_at?: string;
   quota?: { unlimited?: boolean; tier?: string; free_searches_used?: number; free_trial_limit?: number; remaining?: number; trial_ends_at?: string | null };
   evidentiary_notice?: string;
@@ -134,7 +135,7 @@ export default function CounselSearch() {
       `}</style>
       <div className="max-w-5xl mx-auto px-4 py-8 print:py-2">
         <h1 className="text-2xl md:text-3xl font-bold mb-2 print-text">⚖️ Counsel Records Search</h1>
-        <p className="text-[#94a3b8] text-sm mb-6 print-muted">Federal + MI court dockets, MDOC, county parcels, AI research. Every cite HEAD-checked.</p>
+        <p className="text-[#94a3b8] text-sm mb-6 print-muted">Court records only — federal (CourtListener + Tax Court), MI appellate, MDOC/PSOR/NSOPW, plus AI-corroborated MI trial-court search. Every hit filtered to require the searched surname.</p>
 
         <Card className="bg-[#0a1628] border-[#1e3a5f] mb-6 no-print">
           <CardContent className="p-5 space-y-3">
@@ -175,7 +176,7 @@ export default function CounselSearch() {
               <span>I attest this search is for a permissible purpose under FCRA §1681b(a)(4) (litigation, fraud investigation, or bona-fide legal proceeding) and <strong>not</strong> for tenant screening, employment screening, or credit decisions.</span>
             </label>
             <Button className="w-full bg-[#00d4ff] text-black hover:bg-[#00b8e0]" onClick={search} disabled={loading || !attest || !name.trim()}>
-              {loading ? <><Loader2 className="animate-spin mr-2" size={16} />Scanning 25+ sources…</> : "Run Search"}
+              {loading ? <><Loader2 className="animate-spin mr-2" size={16} />Scanning court records…</> : "Run Search"}
             </Button>
           </CardContent>
         </Card>
@@ -212,6 +213,16 @@ export default function CounselSearch() {
                 )}
               </div>
             </div>
+
+            {result.total_hits === 0 && result.empty_message && (
+              <Card className="bg-[#0a1628] border-[#1e3a5f] print-card">
+                <CardContent className="p-6 text-center">
+                  <p className="text-2xl mb-2">⚖️</p>
+                  <h3 className="font-bold mb-2 print-text">No court records found</h3>
+                  <p className="text-sm text-[#cbd5e1] print-text leading-relaxed max-w-2xl mx-auto">{result.empty_message}</p>
+                </CardContent>
+              </Card>
+            )}
 
             {Object.entries(result.results).map(([cat, hits]) => (
               <Card key={cat} className="bg-[#0a1628] border-[#1e3a5f] print-card">
