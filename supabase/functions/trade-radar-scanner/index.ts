@@ -499,7 +499,7 @@ Deno.serve(async (req) => {
     }
 
     try {
-      const rawSignals = await SCANNERS[vertical](state);
+      const rawSignals = await SCANNERS[vertical](state, undefined, sb);
 
       // Plug in proven address-yielding scrapers (Zillow FSBO + EstateSales).
       // Same scrapers powering 21 leads/day for mortgage radar. Home turnover
