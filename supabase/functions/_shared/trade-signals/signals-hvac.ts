@@ -817,5 +817,21 @@ export async function scanSignals(state = "MI", zipFilter?: string[], sb?: Supab
     }
   } catch (e) { console.error("[hvac] Macomb County parcel:", e); }
 
+  // Source-health rollup: record yield per expected source so source_health
+  // surfaces every slug each run (including zero-yield ones).
+  if (sb) {
+    const counts: Record<string, number> = {};
+    for (const s of signals) {
+      const k = s.source_method || "unknown";
+      counts[k] = (counts[k] ?? 0) + 1;
+    }
+    await Promise.allSettled(EXPECTED_SOURCES.map((slug) =>
+      recordSourceRun(sb, slug, counts[slug] ?? 0, undefined, {
+        product: "trade_radar", source_type: "scraper",
+      })
+    ));
+    console.info(`[trade-scanner:yield] hvac-internal sources=${EXPECTED_SOURCES.length} rows=${signals.length}`);
+  }
+
   return signals;
 }
