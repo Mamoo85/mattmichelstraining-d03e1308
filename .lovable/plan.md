@@ -1,60 +1,71 @@
-## What I found
+## What's actually broken (root causes confirmed in DB + code)
 
-The `mortgage-radar-am-digest` cron is scheduled correctly (11:30 UTC daily, active), but **the last 2 days both failed at the pg_cron layer** before the function was even invoked:
+### 1. Email Open/Click 0.0% across every template — **`resend-webhook` function does not exist**
+The dashboard literally says "Requires Resend webhook → resend-webhook fn". I ran `ls supabase/functions/resend-webhook` → **No such file or directory**. Resend has nowhere to POST `email.opened`/`email.clicked` events, so all rates will be 0% forever until the function is built.
 
-```
-2026-05-11 11:30  failed  "job startup timeout"   ← today
-2026-05-10 11:30  failed  "job startup timeout"   ← yesterday
-2026-05-09 11:30  succeeded
-2026-05-08 11:30  succeeded
-2026-05-07 11:30  succeeded
-```
+### 2. LO Outreach "NMLS refresh: 0 new prospects" — **target table doesn't exist**
+`find-lo-prospects` upserts into `public.marketplace_prospects`. I queried the DB: that table does not exist. Every upsert silently errors → 0 inserted. The MI_MLO_SEED list of ~40 lenders can't land. The whole LO Outreach product is non-functional.
 
-This is **not a mortgage-radar bug**. It's a project-wide pg_cron background-worker exhaustion. In the last 36 hours, every high-frequency cron is failing with the same "job startup timeout" error:
+### 3. Talent Radar Hub "Pending 66 · Enriched 0 · Stuck >2h 66 · Last scan: never" — **3 wrong queries in EnrichmentHealthStrip**
+- Code counts rows where `enrichment_status = 'enriched'`. The actual values used in the table are: `complete`, `pending`, `enriching`, `exhausted`, `manual_workbench`. **No row will ever match `enriched`** → that pill is hard-stuck at 0 even when 79 rows are actually `complete`.
+- "Last scan" queries `hire_alert_runs.run_at`, but the scanner writes `started_at`/`created_at` and leaves `run_at` NULL. Most recent real run was today 11:02 UTC, but the strip shows "never".
+- The 66 "stuck" rows are real — they're `pending` and >2h old because the enrich worker stopped completing them. Need to verify the cron is running post worker-pool fix.
 
-| Job | Failures (36h) |
-|---|---|
-| process-email-queue | 547 |
-| queue-worker-enrich-1m | 305 |
-| queue-worker-scrape-1m | 304 |
-| release-pending-sms-every-minute | 295 |
-| outreach-queue-worker-every-minute | 285 |
-| auto-draft-on-inbound-every-minute | 260 |
-| …15+ more every-minute jobs | … |
+### 4. Auto-Blast "Sent 0 of 10 · Scraped 0 · enriched 0 · suppressed 0 · 1 failure"
+`contractor-outreach-auto-blast` orchestrates: scrape → enrich → email. "Scraped 0 / 1 failure" means the internal `invokeFn("contractor-outreach-scrape", …)` call returned non-ok and the pipeline aborted. Most likely cause given recent context: `GOOGLE_MAPS_API_KEY` quota or the scrape function itself erroring. Need to pull the function's log to confirm before touching code.
 
-pg_cron has a fixed worker pool (`max_worker_processes` / `cron.max_running_jobs`). Once it's saturated by long-running `net.http_post` calls from every-minute workers, lower-frequency jobs like the daily 11:30 digest can't acquire a worker and Postgres reports "job startup timeout" — the SQL never runs at all. Once the daily slot is missed, pg_cron does not retry until the next scheduled time.
+### 5. Workbench "No contact found for Delta T Group / PrideStaff Detroit"
+These are `techalert_business_prospects` rows. The table only has columns `phone`, `email`, `website` — no enriched contact stack. The "Draft with Opus" button refuses because `email` is null. The cherry-pick UI surfaces candidate matches (Kai Ho, Aaron Trudgeon, etc.) from a *different* table, but those aren't linked back to the prospect → enrich step never writes an email onto the prospect row. Two acceptable fixes — needs your call (see Open Question).
 
-## The fix
+### 6. Prospect Tracker "Update failed: Could not query the database for the schema cache. Retrying."
+The Mark-dead handler runs `supabase.from("prospect_nudges").update({ status }).eq("id", id)`. The error is PostgREST's schema cache reload error, which is a known transient symptom when the Cloud instance just came back up. It usually resolves in 2–5 minutes once PostgREST finishes reloading. If it persists, force a reload with `NOTIFY pgrst, 'reload schema'`. No code change needed — verify only.
 
-### Step 1 — Recover today's digest immediately
-Manually invoke `mortgage-radar-am-digest` via `supabase--curl_edge_functions` so today's email goes out now. This is a one-shot HTTP call, no migration required.
+### 7. Sidebar issues
+None — screenshots 142058 / 142946 / 143058 are the same products surfaced above. No separate bugs.
 
-### Step 2 — Stop the worker-pool saturation (root cause)
-Audit the every-minute / every-2-minute jobs above. Most of them are queue drainers that should either:
-- be consolidated (one orchestrator that fans out to multiple queues internally), or
-- be moved to fire-and-forget (`net.http_post` returns immediately; the timeout is happening because pg_cron is waiting on the worker slot, not the HTTP response, but the slot is held while `pg_net` waits on its response queue).
+---
 
-Specifically, the worst offenders (`process-email-queue` at 547/36h = every ~4min failing, plus 6 every-minute workers all failing) should be:
-1. Verified that they actually need to run every minute (most queues are empty 95% of fires).
-2. Stretched to every 2–5 minutes where business-acceptable.
-3. Or migrated to a single "queue-orchestrator-1m" job that calls multiple drain endpoints in one SQL invocation.
+## Fix order
 
-### Step 3 — Add a safety net for daily digests
-Add a second cron entry for `mortgage-radar-am-digest` that runs at 11:35 UTC as a retry, gated by a "did today's digest already send?" check inside the function (idempotent — the function already writes a log row per send). This way, even if 11:30 misses its worker, 11:35 catches it. Apply the same pattern to `trade-radar-am-digest` and `mortgage-radar-scanner-daily` (which I should verify also missed today).
+**Step 1 — Verify (no code, 1 min)**
+- Re-test "Mark dead" on the Prospect Tracker. If it works now, that confirms #6 was the PostgREST cache reloading after Cloud upgrade. If it still fails, run `NOTIFY pgrst, 'reload schema';` once via a migration.
 
-### Step 4 — Add cron-sentinel coverage for "job startup timeout"
-The existing `cron-sentinel` watchdog (per memory: 6h check, SMS Matt on critical failure) checks freshness + output pulse but likely doesn't classify "job startup timeout" as a critical class. Confirm and, if needed, add a rule: "if the same daily job hits startup-timeout 2 days in a row → SMS Matt."
+**Step 2 — Talent Radar Hub stats (small frontend fix, ~5 min)**
+Edit `src/components/admin/EnrichmentHealthStrip.tsx`:
+- Change the "Enriched" count from `.eq('enrichment_status','enriched')` → `.eq('enrichment_status','complete')`.
+- Change the "Last scan" query from `.order('run_at', …)` → `.order('started_at', …)` and read `started_at` (or `completed_at` for finished runs).
+- Result: pill flips from `0` → `79`, "never" → "today 11:02 UTC", and CRITICAL banner downgrades once stuck count clears.
 
-## Technical notes
+**Step 3 — Resend webhook (new edge function + Resend dashboard wiring, ~15 min)**
+- Create `supabase/functions/resend-webhook/index.ts` with `verify_jwt = false`. Accept Resend event payloads, verify signature with `RESEND_WEBHOOK_SECRET` (new secret to add), and upsert `opened_at` / `clicked_at` / `bounced_at` / `complained_at` columns on `email_send_log` keyed by `message_id` (Resend's `data.email_id`).
+- Add the missing columns to `email_send_log` (opened_at, clicked_at, bounced_at, complained_at) via migration.
+- Tell user the webhook URL to paste into resend.com → Webhooks: `https://eauvubfpanpeuxsrqesu.supabase.co/functions/v1/resend-webhook`, subscribe to `email.opened`, `email.clicked`, `email.bounced`, `email.complained`.
+- AdminEmailLog dashboard already reads `email_send_log` — open/click columns will populate automatically.
 
-- Project-wide impact: today's missed digest is the visible symptom; underneath, hundreds of queue-worker fires are also missing. Email queue, SMS release, outreach drafts, and signal correlation are all degraded.
-- I'd verify `mortgage-radar-scanner-daily` (11:00 UTC today) also missed before invoking the digest — if both missed, scanner needs to run first so the digest has fresh leads.
-- No schema changes needed for Step 1 or Step 3 (cron-only migration). Step 2 likely requires editing 2–4 worker functions to consolidate.
+**Step 4 — LO Outreach NMLS table (migration, ~5 min)**
+- Create `marketplace_prospects` table the function expects: nmls_id (text unique), full_name, company, city, state, phone, email, source, fetched_at, created_at, plus RLS (service_role bypass + admin read).
+- Confirm `find-lo-prospects` then inserts the ~40 seed lenders on next click.
+- (Optional, separate task) Wire the NMLS Consumer Access scrape behind a Browserless fetch since Apollo free-tier returns 0; not required for the button to start working today.
 
-## Proposed order of operations
-1. Curl-invoke `mortgage-radar-scanner-daily` then `mortgage-radar-am-digest` → today's email goes out within ~5 min.
-2. Ship migration adding the 11:35 UTC retry job (+ same for trade-radar) and idempotency check.
-3. Audit + stretch / consolidate the every-minute drainers.
-4. Extend cron-sentinel rule and verify it fires on the next simulated miss.
+**Step 5 — Auto-Blast diagnostic (logs first, then fix)**
+- Pull `contractor-outreach-auto-blast` and `contractor-outreach-scrape` recent edge logs (no code change yet) to find which step actually fails. Three plausible causes: (a) Google Maps key quota/billing, (b) scrape function 500ing, (c) suppression list claiming everyone. Fix once root cause is in hand. Do not guess-patch.
 
-Approve and I'll execute in that order.
+**Step 6 — Workbench enrichment → prospect link** — needs your decision, see Open Question.
+
+---
+
+## Open Question (need your input before Step 6)
+
+For the "No contact found for Delta T Group / PrideStaff Detroit" workbench errors, two ways to fix:
+
+- **(A)** When a cherry-pick candidate is selected (e.g. Aaron Trudgeon's email/phone), copy that contact onto the `techalert_business_prospects` row so "Draft with Opus" can fire immediately. Faster path, gets you drafting today.
+- **(B)** Wire the existing Apollo→Hunter→Snov enrichment waterfall into a button on each prospect card ("Enrich Contact"), and only allow drafting once it succeeds. Cleaner long-term, but you're hitting Apollo/Hunter on every click.
+
+Which do you want — A, B, or both?
+
+## Technical Notes (for me)
+
+- All fixes target the **primary** Lovable-managed project (`eauvubfpanpeuxsrqesu`).
+- The `resend-webhook` will need `RESEND_WEBHOOK_SECRET` added via the secrets tool — Resend generates this when you create the webhook on their dashboard.
+- The PostgREST schema cache issue (#6) commonly self-heals within 2–5 minutes after a Cloud instance comes back up. No fix unless still failing 10 min from now.
+- The Talent Radar Hub `EnrichmentHealthStrip` fix is the only purely visual/data-display change — all the others touch backend.

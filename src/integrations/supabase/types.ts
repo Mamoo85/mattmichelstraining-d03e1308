@@ -7512,7 +7512,9 @@ export type Database = {
       }
       email_send_log: {
         Row: {
+          bounced_at: string | null
           clicked_at: string | null
+          complained_at: string | null
           created_at: string
           error_message: string | null
           id: string
@@ -7524,7 +7526,9 @@ export type Database = {
           template_name: string
         }
         Insert: {
+          bounced_at?: string | null
           clicked_at?: string | null
+          complained_at?: string | null
           created_at?: string
           error_message?: string | null
           id?: string
@@ -7536,7 +7540,9 @@ export type Database = {
           template_name: string
         }
         Update: {
+          bounced_at?: string | null
           clicked_at?: string | null
+          complained_at?: string | null
           created_at?: string
           error_message?: string | null
           id?: string
@@ -13464,6 +13470,63 @@ export type Database = {
           ip_address?: string | null
           token?: string
           used_at?: string | null
+        }
+        Relationships: []
+      }
+      marketplace_prospects: {
+        Row: {
+          city: string | null
+          company: string | null
+          created_at: string
+          email: string | null
+          enriched_at: string | null
+          fetched_at: string | null
+          full_name: string | null
+          id: string
+          nmls_id: string | null
+          notes: string | null
+          phone: string | null
+          raw: Json | null
+          source: string
+          state: string | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          city?: string | null
+          company?: string | null
+          created_at?: string
+          email?: string | null
+          enriched_at?: string | null
+          fetched_at?: string | null
+          full_name?: string | null
+          id?: string
+          nmls_id?: string | null
+          notes?: string | null
+          phone?: string | null
+          raw?: Json | null
+          source?: string
+          state?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          city?: string | null
+          company?: string | null
+          created_at?: string
+          email?: string | null
+          enriched_at?: string | null
+          fetched_at?: string | null
+          full_name?: string | null
+          id?: string
+          nmls_id?: string | null
+          notes?: string | null
+          phone?: string | null
+          raw?: Json | null
+          source?: string
+          state?: string | null
+          updated_at?: string
+          website?: string | null
         }
         Relationships: []
       }

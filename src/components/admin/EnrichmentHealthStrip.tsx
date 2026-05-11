@@ -23,11 +23,13 @@ export function EnrichmentHealthStrip() {
 
       const [pendingRes, enrichedRes, exhaustedRes, stuckRes, lastRunRes, failRes] = await Promise.all([
         (supabase as any).from("hire_alert_candidates").select("id", { count: "exact", head: true }).eq("enrichment_status", "pending"),
-        (supabase as any).from("hire_alert_candidates").select("id", { count: "exact", head: true }).eq("enrichment_status", "enriched"),
+        // Table uses status value 'complete' (not 'enriched') — see migration history.
+        (supabase as any).from("hire_alert_candidates").select("id", { count: "exact", head: true }).eq("enrichment_status", "complete"),
         (supabase as any).from("hire_alert_candidates").select("id", { count: "exact", head: true }).eq("enrichment_status", "exhausted"),
         (supabase as any).from("hire_alert_candidates").select("id", { count: "exact", head: true })
           .eq("enrichment_status", "pending").lt("first_seen_at", twoHoursAgo),
-        (supabase as any).from("hire_alert_runs").select("run_at").order("run_at", { ascending: false }).limit(1),
+        // Scanner writes started_at on every run; run_at is legacy/nullable.
+        (supabase as any).from("hire_alert_runs").select("started_at").order("started_at", { ascending: false }).limit(1),
         (supabase as any).from("system_comms_log").select("id", { count: "exact", head: true })
           .in("product", ["pdl_enrichment", "sonar_enrichment", "npi_enrichment"])
           .eq("status", "error").gte("created_at", dayAgo),
@@ -38,7 +40,7 @@ export function EnrichmentHealthStrip() {
         enriched: enrichedRes.count || 0,
         exhausted: exhaustedRes.count || 0,
         stuck: stuckRes.count || 0,
-        lastRunISO: lastRunRes.data?.[0]?.run_at || null,
+        lastRunISO: lastRunRes.data?.[0]?.started_at || null,
         apiFailures24h: failRes.count || 0,
       });
     } finally {
