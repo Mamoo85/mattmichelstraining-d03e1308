@@ -176,7 +176,7 @@ export default function CounselSearch() {
               <span>I attest this search is for a permissible purpose under FCRA §1681b(a)(4) (litigation, fraud investigation, or bona-fide legal proceeding) and <strong>not</strong> for tenant screening, employment screening, or credit decisions.</span>
             </label>
             <Button className="w-full bg-[#00d4ff] text-black hover:bg-[#00b8e0]" onClick={search} disabled={loading || !attest || !name.trim()}>
-              {loading ? <><Loader2 className="animate-spin mr-2" size={16} />Scanning 25+ sources…</> : "Run Search"}
+              {loading ? <><Loader2 className="animate-spin mr-2" size={16} />Scanning court records…</> : "Run Search"}
             </Button>
           </CardContent>
         </Card>
