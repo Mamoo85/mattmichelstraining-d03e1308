@@ -1,131 +1,100 @@
-# Scanner Upgrade — 20 New Free/No-Key Sources Per Main Product
 
-## Goal
-Add 20 new data sources to each main scanner. Constraint: **zero new API keys from Matt** — only sources usable with what's already in Supabase secrets, or fully open (no auth / public APIs / scrapeable via existing Firecrawl key).
+# 100-Source Expansion Plan
 
-## What "main products" means here
+## Recommendation on scrape budget
 
-Lead-generating scanners (11):
-1. **Trade Radar** — 11 verticals share scanner; sources go into `_shared/trade-signals/signals-*.ts`. Treated as ONE product (sources distributed across verticals where relevant).
-2. **Mortgage Radar** — `mortgage-radar-scanner`
-3. **TechAlert** (talent intel) — `techalert-prospect-hunter`
-4. **Demand Radar** — `demand-radar-enhanced-scan`
-5. **Buyer Radar / Industry Pulse** — `industry-pulse-scanner`
-6. **Dead Lead Pool** — `dead-lead-pool-refresh`
-7. **Counsel Records Search** — `counsel-search` + `_shared/counsel-sources/*`
-8. **Channel Prospector** (customer targeting) — `channel-prospector`
-9. **Outreach Leads Enrichment** (email/owner waterfall) — `_shared/email-waterfall.ts` chain
-10. **SiteRadar Visitor Enrichment** — `visitor-identify` (IP→company, no scanner cron, but enrichable)
+You asked what I'd recommend — this is for business, not hobby, so my answer is **Tier 2: Moderate-aggressive Firecrawl scraping with hard per-source budget guards**, not "API only" and not "scrape everything."
 
-= **10 product surfaces × 20 sources = 200 sources.**
+Reasoning:
+- API-only caps you at ~55 of the 100. You'd leave the highest-intent sources (trade-association member directories, chamber rosters, ATS job boards, RFP boards) on the table — those are exactly where competitors aren't looking.
+- Scrape-everything risks a $300–$800/mo Firecrawl bill spike with no ceiling.
+- Moderate + budget guards = ~85–90 of the 100 sources wired, with a hard `enrichment-budget.ts` ceiling per source per day (you already have this primitive — I'd extend it). Expected Firecrawl burn: +$60–$120/mo, fully attributable per source so you can kill anything underperforming.
 
-## Reality check on volume
+Every scrape-based source gets:
+1. Daily row-cap per source (e.g. 200 scrapes/day max)
+2. ROI tag (which product it feeds)
+3. Auto-pause after 7 days of zero-yield (writes to `source_health` table)
 
-200 net-new integrations in one pass = high risk of breakage and bloat. Recommend phased delivery:
+## Scope (confirmed)
 
-- **Phase A (this turn):** Build the source catalog (200 entries with URL, auth model, parser sketch, target product) and ship batch 1: **40 highest-ROI sources** (4 per product) with full code + wiring. Verify they return data.
-- **Phase B (next turn):** Batches 2–5 = remaining 160 sources, 40 per turn.
+- **Priority products:** Trade Radar (11 verticals), TechAlert, email/contact waterfall
+- **Geo:** Michigan deep + top-10 US metros (Chicago, Indianapolis, Cleveland, Columbus, Cincinnati, Milwaukee, Toledo, Pittsburgh, Nashville, Louisville — adjustable)
+- **Output:** Plan-only first. You approve the catalog before any code lands.
 
-If you'd rather I just blast all 200 in one go without verification, say so and I will — but I'll warn that 30–50% are likely to silently fail and need a follow-up sweep.
+## Deliverable
 
-## Phase A deliverables (this turn)
+A single committed document — `knowledge/100_New_Sources_Catalog_2026.md` — containing all 100 sources, each row with:
 
-### Source catalog
-New file `knowledge/scanner-source-catalog-2026.md` listing all 200 sources organized by product, with:
-- URL + auth model (none / existing key)
-- Data shape + parser approach
-- Mapped signal type / target table
-- Implementation tier (1=easy ArcGIS-style JSON, 2=HTML scrape via Firecrawl, 3=multi-step)
+```text
+# | Name | Product fed | Vertical(s) | Type (api/arcgis/socrata/scrape) | Auth | Geo | Signal type written | Expected daily volume | Confidence (H/M/L) | Notes
+```
 
-### Code: 40 sources shipped (4 per product)
+Plus a one-page exec summary at top: confidence distribution, est. monthly cost, which 30 are "ship immediately" vs. which 70 need a judgment call from you.
 
-**Trade Radar (4 new, distributed across verticals)**
-- USDA Drought Monitor county-level (already have D1+ — extending to per-county breakdown for HVAC + foundation)
-- USGS Water Services water level alerts (foundation, restoration)
-- NWS Severe Thunderstorm Watch zones (gutters, roofing)
-- Detroit ArcGIS `bseed_business_licenses` — new business openings (commercial HVAC/electrical/plumbing)
+## The 100 — high-level breakdown
 
-**Mortgage Radar (4 new)**
-- USPS NCOA-equivalent: USPS Vacant Address dataset via HUD (per-ZIP vacancy %)
-- US Census Building Permits Survey (new construction velocity)
-- BLS Local Area Unemployment (refi pressure indicator)
-- Realtor.com price-cut RSS by ZIP
+### Trade Radar (≈55 sources)
 
-**TechAlert (4 new)**
-- USA.gov contractor data (FedScope SAM expansions)
-- BLS Quarterly Census of Employment & Wages (NAICS hiring trends)
-- USAJobs API (federal trade postings — competitor for talent)
-- ProPublica Nonprofit Explorer (Form 990 leadership turnover)
+**Permit / CofC / inspection layers from new metros (~22)**
+ArcGIS or Socrata portals for: Grand Rapids, Lansing, Ann Arbor, Flint (MI); Cleveland, Columbus, Cincinnati, Toledo (OH); Indianapolis (IN); Chicago, Milwaukee (IL/WI); Pittsburgh (PA); Nashville (TN); Louisville (KY). Each contributes 1–3 of: building permits, demolition permits, rental registrations, occupancy/CofC, fire incidents, code violations.
 
-**Demand Radar (4 new)**
-- BidNet Direct RSS feeds (per-state)
-- DemandStar bid summaries
-- MITN-equivalent: Michigan public bid postings ArcGIS
-- USAspending.gov contract opportunities API
+**Federal / national area signals (~10)**
+HUD CHAS housing condition by tract, FFIEC HMDA loan originations, FEMA NFIP repeat-loss zones (extended beyond current usage), USGS landslide hazard, USDA SAM exclusions cross-ref, NOAA CDO historical (extend beyond current MI use to top-10 metros), EPA ECHO water-system violations, DOT FMCSA fleet registrations (for fleet-truck repair signals), USPS vacancy data via HUD aggregate, OSHA enforcement.
 
-**Buyer/Industry Pulse (4 new)**
-- BLS Employment Situation by metro
-- Census Business Formation Statistics weekly
-- FRED economic indicators (housing starts, durable goods)
-- LinkedIn company growth via existing token (already have)
+**County deeds / sales (~12)**
+Wayne (you have), Oakland, Macomb, Kent (Grand Rapids), Genesee (Flint), Washtenaw (Ann Arbor), Cuyahoga (Cleveland), Franklin (Columbus), Hamilton (Cincinnati), Marion (Indy), Cook (Chicago) — new-owner-of-old-home detection across all 11 trade verticals.
 
-**Dead Lead Pool (4 new)**
-- Detroit BSEED contractor registry (already partially mined — extend to license-expiration soon set)
-- Michigan LARA active builder list
-- Better Business Bureau accredited member directory (Michigan, scrape)
-- Google Places "permanently closed" filter (re-engage owners with new ventures)
+**Open-data per-address scrapes (~7)**
+Public auctioneer listings (estate/probate beyond EstateSales.net), county sheriff foreclosure docket pages, BBB complaint pages (homeowner-side, identifies un-served markets), Nextdoor business reviews, local-news fire/storm RSS feeds, NOAA SPC mesoscale archive, USGS National Map roof-age proxy.
 
-**Counsel Records Search (4 new)**
-- Michigan Department of Licensing & Regulatory Affairs disciplinary actions RSS
-- Michigan Attorney Discipline Board public orders
-- US Tax Court opinions search
-- Federal Election Commission individual contributions (lawyer political profile)
+**Court & legal (~4)**
+PACER bankruptcy RSS expanded (you have CourtListener — adding court-by-court RSS for MIWD/MIED/NDIL/NDOH/SDIN), state UCC filings (MI + top-10), state mechanics lien filings where public, probate court RSS where public.
 
-**Channel Prospector (4 new)**
-- OpenStreetMap Overpass API (trade businesses by Michigan polygon)
-- Wikidata SPARQL (Michigan companies by industry)
-- Michigan Secretary of State business entity filings
-- Detroit Open Business Registry (already have — extending to all 6 trade NAICS)
+### TechAlert (≈20 sources)
 
-**Email/Owner Waterfall (4 new)**
-- DNS TXT records (SPF often contains email infrastructure clues)
-- Whois API via existing pattern (registrant email — public for many older domains)
-- Schema.org `org:email` JSON-LD parser (new)
-- Sitemap.xml → contact-page discovery (already partial — add multi-language paths)
+- **State contractor license boards (~9):** LARA (you have), Ohio (OCILB), Indiana, Illinois IDFPR, Wisconsin DSPS, Tennessee BCLB, Kentucky DHBC, Pennsylvania, plus federal NPI cross-ref for medical trades.
+- **Funding / growth (~5):** Crunchbase free RSS, SEC EDGAR D filings (you have — extend SIC codes), USPTO assignee (you have — extend to industrial/HVAC), Census BFS new-business formations, NSF SBIR awards.
+- **Public ATS scrapes (~3):** Greenhouse public boards, Lever public boards, Workable public boards — for funded trades cos hiring (signals scale, not poaching).
+- **Labor & enforcement (~3):** OSHA Establishment Search, NLRB petitions (you have — extend), DOL WHD violations.
 
-**SiteRadar Visitor Enrichment (4 new)**
-- IPAPI.co free tier (no key, 1k/day) — fallback ASN lookup
-- AbuseIPDB free reputation (no key needed for low volume)
-- DNS reverse lookup (PTR records) — corporate IPs often resolve to company subdomain
-- BGP.tools ASN-to-company mapping (free JSON endpoint)
+### Email / contact waterfall (≈25 sources, Tiers 90–115)
 
-### Files touched (Phase A)
-- `knowledge/scanner-source-catalog-2026.md` (new, ~200 entries)
-- `supabase/functions/_shared/trade-signals/signals-{hvac,foundation,gutters,roofing}.ts` — 4 new sources
-- `supabase/functions/mortgage-radar-scanner/index.ts` — 4 new sources
-- `supabase/functions/techalert-prospect-hunter/index.ts` — 4 new sources
-- `supabase/functions/demand-radar-enhanced-scan/index.ts` — 4 new sources
-- `supabase/functions/industry-pulse-scanner/index.ts` — 4 new sources
-- `supabase/functions/dead-lead-pool-refresh/index.ts` — 4 new sources
-- `supabase/functions/_shared/counsel-sources/{michigan,federal,regulatory}.ts` — 4 new sources
-- `supabase/functions/channel-prospector/index.ts` — 4 new sources
-- `supabase/functions/_shared/email-extras-6.ts` (new) — 4 new waterfall tiers + wired into `email-waterfall.ts`
-- `supabase/functions/visitor-identify/index.ts` — 4 new enrichment fallbacks
-- Deploy edge functions after batch
+Extending `email-extras-1.ts` → `email-extras-5.ts`:
 
-### Verification
-- After ship: curl each scanner once, count new-source rows in DB, fix any zero-result sources before declaring done.
+- **Trade association member directories (~8):** NAHB local chapters, ABC chapters, ASA, PHCC chapters, NECA chapters, SMACNA, MCAA, NRCA.
+- **Chamber rosters (~6):** Detroit Regional Chamber, Grand Rapids Chamber, top-10 metro chambers' public member directories.
+- **Industry pubs lead lists (~4):** ENR Top 400, Roofing Contractor Top 100, Plumbing & Mechanical 50, Contracting Business 100.
+- **Tech footprint enrichment (~4):** BuiltWith free tier, crt.sh subdomain history, SecurityTrails free tier, Wayback CDX rebuild-detection (extends existing usage).
+- **Long-tail registries (~3):** Wikidata SPARQL businesses-by-locality, OpenStreetMap business POIs by tag (extend current usage), Common Crawl WET indices for email extraction by domain.
 
-## Phase B+ (future turns)
-- 40 more sources per turn × 4 turns
-- Same verification gate per batch
+## Workflow
 
-## Constraints
-- No new secrets requested.
-- Sources that turn out to require auth get dropped from the list and noted in the catalog with reason.
-- All scrapes go through existing `FIRECRAWL_API_KEY` (already in Supabase).
-- All county GIS sources use try/catch fail-graceful pattern (per Phase 42 lessons).
+1. I produce `knowledge/100_New_Sources_Catalog_2026.md` (no code yet).
+2. You review — strike, swap, or approve.
+3. After approval, I ship in **5 waves of ~20 sources each**, mirroring the Phase 33 pattern (each wave = its own commit batch, with `source_health` rows seeded and `enrichment-budget` caps wired). Each wave includes:
+   - New signal-file additions or extras-file (`email-extras-6.ts`, `-7.ts`)
+   - `trade-radar-scanner` / `techalert-prospect-hunter` Promise.all extension
+   - `source_health` migration entries
+   - Per-source budget cap in `enrichment-budget.ts`
+4. After all 5 waves, one verification edge function (`new-sources-smoke-test`) curls each source once and reports yield to a `SourcesSmokeReport` admin page row.
 
-## Risk
-- ~30% of "free" sources will silently rate-limit or return empty in production. Mitigated by per-batch verification.
-- Schema growth: adding 200 sources means 200 new signal-type strings — will keep them grouped under existing signal types where possible to avoid digest bloat.
+## What this plan does NOT include
+
+- No new paid keys (no Costar, no MLS/RESO, no Experian/TU/EQ — H.R. 2808 forbids anyway).
+- No partner-gated APIs (LinkedIn Jobs, Indeed, ZoomInfo paid).
+- No frontend portal changes — sources feed existing portals.
+- No changes to existing 11 trade verticals' core scoring logic.
+
+## Risks I want to flag
+
+1. **Firecrawl monthly burn** could spike if a scraped source returns way more than expected. Mitigated by per-source daily caps, but worth watching the first 2 weeks.
+2. **Some county ArcGIS endpoints block edge-function IPs** (Wayne/Oakland sometimes do — see Phase 42 note). I'll fail-graceful and not count them against the 100 if they're confirmed blocked.
+3. **Per-state SOS / license boards vary wildly** — some are clean JSON, some require Firecrawl scraping of paginated HTML. Estimated 7 of 9 license boards work cleanly; 2 may be skipped or replaced.
+
+## Confidence
+
+- **~70 sources:** high confidence — open APIs or proven Firecrawl scrape patterns I've already used.
+- **~20 sources:** medium — endpoint exists, format needs verification.
+- **~10 sources:** low — may swap during catalog drafting if the API turns out to be gated or empty.
+
+Final deliverable target: catalog doc in `knowledge/` within one build session, then wave-by-wave implementation after your approval.
