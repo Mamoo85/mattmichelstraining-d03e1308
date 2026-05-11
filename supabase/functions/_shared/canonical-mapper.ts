@@ -209,7 +209,40 @@ export async function persistCanonicalRow(
   const row = args.row || {};
   const fm = m.field_map || {};
 
-  // Company
+  // ---- Automated QA: schema + completeness gate BEFORE any writes -------
+  const candidate: QaCandidate = {
+    company_name: getField(fm, row, "company_name") ?? null,
+    domain: getField(fm, row, "domain") ?? null,
+    full_name: getField(fm, row, "full_name") ?? null,
+    email: getField(fm, row, "email") ?? null,
+    phone: getField(fm, row, "phone") ?? null,
+    address: getField(fm, row, "address") ?? null,
+    city: getField(fm, row, "city") ?? null,
+    state: getField(fm, row, "state") ?? null,
+    zip: getField(fm, row, "zip") ?? null,
+    county: getField(fm, row, "county") ?? null,
+    lat: getField(fm, row, "lat") ?? null,
+    lon: getField(fm, row, "lon") ?? null,
+    external_id: getField(fm, row, "external_id") ?? null,
+    occurred_at: getField(fm, row, "occurred_at") ?? null,
+    title: getField(fm, row, "title") ?? null,
+    description: getField(fm, row, "description") ?? null,
+    estimated_value: getField(fm, row, "estimated_value") ?? null,
+    url: getField(fm, row, "url") ?? null,
+  };
+  const qa = validateCandidate(candidate, m);
+  if (!qa.ok) {
+    await quarantine(sb, {
+      source: args.source,
+      product: args.product,
+      segment: args.segment,
+      mapping: m,
+      candidate,
+      raw: row,
+      result: qa,
+    });
+    return out;
+  }
   const companyName = getField(fm, row, "company_name");
   if (companyName) {
     const domain = getField(fm, row, "domain");
