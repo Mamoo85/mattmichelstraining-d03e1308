@@ -560,21 +560,37 @@ Deno.serve(async (req) => {
 
       // Wave 1 Batch 1C — federal area signals (HUD aging-housing, FFIEC HMDA,
       // FEMA NFIP repeat-loss, EPA ECHO water violations, NOAA SPC mesoscale).
-      // Pull client zips across all active clients for this vertical to scope
-      // the ACS aging-housing fetch.
+      // Wave 1 Batch 1D — metro permit ArcGIS/Socrata layers (Grand Rapids,
+      // Ann Arbor, Chicago, Cleveland, Columbus, Indy, Milwaukee, Nashville).
+      // Pull client zips + coverage_regions across all active clients for
+      // this vertical to scope both fetches.
       try {
         const { data: clientsForZips } = await sb
           .from("trade_radar_clients")
-          .select("zip_codes")
+          .select("zip_codes, coverage_regions")
           .eq("vertical", vertical)
           .eq("active", true);
         const allZips = Array.from(new Set(
           (clientsForZips ?? []).flatMap((c: any) => (c.zip_codes as string[]) ?? []),
         )).filter(Boolean).slice(0, 50);
-        const fedSignals = await runFederalAreaSignals(vertical, state, allZips);
+        const allRegions = Array.from(new Set(
+          (clientsForZips ?? []).flatMap((c: any) => (c.coverage_regions as string[]) ?? []),
+        )).filter(Boolean);
+
+        const [fedSignals, metroSignals] = await Promise.all([
+          runFederalAreaSignals(vertical, state, allZips).catch((e) => {
+            console.warn(`[trade-scanner] ${vertical} federal-area-signals failed:`, e instanceof Error ? e.message : String(e));
+            return [] as any[];
+          }),
+          runMetroPermitSignals(vertical as any, allRegions).catch((e) => {
+            console.warn(`[trade-scanner] ${vertical} metro-permits failed:`, e instanceof Error ? e.message : String(e));
+            return [] as any[];
+          }),
+        ]);
         for (const s of fedSignals) rawSignals.push(s);
+        for (const s of metroSignals) rawSignals.push(s);
       } catch (e) {
-        console.warn(`[trade-scanner] ${vertical} federal-area-signals failed:`, e instanceof Error ? e.message : String(e));
+        console.warn(`[trade-scanner] ${vertical} area+metro fetch failed:`, e instanceof Error ? e.message : String(e));
       }
 
       const insertedLeads: any[] = [];
