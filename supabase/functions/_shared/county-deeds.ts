@@ -1,4 +1,7 @@
 // Wave 1 Batch 1E — County deed / foreclosure signals for Trade Radar.
+// deno-lint-ignore-file no-explicit-any
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
+import { withSourceHealth } from "./source-health.ts";
 //
 // Sources:
 //   #6  Kent County (Grand Rapids) deeds       — ArcGIS, new-owner + pre-1990
