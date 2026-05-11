@@ -22,6 +22,8 @@ import { fetchFreshBusinessSignals, fetchMortgageSignals, fetchHireSignals } fro
 import { scrapeZillowFSBO, scrapeEstateSales } from "../_shared/scrapers-public-listings.ts";
 import { runFederalAreaSignals } from "../_shared/federal-area-signals.ts";
 import { runMetroPermitSignals } from "../_shared/metro-permits.ts";
+import { runCountyDeedSignals } from "../_shared/county-deeds.ts";
+import { runPacerBankruptcySignals } from "../_shared/pacer-bankruptcy.ts";
 
 // Warn loudly at startup if FIRECRAWL_API_KEY is missing — half the per-address
 // signal sources (FSBO, estate sales, probate, foreclosure) depend on it.
@@ -48,6 +50,8 @@ const AREA_ALERT_TYPES = new Set<string>([
   "courtlistener_foreclosure",
   // Wave 1 Batch 1C — federal area signals
   "aging_housing_tract", "epa_water_violation_area", "nfip_repeat_loss_zip",
+  // Wave 1 Batch 1F — PACER bankruptcy court distress
+  "bankruptcy_distress",
 ]);
 
 // Verticals where home turnover (FSBO listing, estate sale) is a high-quality
@@ -577,7 +581,7 @@ Deno.serve(async (req) => {
           (clientsForZips ?? []).flatMap((c: any) => (c.coverage_regions as string[]) ?? []),
         )).filter(Boolean);
 
-        const [fedSignals, metroSignals] = await Promise.all([
+        const [fedSignals, metroSignals, deedSignals, pacerSignals] = await Promise.all([
           runFederalAreaSignals(vertical, state, allZips).catch((e) => {
             console.warn(`[trade-scanner] ${vertical} federal-area-signals failed:`, e instanceof Error ? e.message : String(e));
             return [] as any[];
@@ -586,9 +590,19 @@ Deno.serve(async (req) => {
             console.warn(`[trade-scanner] ${vertical} metro-permits failed:`, e instanceof Error ? e.message : String(e));
             return [] as any[];
           }),
+          runCountyDeedSignals(vertical as any, allRegions).catch((e) => {
+            console.warn(`[trade-scanner] ${vertical} county-deeds failed:`, e instanceof Error ? e.message : String(e));
+            return [] as any[];
+          }),
+          runPacerBankruptcySignals(vertical as any, allRegions).catch((e) => {
+            console.warn(`[trade-scanner] ${vertical} pacer-bankruptcy failed:`, e instanceof Error ? e.message : String(e));
+            return [] as any[];
+          }),
         ]);
         for (const s of fedSignals) rawSignals.push(s);
         for (const s of metroSignals) rawSignals.push(s);
+        for (const s of deedSignals) rawSignals.push(s);
+        for (const s of pacerSignals) rawSignals.push(s);
       } catch (e) {
         console.warn(`[trade-scanner] ${vertical} area+metro fetch failed:`, e instanceof Error ? e.message : String(e));
       }
