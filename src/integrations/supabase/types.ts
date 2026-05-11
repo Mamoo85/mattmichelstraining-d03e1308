@@ -23792,6 +23792,8 @@ export type Database = {
           active: boolean
           business_name: string | null
           contact_name: string | null
+          coverage_counties: string[] | null
+          coverage_regions: string[] | null
           created_at: string
           crm_webhook_secret: string | null
           crm_webhook_url: string | null
@@ -23809,6 +23811,8 @@ export type Database = {
           active?: boolean
           business_name?: string | null
           contact_name?: string | null
+          coverage_counties?: string[] | null
+          coverage_regions?: string[] | null
           created_at?: string
           crm_webhook_secret?: string | null
           crm_webhook_url?: string | null
@@ -23826,6 +23830,8 @@ export type Database = {
           active?: boolean
           business_name?: string | null
           contact_name?: string | null
+          coverage_counties?: string[] | null
+          coverage_regions?: string[] | null
           created_at?: string
           crm_webhook_secret?: string | null
           crm_webhook_url?: string | null
