@@ -214,6 +214,16 @@ export default function CounselSearch() {
               </div>
             </div>
 
+            {result.total_hits === 0 && result.empty_message && (
+              <Card className="bg-[#0a1628] border-[#1e3a5f] print-card">
+                <CardContent className="p-6 text-center">
+                  <p className="text-2xl mb-2">⚖️</p>
+                  <h3 className="font-bold mb-2 print-text">No court records found</h3>
+                  <p className="text-sm text-[#cbd5e1] print-text leading-relaxed max-w-2xl mx-auto">{result.empty_message}</p>
+                </CardContent>
+              </Card>
+            )}
+
             {Object.entries(result.results).map(([cat, hits]) => (
               <Card key={cat} className="bg-[#0a1628] border-[#1e3a5f] print-card">
                 <CardContent className="p-4">
