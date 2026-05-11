@@ -320,31 +320,40 @@ async function scanNashvillePermits(vertical: Vertical): Promise<MetroSignal[]> 
 const METROS: Array<{
   name: string;
   matches: RegExp;
-  scanners: Array<(v: Vertical) => Promise<MetroSignal[]>>;
+  scanners: Array<{ slug: string; fn: (v: Vertical) => Promise<MetroSignal[]> }>;
 }> = [
   { name: "Grand Rapids", matches: /grand\s*rapids|west\s*michigan|kent/i,
-    scanners: [scanGrandRapidsPermits, scanGrandRapidsCofCExpirations] },
-  { name: "Ann Arbor", matches: /ann\s*arbor|washtenaw/i, scanners: [scanAnnArborPermits] },
+    scanners: [
+      { slug: "kent_arcgis_permits", fn: scanGrandRapidsPermits },
+      { slug: "kent_arcgis_cofc", fn: scanGrandRapidsCofCExpirations },
+    ] },
+  { name: "Ann Arbor", matches: /ann\s*arbor|washtenaw/i,
+    scanners: [{ slug: "a2_opendata_permits", fn: scanAnnArborPermits }] },
   { name: "Chicago", matches: /chicago|cook\s*county|illinois/i,
-    scanners: [scanChicagoPermits, scanChicagoViolations] },
-  { name: "Cleveland", matches: /cleveland|cuyahoga/i, scanners: [scanClevelandPermits] },
-  { name: "Columbus", matches: /columbus|franklin\s*county/i, scanners: [scanColumbusPermits] },
-  { name: "Indianapolis", matches: /indianapolis|marion\s*county|indiana/i, scanners: [scanIndianapolisPermits] },
-  { name: "Milwaukee", matches: /milwaukee|wisconsin/i, scanners: [scanMilwaukeePermits] },
-  { name: "Nashville", matches: /nashville|davidson|tennessee/i, scanners: [scanNashvillePermits] },
+    scanners: [
+      { slug: "socrata_chicago_permits", fn: scanChicagoPermits },
+      { slug: "socrata_chicago_violations", fn: scanChicagoViolations },
+    ] },
+  { name: "Cleveland", matches: /cleveland|cuyahoga/i,
+    scanners: [{ slug: "cuyahoga_arcgis_permits", fn: scanClevelandPermits }] },
+  { name: "Columbus", matches: /columbus|franklin\s*county/i,
+    scanners: [{ slug: "socrata_columbus_permits", fn: scanColumbusPermits }] },
+  { name: "Indianapolis", matches: /indianapolis|marion\s*county|indiana/i,
+    scanners: [{ slug: "socrata_indy_permits", fn: scanIndianapolisPermits }] },
+  { name: "Milwaukee", matches: /milwaukee|wisconsin/i,
+    scanners: [{ slug: "socrata_milwaukee_permits", fn: scanMilwaukeePermits }] },
+  { name: "Nashville", matches: /nashville|davidson|tennessee/i,
+    scanners: [{ slug: "socrata_nashville_permits", fn: scanNashvillePermits }] },
 ];
 
 /**
- * Run all metro permit scanners that match any of the provided coverage
- * region strings (typically the union of trade_radar_clients.coverage_regions
- * for the vertical being scanned).
- *
- * Returns an aggregated, vertical-filtered list of per-address signals.
- * Each scanner is wrapped in try/catch so one failure can't poison the batch.
+ * Run all metro permit scanners matching coverage regions.
+ * Pass `sb` to enable per-source health tracking via withSourceHealth.
  */
 export async function runMetroPermitSignals(
   vertical: Vertical,
   coverageRegions: string[],
+  sb?: SupabaseClient,
 ): Promise<MetroSignal[]> {
   if (!coverageRegions?.length) return [];
   const haystack = coverageRegions.join(" | ");
@@ -352,13 +361,18 @@ export async function runMetroPermitSignals(
   if (!active.length) return [];
 
   const runs = active.flatMap((m) =>
-    m.scanners.map((s) =>
-      s(vertical).catch((e) => {
-        console.warn(`[metro-permits] ${m.name} scanner failed (${vertical}):`, e instanceof Error ? e.message : String(e));
+    m.scanners.map((s) => {
+      const exec = () => s.fn(vertical);
+      const wrapped: Promise<MetroSignal[]> = sb
+        ? withSourceHealth(sb, s.slug, exec, { product: "trade_radar", source_type: "scraper" })
+        : exec();
+      return wrapped.catch((e) => {
+        console.warn(`[metro-permits] ${s.slug} (${vertical}) failed:`, e instanceof Error ? e.message : String(e));
         return [] as MetroSignal[];
-      })
-    )
+      });
+    })
   );
   const results = await Promise.all(runs);
+  console.info(`[trade-scanner:yield] metro-permits vertical=${vertical} sources=${runs.length} rows=${results.flat().length}`);
   return results.flat();
 }
