@@ -202,7 +202,7 @@ Deno.serve(async (req) => {
       console.warn("SMS failed:", (e as Error).message);
     }
 
-    await logError(sb, {
+    await logError({
       source: "cron",
       function_name: "scanner-monitor-alert",
       severity: it.severity,
