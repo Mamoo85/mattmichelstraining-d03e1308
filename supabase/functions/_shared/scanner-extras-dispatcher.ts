@@ -2,6 +2,7 @@
 // to scanner_extras_runs. Fail-graceful: any source error is captured per-source.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { persistCanonicalRows } from "./canonical-mapper.ts";
 import * as ex from "./scanner-extras-2026.ts";
 import * as exb from "./scanner-extras-2026-b.ts";
 import * as exc from "./scanner-extras-2026-c.ts";
@@ -307,14 +308,17 @@ export async function runPhaseAExtras(product: string, opts: { segment?: string;
     let count = 0;
     let error: string | undefined;
     let sample: unknown = null;
+    let rowsArr: any[] = [];
     try {
       const out = await j.run();
       if (Array.isArray(out)) {
         count = out.length;
         sample = out.slice(0, 2);
+        rowsArr = out;
       } else if (out && typeof out === "object") {
         count = 1;
         sample = out;
+        rowsArr = [out];
       }
     } catch (e) {
       error = e instanceof Error ? e.message : String(e);
@@ -326,6 +330,12 @@ export async function runPhaseAExtras(product: string, opts: { segment?: string;
       .insert({ product, source: j.source, count, ms, error, sample: sample as any, segment })
       .then(() => {})
       .catch(() => {});
+
+    // Fan into canonical schema (fire-and-forget; mapper is fail-graceful)
+    if (!error && rowsArr.length) {
+      persistCanonicalRows(sb, { source: j.source, product, rows: rowsArr, segment })
+        .catch(() => {});
+    }
   }
   return { product, segment, results };
 }
