@@ -108,6 +108,7 @@ const AdminColdEmailAudit = lazyRetry(() => import("./pages/admin/AdminColdEmail
 const LinkHealth = lazyRetry(() => import("./pages/admin/LinkHealth"));
 const TrialDripPreview = lazyRetry(() => import("./pages/admin/TrialDripPreview"));
 const ScannerHealth = lazyRetry(() => import("./pages/admin/ScannerHealth"));
+const AdminScannerMonitoring = lazyRetry(() => import("./pages/admin/AdminScannerMonitoring"));
 const ColdEmailRamp = lazyRetry(() => import("./pages/admin/ColdEmailRamp"));
 const TrialReactivationCampaign = lazyRetry(() => import("./pages/admin/TrialReactivationCampaign"));
 const DwaAdminV4 = lazyRetry(() => import("./pages/DwaAdminV4"));
@@ -1018,6 +1019,7 @@ const App = () => {
                       <Route path="/admin/health" element={<AgencyAdminRoute><AdminHealth /></AgencyAdminRoute>} />
                        <Route path="/dwa-admin" element={<AgencyAdminRoute><DWAAdmin /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/scanner-sources" element={<AgencyAdminRoute><AdminScannerSources /></AgencyAdminRoute>} />
+                      <Route path="/dwa-admin/scanner-monitoring" element={<AgencyAdminRoute><AdminScannerMonitoring /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/data-sources" element={<AgencyAdminRoute><DataSourcesHealth /></AgencyAdminRoute>} />
                        <Route path="/owner/login" element={<OwnerLogin />} />
                        <Route path="/owner/verify" element={<OwnerVerify />} />
