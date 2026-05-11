@@ -40,6 +40,7 @@ interface SearchResult {
   summary: Record<string, number>;
   results: Record<string, IntelHit[]>;
   citations?: Citation[];
+  empty_message?: string | null;
   accessed_at?: string;
   quota?: { unlimited?: boolean; tier?: string; free_searches_used?: number; free_trial_limit?: number; remaining?: number; trial_ends_at?: string | null };
   evidentiary_notice?: string;
