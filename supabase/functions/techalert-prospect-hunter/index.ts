@@ -1154,7 +1154,8 @@ serve(async (req) => {
     const { fetchHireSignals } = await import("../_shared/signal-waterfall.ts");
     const { runAll50Sources } = await import("../_shared/talent-signals/extras-50.ts");
     const { runExtraTalentSources } = await import("../_shared/talent-signals/extras-100.ts");
-    const [githubSignals, edgarSignals, usptoSignals, samSignals, samEntitySignals, blsSignals, eventbriteSignals, usaSpendingSignals, googleMapsSignals, oshaSignals, laraNewSignals, laraDissolvedSignals, laraExpiringSignals, nlrbSignals, cfpbSignals, ch7Signals, detroitCertifiedSignals, detroitOpenBizSignals, councilSurveyedSignals, detroitCityContractSignals, multifamilySignals, demoContractorSignals, demoPipelineSignals, billionDollarSignals, detroitBizLicenseSignals, commercialRedSignals, weatherBonus, hireWaterfallSignals, extras50Result, extras100Result] = (await Promise.allSettled([
+    const { runBatch1AFederal } = await import("../_shared/techalert-federal-scanners.ts");
+    const [githubSignals, edgarSignals, usptoSignals, samSignals, samEntitySignals, blsSignals, eventbriteSignals, usaSpendingSignals, googleMapsSignals, oshaSignals, laraNewSignals, laraDissolvedSignals, laraExpiringSignals, nlrbSignals, cfpbSignals, ch7Signals, detroitCertifiedSignals, detroitOpenBizSignals, councilSurveyedSignals, detroitCityContractSignals, multifamilySignals, demoContractorSignals, demoPipelineSignals, billionDollarSignals, detroitBizLicenseSignals, commercialRedSignals, weatherBonus, hireWaterfallSignals, extras50Result, extras100Result, batch1AResult] = (await Promise.allSettled([
       scanGitHubSignals(),
       scanEDGARFundings(),
       scanUSPTOPatents(),
