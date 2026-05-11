@@ -22,6 +22,8 @@ import { fetchFreshBusinessSignals, fetchMortgageSignals, fetchHireSignals } fro
 import { scrapeZillowFSBO, scrapeEstateSales } from "../_shared/scrapers-public-listings.ts";
 import { runFederalAreaSignals } from "../_shared/federal-area-signals.ts";
 import { runMetroPermitSignals } from "../_shared/metro-permits.ts";
+import { runCountyDeedSignals } from "../_shared/county-deeds.ts";
+import { runPacerBankruptcySignals } from "../_shared/pacer-bankruptcy.ts";
 
 // Warn loudly at startup if FIRECRAWL_API_KEY is missing — half the per-address
 // signal sources (FSBO, estate sales, probate, foreclosure) depend on it.
