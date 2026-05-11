@@ -582,19 +582,19 @@ Deno.serve(async (req) => {
         )).filter(Boolean);
 
         const [fedSignals, metroSignals, deedSignals, pacerSignals] = await Promise.all([
-          runFederalAreaSignals(vertical, state, allZips).catch((e) => {
+          runFederalAreaSignals(vertical, state, allZips, sb).catch((e) => {
             console.warn(`[trade-scanner] ${vertical} federal-area-signals failed:`, e instanceof Error ? e.message : String(e));
             return [] as any[];
           }),
-          runMetroPermitSignals(vertical as any, allRegions).catch((e) => {
+          runMetroPermitSignals(vertical as any, allRegions, sb).catch((e) => {
             console.warn(`[trade-scanner] ${vertical} metro-permits failed:`, e instanceof Error ? e.message : String(e));
             return [] as any[];
           }),
-          runCountyDeedSignals(vertical as any, allRegions).catch((e) => {
+          runCountyDeedSignals(vertical as any, allRegions, sb).catch((e) => {
             console.warn(`[trade-scanner] ${vertical} county-deeds failed:`, e instanceof Error ? e.message : String(e));
             return [] as any[];
           }),
-          runPacerBankruptcySignals(vertical as any, allRegions).catch((e) => {
+          runPacerBankruptcySignals(vertical as any, allRegions, sb).catch((e) => {
             console.warn(`[trade-scanner] ${vertical} pacer-bankruptcy failed:`, e instanceof Error ? e.message : String(e));
             return [] as any[];
           }),

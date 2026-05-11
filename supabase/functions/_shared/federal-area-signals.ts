@@ -1,4 +1,7 @@
 // Batch 1C — Federal area signals for Trade Radar (Wave 1).
+// deno-lint-ignore-file no-explicit-any
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
+import { withSourceHealth } from "./source-health.ts";
 // Returns signal objects compatible with the trade-radar-scanner's
 // AREA_ALERT_TYPES upsert path (vertical, scope inferred from city/zip).
 //
@@ -249,16 +252,22 @@ export async function runFederalAreaSignals(
   vertical: string,
   state = "MI",
   clientZips: string[] = [],
+  sb?: SupabaseClient,
 ): Promise<AreaSignal[]> {
   const sources = FEDERAL_SOURCE_MAP[vertical] ?? [];
   if (!sources.length) return [];
 
+  const wrap = (slug: string, fn: () => Promise<AreaSignal[]>) =>
+    sb
+      ? withSourceHealth(sb, slug, fn, { product: "trade_radar", source_type: "api" })
+      : fn();
+
   const tasks: Array<Promise<AreaSignal[]>> = [];
-  if (sources.includes("aging") && clientZips.length) tasks.push(fetchAgingHousingZips(clientZips));
-  if (sources.includes("hmda_hi") || sources.includes("hmda_refi")) tasks.push(fetchHmdaLoanDensity(state));
-  if (sources.includes("nfip")) tasks.push(fetchNfipRepeatLossZips(state));
-  if (sources.includes("epa")) tasks.push(fetchEpaWaterViolations(state));
-  if (sources.includes("spc")) tasks.push(fetchSpcMesoscale(state));
+  if (sources.includes("aging") && clientZips.length) tasks.push(wrap("hud_acs_aging_housing", () => fetchAgingHousingZips(clientZips)));
+  if (sources.includes("hmda_hi") || sources.includes("hmda_refi")) tasks.push(wrap("ffiec_hmda", () => fetchHmdaLoanDensity(state)));
+  if (sources.includes("nfip")) tasks.push(wrap("fema_nfip_repeat_loss", () => fetchNfipRepeatLossZips(state)));
+  if (sources.includes("epa")) tasks.push(wrap("epa_echo_sdwa", () => fetchEpaWaterViolations(state)));
+  if (sources.includes("spc")) tasks.push(wrap("noaa_spc_mesoscale", () => fetchSpcMesoscale(state)));
 
   const results = await Promise.allSettled(tasks);
   const merged: AreaSignal[] = [];
@@ -266,10 +275,11 @@ export async function runFederalAreaSignals(
     if (r.status === "fulfilled") merged.push(...r.value);
   }
 
-  // Vertical filter for HMDA (refi vs HI)
-  return merged.filter((s) => {
+  const filtered = merged.filter((s) => {
     if (s.signal_type === "home_improvement_loan_area") return sources.includes("hmda_hi");
     if (s.signal_type === "homeowner_equity_area") return sources.includes("hmda_refi");
     return true;
   });
+  console.info(`[trade-scanner:yield] federal-area vertical=${vertical} sources=${tasks.length} rows=${filtered.length}`);
+  return filtered;
 }

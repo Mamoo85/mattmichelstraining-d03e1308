@@ -1,4 +1,7 @@
 // Wave 1 Batch 1E — County deed / foreclosure signals for Trade Radar.
+// deno-lint-ignore-file no-explicit-any
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
+import { withSourceHealth } from "./source-health.ts";
 //
 // Sources:
 //   #6  Kent County (Grand Rapids) deeds       — ArcGIS, new-owner + pre-1990
@@ -193,16 +196,24 @@ async function fetchWayneTaxForeclosure(vertical: Vertical): Promise<DeedSignal[
 export async function runCountyDeedSignals(
   vertical: Vertical,
   coverageRegions: string[],
+  sb?: SupabaseClient,
 ): Promise<DeedSignal[]> {
   if (!ALL_VERTICALS.includes(vertical)) return [];
   const joined = (coverageRegions ?? []).join(" ").toLowerCase();
 
+  const wrap = (slug: string, fn: () => Promise<DeedSignal[]>) =>
+    sb
+      ? withSourceHealth(sb, slug, fn, { product: "trade_radar", source_type: "scraper" })
+      : fn();
+
   const tasks: Array<Promise<DeedSignal[]>> = [];
-  if (/grand\s*rapids|kent/.test(joined)) tasks.push(fetchKentDeeds(vertical));
-  if (/cleveland|cuyahoga/.test(joined)) tasks.push(fetchCuyahogaSales(vertical));
-  if (/detroit|wayne/.test(joined)) tasks.push(fetchWayneTaxForeclosure(vertical));
+  if (/grand\s*rapids|kent/.test(joined)) tasks.push(wrap("kent_county_deeds", () => fetchKentDeeds(vertical)));
+  if (/cleveland|cuyahoga/.test(joined)) tasks.push(wrap("cuyahoga_county_sales", () => fetchCuyahogaSales(vertical)));
+  if (/detroit|wayne/.test(joined)) tasks.push(wrap("wayne_tax_foreclosure", () => fetchWayneTaxForeclosure(vertical)));
 
   if (tasks.length === 0) return [];
   const results = await Promise.allSettled(tasks);
-  return results.flatMap((r) => (r.status === "fulfilled" ? r.value : []));
+  const out = results.flatMap((r) => (r.status === "fulfilled" ? r.value : []));
+  console.info(`[trade-scanner:yield] county-deeds vertical=${vertical} sources=${tasks.length} rows=${out.length}`);
+  return out;
 }

@@ -1,4 +1,6 @@
 // Wave 1 Batch 1F — PACER bankruptcy court RSS for Trade Radar.
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
+import { withSourceHealth } from "./source-health.ts";
 //
 // Sources (all free, public RSS, no key):
 //   #45 PACER NDIL (N. District Illinois)  bankruptcy filings
@@ -76,11 +78,11 @@ async function fetchDistrictCount(url: string): Promise<number> {
 export async function runPacerBankruptcySignals(
   vertical: Vertical,
   coverageRegions: string[],
+  sb?: SupabaseClient,
 ): Promise<CourtSignal[]> {
   if (!TARGET_VERTICALS.has(vertical)) return [];
   const joined = (coverageRegions ?? []).join(" ").toLowerCase();
 
-  // Map each district to a region keyword that signals it's relevant.
   const active = DISTRICTS.filter((d) => {
     if (d.slug === "ndil" && /chicago|illinois|\bil\b/.test(joined)) return true;
     if (d.slug === "ndoh" && /cleveland|columbus|ohio|\boh\b/.test(joined)) return true;
@@ -91,26 +93,30 @@ export async function runPacerBankruptcySignals(
 
   const results = await Promise.allSettled(
     active.map(async (d) => {
-      const count = await fetchDistrictCount(d.url);
-      if (count <= 0) return null;
-      // Score: 5 (low), 7 (moderate >= 10), 8 (high >= 25) within the RSS window
-      const score = count >= 25 ? 8 : count >= 10 ? 7 : 5;
-      const sig: CourtSignal = {
-        scope: "region",
-        scope_value: d.scope_value,
-        state: d.state,
-        signal_type: "bankruptcy_distress",
-        signal_detail: `${count} recent bankruptcy filings in ${d.name}`,
-        signal_date: new Date().toISOString().slice(0, 10),
-        signal_url: d.url,
-        score,
-        source_method: "api",
-        raw_source_data: { district: d.slug, filing_count: count },
+      const slug = `pacer_${d.slug}`;
+      const exec = async (): Promise<CourtSignal[]> => {
+        const count = await fetchDistrictCount(d.url);
+        if (count <= 0) return [];
+        const score = count >= 25 ? 8 : count >= 10 ? 7 : 5;
+        return [{
+          scope: "region",
+          scope_value: d.scope_value,
+          state: d.state,
+          signal_type: "bankruptcy_distress",
+          signal_detail: `${count} recent bankruptcy filings in ${d.name}`,
+          signal_date: new Date().toISOString().slice(0, 10),
+          signal_url: d.url,
+          score,
+          source_method: "api",
+          raw_source_data: { district: d.slug, filing_count: count },
+        }];
       };
-      return sig;
+      return sb
+        ? await withSourceHealth(sb, slug, exec, { product: "trade_radar", source_type: "api" })
+        : await exec();
     }),
   );
-  return results.flatMap((r) =>
-    r.status === "fulfilled" && r.value ? [r.value] : []
-  );
+  const out = results.flatMap((r) => (r.status === "fulfilled" ? r.value : []));
+  console.info(`[trade-scanner:yield] pacer vertical=${vertical} sources=${active.length} rows=${out.length}`);
+  return out;
 }
