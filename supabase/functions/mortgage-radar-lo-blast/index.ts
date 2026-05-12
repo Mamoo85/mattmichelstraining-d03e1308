@@ -124,6 +124,7 @@ Deno.serve(async (req) => {
       ctaUrl: `${SITE}/start-trial?product=mortgage_radar&utm_source=lo_cold&utm_medium=email`,
       templateName: "mortgage_radar_lo_blast",
       plainMode: true,
+      allowSubdomain: true,
     }, sb);
 
     if (r.ok) {

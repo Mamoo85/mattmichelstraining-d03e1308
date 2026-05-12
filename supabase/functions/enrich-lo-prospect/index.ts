@@ -92,9 +92,8 @@ async function enrichViaSonar(name: string, company: string | null): Promise<Enr
 function computeWarmth(row: any, result: EnrichResult): number {
   const hasEmail = result.email || row.email;
   const hasPhone = result.phone || row.phone;
-  const hasFax = Boolean(row.fax_number);
-  const hasAddress = Boolean(row.mailing_address?.zip);
-  return (hasFax ? 2 : 0) + (hasEmail ? 1 : 0) + (hasPhone ? 1 : 0) + (hasAddress ? 2 : 0);
+  const hasCity = Boolean(row.city);
+  return (hasEmail ? 2 : 0) + (hasPhone ? 2 : 0) + (hasCity ? 1 : 0);
 }
 
 serve(async (req) => {
@@ -106,7 +105,7 @@ serve(async (req) => {
     const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
     const limit: number = body.limit ?? 20;
 
-    let q = (sb.from as any)("marketplace_prospects").select("*").eq("status", "active");
+    let q = (sb.from as any)("marketplace_prospects").select("*");
     if (body.prospect_ids?.length) {
       q = q.in("id", body.prospect_ids);
     } else {
@@ -134,10 +133,10 @@ serve(async (req) => {
           stage: "paid",
           provider: "apollo",
           triggered_by: body.prospect_ids?.length ? "manual" : "cron",
-          cost_cents: APOLLO_API_KEY ? 1 : 0,
+          cost_cents: hasApolloKey() ? 1 : 0,
         },
         async () => {
-          const r = await enrichViaApollo(row.full_name, row.company_name);
+          const r = await enrichViaApollo(row.full_name, row.company);
           const fields: string[] = [];
           if (r.email) fields.push("email");
           if (r.phone) fields.push("phone");
@@ -157,7 +156,7 @@ serve(async (req) => {
             triggered_by: body.prospect_ids?.length ? "manual" : "cron",
           },
           async () => {
-            const r = await enrichViaSonar(row.full_name, row.company_name);
+            const r = await enrichViaSonar(row.full_name, row.company);
             const fields: string[] = [];
             if (r.email) fields.push("email");
             if (r.phone) fields.push("phone");
@@ -169,8 +168,7 @@ serve(async (req) => {
 
       const updates: Record<string, unknown> = {
         enriched_at: new Date().toISOString(),
-        enrichment_source: result.source,
-        warmth_score: computeWarmth(row, result),
+        notes: `enriched_via:${result.source}; warmth:${computeWarmth(row, result)}`,
         updated_at: new Date().toISOString(),
       };
       if (result.email && !row.email) updates.email = result.email;

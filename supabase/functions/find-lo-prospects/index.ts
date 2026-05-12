@@ -127,21 +127,17 @@ Deno.serve(async (req) => {
       if (!apolloId && !p.email) { skipped++; continue; }
 
       const row = {
-        nmls_id: `apollo_${apolloId}`,
+        nmls_id: `apollo_${apolloId || (p.email || "").replace(/[^a-z0-9]/gi, "_")}`,
         full_name: [p.first_name, p.last_name].filter(Boolean).join(" ").trim() || "Unknown",
-        company_name: p.organization?.name ?? p.employment_history?.[0]?.organization_name ?? null,
+        company: p.organization?.name ?? p.employment_history?.[0]?.organization_name ?? null,
         email: p.email ?? null,
         phone: p.phone_numbers?.[0]?.sanitized_number ?? null,
-        fax_number: null,
-        mailing_address: p.city || p.state ? {
-          city: p.city ?? null,
-          state: p.state ?? "MI",
-          zip: p.postal_code ?? null,
-        } : null,
-        linkedin_url: p.linkedin_url ?? null,
-        enrichment_source: "apollo",
-        status: "active",
-        warmth_score: (p.email ? 2 : 0) + (p.phone_numbers?.length ? 2 : 0) + (p.linkedin_url ? 1 : 0),
+        city: p.city ?? null,
+        state: p.state ?? "MI",
+        website: p.organization?.website_url ?? null,
+        source: "apollo",
+        raw: p,
+        fetched_at: new Date().toISOString(),
       };
       const { error } = await sb.from("marketplace_prospects").upsert(row, { onConflict: "nmls_id" });
       if (!error) apolloInserted++;
@@ -154,19 +150,19 @@ Deno.serve(async (req) => {
       const slug = s.company.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
       const row = {
         nmls_id: `seed_${slug}`,
-        full_name: s.company, // company-level seed; enrich-lo-prospect can fill a real contact
-        company_name: s.company,
+        full_name: s.company,
+        company: s.company,
         email: null,
         phone: null,
-        fax_number: null,
-        mailing_address: s.city ? { city: s.city, state: "MI", zip: null } : null,
-        linkedin_url: null,
-        enrichment_source: "mi_seed",
-        status: "active",
-        warmth_score: 0,
+        city: s.city ?? null,
+        state: "MI",
+        website: null,
+        source: "mi_seed",
+        fetched_at: new Date().toISOString(),
       };
       const { error } = await sb.from("marketplace_prospects").upsert(row, { onConflict: "nmls_id", ignoreDuplicates: true });
       if (!error) seedInserted++;
+      else console.warn("[find-lo seed] upsert error", error.message);
     }
 
     const inserted = apolloInserted + seedInserted;

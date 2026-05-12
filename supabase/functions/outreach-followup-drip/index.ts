@@ -39,9 +39,14 @@ Detroit Web Agency · (313) 992-1219`;
   if (touch === "d7") {
     return `Hi ${firstName},
 
-Quick follow-up — three ${trade} owners around ${companyName}'s area started trials this week.
+Quick follow-up — three other ${trade} owners near ${companyName} kicked off a free week of Detroit Web Agency this week.
 
-If you want a no-card 7-day trial just reply "YES" and I'll set you up today.
+What the 7-day trial includes (no card, cancel anytime):
+• Missed-Call Catch — auto-texts every missed call so you stop losing jobs to voicemail
+• Dead Lead Reactivation — wakes up old quotes that ghosted you (you only pay when one replies)
+• Live homeowner signals in your service area — permits, storm damage, FSBOs, estate sales
+
+Reply "YES" and I'll have it live for ${companyName} today — takes me about 10 minutes on my end, zero on yours.
 
 — Matt
 Detroit Web Agency · (313) 992-1219`;
@@ -83,6 +88,7 @@ async function sendFollowup(
     bodyHtml,
     product: "DWA",
     plainMode: true,
+    allowSubdomain: true,
     ctaUrl: `https://detroitwebagent.com/start-trial?email=${encodeURIComponent(to)}&utm_source=cold_email&utm_medium=email&utm_campaign=outreach_${touch}`,
     templateName: `outreach_followup_${touch}`,
   }, sb);
