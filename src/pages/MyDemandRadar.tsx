@@ -139,6 +139,45 @@ export default function MyDemandRadar() {
     })();
   }, [clientEmail, dashboardToken]);
 
+  // Load batch action state for filtering / pipeline counts
+  useEffect(() => {
+    if (!client?.id || signals.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      const m = await loadRadarStates(client.id, signals.map((s) => s.id));
+      if (!cancelled) setStates(m);
+    })();
+    return () => { cancelled = true; };
+  }, [client?.id, signals]);
+
+  const industries = useMemo(() => {
+    const set = new Set<string>();
+    signals.forEach((s) => { if (s.industry) set.add(s.industry); });
+    return Array.from(set).sort().slice(0, 20);
+  }, [signals]);
+
+  const visibleSignals = useMemo(() => {
+    return signals.filter((s) => {
+      if (industryFilter && s.industry !== industryFilter) return false;
+      const st = states[s.id];
+      const isSnoozed = st?.snoozedUntil && st.snoozedUntil > Date.now();
+      if (showSnoozed) return !!isSnoozed;
+      return !isSnoozed;
+    });
+  }, [signals, states, industryFilter, showSnoozed]);
+
+  const pipelineCounts = useMemo(() => computePipelineCounts(signals, states), [signals, states]);
+
+  const hottestLead = useMemo(() => {
+    // Take any visible signal where we have a fit cache hint via signal_strength_tier === 'hot' AND highest confidence
+    const candidates = visibleSignals
+      .filter((s) => s.signal_strength_tier === "hot")
+      .sort((a, b) => (b.confidence ?? 0) - (a.confidence ?? 0));
+    if (!candidates[0]) return null;
+    const top = candidates[0];
+    return { id: top.id, company_name: top.company_name, fit_score: 85 + Math.min(10, (top.confidence ?? 8) - 8) * 2 };
+  }, [visibleSignals]);
+
   const stats = useMemo(() => {
     const sevenDaysAgo = Date.now() - 7 * 86_400_000;
     const recent = signals.filter((s) => s.detected_at && new Date(s.detected_at).getTime() >= sevenDaysAgo);
