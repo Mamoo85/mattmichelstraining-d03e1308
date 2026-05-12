@@ -15410,6 +15410,7 @@ export type Database = {
           enrichment_trace: Json | null
           first_name: string | null
           followup_d14_sent_at: string | null
+          followup_d3_sent_at: string | null
           followup_d7_sent_at: string | null
           gmail_message_id: string | null
           gmail_sent_at: string | null
@@ -15461,6 +15462,7 @@ export type Database = {
           enrichment_trace?: Json | null
           first_name?: string | null
           followup_d14_sent_at?: string | null
+          followup_d3_sent_at?: string | null
           followup_d7_sent_at?: string | null
           gmail_message_id?: string | null
           gmail_sent_at?: string | null
@@ -15512,6 +15514,7 @@ export type Database = {
           enrichment_trace?: Json | null
           first_name?: string | null
           followup_d14_sent_at?: string | null
+          followup_d3_sent_at?: string | null
           followup_d7_sent_at?: string | null
           gmail_message_id?: string | null
           gmail_sent_at?: string | null
