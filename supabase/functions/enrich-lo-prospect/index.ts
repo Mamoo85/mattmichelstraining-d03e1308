@@ -147,6 +147,60 @@ serve(async (req) => {
       );
       let result: EnrichResult = apolloAudit.data || { source: "none" };
 
+      // Stage 2: Full email-waterfall (site_scrape → snov → apollo-by-domain →
+      // pattern_verify → hunter → PDL → free tiers). Resolves a website via
+      // Google Places when one isn't already on the row, then runs the same
+      // multi-source scraper waterfall used by Trade Radar / SiteRadar.
+      if (result.source === "none" || (!result.email && !result.phone)) {
+        const [firstName, ...rest] = (row.full_name || "").trim().split(/\s+/);
+        const lastName = rest.join(" ") || null;
+        let website = row.website || null;
+        if (!website && row.company) {
+          try {
+            website = await resolveDomain({
+              businessName: row.company,
+              city: row.city || undefined,
+              state: row.state || "MI",
+            });
+          } catch { /* fail open */ }
+        }
+
+        const waterfallAudit = await logEnrichment<EnrichResult>(
+          {
+            lead_id: row.id,
+            vertical: "prospect",
+            function_name: "enrich-lo-prospect",
+            stage: "free",
+            provider: "email_waterfall",
+            triggered_by: body.prospect_ids?.length ? "manual" : "cron",
+          },
+          async () => {
+            const w = await runEmailWaterfall(sb, {
+              website,
+              business_name: row.company,
+              city: row.city,
+              state: row.state || "MI",
+              contact_first_name: firstName || null,
+              contact_last_name: lastName,
+            });
+            const r: EnrichResult = w.email
+              ? { email: w.email, source: w.source || "waterfall" }
+              : { source: "none" };
+            const fields: string[] = [];
+            if (r.email) fields.push("email");
+            return { data: r, fields_added: fields };
+          },
+        );
+        const wResult = waterfallAudit.data;
+        if (wResult?.email) result = wResult;
+
+        // Persist resolved website for future passes
+        if (website && !row.website) {
+          try { await (sb.from as any)("marketplace_prospects").update({ website }).eq("id", row.id); } catch { /* best-effort */ }
+        }
+      }
+
+      // Stage 3: Sonar last-resort (LLM web search)
       if (result.source === "none" || (!result.email && !result.phone)) {
         const sonarAudit = await logEnrichment<EnrichResult>(
           {
@@ -165,7 +219,7 @@ serve(async (req) => {
             return { data: r, fields_added: fields };
           },
         );
-        result = sonarAudit.data || { source: "none" };
+        result = sonarAudit.data || result;
       }
 
       const updates: Record<string, unknown> = {
