@@ -104,6 +104,36 @@ Deno.serve(async (req) => {
             </div>`
           );
         }
+
+        // Upgrade 4: Healthcare cross-sell — Missed-Call Catch
+        const roles: string[] = client.target_roles || [];
+        const isHealthcare = roles.some((r) =>
+          /cna|lpn|rn|nurse|nursing|caregiver|cma|care_aide/i.test(String(r))
+        );
+        if (isHealthcare && client.owner_email) {
+          // Skip if already a Missed-Call Catch subscriber
+          const { data: existingMC } = await sb
+            .from("missed_call_clients")
+            .select("id")
+            .ilike("owner_email", client.owner_email)
+            .maybeSingle();
+          if (!existingMC) {
+            await sendEmail(
+              client.owner_email,
+              `${name} — quick add-on for your facility`,
+              `<pre style="font-family:Arial,sans-serif;font-size:15px;line-height:1.6;color:#111;white-space:pre-wrap;max-width:560px;">Hi ${name},
+
+One thing I've noticed with nursing homes: the front desk misses a lot of calls. Every missed call is a potential resident inquiry worth $8,000/year in revenue.
+
+We built Missed-Call Catch — it texts every missed caller back in 60 seconds. At $99/month it pays for itself if it catches one resident inquiry per month.
+
+Want to add it to your account? I'll set it up in 10 minutes. Just reply yes.
+
+— Matt
+(313) 992-1219</pre>`
+            );
+          }
+        }
       }
 
       // ── Day 14 success report ────────────────────────────────────────────
