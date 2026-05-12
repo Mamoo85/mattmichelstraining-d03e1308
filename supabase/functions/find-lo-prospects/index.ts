@@ -113,7 +113,7 @@ Deno.serve(async (req) => {
     // Page through up to 3 pages of Apollo
     const apolloPeople: any[] = [];
     if (APOLLO_API_KEY) {
-      for (let page = 1; page <= 3; page++) {
+      for (let page = 1; page <= 5; page++) {
         const batch = await searchApollo(page);
         if (!batch.length) break;
         apolloPeople.push(...batch);
