@@ -13,6 +13,8 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { logEnrichment } from "../_shared/enrichment-audit.ts";
 import { apolloPeopleSearch, hasApolloKey } from "../_shared/apollo.ts";
+import { runEmailWaterfall } from "../_shared/email-waterfall.ts";
+import { resolveDomain } from "../_shared/domain-resolver.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
