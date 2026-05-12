@@ -92,9 +92,8 @@ async function enrichViaSonar(name: string, company: string | null): Promise<Enr
 function computeWarmth(row: any, result: EnrichResult): number {
   const hasEmail = result.email || row.email;
   const hasPhone = result.phone || row.phone;
-  const hasFax = Boolean(row.fax_number);
-  const hasAddress = Boolean(row.mailing_address?.zip);
-  return (hasFax ? 2 : 0) + (hasEmail ? 1 : 0) + (hasPhone ? 1 : 0) + (hasAddress ? 2 : 0);
+  const hasCity = Boolean(row.city);
+  return (hasEmail ? 2 : 0) + (hasPhone ? 2 : 0) + (hasCity ? 1 : 0);
 }
 
 serve(async (req) => {
