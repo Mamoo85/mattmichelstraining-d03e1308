@@ -20216,6 +20216,7 @@ export type Database = {
       sandbox_tenant_config: {
         Row: {
           brand_color: string
+          client_ids: Json | null
           created_at: string
           enabled_radars: string[]
           logo_url: string | null
@@ -20227,6 +20228,7 @@ export type Database = {
         }
         Insert: {
           brand_color?: string
+          client_ids?: Json | null
           created_at?: string
           enabled_radars?: string[]
           logo_url?: string | null
@@ -20238,6 +20240,7 @@ export type Database = {
         }
         Update: {
           brand_color?: string
+          client_ids?: Json | null
           created_at?: string
           enabled_radars?: string[]
           logo_url?: string | null
