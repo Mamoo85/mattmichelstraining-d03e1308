@@ -296,8 +296,24 @@ export default function RadarFitCard({ signal, client, radar, onClick }: Props) 
         <div className="space-y-3 mb-3 relative z-[1]">
           {/* Editorial pull-quote opener */}
           {(fit?.suggested_opener || signal.recommended_pitch) && (
-            <div className="pl-3 border-l-2 border-[#00d4ff]/60">
-              <p className="text-[9px] uppercase tracking-widest text-[#94a3b8] font-bold mb-1">Suggested opener</p>
+            <div className="pl-3 border-l-2 border-[#00d4ff]/60 relative">
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-[9px] uppercase tracking-widest text-[#94a3b8] font-bold">Suggested opener</p>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const text = fit?.suggested_opener || signal.recommended_pitch || "";
+                    navigator.clipboard.writeText(text);
+                    toastSuccess("Pitch copied");
+                    supabase.functions.invoke("radar-action-log", {
+                      body: { signal_id: signal.id, client_id: client.id, radar, action: "copied_opener" },
+                    }).catch(() => {});
+                  }}
+                  className="text-[10px] text-[#00d4ff] hover:underline flex items-center gap-1"
+                >
+                  <Copy className="w-3 h-3" /> Copy pitch
+                </button>
+              </div>
               <p className="text-[13px] text-white/85 leading-relaxed font-serif">
                 {fit?.suggested_opener || signal.recommended_pitch}
               </p>
