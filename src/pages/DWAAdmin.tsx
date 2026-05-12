@@ -79,6 +79,19 @@ type Tab =
 
 const GROUPS: SidebarGroup[] = [
   {
+    label: "👤 My Stuff",
+    items: [
+      { id: "my-command-center", label: "My Command Center" },
+    ],
+  },
+  {
+    label: "🧪 Client Sandbox",
+    items: [
+      { id: "sandbox-admin", label: "DJ Conley — Admin" },
+      { id: "sandbox-site",  label: "DJ Conley — Site" },
+    ],
+  },
+  {
     label: "🏠 Today",
     items: [
       { id: "today",             label: "Today" },
