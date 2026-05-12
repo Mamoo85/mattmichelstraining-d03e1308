@@ -4,14 +4,17 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/u
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { supabase } from "@/integrations/supabase/client";
 import {
   ExternalLink, Mail, Phone, MessageSquare, Search, Linkedin,
-  MapPin, Briefcase, Building2, Copy, Globe, Printer, Send, Flag,
+  MapPin, Briefcase, Building2, Copy, Globe, Printer, Send, Flag, Activity, StickyNote,
 } from "lucide-react";
 import { toastSuccess } from "@/lib/toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import SignalStrengthBars from "./SignalStrengthBars";
 import DossierPrintSheet from "./DossierPrintSheet";
+import LeadStatusControl from "./LeadStatusControl";
+import { useRadarLeadStatus } from "./useRadarLeadStatus";
 
 export interface LeadDetail {
   id: string;
@@ -26,6 +29,8 @@ export interface LeadDetail {
   predicted_needs?: string[];
   source_urls?: string[];
   detected_at?: string;
+  client_id?: string;
+  radar?: "demand" | "buyer";
 }
 
 interface Props {
@@ -45,13 +50,30 @@ export default function LeadDetailDrawer({ lead, open, onOpenChange }: Props) {
   const isMobile = useIsMobile();
   const [channel, setChannel] = useState<Channel>("email");
   const [loading, setLoading] = useState(true);
+  const [editedDrafts, setEditedDrafts] = useState<Partial<Record<Channel, string>>>({});
+  const [noteDraft, setNoteDraft] = useState("");
+  const [savingNote, setSavingNote] = useState(false);
+  const [crmPushing, setCrmPushing] = useState(false);
+
+  const canUseStatus = !!(lead?.client_id && lead?.radar);
+  const statusState = useRadarLeadStatus({
+    signal_id: lead?.id || "",
+    client_id: lead?.client_id || "",
+    radar: lead?.radar || "demand",
+  });
 
   useEffect(() => {
     if (!open) return;
     setLoading(true);
+    setEditedDrafts({});
+    setNoteDraft("");
     const t = setTimeout(() => setLoading(false), 350);
     return () => clearTimeout(t);
   }, [open, lead?.id]);
+
+  useEffect(() => {
+    if (canUseStatus && statusState.notes) setNoteDraft(statusState.notes);
+  }, [statusState.notes, canUseStatus]);
 
   if (!lead) return null;
 
@@ -64,16 +86,26 @@ export default function LeadDetailDrawer({ lead, open, onOpenChange }: Props) {
   const smsDraft = `Hi — saw ${company} is active in ${loc}. We supply ${lead.predicted_needs?.[0] || "industrial materials"} locally. 5-min call?`;
   const linkedInDraft = `Hi — saw ${company}'s recent activity in ${loc}. We work with similar teams on ${lead.predicted_needs?.[0] || "ops support"}. Open to connecting?`;
 
-  const drafts: Record<Channel, string> = { email: emailDraft, sms: smsDraft, linkedin: linkedInDraft };
-  const activeDraft = drafts[channel];
+  const baseDrafts: Record<Channel, string> = { email: emailDraft, sms: smsDraft, linkedin: linkedInDraft };
+  const activeDraft = editedDrafts[channel] ?? baseDrafts[channel];
 
   const copy = (text: string) => {
     navigator.clipboard.writeText(text);
     toastSuccess("Copied to clipboard");
   };
 
-  const sendToCRM = () => {
-    // Best-effort: copies a JSON payload contractors can paste into HubSpot/etc.
+  const saveNote = async () => {
+    if (!canUseStatus || !noteDraft.trim()) return;
+    setSavingNote(true);
+    try {
+      await statusState.log("note", noteDraft.trim());
+      toastSuccess("Note saved");
+    } finally {
+      setSavingNote(false);
+    }
+  };
+
+  const sendToCRM = async () => {
     const payload = {
       company: lead.company_name,
       industry: lead.industry,
@@ -86,7 +118,22 @@ export default function LeadDetailDrawer({ lead, open, onOpenChange }: Props) {
       lead_id: lead.id,
     };
     navigator.clipboard.writeText(JSON.stringify(payload, null, 2));
-    toastSuccess("Lead JSON copied — paste into your CRM");
+    if (canUseStatus) {
+      setCrmPushing(true);
+      try {
+        const { data } = await supabase.functions.invoke("radar-crm-push", {
+          body: { signal_id: lead.id, client_id: lead.client_id, radar: lead.radar, payload },
+        });
+        const delivered = (data as any)?.delivered;
+        toastSuccess(delivered ? "Pushed to your CRM webhook" : "JSON copied — paste into your CRM");
+      } catch {
+        toastSuccess("JSON copied — paste into your CRM");
+      } finally {
+        setCrmPushing(false);
+      }
+    } else {
+      toastSuccess("JSON copied — paste into your CRM");
+    }
   };
 
   const flagMailto = `mailto:matt@detroitwebagent.com?subject=${encodeURIComponent(`Incorrect data: ${company}`)}&body=${encodeURIComponent(`Lead ID: ${lead.id}\nCompany: ${company}\n\nWhat looked wrong:\n`)}`;
@@ -131,16 +178,17 @@ export default function LeadDetailDrawer({ lead, open, onOpenChange }: Props) {
         </Button>
         <Button
           size="sm"
+          disabled={crmPushing}
           className="ml-auto bg-[#00d4ff] hover:bg-[#00d4ff]/90 text-[#0a1628] font-bold h-8"
           onClick={sendToCRM}
         >
-          <Send className="h-3.5 w-3.5 mr-1.5" /> Send to CRM
+          <Send className="h-3.5 w-3.5 mr-1.5" /> {crmPushing ? "Pushing…" : "Send to CRM"}
         </Button>
       </div>
 
       <div className="px-4 sm:px-6 py-5">
         {/* Identity strip */}
-        <div className="flex items-start gap-3 mb-5">
+        <div className="flex items-start gap-3 mb-3">
           <div className="w-10 h-10 rounded-full bg-[#00d4ff]/15 flex items-center justify-center shrink-0">
             <Building2 className="h-5 w-5 text-[#00d4ff]" />
           </div>
@@ -153,6 +201,17 @@ export default function LeadDetailDrawer({ lead, open, onOpenChange }: Props) {
             </div>
           </div>
         </div>
+
+        {canUseStatus && (
+          <div className="mb-5 flex items-center gap-2 flex-wrap">
+            <LeadStatusControl
+              signal_id={lead.id}
+              client_id={lead.client_id!}
+              radar={lead.radar!}
+              size="md"
+            />
+          </div>
+        )}
 
         <Accordion type="single" collapsible defaultValue="dossier" className="w-full">
           {/* DOSSIER */}
@@ -256,9 +315,21 @@ export default function LeadDetailDrawer({ lead, open, onOpenChange }: Props) {
                 ))}
               </div>
 
-              <div className="rounded-lg bg-[#0f1f35] border border-white/10 p-3 text-[13px] text-white/85 whitespace-pre-wrap">
-                {activeDraft}
-              </div>
+              <textarea
+                value={activeDraft}
+                onChange={(e) => setEditedDrafts((prev) => ({ ...prev, [channel]: e.target.value }))}
+                rows={5}
+                className="w-full rounded-lg bg-[#0f1f35] border border-white/10 p-3 text-[13px] text-white/90 leading-relaxed focus:border-[#00d4ff]/60 focus:outline-none resize-y"
+                placeholder="Edit the draft before sending…"
+              />
+              {editedDrafts[channel] !== undefined && editedDrafts[channel] !== baseDrafts[channel] && (
+                <button
+                  onClick={() => setEditedDrafts((prev) => { const n = { ...prev }; delete n[channel]; return n; })}
+                  className="text-[10px] text-[#00d4ff] hover:underline"
+                >
+                  ↺ Reset to suggested
+                </button>
+              )}
 
               <div className="flex gap-2">
                 <Button size="sm" variant="outline" className="flex-1 border-white/15 text-white hover:bg-white/5" onClick={() => copy(activeDraft)}>
@@ -320,6 +391,60 @@ export default function LeadDetailDrawer({ lead, open, onOpenChange }: Props) {
               <ContactRow href={googleSearch(`"${company}" similar companies ${loc}`)} icon={<Search className="h-4 w-4 text-purple-400" />} title="Similar companies" sub="Find more like this" />
             </AccordionContent>
           </AccordionItem>
+
+          {canUseStatus && (
+            <>
+              {/* PRIVATE NOTES */}
+              <AccordionItem value="notes" className="border-white/10">
+                <AccordionTrigger className="text-white hover:no-underline text-sm font-bold">
+                  <span className="flex items-center gap-2"><StickyNote className="h-3.5 w-3.5 text-amber-400" /> Private notes</span>
+                </AccordionTrigger>
+                <AccordionContent className="space-y-2">
+                  <textarea
+                    value={noteDraft}
+                    onChange={(e) => setNoteDraft(e.target.value)}
+                    rows={4}
+                    placeholder="Your private notes on this lead — only you see these."
+                    className="w-full rounded-lg bg-[#0f1f35] border border-white/10 p-3 text-[13px] text-white/90 focus:border-[#00d4ff]/60 focus:outline-none resize-y"
+                  />
+                  <Button
+                    size="sm"
+                    disabled={savingNote || !noteDraft.trim()}
+                    onClick={saveNote}
+                    className="bg-[#00d4ff] hover:bg-[#00d4ff]/90 text-[#0a1628] font-bold"
+                  >
+                    {savingNote ? "Saving…" : "Save note"}
+                  </Button>
+                </AccordionContent>
+              </AccordionItem>
+
+              {/* ACTIVITY TIMELINE */}
+              <AccordionItem value="activity" className="border-white/10">
+                <AccordionTrigger className="text-white hover:no-underline text-sm font-bold">
+                  <span className="flex items-center gap-2"><Activity className="h-3.5 w-3.5 text-[#00d4ff]" /> Activity ({statusState.actions.length})</span>
+                </AccordionTrigger>
+                <AccordionContent>
+                  {statusState.actions.length === 0 ? (
+                    <p className="text-[12px] text-white/50">No activity yet. Calls, emails, status changes, and notes appear here.</p>
+                  ) : (
+                    <ul className="space-y-1.5">
+                      {statusState.actions.slice(0, 30).map((a) => (
+                        <li key={a.id} className="flex items-start gap-2 text-[11px]">
+                          <span className="text-[#64748b] tabular-nums shrink-0 w-20">
+                            {new Date(a.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                          </span>
+                          <span className="text-white/80 font-mono uppercase tracking-wide text-[10px] shrink-0">
+                            {a.action.replace(/_/g, " ")}
+                          </span>
+                          {a.notes && <span className="text-white/60 truncate">— {a.notes}</span>}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </AccordionContent>
+              </AccordionItem>
+            </>
+          )}
         </Accordion>
 
         <div className="mt-6 pt-4 border-t border-white/10 print-hide">

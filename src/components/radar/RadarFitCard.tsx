@@ -3,10 +3,12 @@
 // No "AI" copy anywhere — Automated Intel / Signal Strength only.
 
 import { useEffect, useState } from "react";
-import { Building2, MapPin, TrendingUp, DollarSign, Clock, AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
+import { Building2, MapPin, TrendingUp, DollarSign, Clock, AlertTriangle, ChevronDown, ChevronUp, Copy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { toastSuccess } from "@/lib/toast";
 import OutreachActionBar, { type OutreachContext } from "./OutreachActionBar";
 import SignalStrengthBars from "./SignalStrengthBars";
+import LeadStatusControl from "./LeadStatusControl";
 import dwaMark from "@/assets/dwa-logo-clean.png";
 
 interface FitJSON {
@@ -182,7 +184,7 @@ export default function RadarFitCard({ signal, client, radar, onClick }: Props) 
       )}
 
       {/* Compact 2-line header */}
-      <div className="flex items-start gap-3 mb-3 relative z-[1]">
+      <div className="flex items-start gap-3 mb-2 relative z-[1]">
         <ScoreRing score={fit?.fit_score ?? 50} />
         <div className="min-w-0 flex-1">
           {/* Row 1: chips + signal strength */}
@@ -216,14 +218,23 @@ export default function RadarFitCard({ signal, client, radar, onClick }: Props) 
                 <TrendingUp className="w-3 h-3" /> {signal.hiring_count} hiring
               </span>
             ) : null}
+          </div>
+          {/* Quiet metadata row: detected · score */}
+          <div className="flex items-center gap-2 mt-1 text-[9px] uppercase tracking-widest font-mono text-[#64748b]">
             {signal.detected_at && (
-              <span className={`text-[10px] uppercase tracking-wide font-mono px-1 ${fresh ? "text-[#00d4ff] radar-urgency-pulse" : "text-[#64748b]"}`}>
-                {fresh ? "NEW · " : ""}
+              <span className={fresh ? "text-[#00d4ff] radar-urgency-pulse" : ""}>
+                {fresh ? "NEW · " : "DETECTED · "}
                 {new Date(signal.detected_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
               </span>
             )}
+            {fit && <span className="opacity-60">· SCORE {fit.fit_score}/100</span>}
           </div>
         </div>
+      </div>
+
+      {/* Status / snooze / follow-up */}
+      <div className="mb-3 relative z-[1]">
+        <LeadStatusControl signal_id={signal.id} client_id={client.id} radar={radar} />
       </div>
 
       {/* Why — gradient-fade truncate */}
@@ -285,8 +296,24 @@ export default function RadarFitCard({ signal, client, radar, onClick }: Props) 
         <div className="space-y-3 mb-3 relative z-[1]">
           {/* Editorial pull-quote opener */}
           {(fit?.suggested_opener || signal.recommended_pitch) && (
-            <div className="pl-3 border-l-2 border-[#00d4ff]/60">
-              <p className="text-[9px] uppercase tracking-widest text-[#94a3b8] font-bold mb-1">Suggested opener</p>
+            <div className="pl-3 border-l-2 border-[#00d4ff]/60 relative">
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-[9px] uppercase tracking-widest text-[#94a3b8] font-bold">Suggested opener</p>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const text = fit?.suggested_opener || signal.recommended_pitch || "";
+                    navigator.clipboard.writeText(text);
+                    toastSuccess("Pitch copied");
+                    supabase.functions.invoke("radar-action-log", {
+                      body: { signal_id: signal.id, client_id: client.id, radar, action: "copied_opener" },
+                    }).catch(() => {});
+                  }}
+                  className="text-[10px] text-[#00d4ff] hover:underline flex items-center gap-1"
+                >
+                  <Copy className="w-3 h-3" /> Copy pitch
+                </button>
+              </div>
               <p className="text-[13px] text-white/85 leading-relaxed font-serif">
                 {fit?.suggested_opener || signal.recommended_pitch}
               </p>

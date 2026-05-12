@@ -2342,3 +2342,6 @@ verify_jwt = false
 
 [functions.carealert-monthly-report]
 verify_jwt = false
+
+[functions.radar-crm-push]
+verify_jwt = false

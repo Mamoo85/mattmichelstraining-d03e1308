@@ -13,6 +13,8 @@ import RescueLinkButton from "@/components/shared/RescueLinkButton";
 import JustPurchasedScreen, { isJustPurchased } from "@/components/shared/JustPurchasedScreen";
 import LeadDetailDrawer, { type LeadDetail } from "@/components/radar/LeadDetailDrawer";
 import RadarFitCard from "@/components/radar/RadarFitCard";
+import { loadRadarStates, type BatchLeadStateMap } from "@/components/radar/useRadarLeadStatus";
+import { PipelineStrip, IndustryFilterPills, SnoozeFilterToggle, HottestLeadBanner, computePipelineCounts } from "@/components/radar/RadarListExtras";
 import { Activity, Lock, Download } from "lucide-react";
 
 type Signal = {
@@ -77,6 +79,9 @@ export default function MyDemandRadar() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedLead, setSelectedLead] = useState<LeadDetail | null>(null);
+  const [states, setStates] = useState<BatchLeadStateMap>({});
+  const [industryFilter, setIndustryFilter] = useState<string | null>(null);
+  const [showSnoozed, setShowSnoozed] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -133,6 +138,45 @@ export default function MyDemandRadar() {
       setLoading(false);
     })();
   }, [clientEmail, dashboardToken]);
+
+  // Load batch action state for filtering / pipeline counts
+  useEffect(() => {
+    if (!client?.id || signals.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      const m = await loadRadarStates(client.id, signals.map((s) => s.id));
+      if (!cancelled) setStates(m);
+    })();
+    return () => { cancelled = true; };
+  }, [client?.id, signals]);
+
+  const industries = useMemo(() => {
+    const set = new Set<string>();
+    signals.forEach((s) => { if (s.industry) set.add(s.industry); });
+    return Array.from(set).sort().slice(0, 20);
+  }, [signals]);
+
+  const visibleSignals = useMemo(() => {
+    return signals.filter((s) => {
+      if (industryFilter && s.industry !== industryFilter) return false;
+      const st = states[s.id];
+      const isSnoozed = st?.snoozedUntil && st.snoozedUntil > Date.now();
+      if (showSnoozed) return !!isSnoozed;
+      return !isSnoozed;
+    });
+  }, [signals, states, industryFilter, showSnoozed]);
+
+  const pipelineCounts = useMemo(() => computePipelineCounts(signals, states), [signals, states]);
+
+  const hottestLead = useMemo(() => {
+    // Take any visible signal where we have a fit cache hint via signal_strength_tier === 'hot' AND highest confidence
+    const candidates = visibleSignals
+      .filter((s) => s.signal_strength_tier === "hot")
+      .sort((a, b) => (b.confidence ?? 0) - (a.confidence ?? 0));
+    if (!candidates[0]) return null;
+    const top = candidates[0];
+    return { id: top.id, company_name: top.company_name, fit_score: 85 + Math.min(10, (top.confidence ?? 8) - 8) * 2 };
+  }, [visibleSignals]);
 
   const stats = useMemo(() => {
     const sevenDaysAgo = Date.now() - 7 * 86_400_000;
@@ -221,20 +265,48 @@ export default function MyDemandRadar() {
           </Card>
         </div>
 
-        <div className="flex items-center justify-between mb-4">
+        <PipelineStrip counts={pipelineCounts} />
+        <HottestLeadBanner
+          hottest={hottestLead}
+          onOpen={() => {
+            const s = signals.find((x) => x.id === hottestLead?.id);
+            if (s) setSelectedLead({
+              id: s.id, company_name: s.company_name, location: s.location, industry: s.industry,
+              signal_type: s.signal_type, confidence: s.confidence, recommended_pitch: s.recommended_pitch,
+              hiring_count: s.hiring_count, hiring_roles: s.hiring_roles, predicted_needs: s.predicted_needs,
+              source_urls: s.source_urls, detected_at: s.detected_at,
+              client_id: client?.id, radar: "demand",
+            });
+          }}
+        />
+
+        <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
           <h2 className="text-sm font-bold text-white">Signal feed (last 30 days)</h2>
-          {signals.length > 0 && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => exportCSV(signals)}
-              className="border-[#00d4ff]/40 text-[#00d4ff] hover:bg-[#00d4ff]/10 h-8 text-xs"
-            >
-              <Download className="w-3 h-3 mr-1.5" />
-              Export CSV
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            <SnoozeFilterToggle
+              count={pipelineCounts.snoozed}
+              showSnoozed={showSnoozed}
+              onToggle={() => setShowSnoozed((v) => !v)}
+            />
+            {signals.length > 0 && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => exportCSV(visibleSignals)}
+                className="border-[#00d4ff]/40 text-[#00d4ff] hover:bg-[#00d4ff]/10 h-8 text-xs"
+              >
+                <Download className="w-3 h-3 mr-1.5" />
+                Export CSV
+              </Button>
+            )}
+          </div>
         </div>
+
+        <IndustryFilterPills
+          industries={industries}
+          selected={industryFilter}
+          onChange={setIndustryFilter}
+        />
 
         {loading ? (
           <p className="text-[#94a3b8]">Loading signals…</p>
@@ -250,9 +322,13 @@ export default function MyDemandRadar() {
             ]}
             setupGuideHref="mailto:matt@detroitwebagent.com?subject=Demand%20Radar%20setup"
           />
+        ) : visibleSignals.length === 0 ? (
+          <p className="text-[12px] text-[#64748b] text-center py-8">
+            No signals match your current filters.
+          </p>
         ) : (
           <div className="grid gap-3">
-            {signals.map((s) => (
+            {visibleSignals.map((s) => (
               <RadarFitCard
                 key={s.id}
                 radar="demand"
@@ -271,6 +347,8 @@ export default function MyDemandRadar() {
                   predicted_needs: s.predicted_needs,
                   source_urls: s.source_urls,
                   detected_at: s.detected_at,
+                  client_id: client?.id,
+                  radar: "demand",
                 })}
               />
             ))}
