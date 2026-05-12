@@ -981,6 +981,9 @@ verify_jwt = false
 [functions.hoa-lead-magnet-capture]
 verify_jwt = false
 
+[functions.techalert-staffing-lead-magnet]
+verify_jwt = false
+
 [functions.hoa-secretary]
 verify_jwt = false
 
