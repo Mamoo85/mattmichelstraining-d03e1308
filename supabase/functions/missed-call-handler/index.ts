@@ -5,11 +5,13 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { verifyTwilioSignature } from "../_shared/webhook-verify.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219";
 const MATT_PERSONAL = Deno.env.get("MATT_PERSONAL_PHONE") || "+13138064952";
+const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN");
 
 const TWIML_HEADERS = { "Content-Type": "text/xml" };
 
@@ -23,10 +25,19 @@ serve(async (req) => {
   if (req.method !== "POST") {
     return twiml("<Hangup/>");
   }
+  if (!TWILIO_AUTH_TOKEN) {
+    console.error("[missed-call-handler] TWILIO_AUTH_TOKEN not set");
+    return new Response("Misconfigured", { status: 500 });
+  }
 
   try {
     const text = await req.text();
     const params = new URLSearchParams(text);
+    const formObj: Record<string, string> = {};
+    for (const [k, v] of params.entries()) formObj[k] = v;
+    const sig = req.headers.get("x-twilio-signature");
+    const ok = await verifyTwilioSignature(req.url, formObj, sig, TWILIO_AUTH_TOKEN);
+    if (!ok) return new Response("Forbidden", { status: 403 });
     const fromNumber = params.get("From") || "";
     const toNumber = params.get("To") || "";
 

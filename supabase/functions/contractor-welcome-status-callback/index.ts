@@ -6,9 +6,11 @@
 // We match by MessageSid → twilio_sid and update twilio_status + twilio_error_code.
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { verifyTwilioSignature } from "../_shared/webhook-verify.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -18,6 +20,12 @@ const corsHeaders = {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (!TWILIO_AUTH_TOKEN) {
+    console.error("[contractor-welcome-status-callback] TWILIO_AUTH_TOKEN not set");
+    return new Response(JSON.stringify({ error: "misconfigured" }), {
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
 
   try {
     // Twilio posts as application/x-www-form-urlencoded
@@ -29,6 +37,15 @@ serve(async (req) => {
       // Fall back to JSON for manual testing
       const json = await req.json().catch(() => ({}));
       Object.assign(params, json);
+    }
+
+    // Verify Twilio signature (fail closed)
+    const sig = req.headers.get("x-twilio-signature");
+    const ok = await verifyTwilioSignature(req.url, params, sig, TWILIO_AUTH_TOKEN);
+    if (!ok) {
+      return new Response(JSON.stringify({ error: "invalid_signature" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const sid = params.MessageSid || params.SmsSid;

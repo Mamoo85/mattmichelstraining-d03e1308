@@ -105,17 +105,17 @@ Deno.serve(async (req) => {
       const params: Record<string, string> = {};
       for (const [k, v] of form.entries()) params[k] = String(v);
 
-      if (TWILIO_AUTH_TOKEN) {
-        const fullUrl = req.url;
-        const sig = req.headers.get("x-twilio-signature");
-        const ok = await verifyTwilioSignature(fullUrl, params, sig, TWILIO_AUTH_TOKEN);
-        if (!ok) {
-          return new Response("<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response/>", {
-            status: 401, headers: { ...corsHeaders, "Content-Type": "text/xml" },
-          });
-        }
-      } else {
-        console.warn("[outreach-reply-handler] TWILIO_AUTH_TOKEN not set — accepting unsigned (DEV ONLY)");
+      if (!TWILIO_AUTH_TOKEN) {
+        console.error("[outreach-reply-handler] TWILIO_AUTH_TOKEN not set — refusing inbound SMS");
+        return new Response("Misconfigured", { status: 500 });
+      }
+      const fullUrl = req.url;
+      const sig = req.headers.get("x-twilio-signature");
+      const ok = await verifyTwilioSignature(fullUrl, params, sig, TWILIO_AUTH_TOKEN);
+      if (!ok) {
+        return new Response("<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response/>", {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "text/xml" },
+        });
       }
 
       channel = "sms";
