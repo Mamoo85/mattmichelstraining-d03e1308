@@ -375,16 +375,17 @@ serve(async (req) => {
           industry: industry,
         });
 
+        // Plain mode: human-looking, no dark template, no preview card. Better inbox placement.
+        const plainBody = `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;font-size:15px;line-height:1.55;color:#222;max-width:600px;">${emailBody.replace(/\n/g, "<br>")}<br><br><a href="${ctaUrl}">See what I'd build for you →</a></div>`;
         const r = await dwaColdEmail({
           to: email,
           subject,
-          bodyHtml: emailBody.replace(/\n/g, "<br>"),
-          // Web design has no trial — gated CTA in dwaColdEmail picks "See it live →"
+          bodyHtml: plainBody,
           product: "Web Design Build",
           ctaUrl,
           ctaText: "See what I'd build for you →",
           templateName: DRIP_TEMPLATES[stepIndex],
-          previewHtml,
+          plainMode: true,
         }, serviceClient);
 
         if (!r.ok) {
