@@ -23486,6 +23486,48 @@ export type Database = {
           },
         ]
       }
+      techalert_staffing_leads: {
+        Row: {
+          agency: string | null
+          contacted_at: string | null
+          converted_at: string | null
+          county: string | null
+          created_at: string | null
+          email: string
+          id: string
+          notes: string | null
+          phone: string | null
+          source: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          agency?: string | null
+          contacted_at?: string | null
+          converted_at?: string | null
+          county?: string | null
+          created_at?: string | null
+          email: string
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          source?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          agency?: string | null
+          contacted_at?: string | null
+          converted_at?: string | null
+          county?: string | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          source?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       tenant_intel_searches: {
         Row: {
           created_at: string
