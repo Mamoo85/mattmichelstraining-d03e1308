@@ -64,8 +64,11 @@ const AdminClientAttribution = lazy(() => import("@/components/admin/AdminClient
 const TrialFunnelInsights = lazy(() => import("@/components/dwa-admin/TrialFunnelInsights"));
 const EmailPreflightHarness = lazy(() => import("@/components/dwa-admin/EmailPreflightHarness"));
 const AdminToday = lazy(() => import("@/components/dwa-admin/AdminToday"));
+const MyCommandCenter = lazy(() => import("@/components/dwa-admin/MyCommandCenter"));
+const ClientSandboxFrame = lazy(() => import("@/components/dwa-admin/ClientSandboxFrame"));
 
 type Tab =
+  | "my-command-center" | "sandbox-site" | "sandbox-admin"
   | "today" | "ai-command"
   | "dwa-overview" | "revenue" | "leads-e2e" | "prospect-tracker" | "agent-toolkit" | "pipeline-velocity"
   | "command-center" | "sms-inbox" | "sms-drafts" | "call-list" | "linkedin-blitz" | "ad-launcher" | "agency-outreach" | "dead-leads" | "fax-drip" | "postcard-drip" | "sms-sniper" | "dead-lead-ad-studio" | "wave5-outreach"
@@ -75,6 +78,19 @@ type Tab =
   | "sales-hub" | "buyer-radar-qa" | "mortgage-radar" | "strategy-mode" | "enrichment-audit" | "enrichment-health" | "enrichment-debug" | "reply-inbox" | "client-attribution" | "marketing-tools" | "djconley" | "proposals" | "manual-onboarding" | "suppression-lists" | "system-audit" | "demo-pipeline" | "trial-funnel" | "email-preflight";
 
 const GROUPS: SidebarGroup[] = [
+  {
+    label: "👤 My Stuff",
+    items: [
+      { id: "my-command-center", label: "My Command Center" },
+    ],
+  },
+  {
+    label: "🧪 Client Sandbox",
+    items: [
+      { id: "sandbox-admin", label: "DJ Conley — Admin" },
+      { id: "sandbox-site",  label: "DJ Conley — Site" },
+    ],
+  },
   {
     label: "🏠 Today",
     items: [
@@ -172,7 +188,7 @@ const GROUPS: SidebarGroup[] = [
 const lazyFallback = (label: string) => <div className="text-white/40 text-sm p-6">Loading {label}…</div>;
 
 export default function DWAAdmin() {
-  const [activeTab, setActiveTab] = useState<Tab>("today");
+  const [activeTab, setActiveTab] = useState<Tab>("my-command-center");
   const [collapsed, setCollapsed] = useState(false);
 
   return (
@@ -198,6 +214,9 @@ export default function DWAAdmin() {
         <div className="px-3 sm:px-6 py-6">
           <InstallAppBanner app="dwa-admin" />
 
+          {activeTab === "my-command-center" && <Suspense fallback={lazyFallback("My Command Center")}><MyCommandCenter /></Suspense>}
+          {activeTab === "sandbox-admin"     && <Suspense fallback={lazyFallback("DJ Conley Admin")}><ClientSandboxFrame initialMode="admin" /></Suspense>}
+          {activeTab === "sandbox-site"      && <Suspense fallback={lazyFallback("DJ Conley Site")}><ClientSandboxFrame initialMode="site" /></Suspense>}
           {activeTab === "today"            && <Suspense fallback={lazyFallback("Today")}><AdminToday /></Suspense>}
           {activeTab === "sales-hub"        && <Suspense fallback={lazyFallback("Sales Hub")}><ProductSalesHub /></Suspense>}
           {activeTab === "ai-command"       && <Suspense fallback={lazyFallback("AI Command")}><AdminCommandBar /></Suspense>}
