@@ -1878,6 +1878,12 @@ verify_jwt = false
 [functions.techalert-healthcare-scanner]
 verify_jwt = false
 
+[functions.techalert-reply-handler]
+verify_jwt = false
+
+[functions.seed-nursing-home-prospects]
+verify_jwt = false
+
 [functions.techalert-followup-drip]
 verify_jwt = false
 
