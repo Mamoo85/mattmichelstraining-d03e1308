@@ -22392,6 +22392,81 @@ export type Database = {
         }
         Relationships: []
       }
+      staffing_agency_prospects: {
+        Row: {
+          agency_name: string
+          apollo_id: string | null
+          bounced_at: string | null
+          city: string | null
+          contact_name: string | null
+          contact_title: string | null
+          converted_at: string | null
+          created_at: string
+          d0_sent_at: string | null
+          d3_sent_at: string | null
+          d7_sent_at: string | null
+          domain: string | null
+          email: string
+          id: string
+          meta: Json | null
+          notes: string | null
+          phone: string | null
+          replied_at: string | null
+          source: string
+          state: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          agency_name: string
+          apollo_id?: string | null
+          bounced_at?: string | null
+          city?: string | null
+          contact_name?: string | null
+          contact_title?: string | null
+          converted_at?: string | null
+          created_at?: string
+          d0_sent_at?: string | null
+          d3_sent_at?: string | null
+          d7_sent_at?: string | null
+          domain?: string | null
+          email: string
+          id?: string
+          meta?: Json | null
+          notes?: string | null
+          phone?: string | null
+          replied_at?: string | null
+          source?: string
+          state?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          agency_name?: string
+          apollo_id?: string | null
+          bounced_at?: string | null
+          city?: string | null
+          contact_name?: string | null
+          contact_title?: string | null
+          converted_at?: string | null
+          created_at?: string
+          d0_sent_at?: string | null
+          d3_sent_at?: string | null
+          d7_sent_at?: string | null
+          domain?: string | null
+          email?: string
+          id?: string
+          meta?: Json | null
+          notes?: string | null
+          phone?: string | null
+          replied_at?: string | null
+          source?: string
+          state?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       str_reputation_clients: {
         Row: {
           active: boolean | null
