@@ -1896,6 +1896,12 @@ verify_jwt = false
 [functions.outreach-leads-enrich]
 verify_jwt = false
 
+[functions.outreach-followup-drip]
+verify_jwt = false
+
+[functions.outreach-dead-lead-seed]
+verify_jwt = false
+
 [functions.weekly-admin-digest]
 verify_jwt = false
 
