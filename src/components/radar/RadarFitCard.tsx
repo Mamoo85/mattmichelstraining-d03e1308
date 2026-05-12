@@ -184,7 +184,7 @@ export default function RadarFitCard({ signal, client, radar, onClick }: Props) 
       )}
 
       {/* Compact 2-line header */}
-      <div className="flex items-start gap-3 mb-3 relative z-[1]">
+      <div className="flex items-start gap-3 mb-2 relative z-[1]">
         <ScoreRing score={fit?.fit_score ?? 50} />
         <div className="min-w-0 flex-1">
           {/* Row 1: chips + signal strength */}
@@ -218,14 +218,23 @@ export default function RadarFitCard({ signal, client, radar, onClick }: Props) 
                 <TrendingUp className="w-3 h-3" /> {signal.hiring_count} hiring
               </span>
             ) : null}
+          </div>
+          {/* Quiet metadata row: detected · score */}
+          <div className="flex items-center gap-2 mt-1 text-[9px] uppercase tracking-widest font-mono text-[#64748b]">
             {signal.detected_at && (
-              <span className={`text-[10px] uppercase tracking-wide font-mono px-1 ${fresh ? "text-[#00d4ff] radar-urgency-pulse" : "text-[#64748b]"}`}>
-                {fresh ? "NEW · " : ""}
+              <span className={fresh ? "text-[#00d4ff] radar-urgency-pulse" : ""}>
+                {fresh ? "NEW · " : "DETECTED · "}
                 {new Date(signal.detected_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
               </span>
             )}
+            {fit && <span className="opacity-60">· SCORE {fit.fit_score}/100</span>}
           </div>
         </div>
+      </div>
+
+      {/* Status / snooze / follow-up */}
+      <div className="mb-3 relative z-[1]">
+        <LeadStatusControl signal_id={signal.id} client_id={client.id} radar={radar} />
       </div>
 
       {/* Why — gradient-fade truncate */}
