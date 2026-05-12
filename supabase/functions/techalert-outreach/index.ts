@@ -314,7 +314,7 @@ serve(async (req) => {
       const tradeGroup = isHealthcareRole(t.role || "") ? "nursing" : "trades";
       const candidateCount = candidateCountMap.get(`${stateAbr}|${tradeGroup}`) ?? 0;
 
-      const result = await sendEmail(sb, t.owner_email, t.owner_name, t.company_name, t.role, t.is_boiler ?? false, stateAbr, candidateCount);
+      const result = await sendEmail(sb, t.owner_email, t.owner_name, t.company_name, t.role, t.is_boiler ?? false, stateAbr, candidateCount, t.id);
 
       if (!result.ok) {
         console.error(`[outreach] ${t.company_name}: ${result.err}`);
