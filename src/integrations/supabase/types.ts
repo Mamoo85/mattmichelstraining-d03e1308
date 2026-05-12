@@ -23275,6 +23275,7 @@ export type Database = {
           employee_count: number | null
           enriched_at: string | null
           enrichment_reset_at: string | null
+          follow_up_call_completed: string | null
           followup_d14_sent_at: string | null
           followup_d3_sent_at: string | null
           followup_d7_sent_at: string | null
@@ -23290,7 +23291,10 @@ export type Database = {
           owner_name: string | null
           owner_phone: string | null
           phone: string | null
+          postcard_queue: boolean | null
+          postcard_sent_at: string | null
           replied_at: string | null
+          reply_body: string | null
           reply_positive: boolean | null
           repost_count: number | null
           role: string | null
@@ -23299,6 +23303,7 @@ export type Database = {
           source_url: string | null
           state: string | null
           status: string
+          unsubscribe_reason: string | null
           updated_at: string
           website: string | null
         }
@@ -23311,6 +23316,7 @@ export type Database = {
           employee_count?: number | null
           enriched_at?: string | null
           enrichment_reset_at?: string | null
+          follow_up_call_completed?: string | null
           followup_d14_sent_at?: string | null
           followup_d3_sent_at?: string | null
           followup_d7_sent_at?: string | null
@@ -23326,7 +23332,10 @@ export type Database = {
           owner_name?: string | null
           owner_phone?: string | null
           phone?: string | null
+          postcard_queue?: boolean | null
+          postcard_sent_at?: string | null
           replied_at?: string | null
+          reply_body?: string | null
           reply_positive?: boolean | null
           repost_count?: number | null
           role?: string | null
@@ -23335,6 +23344,7 @@ export type Database = {
           source_url?: string | null
           state?: string | null
           status?: string
+          unsubscribe_reason?: string | null
           updated_at?: string
           website?: string | null
         }
@@ -23347,6 +23357,7 @@ export type Database = {
           employee_count?: number | null
           enriched_at?: string | null
           enrichment_reset_at?: string | null
+          follow_up_call_completed?: string | null
           followup_d14_sent_at?: string | null
           followup_d3_sent_at?: string | null
           followup_d7_sent_at?: string | null
@@ -23362,7 +23373,10 @@ export type Database = {
           owner_name?: string | null
           owner_phone?: string | null
           phone?: string | null
+          postcard_queue?: boolean | null
+          postcard_sent_at?: string | null
           replied_at?: string | null
+          reply_body?: string | null
           reply_positive?: boolean | null
           repost_count?: number | null
           role?: string | null
@@ -23371,6 +23385,7 @@ export type Database = {
           source_url?: string | null
           state?: string | null
           status?: string
+          unsubscribe_reason?: string | null
           updated_at?: string
           website?: string | null
         }
