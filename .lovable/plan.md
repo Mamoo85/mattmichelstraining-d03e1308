@@ -1,71 +1,129 @@
-## What's actually broken (root causes confirmed in DB + code)
+# Autonomous Cold-Email System — Refined Plan (2026-05-12)
 
-### 1. Email Open/Click 0.0% across every template — **`resend-webhook` function does not exist**
-The dashboard literally says "Requires Resend webhook → resend-webhook fn". I ran `ls supabase/functions/resend-webhook` → **No such file or directory**. Resend has nowhere to POST `email.opened`/`email.clicked` events, so all rates will be 0% forever until the function is built.
-
-### 2. LO Outreach "NMLS refresh: 0 new prospects" — **target table doesn't exist**
-`find-lo-prospects` upserts into `public.marketplace_prospects`. I queried the DB: that table does not exist. Every upsert silently errors → 0 inserted. The MI_MLO_SEED list of ~40 lenders can't land. The whole LO Outreach product is non-functional.
-
-### 3. Talent Radar Hub "Pending 66 · Enriched 0 · Stuck >2h 66 · Last scan: never" — **3 wrong queries in EnrichmentHealthStrip**
-- Code counts rows where `enrichment_status = 'enriched'`. The actual values used in the table are: `complete`, `pending`, `enriching`, `exhausted`, `manual_workbench`. **No row will ever match `enriched`** → that pill is hard-stuck at 0 even when 79 rows are actually `complete`.
-- "Last scan" queries `hire_alert_runs.run_at`, but the scanner writes `started_at`/`created_at` and leaves `run_at` NULL. Most recent real run was today 11:02 UTC, but the strip shows "never".
-- The 66 "stuck" rows are real — they're `pending` and >2h old because the enrich worker stopped completing them. Need to verify the cron is running post worker-pool fix.
-
-### 4. Auto-Blast "Sent 0 of 10 · Scraped 0 · enriched 0 · suppressed 0 · 1 failure"
-`contractor-outreach-auto-blast` orchestrates: scrape → enrich → email. "Scraped 0 / 1 failure" means the internal `invokeFn("contractor-outreach-scrape", …)` call returned non-ok and the pipeline aborted. Most likely cause given recent context: `GOOGLE_MAPS_API_KEY` quota or the scrape function itself erroring. Need to pull the function's log to confirm before touching code.
-
-### 5. Workbench "No contact found for Delta T Group / PrideStaff Detroit"
-These are `techalert_business_prospects` rows. The table only has columns `phone`, `email`, `website` — no enriched contact stack. The "Draft with Opus" button refuses because `email` is null. The cherry-pick UI surfaces candidate matches (Kai Ho, Aaron Trudgeon, etc.) from a *different* table, but those aren't linked back to the prospect → enrich step never writes an email onto the prospect row. Two acceptable fixes — needs your call (see Open Question).
-
-### 6. Prospect Tracker "Update failed: Could not query the database for the schema cache. Retrying."
-The Mark-dead handler runs `supabase.from("prospect_nudges").update({ status }).eq("id", id)`. The error is PostgREST's schema cache reload error, which is a known transient symptom when the Cloud instance just came back up. It usually resolves in 2–5 minutes once PostgREST finishes reloading. If it persists, force a reload with `NOTIFY pgrst, 'reload schema'`. No code change needed — verify only.
-
-### 7. Sidebar issues
-None — screenshots 142058 / 142946 / 143058 are the same products surfaced above. No separate bugs.
+I pulled live DB counts and reviewed Claude's plan end-to-end. The shape of his plan is right, but several assumptions are wrong. Below is the corrected reality + a leaner build order.
 
 ---
 
-## Fix order
+## Part 1 — Actual DB Inventory (live numbers, not estimates)
 
-**Step 1 — Verify (no code, 1 min)**
-- Re-test "Mark dead" on the Prospect Tracker. If it works now, that confirms #6 was the PostgREST cache reloading after Cloud upgrade. If it still fails, run `NOTIFY pgrst, 'reload schema';` once via a migration.
 
-**Step 2 — Talent Radar Hub stats (small frontend fix, ~5 min)**
-Edit `src/components/admin/EnrichmentHealthStrip.tsx`:
-- Change the "Enriched" count from `.eq('enrichment_status','enriched')` → `.eq('enrichment_status','complete')`.
-- Change the "Last scan" query from `.order('run_at', …)` → `.order('started_at', …)` and read `started_at` (or `completed_at` for finished runs).
-- Result: pill flips from `0` → `79`, "never" → "today 11:02 UTC", and CRITICAL banner downgrades once stuck count clears.
+| Table                        | Total     | Quality / Enriched                    | Emailed                                           | Replied |
+| ---------------------------- | --------- | ------------------------------------- | ------------------------------------------------- | ------- |
+| `techalert_prospect_targets` | **1,520** | 74 with owner_email                   | 63                                                | 0       |
+| `trade_radar_leads`          | **2,538** | 2,185 score≥7                         | 0 outreach (B2C — homeowners, not for cold email) | —       |
+| `mortgage_radar_leads`       | **716**   | 634 score≥7                           | 0                                                 | —       |
+| `outreach_leads`             | **2,880** | 1,182 with email                      | 951 contacted                                     | 0       |
+| `hire_alert_candidates`      | 304       | 39 (B2C — candidates, not businesses) | —                                                 | —       |
+| `contractor_leads`           | 24        | 24 (B2C — homeowners)                 | —                                                 | —       |
+| `dead_lead_contacts`         | **0**     | 0                                     | 0                                                 | —       |
+| `marketplace_prospects`      | **0**     | 0                                     | 0                                                 | —       |
 
-**Step 3 — Resend webhook (new edge function + Resend dashboard wiring, ~15 min)**
-- Create `supabase/functions/resend-webhook/index.ts` with `verify_jwt = false`. Accept Resend event payloads, verify signature with `RESEND_WEBHOOK_SECRET` (new secret to add), and upsert `opened_at` / `clicked_at` / `bounced_at` / `complained_at` columns on `email_send_log` keyed by `message_id` (Resend's `data.email_id`).
-- Add the missing columns to `email_send_log` (opened_at, clicked_at, bounced_at, complained_at) via migration.
-- Tell user the webhook URL to paste into resend.com → Webhooks: `https://eauvubfpanpeuxsrqesu.supabase.co/functions/v1/resend-webhook`, subscribe to `email.opened`, `email.clicked`, `email.bounced`, `email.complained`.
-- AdminEmailLog dashboard already reads `email_send_log` — open/click columns will populate automatically.
 
-**Step 4 — LO Outreach NMLS table (migration, ~5 min)**
-- Create `marketplace_prospects` table the function expects: nmls_id (text unique), full_name, company, city, state, phone, email, source, fetched_at, created_at, plus RLS (service_role bypass + admin read).
-- Confirm `find-lo-prospects` then inserts the ~40 seed lenders on next click.
-- (Optional, separate task) Wire the NMLS Consumer Access scrape behind a Browserless fetch since Apollo free-tier returns 0; not required for the button to start working today.
+**Trade Radar by vertical:** HVAC 395 / Roofing 341 / Demo-Junk 308 / Electrical 246 / Exterior 233 / Plumbing 214 / Tree 199 / Gutters 199 / Pest 171 / Restoration 151 / Foundation 81. All 2,000+ score ≥7.
 
-**Step 5 — Auto-Blast diagnostic (logs first, then fix)**
-- Pull `contractor-outreach-auto-blast` and `contractor-outreach-scrape` recent edge logs (no code change yet) to find which step actually fails. Three plausible causes: (a) Google Maps key quota/billing, (b) scrape function 500ing, (c) suppression list claiming everyone. Fix once root cause is in hand. Do not guess-patch.
+**Last 30 days email volume:** 1,500+ sent across 20+ templates. Top: cold_outreach 311, multi_service_pitch_1 285, contractor_drip_d0 258, web_drip_d1 227, techalert_cold_d0 114.
 
-**Step 6 — Workbench enrichment → prospect link** — needs your decision, see Open Question.
+### Corrections to Claude's quality thresholds
+
+- **Trade Radar / Mortgage Radar / Contractor Leads / Dead Lead = B2C homeowner data**, not cold-email prospects. They feed *paying customers*, not outbound sales. Confidence threshold means "enough leads to deliver to a buyer," which we already have for Trade Radar (every vertical has 80+ quality). **Mortgage Radar needs more — 634 is fine but only ~15 are fresh per week.**
+- **TechAlert owner_email count = 74/1,520 = 5% enrichment.** This is the real bottleneck. We have 1,500 trade businesses identified but only 74 we can email. Enrichment, not discovery, is the limiter.
+- **outreach_leads has 2,880 rows with 1,182 emails** — Claude assumed this was thin. It isn't; we just haven't been blasting it hard.
+- **dead_lead_contacts is literally 0.** Dead Lead product has no source data. Either scrap or build.
 
 ---
 
-## Open Question (need your input before Step 6)
+## Part 2 — Customer Readiness (matches Claude's findings)
 
-For the "No contact found for Delta T Group / PrideStaff Detroit" workbench errors, two ways to fix:
+7-day trials: confirmed broken on TechAlert (`create-hire-alert-checkout` has no `trial_period_days`). All others set. **This is the single highest-priority 5-minute fix.**
 
-- **(A)** When a cherry-pick candidate is selected (e.g. Aaron Trudgeon's email/phone), copy that contact onto the `techalert_business_prospects` row so "Draft with Opus" can fire immediately. Faster path, gets you drafting today.
-- **(B)** Wire the existing Apollo→Hunter→Snov enrichment waterfall into a button on each prospect card ("Enrich Contact"), and only allow drafting once it succeeds. Cleaner long-term, but you're hitting Apollo/Hunter on every click.
+Lovable deploy backlog from Phase 45 still pending — must be cleared first.
 
-Which do you want — A, B, or both?
+---
 
-## Technical Notes (for me)
+## Part 3 — Volume Reality
 
-- All fixes target the **primary** Lovable-managed project (`eauvubfpanpeuxsrqesu`).
-- The `resend-webhook` will need `RESEND_WEBHOOK_SECRET` added via the secrets tool — Resend generates this when you create the webhook on their dashboard.
-- The PostgREST schema cache issue (#6) commonly self-heals within 2–5 minutes after a Cloud instance comes back up. No fix unless still failing 10 min from now.
-- The Talent Radar Hub `EnrichmentHealthStrip` fix is the only purely visual/data-display change — all the others touch backend.
+Daily theoretical cap: ~1,055/day. Actual recent 30d run rate: ~50/day. We are **20× under our own cap**, not because pools are empty but because:
+
+1. `dwa-product-blast` + `siteradar-cold-blast` send rich HTML → spam → conversions ≈ 0 → no point increasing volume
+2. No enrichment pressure on `techalert_prospect_targets` (only 5% have emails)
+3. Resend free tier limits real ceiling to 100/day until plan upgraded
+
+**Resend plan check is action #1.** No point planning 1,000/day sends on a 100/day plan. We have paid plan now let's use it! 
+
+---
+
+## Part 4 — Refined Build Order
+
+### Phase A — Quick wins (today, ~2 hrs)
+
+1. **Check Resend plan** — confirm we're on paid ($20/mo, 50k/month). If not, upgrade before any volume work.
+2. **TechAlert trial fix** — add `subscription_data: { trial_period_days: 7 }` to `create-hire-alert-checkout`.
+3. **Deploy Lovable backlog** (Phase 45 + healthcare scanner fixes already in git).
+4. **Convert `dwa-product-blast` + `siteradar-cold-blast` to plainMode** via existing `dwaColdEmail()` helper (same pattern as techalert-outreach fix).
+
+### Phase B — Enrichment over discovery (this week)
+
+Claude jumped to "build a prospect replenisher." Wrong order. We already have **1,520 TechAlert + 2,880 outreach_leads** prospects sitting unenriched. Discovery isn't the bottleneck; **email-finding is.**
+
+5. **Crank `outreach-leads-enrich**` — it drains 20/day. Raise to 200/day. Same with `techalert-enrich`. Both already exist; just need higher caps and more frequent cron (every 2 hrs instead of daily).
+6. **Wire the full email-waterfall.ts** (Tiers 7–89 — already built in `_shared/`) into both enrich functions. Currently they only run Apollo → Hunter → Firecrawl. The 70+ free sources in `email-extras-*.ts` are sitting unused.
+
+Expected result: in 5 days, TechAlert email coverage goes from 5% → 40%+ on existing pool. No new sourcing needed yet.
+
+### Phase C — Quality-based dynamic caps (next week)
+
+7. Build `outreach-quality-scorer` (nightly) + `outreach_quality_scores` table — Claude's design is right.
+8. **Cap formula correction:** Claude's `pool_size * 0.10 * (quality/100)` will starve drips. Better:
+  ```
+   cap = min(MAX, eligible_unsent * 0.20, daily_resend_budget_share)
+  ```
+   where `daily_resend_budget_share` = (Resend monthly cap / 30) × (product priority weight). This explicitly prevents Resend overrun.
+9. SMS alert to Matt when any product has <30 eligible-to-send.
+
+### Phase D — Replenisher + drip parity (week 3)
+
+10. **Then** build `outreach-prospect-replenisher` — but with deduplication against `email_send_log` so we never re-source someone we already burned.
+11. `**outreach-followup-drip**` (D3/D7/D14 for outreach_leads) — Claude's design correct, copy techalert-followup-drip pattern.
+12. Industry-specific Missed-Call pitch subtypes in `dwa-product-blast`.
+
+### Phase E — Personalization (week 4)
+
+13. Per-prospect personalization: pass `business_name`, `recent_signal` (e.g., "saw your BSEED roofing permit last week"), and `local_proof` ("3 other [city] [trade] companies use this") into the LLM. Currently `dwa-product-blast` uses static industry templates — that's not personalization, that's segmentation.
+14. A/B subject line testing across all products.
+
+---
+
+## Part 5 — Things Claude got wrong / missed
+
+
+| Claude said                                                                           | Reality                                                                                               |
+| ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| "outreach_leads pool may be near empty"                                               | 2,880 rows, 1,182 with emails. Pool is fine.                                                          |
+| "TechAlert enriched 40+ = confident"                                                  | We have 74 enriched out of 1,520 — discovery is solved, enrichment is the gap                         |
+| "Build replenisher first (Phase B)"                                                   | Backwards. Enrichment first; we already have ~4,400 prospects sitting unenriched                      |
+| "Resend free = 100/day"                                                               | Correct, but didn't make this action #1. No outbound plan works until plan is confirmed.              |
+| Missed `email-waterfall.ts` Tiers 7–89                                                | 70+ free email sources already in `_shared/` — never wired into the enrich functions                  |
+| Quality formula `pool × 0.10 × quality`                                               | Doesn't account for Resend budget. Will overshoot if pools are large.                                 |
+| "Trade Radar / Mortgage Radar / Contractor / Dead Lead need cold-email source counts" | These are B2C buyer-product data, not outbound prospects. Conflates two pipelines.                    |
+| dead_lead_contacts = 0                                                                | Claude didn't notice. Dead Lead product literally has no source data. Decision needed: scrap or seed. |
+
+
+---
+
+## Part 6 — One question I need answered before building
+
+**Dead Lead Reactivation** has 0 source contacts in DB. Three options:
+
+- (a) Scrap the product
+- (b) Build a one-time importer for Matt's old contractor contact lists / CSVs
+- (c) Auto-seed from `outreach_leads` rows that have phone + no reply after D14
+
+Need Matt's call before allocating effort. Everything else above I can execute without further input. C and lets also keep this in the cold email loop. Im not getting rid of this product.
+
+---
+
+## Approval needed
+
+- OK to start with Phase A (Resend check, TechAlert trial, plainMode conversions, Lovable deploy)?
+- Decision on Dead Lead (a/b/c)?
+- Any product I should deprioritize (e.g., is Foundation Trade Radar at 81 leads worth keeping aggressive on)? Your call. Im not sure.

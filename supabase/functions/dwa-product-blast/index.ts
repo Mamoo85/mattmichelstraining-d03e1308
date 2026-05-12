@@ -13,10 +13,9 @@
 // All sends respect outreach-blocklist + marketing-kill-switch.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { dwaEmail, listUnsubHeaders } from "../_shared/dwa-email.ts";
+import { dwaColdEmail } from "../_shared/dwa-email.ts";
 import { isBlocked } from "../_shared/outreach-blocklist.ts";
 import { isMarketingBlocked } from "../_shared/marketing-kill-switch.ts";
-import { buildPremiumEmailHtml, RADAR_ADDON_BOX } from "../_shared/dwa-premium-email.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -134,31 +133,26 @@ function pitchFor(lead: any): ProductPitch {
   };
 }
 
-function emailHtml(lead: any, pitch: ProductPitch): string {
+function plainEmailHtml(lead: any, pitch: ProductPitch): string {
   const fn = lead.first_name || lead.owner_name?.split(" ")[0] || "there";
   const biz = lead.business_name || "your shop";
   const city = lead.city || "Michigan";
-
-  // Strip the lead intro into 2-3 short paragraphs
-  const introRaw = pitch.intro(fn, biz, city);
-  const paragraphs = introRaw
+  const intro = pitch.intro(fn, biz, city);
+  const paragraphs = intro
     .split(/\n\s*\n|\n/)
     .map((s) => s.trim())
-    .filter(Boolean)
-    .slice(0, 4);
-
-  return buildPremiumEmailHtml({
-    preheader: pitch.headline.replace(/[^\w\s—.,'-]/g, "").slice(0, 110),
-    heroBadge: pitch.product.replace(/_/g, " ").toUpperCase(),
-    headline: pitch.headline,
-    paragraphs,
-    addOnBox: RADAR_ADDON_BOX,
-    ctaUrl: `${pitch.ctaUrl}&email=${encodeURIComponent(lead.email || "")}&utm_source=product_blast&utm_medium=email`,
-    ctaText: pitch.ctaText.replace(/\s*→\s*$/, ""),
-    signoffLine: "— Matt, (313) 992-1219",
-    unsubscribeUrl: `${SITE}/unsubscribe?email=${encodeURIComponent(lead.email)}`,
-    footerNote: "One-time pitch. Reply STOP to opt out.",
-  });
+    .filter(Boolean);
+  const ctaUrl = `${pitch.ctaUrl}${pitch.ctaUrl.includes("?") ? "&" : "?"}email=${encodeURIComponent(lead.email || "")}&utm_source=product_blast&utm_medium=email`;
+  const body = paragraphs
+    .map((p) => `<p style="margin:0 0 14px;">${p.replace(/\n/g, "<br/>")}</p>`)
+    .join("");
+  return `<div style="font:15px/1.55 -apple-system,Segoe UI,Arial,sans-serif;color:#111;max-width:560px;">
+${body}
+<p style="margin:0 0 14px;"><a href="${ctaUrl}" style="color:#0a58ca;">${ctaUrl}</a></p>
+<p style="margin:18px 0 4px;">— Matt Michels</p>
+<p style="margin:0 0 4px;color:#555;">Detroit Web Agency · (313) 992-1219</p>
+<p style="margin:14px 0 0;font-size:12px;color:#888;">Reply STOP to opt out. <a href="${SITE}/unsubscribe?email=${encodeURIComponent(lead.email)}" style="color:#888;">Unsubscribe</a>.</p>
+</div>`;
 }
 
 Deno.serve(async (req) => {
@@ -199,9 +193,17 @@ Deno.serve(async (req) => {
 
     const pitch = pitchFor(lead);
     const subject = pitch.subject(lead.business_name || "your shop", lead.city || "Michigan");
-    const html = emailHtml(lead, pitch);
+    const html = plainEmailHtml(lead, pitch);
 
-    const r = await dwaEmail({ to: lead.email, subject, html, headers: listUnsubHeaders(lead.email) });
+    const r = await dwaColdEmail({
+      to: lead.email,
+      subject,
+      bodyHtml: html,
+      product: pitch.product,
+      ctaUrl: pitch.ctaUrl,
+      templateName: `dwa_product_blast_${pitch.product}`,
+      plainMode: true,
+    }, sb);
     if (r.ok) {
       sent++;
       byProduct[pitch.product] = (byProduct[pitch.product] || 0) + 1;

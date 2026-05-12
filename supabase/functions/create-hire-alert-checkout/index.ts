@@ -53,6 +53,8 @@ serve(async (req) => {
             },
           },
         }],
+        subscription_data: { trial_period_days: 7 },
+        payment_method_collection: "if_required",
         metadata: {
           type: "hire_alert_subscription",
           plan: annualSubPlan,
@@ -171,6 +173,8 @@ serve(async (req) => {
           },
         },
       ],
+      subscription_data: { trial_period_days: 7 },
+      payment_method_collection: "if_required",
       metadata: {
         type: "hire_alert_subscription",
         plan: resolvedPlan,
