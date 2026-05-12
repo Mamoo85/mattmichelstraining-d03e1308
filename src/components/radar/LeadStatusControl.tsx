@@ -44,7 +44,11 @@ export default function LeadStatusControl({ signal_id, client_id, radar, size = 
   const snoozedActive = snoozedUntil !== null && snoozedUntil > Date.now();
 
   return (
-    <div ref={ref} className="flex items-center gap-1 relative">
+    <div
+      ref={ref}
+      className="flex items-center gap-1 relative"
+      onClick={(e) => e.stopPropagation()}
+    >
       <button
         onClick={(e) => { e.stopPropagation(); setOpenStatus((v) => !v); setOpenSnooze(false); }}
         className={`uppercase tracking-widest font-bold rounded border flex items-center gap-1 ${padding} ${meta.cls} transition-colors`}
