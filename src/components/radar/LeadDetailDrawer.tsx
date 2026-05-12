@@ -315,9 +315,21 @@ export default function LeadDetailDrawer({ lead, open, onOpenChange }: Props) {
                 ))}
               </div>
 
-              <div className="rounded-lg bg-[#0f1f35] border border-white/10 p-3 text-[13px] text-white/85 whitespace-pre-wrap">
-                {activeDraft}
-              </div>
+              <textarea
+                value={activeDraft}
+                onChange={(e) => setEditedDrafts((prev) => ({ ...prev, [channel]: e.target.value }))}
+                rows={5}
+                className="w-full rounded-lg bg-[#0f1f35] border border-white/10 p-3 text-[13px] text-white/90 leading-relaxed focus:border-[#00d4ff]/60 focus:outline-none resize-y"
+                placeholder="Edit the draft before sending…"
+              />
+              {editedDrafts[channel] !== undefined && editedDrafts[channel] !== baseDrafts[channel] && (
+                <button
+                  onClick={() => setEditedDrafts((prev) => { const n = { ...prev }; delete n[channel]; return n; })}
+                  className="text-[10px] text-[#00d4ff] hover:underline"
+                >
+                  ↺ Reset to suggested
+                </button>
+              )}
 
               <div className="flex gap-2">
                 <Button size="sm" variant="outline" className="flex-1 border-white/15 text-white hover:bg-white/5" onClick={() => copy(activeDraft)}>
