@@ -184,6 +184,7 @@ async function sendEmail(
   isBoiler: boolean,
   stateAbr: string,
   candidateCount: number,
+  prospectId: string,
 ) {
   const ctaUrl = `https://detroitwebagent.com/start-trial?product=techalert&email=${encodeURIComponent(to)}&state=${stateAbr}&utm_source=cold_email&utm_medium=email&utm_campaign=techalert_d0`;
 
@@ -192,21 +193,35 @@ async function sendEmail(
   const firstName = ownerName?.split(" ")[0] || companyName;
   const tradeLabelSubj = /cna/i.test(role) ? "CNAs" : /lpn/i.test(role) ? "LPNs" : /rn|nurse/i.test(role) ? "RNs" : null;
 
-  const subject = useProof && tradeLabelSubj
-    ? `${firstName} — here are 3 ${tradeLabelSubj} licensed in ${stateName} this week`
-    : buildSubject(ownerName, companyName, role, isBoiler, candidateCount, stateAbr);
+  // A/B variant — deterministic per prospect (Upgrade 3)
+  const abVariant: "A" | "B" = (prospectId.charCodeAt(0) % 2 === 0) ? "A" : "B";
+  const isHealthcare = isHealthcareRole(role);
+
+  let subject: string;
+  if (useProof && tradeLabelSubj) {
+    subject = `${firstName} — here are 3 ${tradeLabelSubj} licensed in ${stateName} this week`;
+  } else if (isHealthcare && tradeLabelSubj && abVariant === "B") {
+    const county = ownerName ? "your county" : stateName;
+    subject = `${firstName} — 3 new ${tradeLabelSubj} just licensed in ${county} this week`;
+  } else {
+    subject = buildSubject(ownerName, companyName, role, isBoiler, candidateCount, stateAbr);
+  }
+
+  const baseTemplate = useProof ? "techalert_cold_d0_proof" : "techalert_cold_d0";
+  const templateName = isHealthcare ? `${baseTemplate}_${abVariant.toLowerCase()}` : baseTemplate;
+
   const bodyHtml = buildPlainEmail(ownerName, companyName, role, isBoiler, stateAbr, candidateCount, ctaUrl);
 
   const r = await dwaColdEmail({
     to,
     subject,
     bodyHtml,
-    product: isHealthcareRole(role) ? "CareAlert" : "TechAlert",
+    product: isHealthcare ? "CareAlert" : "TechAlert",
     ctaUrl,
-    templateName: useProof ? "techalert_cold_d0_proof" : "techalert_cold_d0",
+    templateName,
     plainMode: true,
   }, sb);
-  return { ok: r.ok, err: r.error };
+  return { ok: r.ok, err: r.error, abVariant, templateName };
 }
 
 serve(async (req) => {
