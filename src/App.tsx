@@ -875,6 +875,8 @@ const App = () => {
                     <Route path="/talent-radar" element={<HireAlert />} />
                     <Route path="/talent-radar/enterprise" element={<HireAlertMSPInquiry />} />
                     <Route path="/talent-radar/healthcare" element={<HealthcareHireAlert />} />
+                    <Route path="/carealert" element={<CareAlert />} />
+                    <Route path="/care-alert" element={<Navigate to="/carealert" replace />} />
                     <Route path="/talent-radar/dashboard" element={<MyTechAlert />} />
                     <Route path="/talent-radar/setup" element={<TalentRadarSetup />} />
                     <Route path="/talent-radar/trial" element={<HireAlertTrial />} />
