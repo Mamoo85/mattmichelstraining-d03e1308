@@ -391,6 +391,60 @@ export default function LeadDetailDrawer({ lead, open, onOpenChange }: Props) {
               <ContactRow href={googleSearch(`"${company}" similar companies ${loc}`)} icon={<Search className="h-4 w-4 text-purple-400" />} title="Similar companies" sub="Find more like this" />
             </AccordionContent>
           </AccordionItem>
+
+          {canUseStatus && (
+            <>
+              {/* PRIVATE NOTES */}
+              <AccordionItem value="notes" className="border-white/10">
+                <AccordionTrigger className="text-white hover:no-underline text-sm font-bold">
+                  <span className="flex items-center gap-2"><StickyNote className="h-3.5 w-3.5 text-amber-400" /> Private notes</span>
+                </AccordionTrigger>
+                <AccordionContent className="space-y-2">
+                  <textarea
+                    value={noteDraft}
+                    onChange={(e) => setNoteDraft(e.target.value)}
+                    rows={4}
+                    placeholder="Your private notes on this lead — only you see these."
+                    className="w-full rounded-lg bg-[#0f1f35] border border-white/10 p-3 text-[13px] text-white/90 focus:border-[#00d4ff]/60 focus:outline-none resize-y"
+                  />
+                  <Button
+                    size="sm"
+                    disabled={savingNote || !noteDraft.trim()}
+                    onClick={saveNote}
+                    className="bg-[#00d4ff] hover:bg-[#00d4ff]/90 text-[#0a1628] font-bold"
+                  >
+                    {savingNote ? "Saving…" : "Save note"}
+                  </Button>
+                </AccordionContent>
+              </AccordionItem>
+
+              {/* ACTIVITY TIMELINE */}
+              <AccordionItem value="activity" className="border-white/10">
+                <AccordionTrigger className="text-white hover:no-underline text-sm font-bold">
+                  <span className="flex items-center gap-2"><Activity className="h-3.5 w-3.5 text-[#00d4ff]" /> Activity ({statusState.actions.length})</span>
+                </AccordionTrigger>
+                <AccordionContent>
+                  {statusState.actions.length === 0 ? (
+                    <p className="text-[12px] text-white/50">No activity yet. Calls, emails, status changes, and notes appear here.</p>
+                  ) : (
+                    <ul className="space-y-1.5">
+                      {statusState.actions.slice(0, 30).map((a) => (
+                        <li key={a.id} className="flex items-start gap-2 text-[11px]">
+                          <span className="text-[#64748b] tabular-nums shrink-0 w-20">
+                            {new Date(a.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                          </span>
+                          <span className="text-white/80 font-mono uppercase tracking-wide text-[10px] shrink-0">
+                            {a.action.replace(/_/g, " ")}
+                          </span>
+                          {a.notes && <span className="text-white/60 truncate">— {a.notes}</span>}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </AccordionContent>
+              </AccordionItem>
+            </>
+          )}
         </Accordion>
 
         <div className="mt-6 pt-4 border-t border-white/10 print-hide">
