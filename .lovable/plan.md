@@ -1,129 +1,73 @@
-# Autonomous Cold-Email System — Refined Plan (2026-05-12)
+## Goal
 
-I pulled live DB counts and reviewed Claude's plan end-to-end. The shape of his plan is right, but several assumptions are wrong. Below is the corrected reality + a leaner build order.
+Give Matt one place inside `/dwa-admin` to (a) see every radar he sells exactly the way a paying customer sees it, and (b) preview/customize the admin panel that will ship inside every website-build client (starting with DJ Conley / Pat).
 
----
+## What already exists
 
-## Part 1 — Actual DB Inventory (live numbers, not estimates)
+**Customer-facing radar portals** (23 pages, all live):
+`MyRoofingRadar`, `MyHVACRadar`, `MyPlumbingRadar`, `MyElectricalRadar`, `MyPestControlRadar`, `MyGuttersRadar`, `MyExteriorRadar`, `MyTreeRadar`, `MyRestorationRadar`, `MyDemoJunkRadar`, `MyFoundationRadar`, `MyPaintingRadar`, `MyMortgageRadar`, `MyTechAlert`, `MySiteRadar`, `MyMissedCall`, `MyFieldDesk`, `MyDemandRadar`, `MyBuyerRadar`, `MyContractorLeads`, `MyDeadLeadReactivation`, `MyIndustryPulse`, `MyCounselSearch`.
 
+**DJ Conley sandbox** (`/sandbox/djconley/*`): public marketing site mirror (Home, About, Industries, Service, Parts, Products, Projects, Rentals, Education, Resources, Careers, Contact + 6 boiler product pages, Blog) **plus** an Admin Command Center (`AdminShell` + 12 tabs: SiteRadar, Missed-Call, Buyer Radar, FieldDesk, TechAlert, Trade Radar, Outreach, Reviews, Widgets, Reports, Integrations, Team, Settings).
 
-| Table                        | Total     | Quality / Enriched                    | Emailed                                           | Replied |
-| ---------------------------- | --------- | ------------------------------------- | ------------------------------------------------- | ------- |
-| `techalert_prospect_targets` | **1,520** | 74 with owner_email                   | 63                                                | 0       |
-| `trade_radar_leads`          | **2,538** | 2,185 score≥7                         | 0 outreach (B2C — homeowners, not for cold email) | —       |
-| `mortgage_radar_leads`       | **716**   | 634 score≥7                           | 0                                                 | —       |
-| `outreach_leads`             | **2,880** | 1,182 with email                      | 951 contacted                                     | 0       |
-| `hire_alert_candidates`      | 304       | 39 (B2C — candidates, not businesses) | —                                                 | —       |
-| `contractor_leads`           | 24        | 24 (B2C — homeowners)                 | —                                                 | —       |
-| `dead_lead_contacts`         | **0**     | 0                                     | 0                                                 | —       |
-| `marketplace_prospects`      | **0**     | 0                                     | 0                                                 | —       |
+**DWA Admin** (`/dwa-admin`): already has `DJConleyCommandPanel` lazy-loaded and a 5-group sidebar (Today / Customers / Outreach / Products / Ops).
 
-
-**Trade Radar by vertical:** HVAC 395 / Roofing 341 / Demo-Junk 308 / Electrical 246 / Exterior 233 / Plumbing 214 / Tree 199 / Gutters 199 / Pest 171 / Restoration 151 / Foundation 81. All 2,000+ score ≥7.
-
-**Last 30 days email volume:** 1,500+ sent across 20+ templates. Top: cold_outreach 311, multi_service_pitch_1 285, contractor_drip_d0 258, web_drip_d1 227, techalert_cold_d0 114.
-
-### Corrections to Claude's quality thresholds
-
-- **Trade Radar / Mortgage Radar / Contractor Leads / Dead Lead = B2C homeowner data**, not cold-email prospects. They feed *paying customers*, not outbound sales. Confidence threshold means "enough leads to deliver to a buyer," which we already have for Trade Radar (every vertical has 80+ quality). **Mortgage Radar needs more — 634 is fine but only ~15 are fresh per week.**
-- **TechAlert owner_email count = 74/1,520 = 5% enrichment.** This is the real bottleneck. We have 1,500 trade businesses identified but only 74 we can email. Enrichment, not discovery, is the limiter.
-- **outreach_leads has 2,880 rows with 1,182 emails** — Claude assumed this was thin. It isn't; we just haven't been blasting it hard.
-- **dead_lead_contacts is literally 0.** Dead Lead product has no source data. Either scrap or build.
+**What's missing** is the consolidation Matt is asking for: there's no single "view everything as a customer would" surface, and no admin-side preview of the DJ Conley client admin.
 
 ---
 
-## Part 2 — Customer Readiness (matches Claude's findings)
+## Plan
 
-7-day trials: confirmed broken on TechAlert (`create-hire-alert-checkout` has no `trial_period_days`). All others set. **This is the single highest-priority 5-minute fix.**
+### 1. Enroll Matt in every product (migration)
 
-Lovable deploy backlog from Phase 45 still pending — must be cleared first.
+New migration `supabase/migrations/<ts>_matt_full_enrollment.sql` that upserts a `matt@detroitwebagent.com` row into every client table that doesn't already have one, using SE-Michigan ZIP coverage + `status='active'`:
+`field_crm_clients` (FieldDesk + SiteRadar visitor script), `hire_alert_clients` (TechAlert), `missed_call_clients`, `mortgage_radar_clients`, `contractor_clients`, `dead_lead_campaigns`, `industry_pulse_clients` (Buyer + Demand + Growth), plus all 11 `trade_radar_clients` rows. Idempotent (`ON CONFLICT DO UPDATE`). Phase 44 already enrolled some of these; this migration fills the gaps and standardizes Matt's tokens so the customer pages render real data.
 
----
+### 2. New tab — "My Command Center" (customer view)
 
-## Part 3 — Volume Reality
+- Add sidebar group `👤 My Stuff` with item `my-command-center` at the top of `DWAAdmin.tsx` GROUPS.
+- New component `src/components/dwa-admin/MyCommandCenter.tsx`:
+  - Top KPI strip (active subscriptions count, total leads this week across all radars, today's signal count, MRR-equivalent if Matt were paying).
+  - Sub-nav of pills, one per product Matt is enrolled in (Trade Radar 11 verticals collapsed into one pill with a vertical sub-picker, then Mortgage / Talent / Site / Missed-Call / FieldDesk / Demand / Buyer / Contractor / Dead Lead / Industry Pulse / Counsel).
+  - Body renders the matching `My*` page component **inline** (not iframed) by importing them as lazy components. They already query Supabase by `auth.uid()` / token, so once Matt is enrolled they "just work."
+  - "Open in new tab" link on each so Matt can pop the customer portal full-screen for screenshots.
 
-Daily theoretical cap: ~1,055/day. Actual recent 30d run rate: ~50/day. We are **20× under our own cap**, not because pools are empty but because:
+### 3. New tab — "Client Admin Sandbox" (DJ Conley preview)
 
-1. `dwa-product-blast` + `siteradar-cold-blast` send rich HTML → spam → conversions ≈ 0 → no point increasing volume
-2. No enrichment pressure on `techalert_prospect_targets` (only 5% have emails)
-3. Resend free tier limits real ceiling to 100/day until plan upgraded
+- Sidebar group `🧪 Client Sandbox` with items `dj-conley-site` and `dj-conley-admin`.
+- Component `src/components/dwa-admin/ClientSandboxFrame.tsx`: an iframe wrapper that loads `/sandbox/djconley/` or `/sandbox/djconley/admin` with a top toolbar:
+  - Quick-jump dropdown of all 12 admin tabs.
+  - Device-width toggle (desktop / tablet / mobile).
+  - "Open standalone" button.
+  - "Customize" panel (right rail) for the things Matt will most want to tweak: brand color, logo URL, owner name, owner email, included radar pills. Writes to a `sandbox_tenant_config` table (new) so changes survive reload and we can later promote them into a real client provisioning record.
 
-**Resend plan check is action #1.** No point planning 1,000/day sends on a 100/day plan. We have paid plan now let's use it! 
+### 4. DJ Conley parity audit
 
----
+Deliverable: `knowledge/djconley-parity-audit.md` listing every page on the live djconley.com vs what's in `src/sandbox/djconley/pages/` with status (✅ exact / 🟡 minor delta / ❌ missing) and the "very minor enhancement" deltas Matt wants noted per page. The 18 routes already in `index.tsx` cover the main IA; this step verifies content fidelity (copy, hero photos, product specs, contact info) and flags anything to repaint before the Pat demo.
 
-## Part 4 — Refined Build Order
+### 5. Replace placeholder data in DJ Conley admin tabs
 
-### Phase A — Quick wins (today, ~2 hrs)
-
-1. **Check Resend plan** — confirm we're on paid ($20/mo, 50k/month). If not, upgrade before any volume work.
-2. **TechAlert trial fix** — add `subscription_data: { trial_period_days: 7 }` to `create-hire-alert-checkout`.
-3. **Deploy Lovable backlog** (Phase 45 + healthcare scanner fixes already in git).
-4. **Convert `dwa-product-blast` + `siteradar-cold-blast` to plainMode** via existing `dwaColdEmail()` helper (same pattern as techalert-outreach fix).
-
-### Phase B — Enrichment over discovery (this week)
-
-Claude jumped to "build a prospect replenisher." Wrong order. We already have **1,520 TechAlert + 2,880 outreach_leads** prospects sitting unenriched. Discovery isn't the bottleneck; **email-finding is.**
-
-5. **Crank `outreach-leads-enrich**` — it drains 20/day. Raise to 200/day. Same with `techalert-enrich`. Both already exist; just need higher caps and more frequent cron (every 2 hrs instead of daily).
-6. **Wire the full email-waterfall.ts** (Tiers 7–89 — already built in `_shared/`) into both enrich functions. Currently they only run Apollo → Hunter → Firecrawl. The 70+ free sources in `email-extras-*.ts` are sitting unused.
-
-Expected result: in 5 days, TechAlert email coverage goes from 5% → 40%+ on existing pool. No new sourcing needed yet.
-
-### Phase C — Quality-based dynamic caps (next week)
-
-7. Build `outreach-quality-scorer` (nightly) + `outreach_quality_scores` table — Claude's design is right.
-8. **Cap formula correction:** Claude's `pool_size * 0.10 * (quality/100)` will starve drips. Better:
-  ```
-   cap = min(MAX, eligible_unsent * 0.20, daily_resend_budget_share)
-  ```
-   where `daily_resend_budget_share` = (Resend monthly cap / 30) × (product priority weight). This explicitly prevents Resend overrun.
-9. SMS alert to Matt when any product has <30 eligible-to-send.
-
-### Phase D — Replenisher + drip parity (week 3)
-
-10. **Then** build `outreach-prospect-replenisher` — but with deduplication against `email_send_log` so we never re-source someone we already burned.
-11. `**outreach-followup-drip**` (D3/D7/D14 for outreach_leads) — Claude's design correct, copy techalert-followup-drip pattern.
-12. Industry-specific Missed-Call pitch subtypes in `dwa-product-blast`.
-
-### Phase E — Personalization (week 4)
-
-13. Per-prospect personalization: pass `business_name`, `recent_signal` (e.g., "saw your BSEED roofing permit last week"), and `local_proof` ("3 other [city] [trade] companies use this") into the LLM. Currently `dwa-product-blast` uses static industry templates — that's not personalization, that's segmentation.
-14. A/B subject line testing across all products.
+The 12 tabs in `src/sandbox/djconley/admin/tabs.tsx` are all hardcoded `TabPlaceholder` demos. For the Pat demo we'll wire the 4 most impactful ones (SiteRadar, Buyer Radar, TechAlert, Reviews) to live Supabase queries scoped by a sandbox `client_id`, so Pat sees actual data in those panels. The other 8 stay as polished mockups (clearly labeled "Sample Data" badge) — same level Pat sees in proposals today.
 
 ---
 
-## Part 5 — Things Claude got wrong / missed
+## Technical Details
 
+- All `My*` pages use `lazyRetry()` and read from Supabase via `useAuth()` or token query param. Inline mounting inside `MyCommandCenter` works because they're already self-contained route components.
+- The iframe approach for the sandbox preview avoids React-Router collisions with the parent `/dwa-admin` route tree.
+- New table `sandbox_tenant_config` (single row keyed by `tenant_slug='djconley'`): `brand_color`, `logo_url`, `owner_name`, `owner_email`, `enabled_radars text[]`, `updated_at`. RLS: admin-only.
+- No edge-function changes required for the customer view — everything Matt needs already runs daily (scanners, digests). Migration #1 just makes sure his rows exist so the dashboards render data instead of empty states.
+- Keep the DWA Admin sidebar additions at the top of `GROUPS` so Matt sees them first on load.
 
-| Claude said                                                                           | Reality                                                                                               |
-| ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| "outreach_leads pool may be near empty"                                               | 2,880 rows, 1,182 with emails. Pool is fine.                                                          |
-| "TechAlert enriched 40+ = confident"                                                  | We have 74 enriched out of 1,520 — discovery is solved, enrichment is the gap                         |
-| "Build replenisher first (Phase B)"                                                   | Backwards. Enrichment first; we already have ~4,400 prospects sitting unenriched                      |
-| "Resend free = 100/day"                                                               | Correct, but didn't make this action #1. No outbound plan works until plan is confirmed.              |
-| Missed `email-waterfall.ts` Tiers 7–89                                                | 70+ free email sources already in `_shared/` — never wired into the enrich functions                  |
-| Quality formula `pool × 0.10 × quality`                                               | Doesn't account for Resend budget. Will overshoot if pools are large.                                 |
-| "Trade Radar / Mortgage Radar / Contractor / Dead Lead need cold-email source counts" | These are B2C buyer-product data, not outbound prospects. Conflates two pipelines.                    |
-| dead_lead_contacts = 0                                                                | Claude didn't notice. Dead Lead product literally has no source data. Decision needed: scrap or seed. |
+## Out of scope (call out before building)
 
-
----
-
-## Part 6 — One question I need answered before building
-
-**Dead Lead Reactivation** has 0 source contacts in DB. Three options:
-
-- (a) Scrap the product
-- (b) Build a one-time importer for Matt's old contractor contact lists / CSVs
-- (c) Auto-seed from `outreach_leads` rows that have phone + no reply after D14
-
-Need Matt's call before allocating effort. Everything else above I can execute without further input. C and lets also keep this in the cold email loop. Im not getting rid of this product.
+- Building real auth/seat management for the DJ Conley client admin (it's a sandbox login gate today; productionizing multi-tenant client logins is a separate project).
+- Replacing all 12 DJ Conley admin tabs with live data — only wiring the 4 demo-critical ones for Pat.
+- Any changes to existing customer `My*` pages themselves.
 
 ---
 
-## Approval needed
+## Open questions before I build
 
-- OK to start with Phase A (Resend check, TechAlert trial, plainMode conversions, Lovable deploy)?
-- Decision on Dead Lead (a/b/c)?
-- Any product I should deprioritize (e.g., is Foundation Trade Radar at 81 leads worth keeping aggressive on)? Your call. Im not sure.
+1. For the "My Command Center" view, do you want the 11 Trade Radar verticals shown as **one combined feed** (all leads from all 11 verticals merged + filterable), or as **11 separate sub-tabs** like a customer enrolled in all 11 would see? Like a customer would see. 
+2. The DJ Conley sandbox admin currently uses fake demo data on 12 tabs. Should I (a) wire 4 tabs to real data + label the rest "Sample," or (b) wire all 12 to real data scoped to a `djconley` sandbox tenant (longer build)? Real data.
+3. Confirm: the "exact replica of his current website" means content-parity with what's at djconley.com today (I'll pull and diff) — not a redesign, right? Right, don't we already have this? 
