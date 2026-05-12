@@ -2895,6 +2895,7 @@ export type Database = {
           status: string
           stripe_session_id: string
           updated_at: string
+          user_id: string | null
           webhook_event_id: string | null
         }
         Insert: {
@@ -2908,6 +2909,7 @@ export type Database = {
           status?: string
           stripe_session_id: string
           updated_at?: string
+          user_id?: string | null
           webhook_event_id?: string | null
         }
         Update: {
@@ -2921,6 +2923,7 @@ export type Database = {
           status?: string
           stripe_session_id?: string
           updated_at?: string
+          user_id?: string | null
           webhook_event_id?: string | null
         }
         Relationships: []
@@ -14131,6 +14134,7 @@ export type Database = {
           tcpa_consent_at: string | null
           trial_ends_at: string | null
           updated_at: string
+          user_id: string | null
           zip_codes: string[] | null
         }
         Insert: {
@@ -14157,6 +14161,7 @@ export type Database = {
           tcpa_consent_at?: string | null
           trial_ends_at?: string | null
           updated_at?: string
+          user_id?: string | null
           zip_codes?: string[] | null
         }
         Update: {
@@ -14183,6 +14188,7 @@ export type Database = {
           tcpa_consent_at?: string | null
           trial_ends_at?: string | null
           updated_at?: string
+          user_id?: string | null
           zip_codes?: string[] | null
         }
         Relationships: []
