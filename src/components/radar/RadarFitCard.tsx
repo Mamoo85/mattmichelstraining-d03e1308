@@ -3,10 +3,12 @@
 // No "AI" copy anywhere — Automated Intel / Signal Strength only.
 
 import { useEffect, useState } from "react";
-import { Building2, MapPin, TrendingUp, DollarSign, Clock, AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
+import { Building2, MapPin, TrendingUp, DollarSign, Clock, AlertTriangle, ChevronDown, ChevronUp, Copy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { toastSuccess } from "@/lib/toast";
 import OutreachActionBar, { type OutreachContext } from "./OutreachActionBar";
 import SignalStrengthBars from "./SignalStrengthBars";
+import LeadStatusControl from "./LeadStatusControl";
 import dwaMark from "@/assets/dwa-logo-clean.png";
 
 interface FitJSON {
