@@ -58,42 +58,44 @@ function copyD7(name: string | null, agency: string): DripCopy {
 async function sourceFromApollo(sb: any) {
   let inserted = 0;
   for (const location of MI_LOCATIONS) {
-    try {
-      const orgs = await apolloOrganizationSearch({
-        organization_locations: [location],
-        organization_industries: ["staffing & recruiting", "hospitals & health care"],
-        keywords: ["healthcare staffing", "nurse staffing", "CNA", "medical staffing"],
-        per_page: 10,
-      });
-      for (const org of orgs?.organizations || []) {
-        const domain = org.primary_domain || org.website_url;
-        if (!domain) continue;
-        const people = await apolloPeopleSearch({
-          organization_domains: [domain],
-          person_titles: TARGET_TITLES,
-          per_page: 2,
-        });
-        for (const p of people?.people || []) {
-          const email = p.email;
-          if (!email || email === "email_not_unlocked@domain.com") continue;
-          const { error } = await sb.from("staffing_agency_prospects").upsert({
-            agency_name: org.name,
-            contact_name: [p.first_name, p.last_name].filter(Boolean).join(" "),
-            contact_title: p.title,
-            email: email.toLowerCase(),
-            phone: p.phone_numbers?.[0]?.sanitized_number || null,
-            city: org.city,
-            state: org.state || "MI",
-            domain,
-            apollo_id: p.id,
-            source: "apollo",
-            status: "new",
-          }, { onConflict: "email", ignoreDuplicates: true });
-          if (!error) inserted++;
+    for (const keyword of ["healthcare staffing", "nurse staffing agency", "medical staffing"]) {
+      try {
+        const orgs = await apolloOrganizationSearch({
+          organization_locations: [location],
+          q_organization_name: keyword,
+          per_page: 10,
+        } as any);
+        for (const org of orgs || []) {
+          const domain = (org as any).primary_domain || (org as any).website_url;
+          if (!domain || !org.name) continue;
+          const people = await apolloPeopleSearch({
+            organization_name: org.name,
+            person_titles: TARGET_TITLES,
+            per_page: 2,
+            decision_makers_only: false,
+          });
+          for (const p of people || []) {
+            const email = (p as any).email;
+            if (!email || email === "email_not_unlocked@domain.com") continue;
+            const { error } = await sb.from("staffing_agency_prospects").upsert({
+              agency_name: org.name,
+              contact_name: [(p as any).first_name, (p as any).last_name].filter(Boolean).join(" ") || null,
+              contact_title: (p as any).title || null,
+              email: String(email).toLowerCase(),
+              phone: (p as any).phone_numbers?.[0]?.sanitized_number || null,
+              city: (org as any).city || null,
+              state: (org as any).state || "MI",
+              domain,
+              apollo_id: (p as any).id,
+              source: "apollo",
+              status: "new",
+            }, { onConflict: "email", ignoreDuplicates: true });
+            if (!error) inserted++;
+          }
         }
+      } catch (e) {
+        console.error(`Apollo source failed for ${location}/${keyword}:`, e);
       }
-    } catch (e) {
-      console.error(`Apollo source failed for ${location}:`, e);
     }
   }
   return inserted;
