@@ -62,9 +62,10 @@ const AdminReplyInbox = lazy(() => import("@/components/admin/AdminReplyInbox"))
 const AdminClientAttribution = lazy(() => import("@/components/admin/AdminClientAttribution"));
 const TrialFunnelInsights = lazy(() => import("@/components/dwa-admin/TrialFunnelInsights"));
 const EmailPreflightHarness = lazy(() => import("@/components/dwa-admin/EmailPreflightHarness"));
+const AdminToday = lazy(() => import("@/components/dwa-admin/AdminToday"));
 
 type Tab =
-  | "ai-command"
+  | "today" | "ai-command"
   | "dwa-overview" | "revenue" | "leads-e2e" | "prospect-tracker" | "agent-toolkit" | "pipeline-velocity"
   | "command-center" | "sms-inbox" | "sms-drafts" | "call-list" | "linkedin-blitz" | "ad-launcher" | "agency-outreach" | "dead-leads" | "fax-drip" | "postcard-drip" | "sms-sniper" | "dead-lead-ad-studio" | "wave5-outreach"
   | "contractor-leads" | "contractor-onboarding" | "contractor-market" | "fielddesk" | "techalert" | "missed-call" | "missed-call-leads" | "clients-all"
@@ -74,87 +75,94 @@ type Tab =
 
 const GROUPS: SidebarGroup[] = [
   {
-    label: "Revenue",
+    label: "🏠 Today",
     items: [
-      { id: "sales-hub",         label: "💬 Sales Hub" },
-      { id: "ai-command",        label: "🧠 AI Command" },
-      { id: "dwa-overview",      label: "📊 Overview" },
-      { id: "pipeline-velocity", label: "📈 Pipeline Velocity" },
-      { id: "revenue",           label: "💰 Revenue" },
-      { id: "leads-e2e",         label: "🟢 Leads E2E" },
-      { id: "prospect-tracker",  label: "📍 Prospect Tracker" },
-      { id: "agent-toolkit",     label: "🤖 Agent Toolkit" },
+      { id: "today",             label: "Today" },
+      { id: "ai-command",        label: "AI Command" },
     ],
   },
   {
-    label: "Outreach",
+    label: "💰 Customers & Revenue",
     items: [
-      { id: "wave5-outreach",  label: "📡 Wave 5 Console (NEW)" },
-      { id: "marketing-tools", label: "📡 Marketing Tools" },
-      { id: "command-center",   label: "🎯 Command Center" },
-      { id: "sms-inbox",        label: "💬 SMS Inbox" },
-      { id: "sms-drafts",       label: "✍️ Pending Drafts" },
-      { id: "call-list",        label: "📞 Daily Call Sheet" },
-      { id: "linkedin-blitz",        label: "🎯 Growth Outreach" },
-      { id: "ad-launcher",           label: "🚀 Ad Launcher" },
-      { id: "dead-lead-ad-studio",   label: "🎯 Dead Lead Ad Studio" },
-      { id: "agency-outreach",       label: "📨 Agency Outreach" },
-      { id: "dead-leads",            label: "♻️ Dead Leads" },
-      { id: "fax-drip",              label: "📠 Fax Drip" },
-      { id: "postcard-drip",         label: "✉️ Postcard Drip" },
-      { id: "sms-sniper",            label: "💬 SMS Sniper" },
+      { id: "revenue",               label: "Revenue" },
+      { id: "dwa-overview",          label: "Overview" },
+      { id: "sales-hub",             label: "Sales Hub" },
+      { id: "pipeline-velocity",     label: "Pipeline Velocity" },
+      { id: "clients-all",           label: "All Clients / CRM" },
+      { id: "contractor-leads",      label: "Contractor Leads" },
+      { id: "contractor-onboarding", label: "Contractor Onboarding" },
+      { id: "fielddesk",             label: "FieldDesk Clients" },
+      { id: "techalert",             label: "Talent Radar Clients" },
+      { id: "missed-call",           label: "Missed-Call Clients" },
+      { id: "manual-onboarding",     label: "Manual Onboarding Queue" },
     ],
   },
   {
-    label: "Customers",
+    label: "📡 Outreach",
     items: [
-      { id: "contractor-leads",      label: "🏗️ Contractor Leads" },
-      { id: "contractor-onboarding", label: "🤝 Contractor Onboarding" },
-      { id: "contractor-market",     label: "🏪 PPL Marketplace" },
-      { id: "fielddesk",             label: "🛠️ FieldDesk Clients" },
-      { id: "techalert",             label: "🎯 TechAlert Clients" },
-      { id: "missed-call",           label: "📞 Missed-Call Catch" },
-      { id: "missed-call-leads",     label: "📞 Missed Call Leads" },
-      { id: "clients-all",           label: "👥 All Clients / CRM" },
-      { id: "manual-onboarding",     label: "🆕 Manual Onboarding Queue" },
-      { id: "djconley",              label: "👑 D.J. Conley · Premium" },
-      { id: "demo-pipeline",         label: "🎬 Demo Pipeline" },
-      { id: "proposals",             label: "📬 Prospect Proposals" },
+      { id: "reply-inbox",       label: "Reply Inbox" },
+      { id: "sms-inbox",         label: "SMS Inbox" },
+      { id: "sms-drafts",        label: "Pending Drafts" },
+      { id: "call-list",         label: "Daily Call Sheet" },
+      { id: "command-center",    label: "Command Center" },
+      { id: "wave5-outreach",    label: "Wave 5 Console" },
+      { id: "marketing-tools",   label: "Marketing Tools" },
+      { id: "ad-launcher",       label: "Ad Launcher" },
+      { id: "agency-outreach",   label: "Agency Outreach" },
+      { id: "dead-leads",        label: "Dead Leads" },
+      { id: "fax-drip",          label: "Fax Drip" },
+      { id: "postcard-drip",     label: "Postcard Drip" },
+      { id: "sms-sniper",        label: "SMS Sniper" },
+      { id: "linkedin-blitz",    label: "Growth Outreach" },
+      { id: "dead-lead-ad-studio", label: "Dead Lead Ad Studio" },
     ],
   },
   {
-    label: "Intel & Radars",
+    label: "🎯 Products & Radars",
     items: [
-      { id: "techalert",       label: "🎯 Talent Radar" },
-      { id: "lead-marketplace", label: "🏪 Lead Marketplace" },
-      { id: "demand-radar",    label: "📈 Demand Radar" },
-      { id: "mortgage-radar",  label: "🏠 Mortgage Radar" },
-      { id: "trade-radar",     label: "🔨 Trade Radar (11 Verticals)" },
-      { id: "hvb",             label: "📦 High-Volume Buyers" },
-      { id: "growth-signals",  label: "📡 Growth Signals" },
-      { id: "trial-funnel",    label: "🎯 Trial Funnel & Email" },
-      { id: "email-preflight", label: "📧 Email Preflight" },
-      { id: "visitor-intel",   label: "👁️ Visitor Intel" },
-      { id: "the-wire",        label: "📡 The Wire" },
-      { id: "coverage-map",    label: "🗺️ Coverage Map" },
+      { id: "trade-radar",       label: "Trade Radar (11 Verticals)" },
+      { id: "mortgage-radar",    label: "Mortgage Radar" },
+      { id: "techalert",         label: "Talent Radar" },
+      { id: "demand-radar",      label: "Demand Radar" },
+      { id: "lead-marketplace",  label: "Lead Marketplace" },
+      { id: "contractor-market", label: "PPL Marketplace" },
+      { id: "missed-call-leads", label: "Missed Call Leads" },
+      { id: "hvb",               label: "High-Volume Buyers" },
+      { id: "growth-signals",    label: "Growth Signals" },
     ],
   },
   {
-    label: "Ops & Tools",
+    label: "🛠️ Ops",
     items: [
-      { id: "health",          label: "🛡️ Health & Compliance" },
-      { id: "suppression-lists", label: "🚫 Suppression Lists" },
-      { id: "system-audit",      label: "🔍 System Audit" },
-      { id: "enrichment-audit",  label: "🔬 Enrichment Audit" },
-      { id: "enrichment-health",  label: "📊 Enrichment Health" },
-      { id: "reply-inbox",        label: "📬 Reply Inbox" },
-      { id: "client-attribution", label: "🎯 Client Attribution" },
-      { id: "buyer-radar-qa",  label: "🛡️ Buyer Radar QA" },
-      { id: "simulation",      label: "🧪 Simulation Suite" },
-      { id: "playbook-hub",  label: "📖 Playbook & Strategy" },
-      { id: "strategy-mode", label: "🧠 Strategy Mode" },
-      { id: "field-ops",     label: "⚙️ Field Ops" },
-      { id: "command",       label: "🎛️ Command Deck" },
+      { id: "health",            label: "Health & Compliance" },
+      { id: "system-audit",      label: "System Audit" },
+      { id: "enrichment-health", label: "Enrichment Health" },
+      { id: "enrichment-audit",  label: "Enrichment Audit" },
+      { id: "suppression-lists", label: "Suppression Lists" },
+      { id: "trial-funnel",      label: "Trial Funnel & Email" },
+      { id: "email-preflight",   label: "Email Preflight" },
+      { id: "client-attribution", label: "Client Attribution" },
+    ],
+  },
+  {
+    label: "More Tools",
+    collapsed: true,
+    items: [
+      { id: "leads-e2e",         label: "Leads E2E" },
+      { id: "prospect-tracker",  label: "Prospect Tracker" },
+      { id: "agent-toolkit",     label: "Agent Toolkit" },
+      { id: "visitor-intel",     label: "Visitor Intel" },
+      { id: "the-wire",          label: "The Wire" },
+      { id: "coverage-map",      label: "Coverage Map" },
+      { id: "buyer-radar-qa",    label: "Buyer Radar QA" },
+      { id: "simulation",        label: "Simulation Suite" },
+      { id: "playbook-hub",      label: "Playbook & Strategy" },
+      { id: "strategy-mode",     label: "Strategy Mode" },
+      { id: "field-ops",         label: "Field Ops" },
+      { id: "command",           label: "Command Deck" },
+      { id: "djconley",          label: "D.J. Conley · Premium" },
+      { id: "demo-pipeline",     label: "Demo Pipeline" },
+      { id: "proposals",         label: "Prospect Proposals" },
     ],
   },
 ];
@@ -162,7 +170,7 @@ const GROUPS: SidebarGroup[] = [
 const lazyFallback = (label: string) => <div className="text-white/40 text-sm p-6">Loading {label}…</div>;
 
 export default function DWAAdmin() {
-  const [activeTab, setActiveTab] = useState<Tab>("ai-command");
+  const [activeTab, setActiveTab] = useState<Tab>("today");
   const [collapsed, setCollapsed] = useState(false);
 
   return (
@@ -188,6 +196,7 @@ export default function DWAAdmin() {
         <div className="px-3 sm:px-6 py-6">
           <InstallAppBanner app="dwa-admin" />
 
+          {activeTab === "today"            && <Suspense fallback={lazyFallback("Today")}><AdminToday /></Suspense>}
           {activeTab === "sales-hub"        && <Suspense fallback={lazyFallback("Sales Hub")}><ProductSalesHub /></Suspense>}
           {activeTab === "ai-command"       && <Suspense fallback={lazyFallback("AI Command")}><AdminCommandBar /></Suspense>}
           {activeTab === "dwa-overview"      && <Suspense fallback={lazyFallback("overview")}><AdminDWAOverview /></Suspense>}
