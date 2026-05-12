@@ -203,7 +203,7 @@ serve(async (req) => {
         source_label: "Google Maps Healthcare",
         source_url: `https://www.google.com/maps/place/?q=place_id:${f.placeId}`,
         // owner_email left null — techalert-enrich will populate via Apollo/Hunter/Firecrawl
-      }, { onConflict: "company_name,state", ignoreDuplicates: false });
+      }, { onConflict: "company_name,role", ignoreDuplicates: false });
 
       if (error) {
         console.error(`[healthcare] upsert "${f.name}":`, error.message);

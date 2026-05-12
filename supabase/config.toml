@@ -1869,6 +1869,9 @@ verify_jwt = false
 [functions.visitor-identify]
 verify_jwt = false
 
+[functions.techalert-prospect-hunter]
+verify_jwt = false
+
 [functions.techalert-enrich]
 verify_jwt = false
 
