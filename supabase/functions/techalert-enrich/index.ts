@@ -58,7 +58,7 @@ serve(async (req) => {
   // Smaller batch sizes to dodge WORKER_RESOURCE_LIMIT on free tier.
   // Default 5/run; can be overridden per-invocation.
   const reqBody = await req.json().catch(() => ({} as any));
-  const batchLimit = Math.min(Math.max(Number(reqBody?.limit ?? 5), 1), 25);
+  const batchLimit = Math.min(Math.max(Number(reqBody?.limit ?? 50), 1), 200);
 
   try {
     // Fetch up to N unenriched new prospects per run (small batches)
