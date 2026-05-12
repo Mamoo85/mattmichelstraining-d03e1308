@@ -5,17 +5,32 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { sendSMS } from "../_shared/twilio.ts";
+import { verifyTwilioSignature } from "../_shared/webhook-verify.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-const ADMIN_PHONE = Deno.env.get("ADMIN_PHONE") || "+13138064952";
+const ADMIN_PHONE = Deno.env.get("ADMIN_PHONE");
 const TWILIO_PHONE = Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219";
+const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN");
 
 serve(async (req) => {
   if (req.method !== "POST") return new Response("ok", { status: 200 });
+  if (!TWILIO_AUTH_TOKEN) {
+    console.error("[voicemail-transcription-handler] TWILIO_AUTH_TOKEN not set");
+    return new Response("Misconfigured", { status: 500 });
+  }
+  if (!ADMIN_PHONE) {
+    console.error("[voicemail-transcription-handler] ADMIN_PHONE not set");
+    return new Response("Misconfigured", { status: 500 });
+  }
   try {
     const text = await req.text();
     const params = new URLSearchParams(text);
+    const formObj: Record<string, string> = {};
+    for (const [k, v] of params.entries()) formObj[k] = v;
+    const sig = req.headers.get("x-twilio-signature");
+    const ok = await verifyTwilioSignature(req.url, formObj, sig, TWILIO_AUTH_TOKEN);
+    if (!ok) return new Response("Forbidden", { status: 403 });
     const transcript = params.get("TranscriptionText") || "";
     const callerPhone = params.get("From") || params.get("Called") || "";
     const status = params.get("TranscriptionStatus") || "";
