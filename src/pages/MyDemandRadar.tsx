@@ -79,6 +79,9 @@ export default function MyDemandRadar() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedLead, setSelectedLead] = useState<LeadDetail | null>(null);
+  const [states, setStates] = useState<BatchLeadStateMap>({});
+  const [industryFilter, setIndustryFilter] = useState<string | null>(null);
+  const [showSnoozed, setShowSnoozed] = useState(false);
 
   useEffect(() => {
     (async () => {
