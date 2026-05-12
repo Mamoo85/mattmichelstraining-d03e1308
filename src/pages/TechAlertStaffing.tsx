@@ -111,7 +111,7 @@ export default function TechAlertStaffing() {
           <a href="#free-candidates" style={{ background: ACCENT, color: BG, padding: "14px 24px", borderRadius: 8, fontWeight: 800, textDecoration: "none" }}>
             Get 10 Free Names
           </a>
-          <Link to="/talent-radar/trial" style={{ border: `1px solid ${ACCENT}`, color: ACCENT, padding: "14px 24px", borderRadius: 8, fontWeight: 800, textDecoration: "none" }}>
+          <Link to="/talent-radar/trial?vertical=healthcare" style={{ border: `1px solid ${ACCENT}`, color: ACCENT, padding: "14px 24px", borderRadius: 8, fontWeight: 800, textDecoration: "none" }}>
             Start No-Card Trial
           </Link>
           <a href="/talent-radar/setup" style={{ color: "#cbd5e1", padding: "14px 8px", fontWeight: 700, textDecoration: "none" }}>
@@ -140,7 +140,7 @@ export default function TechAlertStaffing() {
                 <button onClick={startCheckout} disabled={checkoutLoading} style={{ background: ACCENT, color: BG, border: "none", padding: "14px 20px", borderRadius: 8, fontWeight: 900, cursor: checkoutLoading ? "wait" : "pointer" }}>
                   {checkoutLoading ? "Opening checkout…" : "Start 7-Day Checkout Trial →"}
                 </button>
-                <Link to="/talent-radar/trial" style={{ border: `1px solid ${BORDER}`, color: "#cbd5e1", padding: "13px 20px", borderRadius: 8, fontWeight: 800, textDecoration: "none" }}>
+                <Link to="/talent-radar/trial?vertical=healthcare" style={{ border: `1px solid ${BORDER}`, color: "#cbd5e1", padding: "13px 20px", borderRadius: 8, fontWeight: 800, textDecoration: "none" }}>
                   Start No-Card Trial Instead
                 </Link>
               </div>
