@@ -193,9 +193,17 @@ Deno.serve(async (req) => {
 
     const pitch = pitchFor(lead);
     const subject = pitch.subject(lead.business_name || "your shop", lead.city || "Michigan");
-    const html = emailHtml(lead, pitch);
+    const html = plainEmailHtml(lead, pitch);
 
-    const r = await dwaEmail({ to: lead.email, subject, html, headers: listUnsubHeaders(lead.email) });
+    const r = await dwaColdEmail({
+      to: lead.email,
+      subject,
+      bodyHtml: html,
+      product: pitch.product,
+      ctaUrl: pitch.ctaUrl,
+      templateName: `dwa_product_blast_${pitch.product}`,
+      plainMode: true,
+    }, sb);
     if (r.ok) {
       sent++;
       byProduct[pitch.product] = (byProduct[pitch.product] || 0) + 1;
