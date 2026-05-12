@@ -105,7 +105,7 @@ serve(async (req) => {
     const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
     const limit: number = body.limit ?? 20;
 
-    let q = (sb.from as any)("marketplace_prospects").select("*").eq("status", "active");
+    let q = (sb.from as any)("marketplace_prospects").select("*");
     if (body.prospect_ids?.length) {
       q = q.in("id", body.prospect_ids);
     } else {
