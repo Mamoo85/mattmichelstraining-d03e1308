@@ -21,7 +21,35 @@ export default function TechAlertStaffing() {
   const [county, setCounty] = useState("Wayne");
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [sent, setSent] = useState(false);
+
+  async function startCheckout() {
+    if (!email) {
+      toast({ title: "Enter your email first", description: "Use the form so checkout can pre-fill your account." });
+      return;
+    }
+    setCheckoutLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-hire-alert-checkout", {
+        body: {
+          email,
+          company_name: agency,
+          phone,
+          plan: "standalone",
+          target_roles: ["cna", "rn", "lpn", "home_health_aide"],
+          county,
+          source_page: "healthcare",
+          ref: "techalert_staffing_self_checkout",
+        },
+      });
+      if (error || !data?.url) throw new Error(error?.message || "Checkout failed");
+      window.location.href = data.url;
+    } catch (err: unknown) {
+      toast({ title: "Checkout error", description: err instanceof Error ? err.message : "Text Matt at (313) 992-1219", variant: "destructive" });
+      setCheckoutLoading(false);
+    }
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -79,10 +107,21 @@ export default function TechAlertStaffing() {
             <span key={c} style={{ background: CARD, border: `1px solid ${BORDER}`, padding: "6px 12px", borderRadius: 20, fontSize: 12, color: "#94a3b8" }}>{c}</span>
           ))}
         </div>
+        <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginTop: 24 }}>
+          <a href="#free-candidates" style={{ background: ACCENT, color: BG, padding: "14px 24px", borderRadius: 8, fontWeight: 800, textDecoration: "none" }}>
+            Get 10 Free Names
+          </a>
+          <Link to="/talent-radar/trial?vertical=healthcare" style={{ border: `1px solid ${ACCENT}`, color: ACCENT, padding: "14px 24px", borderRadius: 8, fontWeight: 800, textDecoration: "none" }}>
+            Start No-Card Trial
+          </Link>
+          <a href="/talent-radar/setup" style={{ color: "#cbd5e1", padding: "14px 8px", fontWeight: 700, textDecoration: "none" }}>
+            Self-Onboard →
+          </a>
+        </div>
       </section>
 
       {/* Lead magnet form */}
-      <section style={{ maxWidth: 560, margin: "0 auto 56px", padding: "0 20px" }}>
+      <section id="free-candidates" style={{ maxWidth: 560, margin: "0 auto 56px", padding: "0 20px" }}>
         <div style={{ background: CARD, border: `2px solid ${ACCENT}`, borderRadius: 14, padding: 28 }}>
           {sent ? (
             <div style={{ textAlign: "center" }}>
@@ -97,6 +136,14 @@ export default function TechAlertStaffing() {
               >
                 Or text Matt now: (313) 992-1219 →
               </a>
+              <div style={{ display: "grid", gap: 10, marginTop: 22 }}>
+                <button onClick={startCheckout} disabled={checkoutLoading} style={{ background: ACCENT, color: BG, border: "none", padding: "14px 20px", borderRadius: 8, fontWeight: 900, cursor: checkoutLoading ? "wait" : "pointer" }}>
+                  {checkoutLoading ? "Opening checkout…" : "Start 7-Day Checkout Trial →"}
+                </button>
+                <Link to="/talent-radar/trial?vertical=healthcare" style={{ border: `1px solid ${BORDER}`, color: "#cbd5e1", padding: "13px 20px", borderRadius: 8, fontWeight: 800, textDecoration: "none" }}>
+                  Start No-Card Trial Instead
+                </Link>
+              </div>
             </div>
           ) : (
             <>

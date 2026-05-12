@@ -50,18 +50,24 @@ serve(async (req) => {
       if (r.error) console.warn("[lead-magnet] upsert warn:", r.error.message);
     });
 
-    // 2. Pull top 10 nursing candidates
+    // 2. Pull top nursing candidates. `hire_alert_candidates` stores county inside raw_data,
+    // not as a physical column, so filter in memory and fall back to all Michigan nurse rows.
     let q = sb.from("hire_alert_candidates")
-      .select("full_name,name,trade,license_type,city,county,zip,license_expiry,availability_score,first_seen_at")
+      .select("full_name,name,trade,license_type,city,zip,license_expiry,availability_score,first_seen_at,raw_data")
       .in("trade", NURSING_TRADES)
       .order("availability_score", { ascending: false, nullsFirst: false })
       .order("first_seen_at", { ascending: false })
-      .limit(10);
-    if (county) q = q.ilike("county", `%${county}%`);
+      .limit(60);
     const { data: candidates, error: cErr } = await q;
     if (cErr) console.warn("[lead-magnet] candidate query warn:", cErr.message);
 
-    const rows = (candidates || []).map((c, i) => {
+    const allCandidates = candidates || [];
+    const countyCandidates = county
+      ? allCandidates.filter((c: any) => String(c.raw_data?.county || "").toLowerCase().includes(String(county).toLowerCase()))
+      : allCandidates;
+    const selectedCandidates = (countyCandidates.length >= 5 ? countyCandidates : allCandidates).slice(0, 10);
+
+    const rows = selectedCandidates.map((c, i) => {
       const fullName = c.full_name || c.name || "Candidate";
       const role = (c.license_type || c.trade || "Healthcare").toUpperCase();
       const where = [c.city, c.zip].filter(Boolean).join(", ") || "Michigan";
@@ -174,7 +180,7 @@ serve(async (req) => {
       }).catch(e => console.warn("[lead-magnet] sms warn:", e));
     }
 
-    return new Response(JSON.stringify({ success: true, candidates: candidates?.length || 0 }), {
+    return new Response(JSON.stringify({ success: true, candidates: selectedCandidates.length }), {
       status: 200, headers: { ...cors, "Content-Type": "application/json" },
     });
   } catch (e) {
