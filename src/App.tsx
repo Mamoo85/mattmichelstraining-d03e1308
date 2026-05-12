@@ -345,6 +345,7 @@ const HireAlertMSPInquiry = lazyRetry(() => import("./pages/HireAlertMSPInquiry"
 const FreeLeadsQR = lazyRetry(() => import("./pages/FreeLeadsQR"));
 const HireAlertTrial = lazyRetry(() => import("./pages/HireAlertTrial"));
 const HealthcareHireAlert = lazyRetry(() => import("./pages/HealthcareHireAlert"));
+const TechAlertStaffing = lazyRetry(() => import("./pages/TechAlertStaffing"));
 const CareAlert = lazyRetry(() => import("./pages/CareAlert"));
 const WebsiteSpeedAudits = lazyRetry(() => import("./pages/WebsiteSpeedAudits"));
 const CrimeDigest = lazyRetry(() => import("./pages/CrimeDigest"));
