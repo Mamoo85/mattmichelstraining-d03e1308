@@ -71,11 +71,14 @@ export async function isBlocked(
     return { blocked: false };
   }
 
+  // PostgREST .or() uses commas as separators; values with commas/parens must be quoted.
+  // Wrap every value in double quotes to be safe.
+  const q = (v: string) => `"${v.replace(/"/g, '\\"')}"`;
   const orConditions: string[] = [];
-  if (phone) orConditions.push(`phone.eq.${phone}`);
-  if (email) orConditions.push(`email.eq.${email}`);
-  if (domain) orConditions.push(`domain.eq.${domain}`);
-  if (business) orConditions.push(`business_name.eq.${business}`);
+  if (phone) orConditions.push(`phone.eq.${q(phone)}`);
+  if (email) orConditions.push(`email.eq.${q(email)}`);
+  if (domain) orConditions.push(`domain.eq.${q(domain)}`);
+  if (business) orConditions.push(`business_name.eq.${q(business)}`);
 
   const { data, error } = await supabase
     .from("outreach_blocklist")
