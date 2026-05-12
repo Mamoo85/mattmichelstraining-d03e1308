@@ -20213,6 +20213,42 @@ export type Database = {
           },
         ]
       }
+      sandbox_tenant_config: {
+        Row: {
+          brand_color: string
+          created_at: string
+          enabled_radars: string[]
+          logo_url: string | null
+          notes: string | null
+          owner_email: string | null
+          owner_name: string | null
+          tenant_slug: string
+          updated_at: string
+        }
+        Insert: {
+          brand_color?: string
+          created_at?: string
+          enabled_radars?: string[]
+          logo_url?: string | null
+          notes?: string | null
+          owner_email?: string | null
+          owner_name?: string | null
+          tenant_slug: string
+          updated_at?: string
+        }
+        Update: {
+          brand_color?: string
+          created_at?: string
+          enabled_radars?: string[]
+          logo_url?: string | null
+          notes?: string | null
+          owner_email?: string | null
+          owner_name?: string | null
+          tenant_slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       satisfaction_survey_clients: {
         Row: {
           active: boolean | null
