@@ -140,20 +140,27 @@ serve(async (req) => {
     const batchSize = 100;
     for (let i = 0; i < unique.length; i += batchSize) {
       const batch = unique.slice(i, i + batchSize).map((p) => ({
-        ...p,
+        company_name: p.company_name,
+        state: p.state,
+        city: p.city,
+        phone: p.owner_phone,
+        owner_phone: p.owner_phone,
+        role: p.role,
+        score: p.score,
         is_boiler: false,
-        signal_source: p.source_label,
-        signal_date: new Date().toISOString(),
+        source_label: p.source_label,
+        status: "seeded",
       }));
       // Upsert ignore on conflict
-      const { error, count } = await sb
+      const { error, data } = await sb
         .from("techalert_prospect_targets")
-        .upsert(batch, { onConflict: "company_name,state", ignoreDuplicates: true, count: "exact" });
+        .upsert(batch, { onConflict: "company_name,state", ignoreDuplicates: true })
+        .select("id");
       if (error) {
         console.error("[seed] upsert error:", error.message);
         continue;
       }
-      inserted += count ?? batch.length;
+      inserted += data?.length ?? 0;
     }
 
     await sb.from("agent_heartbeats").upsert({
