@@ -237,6 +237,8 @@ export default function MyBuyerRadar() {
                     confidence: s.confidence,
                     predicted_needs: s.predicted_needs,
                     detected_at: (s as any).detected_at,
+                    client_id: client?.id,
+                    radar: "buyer",
                   })}
                 />
               ))}
