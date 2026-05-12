@@ -171,6 +171,9 @@ export interface DwaColdEmailOpts {
   ctaText?: string;       // CTA button label for non-trial products. Default: "See it live →"
   templateName: string;   // for email_send_log audit
   bcc?: string;
+  // When true, skips the dark DWA HTML wrapper and sends bodyHtml as-is.
+  // Use for cold outreach where a plain, human-looking email avoids spam filters.
+  plainMode?: boolean;
   // Visual blocks — render BEFORE the body for max impact (humans are visual).
   teaserHtml?: string;    // pre-rendered teaserCardHtml() output
   previewHtml?: string;   // pre-rendered dashboardPreviewHtml() output
@@ -197,12 +200,18 @@ export async function dwaColdEmail(
     return { ok: false, error: `email_sanity: ${sanity.reason}` };
   }
 
-  const ctaBlock = isTrialEligible(opts.product)
-    ? trialCtaHtml({ product: opts.product, url: opts.ctaUrl })
-    : plainCtaHtml({ url: opts.ctaUrl, text: opts.ctaText || "See it live →" });
-  const visuals = `${opts.previewHtml || ""}${opts.teaserHtml || ""}`;
-  const inner = `${visuals}${opts.bodyHtml}\n${ctaBlock}`;
-  const html = dwaWrap(inner);
+  let html: string;
+  if (opts.plainMode) {
+    // Plain mode: send bodyHtml as-is, no dark template. For cold outreach where
+    // the branded wrapper triggers spam filters. bodyHtml must be self-contained HTML.
+    html = opts.bodyHtml;
+  } else {
+    const ctaBlock = isTrialEligible(opts.product)
+      ? trialCtaHtml({ product: opts.product, url: opts.ctaUrl })
+      : plainCtaHtml({ url: opts.ctaUrl, text: opts.ctaText || "See it live →" });
+    const visuals = `${opts.previewHtml || ""}${opts.teaserHtml || ""}`;
+    html = dwaWrap(`${visuals}${opts.bodyHtml}\n${ctaBlock}`);
+  }
   const messageId = `cold-${opts.templateName}-${crypto.randomUUID()}`;
 
   if (sb) {
