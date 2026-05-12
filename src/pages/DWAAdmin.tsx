@@ -139,6 +139,7 @@ const GROUPS: SidebarGroup[] = [
       { id: "system-audit",      label: "System Audit" },
       { id: "enrichment-health", label: "Enrichment Health" },
       { id: "enrichment-audit",  label: "Enrichment Audit" },
+      { id: "enrichment-debug",  label: "Enrichment Debug" },
       { id: "suppression-lists", label: "Suppression Lists" },
       { id: "trial-funnel",      label: "Trial Funnel & Email" },
       { id: "email-preflight",   label: "Email Preflight" },
