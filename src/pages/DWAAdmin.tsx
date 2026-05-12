@@ -188,7 +188,7 @@ const GROUPS: SidebarGroup[] = [
 const lazyFallback = (label: string) => <div className="text-white/40 text-sm p-6">Loading {label}…</div>;
 
 export default function DWAAdmin() {
-  const [activeTab, setActiveTab] = useState<Tab>("today");
+  const [activeTab, setActiveTab] = useState<Tab>("my-command-center");
   const [collapsed, setCollapsed] = useState(false);
 
   return (
