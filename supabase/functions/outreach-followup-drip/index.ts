@@ -88,6 +88,7 @@ async function sendFollowup(
     bodyHtml,
     product: "DWA",
     plainMode: true,
+    allowSubdomain: true,
     ctaUrl: `https://detroitwebagent.com/start-trial?email=${encodeURIComponent(to)}&utm_source=cold_email&utm_medium=email&utm_campaign=outreach_${touch}`,
     templateName: `outreach_followup_${touch}`,
   }, sb);
