@@ -265,20 +265,48 @@ export default function MyDemandRadar() {
           </Card>
         </div>
 
-        <div className="flex items-center justify-between mb-4">
+        <PipelineStrip counts={pipelineCounts} />
+        <HottestLeadBanner
+          hottest={hottestLead}
+          onOpen={() => {
+            const s = signals.find((x) => x.id === hottestLead?.id);
+            if (s) setSelectedLead({
+              id: s.id, company_name: s.company_name, location: s.location, industry: s.industry,
+              signal_type: s.signal_type, confidence: s.confidence, recommended_pitch: s.recommended_pitch,
+              hiring_count: s.hiring_count, hiring_roles: s.hiring_roles, predicted_needs: s.predicted_needs,
+              source_urls: s.source_urls, detected_at: s.detected_at,
+              client_id: client?.id, radar: "demand",
+            });
+          }}
+        />
+
+        <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
           <h2 className="text-sm font-bold text-white">Signal feed (last 30 days)</h2>
-          {signals.length > 0 && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => exportCSV(signals)}
-              className="border-[#00d4ff]/40 text-[#00d4ff] hover:bg-[#00d4ff]/10 h-8 text-xs"
-            >
-              <Download className="w-3 h-3 mr-1.5" />
-              Export CSV
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            <SnoozeFilterToggle
+              count={pipelineCounts.snoozed}
+              showSnoozed={showSnoozed}
+              onToggle={() => setShowSnoozed((v) => !v)}
+            />
+            {signals.length > 0 && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => exportCSV(visibleSignals)}
+                className="border-[#00d4ff]/40 text-[#00d4ff] hover:bg-[#00d4ff]/10 h-8 text-xs"
+              >
+                <Download className="w-3 h-3 mr-1.5" />
+                Export CSV
+              </Button>
+            )}
+          </div>
         </div>
+
+        <IndustryFilterPills
+          industries={industries}
+          selected={industryFilter}
+          onChange={setIndustryFilter}
+        />
 
         {loading ? (
           <p className="text-[#94a3b8]">Loading signals…</p>
@@ -294,9 +322,13 @@ export default function MyDemandRadar() {
             ]}
             setupGuideHref="mailto:matt@detroitwebagent.com?subject=Demand%20Radar%20setup"
           />
+        ) : visibleSignals.length === 0 ? (
+          <p className="text-[12px] text-[#64748b] text-center py-8">
+            No signals match your current filters.
+          </p>
         ) : (
           <div className="grid gap-3">
-            {signals.map((s) => (
+            {visibleSignals.map((s) => (
               <RadarFitCard
                 key={s.id}
                 radar="demand"
@@ -315,6 +347,8 @@ export default function MyDemandRadar() {
                   predicted_needs: s.predicted_needs,
                   source_urls: s.source_urls,
                   detected_at: s.detected_at,
+                  client_id: client?.id,
+                  radar: "demand",
                 })}
               />
             ))}
