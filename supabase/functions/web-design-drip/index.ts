@@ -245,16 +245,17 @@ serve(async (req) => {
           : "";
         const bodyWithRevenue = bodyText + `\n\nP.S. Based on signals we already pulled for ${industry} businesses in your area, you're leaving roughly ${revenueUsd}/mo on the table. The dashboard above is what we'd hand you on day one.` + missedCallPS;
 
+        // Plain mode: human-looking, no dark template, no preview card. Better inbox placement.
+        const plainBody = `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;font-size:15px;line-height:1.55;color:#222;max-width:600px;">${bodyWithRevenue.replace(/\n/g, "<br>")}<br><br><a href="${ctaUrl}">See what I'd build for you →</a></div>`;
         const r = await dwaColdEmail({
           to: email,
           subject,
-          bodyHtml: bodyWithRevenue.replace(/\n/g, "<br>"),
-          // Web design has no trial — gated CTA picks "See it live →" automatically.
+          bodyHtml: plainBody,
           product: "Web Design Build",
           ctaUrl,
           ctaText: "See what I'd build for you →",
           templateName: nextStep.templateName,
-          previewHtml,
+          plainMode: true,
         }, sb);
 
         if (!r.ok) {
