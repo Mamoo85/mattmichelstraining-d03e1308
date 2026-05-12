@@ -2354,3 +2354,12 @@ verify_jwt = false
 
 [functions.radar-crm-push]
 verify_jwt = false
+
+[functions.mortgage-radar-lo-blast]
+verify_jwt = false
+
+[functions.find-lo-prospects]
+verify_jwt = false
+
+[functions.enrich-lo-prospect]
+verify_jwt = false
