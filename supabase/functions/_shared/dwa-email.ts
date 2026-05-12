@@ -177,6 +177,10 @@ export interface DwaColdEmailOpts {
   // Visual blocks — render BEFORE the body for max impact (humans are visual).
   teaserHtml?: string;    // pre-rendered teaserCardHtml() output
   previewHtml?: string;   // pre-rendered dashboardPreviewHtml() output
+  // When true, accept legitimate subdomain emails (e.g. careers.bcbsm.com,
+  // marketing.eaton.com). Use for enriched prospects where the source
+  // (Snov/Apollo/Hunter/PDL) already verified deliverability.
+  allowSubdomain?: boolean;
 }
 
 export async function dwaColdEmail(
@@ -185,7 +189,8 @@ export async function dwaColdEmail(
 ): Promise<{ ok: boolean; error?: string; messageId?: string }> {
   // Pre-send sanity check — skip invalid/disposable/no-MX addresses silently
   const sanity = await checkEmailSanity(opts.to);
-  if (!sanity.ok) {
+  const sanityOk = sanity.ok || (opts.allowSubdomain && sanity.reason === "non_apex_subdomain");
+  if (!sanityOk) {
     if (sb) {
       try {
         await sb.from("email_send_log").insert({
