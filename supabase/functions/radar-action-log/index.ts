@@ -12,6 +12,12 @@ const corsHeaders = {
 const ALLOWED = new Set([
   "called", "emailed", "linkedin", "sms", "crm",
   "copied_opener", "won", "lost", "snooze", "viewed",
+  // status pipeline
+  "status_new", "status_contacted", "status_proposal", "status_won", "status_lost",
+  // snooze durations
+  "snooze_3d", "snooze_1w", "snooze_2w", "unsnooze",
+  // free-form note + CRM push
+  "note", "crm_pushed",
 ]);
 
 Deno.serve(async (req) => {
