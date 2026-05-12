@@ -2366,3 +2366,6 @@ verify_jwt = false
 
 [functions.enrich-lo-prospect]
 verify_jwt = false
+
+[functions.staffing-agency-prospector]
+verify_jwt = false
