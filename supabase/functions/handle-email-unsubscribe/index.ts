@@ -124,7 +124,33 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: 'Failed to process unsubscribe' }, 500)
   }
 
-  console.log('Email unsubscribed', { email: tokenRecord.email })
+  // Upgrade 10: route healthcare unsubs to postcard queue instead of dead-end suppress
+  const email = tokenRecord.email.toLowerCase();
+  try {
+    const { data: prospect } = await supabase
+      .from("techalert_prospect_targets")
+      .select("id, company_name")
+      .ilike("contact_email", email)
+      .maybeSingle();
+    if (prospect?.id) {
+      const isHealthcare = /health|nursing|care|medical|hospice|hospital|senior|rehab/i.test(
+        String(prospect.company_name || "")
+      );
+      await supabase
+        .from("techalert_prospect_targets")
+        .update({
+          outreach_status: "unsubscribed",
+          unsubscribe_reason: "email_unsubscribe",
+          postcard_queue: isHealthcare,
+        })
+        .eq("id", prospect.id);
+    }
+  } catch (err) {
+    console.error("Failed to update prospect on unsubscribe", err);
+  }
+
+  console.log('Email unsubscribed', { email })
 
   return jsonResponse({ success: true })
 })
+
