@@ -77,8 +77,19 @@ async function searchApollo(page = 1): Promise<any[]> {
   if (!APOLLO_API_KEY) return [];
   try {
     const r = await apolloMixedPeopleSearch({
-      person_titles: ["Mortgage Loan Originator", "MLO", "Loan Officer", "Mortgage Banker", "Senior Loan Officer", "Loan Originator"],
-      person_locations: ["Michigan, US", "Michigan"],
+      person_titles: [
+        "Mortgage Loan Originator", "MLO", "Loan Officer", "Senior Loan Officer",
+        "Loan Originator", "Mortgage Banker", "Mortgage Advisor", "Mortgage Consultant",
+        "Mortgage Broker", "Branch Manager", "Producing Branch Manager",
+        "VP Mortgage", "Home Lending Advisor", "Mortgage Specialist",
+        "Lending Officer", "Mortgage Sales", "Mortgage Originator",
+      ],
+      person_locations: [
+        "Michigan, US", "Michigan",
+        "Ohio, US", "Indiana, US", "Illinois, US", "Wisconsin, US",
+        "Detroit, Michigan", "Grand Rapids, Michigan", "Ann Arbor, Michigan",
+        "Lansing, Michigan", "Kalamazoo, Michigan", "Flint, Michigan",
+      ],
       page,
       per_page: 25,
     });
