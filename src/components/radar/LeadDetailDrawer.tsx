@@ -50,13 +50,30 @@ export default function LeadDetailDrawer({ lead, open, onOpenChange }: Props) {
   const isMobile = useIsMobile();
   const [channel, setChannel] = useState<Channel>("email");
   const [loading, setLoading] = useState(true);
+  const [editedDrafts, setEditedDrafts] = useState<Partial<Record<Channel, string>>>({});
+  const [noteDraft, setNoteDraft] = useState("");
+  const [savingNote, setSavingNote] = useState(false);
+  const [crmPushing, setCrmPushing] = useState(false);
+
+  const canUseStatus = !!(lead?.client_id && lead?.radar);
+  const statusState = useRadarLeadStatus({
+    signal_id: lead?.id || "",
+    client_id: lead?.client_id || "",
+    radar: lead?.radar || "demand",
+  });
 
   useEffect(() => {
     if (!open) return;
     setLoading(true);
+    setEditedDrafts({});
+    setNoteDraft("");
     const t = setTimeout(() => setLoading(false), 350);
     return () => clearTimeout(t);
   }, [open, lead?.id]);
+
+  useEffect(() => {
+    if (canUseStatus && statusState.notes) setNoteDraft(statusState.notes);
+  }, [statusState.notes, canUseStatus]);
 
   if (!lead) return null;
 
@@ -69,16 +86,26 @@ export default function LeadDetailDrawer({ lead, open, onOpenChange }: Props) {
   const smsDraft = `Hi — saw ${company} is active in ${loc}. We supply ${lead.predicted_needs?.[0] || "industrial materials"} locally. 5-min call?`;
   const linkedInDraft = `Hi — saw ${company}'s recent activity in ${loc}. We work with similar teams on ${lead.predicted_needs?.[0] || "ops support"}. Open to connecting?`;
 
-  const drafts: Record<Channel, string> = { email: emailDraft, sms: smsDraft, linkedin: linkedInDraft };
-  const activeDraft = drafts[channel];
+  const baseDrafts: Record<Channel, string> = { email: emailDraft, sms: smsDraft, linkedin: linkedInDraft };
+  const activeDraft = editedDrafts[channel] ?? baseDrafts[channel];
 
   const copy = (text: string) => {
     navigator.clipboard.writeText(text);
     toastSuccess("Copied to clipboard");
   };
 
-  const sendToCRM = () => {
-    // Best-effort: copies a JSON payload contractors can paste into HubSpot/etc.
+  const saveNote = async () => {
+    if (!canUseStatus || !noteDraft.trim()) return;
+    setSavingNote(true);
+    try {
+      await statusState.log("note", noteDraft.trim());
+      toastSuccess("Note saved");
+    } finally {
+      setSavingNote(false);
+    }
+  };
+
+  const sendToCRM = async () => {
     const payload = {
       company: lead.company_name,
       industry: lead.industry,
@@ -91,7 +118,22 @@ export default function LeadDetailDrawer({ lead, open, onOpenChange }: Props) {
       lead_id: lead.id,
     };
     navigator.clipboard.writeText(JSON.stringify(payload, null, 2));
-    toastSuccess("Lead JSON copied — paste into your CRM");
+    if (canUseStatus) {
+      setCrmPushing(true);
+      try {
+        const { data } = await supabase.functions.invoke("radar-crm-push", {
+          body: { signal_id: lead.id, client_id: lead.client_id, radar: lead.radar, payload },
+        });
+        const delivered = (data as any)?.delivered;
+        toastSuccess(delivered ? "Pushed to your CRM webhook" : "JSON copied — paste into your CRM");
+      } catch {
+        toastSuccess("JSON copied — paste into your CRM");
+      } finally {
+        setCrmPushing(false);
+      }
+    } else {
+      toastSuccess("JSON copied — paste into your CRM");
+    }
   };
 
   const flagMailto = `mailto:matt@detroitwebagent.com?subject=${encodeURIComponent(`Incorrect data: ${company}`)}&body=${encodeURIComponent(`Lead ID: ${lead.id}\nCompany: ${company}\n\nWhat looked wrong:\n`)}`;
