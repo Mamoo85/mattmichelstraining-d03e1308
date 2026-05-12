@@ -133,7 +133,7 @@ serve(async (req) => {
           stage: "paid",
           provider: "apollo",
           triggered_by: body.prospect_ids?.length ? "manual" : "cron",
-          cost_cents: APOLLO_API_KEY ? 1 : 0,
+          cost_cents: hasApolloKey() ? 1 : 0,
         },
         async () => {
           const r = await enrichViaApollo(row.full_name, row.company);
