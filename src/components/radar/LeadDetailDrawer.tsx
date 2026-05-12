@@ -29,6 +29,8 @@ export interface LeadDetail {
   predicted_needs?: string[];
   source_urls?: string[];
   detected_at?: string;
+  client_id?: string;
+  radar?: "demand" | "buyer";
 }
 
 interface Props {
