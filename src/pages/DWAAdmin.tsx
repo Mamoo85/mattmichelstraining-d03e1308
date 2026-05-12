@@ -214,6 +214,9 @@ export default function DWAAdmin() {
         <div className="px-3 sm:px-6 py-6">
           <InstallAppBanner app="dwa-admin" />
 
+          {activeTab === "my-command-center" && <Suspense fallback={lazyFallback("My Command Center")}><MyCommandCenter /></Suspense>}
+          {activeTab === "sandbox-admin"     && <Suspense fallback={lazyFallback("DJ Conley Admin")}><ClientSandboxFrame initialMode="admin" /></Suspense>}
+          {activeTab === "sandbox-site"      && <Suspense fallback={lazyFallback("DJ Conley Site")}><ClientSandboxFrame initialMode="site" /></Suspense>}
           {activeTab === "today"            && <Suspense fallback={lazyFallback("Today")}><AdminToday /></Suspense>}
           {activeTab === "sales-hub"        && <Suspense fallback={lazyFallback("Sales Hub")}><ProductSalesHub /></Suspense>}
           {activeTab === "ai-command"       && <Suspense fallback={lazyFallback("AI Command")}><AdminCommandBar /></Suspense>}
