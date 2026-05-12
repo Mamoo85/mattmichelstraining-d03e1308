@@ -64,8 +64,11 @@ const AdminClientAttribution = lazy(() => import("@/components/admin/AdminClient
 const TrialFunnelInsights = lazy(() => import("@/components/dwa-admin/TrialFunnelInsights"));
 const EmailPreflightHarness = lazy(() => import("@/components/dwa-admin/EmailPreflightHarness"));
 const AdminToday = lazy(() => import("@/components/dwa-admin/AdminToday"));
+const MyCommandCenter = lazy(() => import("@/components/dwa-admin/MyCommandCenter"));
+const ClientSandboxFrame = lazy(() => import("@/components/dwa-admin/ClientSandboxFrame"));
 
 type Tab =
+  | "my-command-center" | "sandbox-site" | "sandbox-admin"
   | "today" | "ai-command"
   | "dwa-overview" | "revenue" | "leads-e2e" | "prospect-tracker" | "agent-toolkit" | "pipeline-velocity"
   | "command-center" | "sms-inbox" | "sms-drafts" | "call-list" | "linkedin-blitz" | "ad-launcher" | "agency-outreach" | "dead-leads" | "fax-drip" | "postcard-drip" | "sms-sniper" | "dead-lead-ad-studio" | "wave5-outreach"
