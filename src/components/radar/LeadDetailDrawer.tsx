@@ -178,16 +178,17 @@ export default function LeadDetailDrawer({ lead, open, onOpenChange }: Props) {
         </Button>
         <Button
           size="sm"
+          disabled={crmPushing}
           className="ml-auto bg-[#00d4ff] hover:bg-[#00d4ff]/90 text-[#0a1628] font-bold h-8"
           onClick={sendToCRM}
         >
-          <Send className="h-3.5 w-3.5 mr-1.5" /> Send to CRM
+          <Send className="h-3.5 w-3.5 mr-1.5" /> {crmPushing ? "Pushing…" : "Send to CRM"}
         </Button>
       </div>
 
       <div className="px-4 sm:px-6 py-5">
         {/* Identity strip */}
-        <div className="flex items-start gap-3 mb-5">
+        <div className="flex items-start gap-3 mb-3">
           <div className="w-10 h-10 rounded-full bg-[#00d4ff]/15 flex items-center justify-center shrink-0">
             <Building2 className="h-5 w-5 text-[#00d4ff]" />
           </div>
@@ -200,6 +201,17 @@ export default function LeadDetailDrawer({ lead, open, onOpenChange }: Props) {
             </div>
           </div>
         </div>
+
+        {canUseStatus && (
+          <div className="mb-5 flex items-center gap-2 flex-wrap">
+            <LeadStatusControl
+              signal_id={lead.id}
+              client_id={lead.client_id!}
+              radar={lead.radar!}
+              size="md"
+            />
+          </div>
+        )}
 
         <Accordion type="single" collapsible defaultValue="dossier" className="w-full">
           {/* DOSSIER */}
