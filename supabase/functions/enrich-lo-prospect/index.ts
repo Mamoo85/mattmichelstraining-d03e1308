@@ -136,7 +136,7 @@ serve(async (req) => {
           cost_cents: APOLLO_API_KEY ? 1 : 0,
         },
         async () => {
-          const r = await enrichViaApollo(row.full_name, row.company_name);
+          const r = await enrichViaApollo(row.full_name, row.company);
           const fields: string[] = [];
           if (r.email) fields.push("email");
           if (r.phone) fields.push("phone");
@@ -156,7 +156,7 @@ serve(async (req) => {
             triggered_by: body.prospect_ids?.length ? "manual" : "cron",
           },
           async () => {
-            const r = await enrichViaSonar(row.full_name, row.company_name);
+            const r = await enrichViaSonar(row.full_name, row.company);
             const fields: string[] = [];
             if (r.email) fields.push("email");
             if (r.phone) fields.push("phone");
@@ -168,8 +168,7 @@ serve(async (req) => {
 
       const updates: Record<string, unknown> = {
         enriched_at: new Date().toISOString(),
-        enrichment_source: result.source,
-        warmth_score: computeWarmth(row, result),
+        notes: `enriched_via:${result.source}; warmth:${computeWarmth(row, result)}`,
         updated_at: new Date().toISOString(),
       };
       if (result.email && !row.email) updates.email = result.email;
