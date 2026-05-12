@@ -1,7 +1,7 @@
-// siteradar-cold-blast — Cold email pitch for SiteRadar to any business with a website.
+// siteradar-cold-blast — Plain cold email pitch for SiteRadar.
+// Plain HTML body (no dark template, no card image) — deliverability-safe.
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { dwaEmail, listUnsubHeaders } from "../_shared/dwa-email.ts";
-import { teaserCardHtml } from "../_shared/teaser-card.ts";
+import { dwaColdEmail } from "../_shared/dwa-email.ts";
 import { isBlocked } from "../_shared/outreach-blocklist.ts";
 import { isMarketingBlocked } from "../_shared/marketing-kill-switch.ts";
 
@@ -14,30 +14,18 @@ const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const DAILY_CAP = parseInt(Deno.env.get("SITERADAR_BLAST_CAP") || "175", 10);
 const SITE = "https://detroitwebagent.com";
 
-function emailHtml(lead: any): string {
+function plainBody(lead: any): string {
   const fn = lead.first_name || lead.owner_name?.split(" ")[0] || "there";
   const biz = lead.business_name || "your business";
-  const card = teaserCardHtml({
-    headline: `📡 SiteRadar for ${biz}`,
-    scoreLabel: "$49/mo · 7-day trial",
-    bullets: [
-      "See every company that visits your site (by name, not IP)",
-      "Instant Slack/SMS alert when a hot prospect returns",
-      "Pulls firmographic data — industry, size, location",
-    ],
-    ctaText: "Start free 7-day trial →",
-    ctaUrl: `${SITE}/start-trial?product=site_radar&email=${encodeURIComponent(lead.email || "")}&utm_source=cold_email&utm_medium=email&utm_campaign=siteradar_blast`,
-    badge: "SITERADAR · TRIAL",
-  });
-  return `<div style="max-width:600px;margin:0 auto;padding:24px 16px;background:#fff;">
-  <p style="font:15px/1.55 -apple-system,Segoe UI,Arial;color:#0f2540;margin:0 0 10px;">Hey ${fn},</p>
-  <p style="font:15px/1.55 -apple-system,Segoe UI,Arial;color:#0f2540;margin:0 0 10px;">If your website gets traffic but only 2% of visitors convert, you're losing the other 98%. SiteRadar shows you who they were — by company name, industry, and size — so you can follow up.</p>
-  ${card}
-  <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0;"/>
-  <p style="font:12px/1.5 -apple-system,Segoe UI,Arial;color:#7a8aa0;margin:0;">
-    Matt Michels — Detroit Web Agency · (313) 992-1219<br/>
-    <a href="${SITE}/unsubscribe?email=${encodeURIComponent(lead.email)}" style="color:#7a8aa0;">Unsubscribe</a> · Reply STOP to opt out.
-  </p>
+  const ctaUrl = `${SITE}/start-trial?product=site_radar&email=${encodeURIComponent(lead.email || "")}&utm_source=cold_email&utm_medium=email&utm_campaign=siteradar_blast`;
+  return `<div style="font:15px/1.55 -apple-system,Segoe UI,Arial,sans-serif;color:#111;max-width:560px;">
+<p style="margin:0 0 14px;">Hey ${fn},</p>
+<p style="margin:0 0 14px;">Quick one about ${biz}'s website — if it gets traffic but only a small percent of visitors ever fill out the form, you're losing the rest without knowing who they were.</p>
+<p style="margin:0 0 14px;">SiteRadar shows you the company name, industry, and size of every visitor (not just an IP), so you can follow up directly. $49/mo with a free 7-day trial:</p>
+<p style="margin:0 0 14px;"><a href="${ctaUrl}" style="color:#0a58ca;">${ctaUrl}</a></p>
+<p style="margin:18px 0 4px;">— Matt Michels</p>
+<p style="margin:0 0 4px;color:#555;">Detroit Web Agency · (313) 992-1219</p>
+<p style="margin:14px 0 0;font-size:12px;color:#888;">Reply STOP to opt out. <a href="${SITE}/unsubscribe?email=${encodeURIComponent(lead.email)}" style="color:#888;">Unsubscribe</a>.</p>
 </div>`;
 }
 
@@ -71,7 +59,15 @@ Deno.serve(async (req) => {
     } catch (_) {}
 
     const subject = `${lead.business_name || "your site"} — see who's actually visiting`;
-    const r = await dwaEmail({ to: lead.email, subject, html: emailHtml(lead), headers: listUnsubHeaders(lead.email) });
+    const r = await dwaColdEmail({
+      to: lead.email,
+      subject,
+      bodyHtml: plainBody(lead),
+      product: "site_radar",
+      ctaUrl: `${SITE}/start-trial?product=site_radar`,
+      templateName: "siteradar_cold_blast",
+      plainMode: true,
+    }, sb);
     if (r.ok) {
       sent++;
       await sb.from("outreach_leads").update({
