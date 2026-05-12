@@ -58,6 +58,7 @@ const AdminManualOnboardingQueue = lazy(() => import("@/components/dwa-admin/Adm
 const AdminSuppressionLists = lazy(() => import("@/components/dwa-admin/AdminSuppressionLists"));
 const AdminSystemAudit = lazy(() => import("@/components/dwa-admin/AdminSystemAudit"));
 const AdminEnrichmentHealth = lazy(() => import("@/components/admin/AdminEnrichmentHealth"));
+const AdminEnrichmentDebug = lazy(() => import("@/components/admin/AdminEnrichmentDebug"));
 const AdminReplyInbox = lazy(() => import("@/components/admin/AdminReplyInbox"));
 const AdminClientAttribution = lazy(() => import("@/components/admin/AdminClientAttribution"));
 const TrialFunnelInsights = lazy(() => import("@/components/dwa-admin/TrialFunnelInsights"));
@@ -71,7 +72,7 @@ type Tab =
   | "contractor-leads" | "contractor-onboarding" | "contractor-market" | "fielddesk" | "techalert" | "missed-call" | "missed-call-leads" | "clients-all"
   | "lead-marketplace" | "demand-radar" | "hvb" | "growth-signals" | "visitor-intel" | "the-wire" | "coverage-map" | "trade-radar"
   | "health" | "simulation" | "playbook-hub" | "field-ops" | "command"
-  | "sales-hub" | "buyer-radar-qa" | "mortgage-radar" | "strategy-mode" | "enrichment-audit" | "enrichment-health" | "reply-inbox" | "client-attribution" | "marketing-tools" | "djconley" | "proposals" | "manual-onboarding" | "suppression-lists" | "system-audit" | "demo-pipeline" | "trial-funnel" | "email-preflight";
+  | "sales-hub" | "buyer-radar-qa" | "mortgage-radar" | "strategy-mode" | "enrichment-audit" | "enrichment-health" | "enrichment-debug" | "reply-inbox" | "client-attribution" | "marketing-tools" | "djconley" | "proposals" | "manual-onboarding" | "suppression-lists" | "system-audit" | "demo-pipeline" | "trial-funnel" | "email-preflight";
 
 const GROUPS: SidebarGroup[] = [
   {
@@ -138,6 +139,7 @@ const GROUPS: SidebarGroup[] = [
       { id: "system-audit",      label: "System Audit" },
       { id: "enrichment-health", label: "Enrichment Health" },
       { id: "enrichment-audit",  label: "Enrichment Audit" },
+      { id: "enrichment-debug",  label: "Enrichment Debug" },
       { id: "suppression-lists", label: "Suppression Lists" },
       { id: "trial-funnel",      label: "Trial Funnel & Email" },
       { id: "email-preflight",   label: "Email Preflight" },
@@ -257,6 +259,7 @@ export default function DWAAdmin() {
           {activeTab === "health"          && <Suspense fallback={lazyFallback("health")}><HealthComplianceHub /></Suspense>}
           {activeTab === "enrichment-audit"  && <Suspense fallback={lazyFallback("enrichment audit")}><AdminEnrichmentAudit /></Suspense>}
           {activeTab === "enrichment-health"  && <Suspense fallback={lazyFallback("enrichment health")}><AdminEnrichmentHealth /></Suspense>}
+          {activeTab === "enrichment-debug"   && <Suspense fallback={lazyFallback("enrichment debug")}><AdminEnrichmentDebug /></Suspense>}
           {activeTab === "reply-inbox"        && <Suspense fallback={lazyFallback("reply inbox")}><AdminReplyInbox /></Suspense>}
           {activeTab === "client-attribution" && <Suspense fallback={lazyFallback("client attribution")}><AdminClientAttribution /></Suspense>}
           {activeTab === "buyer-radar-qa"  && <Suspense fallback={lazyFallback("Buyer Radar QA")}><BuyerRadarQAChecklist /></Suspense>}
