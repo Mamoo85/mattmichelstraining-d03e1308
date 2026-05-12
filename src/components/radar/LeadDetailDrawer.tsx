@@ -4,14 +4,17 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/u
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { supabase } from "@/integrations/supabase/client";
 import {
   ExternalLink, Mail, Phone, MessageSquare, Search, Linkedin,
-  MapPin, Briefcase, Building2, Copy, Globe, Printer, Send, Flag,
+  MapPin, Briefcase, Building2, Copy, Globe, Printer, Send, Flag, Activity, StickyNote,
 } from "lucide-react";
 import { toastSuccess } from "@/lib/toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import SignalStrengthBars from "./SignalStrengthBars";
 import DossierPrintSheet from "./DossierPrintSheet";
+import LeadStatusControl from "./LeadStatusControl";
+import { useRadarLeadStatus } from "./useRadarLeadStatus";
 
 export interface LeadDetail {
   id: string;
