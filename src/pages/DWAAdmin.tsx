@@ -58,6 +58,7 @@ const AdminManualOnboardingQueue = lazy(() => import("@/components/dwa-admin/Adm
 const AdminSuppressionLists = lazy(() => import("@/components/dwa-admin/AdminSuppressionLists"));
 const AdminSystemAudit = lazy(() => import("@/components/dwa-admin/AdminSystemAudit"));
 const AdminEnrichmentHealth = lazy(() => import("@/components/admin/AdminEnrichmentHealth"));
+const AdminEnrichmentDebug = lazy(() => import("@/components/admin/AdminEnrichmentDebug"));
 const AdminReplyInbox = lazy(() => import("@/components/admin/AdminReplyInbox"));
 const AdminClientAttribution = lazy(() => import("@/components/admin/AdminClientAttribution"));
 const TrialFunnelInsights = lazy(() => import("@/components/dwa-admin/TrialFunnelInsights"));
