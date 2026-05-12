@@ -8,7 +8,7 @@ const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
 
-const MATT_CELL = "+13138064952"; // Matt's personal cell — used to detect AT&T call-forwarding origin
+const MATT_CELL = Deno.env.get("MATT_PERSONAL_PHONE") || Deno.env.get("ADMIN_PHONE") || "";
 const FROM_EMAIL = "Matt Michels <matt@detroitwebagent.com>";
 const REPLY_TO = "matt@detroitwebagent.com";
 
