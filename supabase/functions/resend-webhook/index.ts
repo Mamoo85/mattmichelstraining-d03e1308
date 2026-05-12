@@ -45,10 +45,21 @@ async function verifySvix(rawBody: string, headers: Headers): Promise<boolean> {
   const expected = btoa(String.fromCharCode(...new Uint8Array(sigBuf)));
 
   // svix-signature header may contain multiple "v1,sig v1,sig2" pairs
-  return svixSig.split(" ").some((pair) => {
-    const [, sig] = pair.split(",");
-    return sig === expected;
-  });
+  const received = svixSig.split(" ").map((p) => p.split(",")[1] || "");
+  const match = received.some((sig) => sig === expected);
+  if (!match) {
+    console.error("[resend-webhook] sig mismatch", JSON.stringify({
+      expected_prefix: expected.slice(0, 12),
+      received_prefixes: received.map((s) => s.slice(0, 12)),
+      secret_len: WEBHOOK_SECRET.length,
+      secret_starts_whsec: WEBHOOK_SECRET.startsWith("whsec_"),
+      key_bytes_len: keyBytes.length,
+      svix_id: svixId,
+      svix_ts: svixTs,
+      body_len: rawBody.length,
+    }));
+  }
+  return match;
 }
 
 Deno.serve(async (req: Request) => {
