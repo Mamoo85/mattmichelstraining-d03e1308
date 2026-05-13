@@ -5,6 +5,7 @@ import { dwaEmail, listUnsubHeaders } from "../_shared/dwa-email.ts";
 import { teaserCardHtml } from "../_shared/teaser-card.ts";
 import { isBlocked } from "../_shared/outreach-blocklist.ts";
 import { isMarketingBlocked } from "../_shared/marketing-kill-switch.ts";
+import { wasContactedRecently } from "../_shared/cold-email-dedup.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
