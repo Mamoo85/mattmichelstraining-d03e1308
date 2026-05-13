@@ -13,6 +13,60 @@
 const OPENROUTER_KEY = Deno.env.get("OPENROUTER_API_KEY") || "";
 const ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
 
+// ---------------------------------------------------------------------------
+// Daily spend cap (cost control until paying customers ramp).
+//   - Through 2026-05-19 (this week): $25/day grace cap (legacy budget).
+//   - From  2026-05-20 onward:        $5/day hard cap.
+// Override via env OPENROUTER_DAILY_CAP_USD (numeric, dollars).
+// Spend is tracked in public.openrouter_daily_spend via RPC.
+// Failures of the gate are fail-OPEN (we never block on infra error).
+// ---------------------------------------------------------------------------
+const SUPA_URL = Deno.env.get("SUPABASE_URL") || "";
+const SUPA_SRK =
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ||
+  Deno.env.get("SERVICE_ROLE_KEY") || "";
+
+function dailyCapUsd(): number {
+  const override = Number(Deno.env.get("OPENROUTER_DAILY_CAP_USD") || "");
+  if (Number.isFinite(override) && override > 0) return override;
+  // Detroit-local "today" — matches the RPC's timezone.
+  const fmt = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Detroit",
+    year: "numeric", month: "2-digit", day: "2-digit",
+  });
+  const today = fmt.format(new Date()); // YYYY-MM-DD
+  return today >= "2026-05-20" ? 5 : 25;
+}
+
+async function rpc(fn: string, body: Record<string, unknown> = {}): Promise<any> {
+  if (!SUPA_URL || !SUPA_SRK) return null;
+  try {
+    const r = await fetch(`${SUPA_URL}/rest/v1/rpc/${fn}`, {
+      method: "POST",
+      headers: {
+        apikey: SUPA_SRK,
+        Authorization: `Bearer ${SUPA_SRK}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+    if (!r.ok) return null;
+    return await r.json().catch(() => null);
+  } catch {
+    return null;
+  }
+}
+
+async function todaysSpend(): Promise<number> {
+  const v = await rpc("openrouter_today_spend");
+  return Number(v) || 0;
+}
+
+async function recordSpend(costUsd: number): Promise<void> {
+  if (!Number.isFinite(costUsd) || costUsd <= 0) return;
+  await rpc("openrouter_record_spend", { _cost: costUsd });
+}
+
 export type OpenRouterModel =
   | "perplexity/sonar-pro"
   | "perplexity/sonar-reasoning-pro"
@@ -39,6 +93,21 @@ export interface OpenRouterResult {
 
 export async function openrouterCall(opts: OpenRouterCallOpts): Promise<OpenRouterResult | null> {
   if (!OPENROUTER_KEY) return null;
+
+  // Daily cost gate. Fail-OPEN on infra errors.
+  try {
+    const cap = dailyCapUsd();
+    const spent = await todaysSpend();
+    if (spent >= cap) {
+      console.warn(
+        `openrouter daily cap reached: $${spent.toFixed(2)} >= $${cap} — blocking ${opts.model}`,
+      );
+      return null;
+    }
+  } catch (e) {
+    console.warn("openrouter cap check failed (fail-open)", String((e as any)?.message ?? e));
+  }
+
   const messages: any[] = [];
   if (opts.system) messages.push({ role: "system", content: opts.system });
   messages.push({ role: "user", content: opts.user });
@@ -73,6 +142,10 @@ export async function openrouterCall(opts: OpenRouterCallOpts): Promise<OpenRout
     const data = await r.json();
     const text = data?.choices?.[0]?.message?.content ?? "";
     const cost = Number(data?.usage?.cost ?? data?.usage?.total_cost ?? 0) || undefined;
+    if (cost && cost > 0) {
+      // Fire-and-forget — never block the response on the ledger.
+      recordSpend(cost).catch(() => {});
+    }
     return { text, raw: data, cost_usd: cost };
   } catch (e) {
     console.warn(`openrouter ${opts.model} error`, String((e as any)?.message ?? e));
