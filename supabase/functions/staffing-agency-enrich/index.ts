@@ -9,6 +9,7 @@ import { hunterFindEmail } from "../_shared/hunter.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY") || "";
 const SNOV_CLIENT_ID = Deno.env.get("SNOV_CLIENT_ID") || "";
 const SNOV_CLIENT_SECRET = Deno.env.get("SNOV_CLIENT_SECRET") || "";
 
@@ -47,14 +48,35 @@ function domainOf(website: string | null): string | null {
   try {
     const u = website.startsWith("http") ? website : `https://${website}`;
     const host = new URL(u).hostname.replace(/^www\./, "");
-    // Skip yelp/google/facebook hosts — not the real agency domain
     if (/yelp|google|facebook|instagram|linkedin|maps/i.test(host)) return null;
     return host;
   } catch { return null; }
 }
 
-async function resolveEmail(website: string | null): Promise<{ email: string; contact_name: string | null; via: string }> {
-  const domain = domainOf(website);
+// When the queue row lacks a real domain (Yelp link, no website),
+// look up the agency on Google Places by name + phone to get the real website.
+async function resolveRealWebsite(name: string, phone: string | null, city: string | null): Promise<string | null> {
+  if (!GOOGLE_MAPS_API_KEY || !name) return null;
+  try {
+    const query = `${name} ${city || "Michigan"}`;
+    const r = await fetch(`https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${encodeURIComponent(query)}&inputtype=textquery&fields=place_id,name&key=${GOOGLE_MAPS_API_KEY}`, { signal: AbortSignal.timeout(6000) });
+    const d = await r.json();
+    const placeId = d?.candidates?.[0]?.place_id;
+    if (!placeId) return null;
+    const dr = await fetch(`https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=website,formatted_phone_number&key=${GOOGLE_MAPS_API_KEY}`, { signal: AbortSignal.timeout(6000) });
+    const det = (await dr.json())?.result || {};
+    return det.website || null;
+  } catch { return null; }
+}
+
+async function resolveEmail(website: string | null, name: string, phone: string | null, city: string | null): Promise<{ email: string; contact_name: string | null; via: string; resolved_website: string | null }> {
+  let realWebsite = website;
+  let domain = domainOf(website);
+  if (!domain) {
+    realWebsite = await resolveRealWebsite(name, phone, city);
+    domain = domainOf(realWebsite);
+  }
+  // shadow-rebind for downstream
   if (website && domain) {
     try {
       const c = await Promise.race([
