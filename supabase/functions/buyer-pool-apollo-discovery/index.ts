@@ -85,6 +85,15 @@ Deno.serve(async (req) => {
     });
   }
 
+  // Up-front health check so we don't silently get 0 results from a bad/expired key
+  const health = await apolloHealth();
+  if (!health.ok) {
+    return new Response(JSON.stringify({
+      ok: false,
+      error: `Apollo health check failed: ${health.status} ${health.error || ""}`.slice(0, 300),
+    }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
+
   try {
     const { data: targets, error } = await sb
       .from("buyer_universe_targets")
