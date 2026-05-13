@@ -218,7 +218,9 @@ serve(async (req) => {
   const startedAt = Date.now();
 
   try {
-    const sourced = await sourceFromApollo(sb);
+    const apolloSourced = await sourceFromApollo(sb);
+    const placesSourced = await sourceFromGooglePlaces(sb);
+    const sourced = apolloSourced + placesSourced;
 
     let remaining = DAILY_SEND_CAP;
     const d7 = await sendDripBatch(sb, "d7", remaining); remaining -= d7;
