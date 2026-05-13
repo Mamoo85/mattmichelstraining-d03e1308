@@ -172,7 +172,7 @@ const About = () => {
   <div className="min-h-screen bg-background">
     <SEOHead
       title="About Coach Matt Michels"
-      description="Meet Matt Michels — 20+ years training youth athletes in Grosse Pointe. Anti-influencer strength coach who's sent 50+ athletes to the college level with zero injuries."
+      description="Meet Matt Michels — 20+ years training youth athletes in Grosse Pointe. Anti-influencer strength coach who's sent 50+ athletes to college, zero injuries."
       path="/about"
     />
     <AppNavbar />
