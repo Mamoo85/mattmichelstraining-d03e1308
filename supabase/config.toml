@@ -2375,3 +2375,10 @@ verify_jwt = false
 
 [functions.inventory-daily-digest]
 verify_jwt = false
+
+[functions.staffing-agency-discover]
+verify_jwt = false
+
+[functions.staffing-agency-enrich]
+verify_jwt = false
+
