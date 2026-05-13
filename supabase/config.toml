@@ -1,5 +1,8 @@
 project_id = "zmyczlfuufhngzovkjdh"
 
+[functions.cold-email-pool-router]
+verify_jwt = false
+
 [functions.scanner-monitor-alert]
 verify_jwt = false
 
