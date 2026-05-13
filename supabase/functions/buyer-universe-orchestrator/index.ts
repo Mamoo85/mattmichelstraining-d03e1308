@@ -119,27 +119,42 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      // Queue Apify job if recipe has one and we're under budget
+      // Apify lane DISABLED — no scraper credits. Skip entirely; rely on free + Apollo discovery.
       if (recipe.apify) {
-        const used = await apifyBudgetUsedToday(sb, t.pool);
-        if (used < Number(t.apify_daily_budget_usd ?? 25)) {
-          await sb.from("apify_actor_jobs").insert({
-            pool: t.pool,
-            actor_id: recipe.apify.actor_id,
-            input_payload: recipe.apify.build_input(),
-          });
-          actions.push({ pool: t.pool, queued: "apify", gap, budget_used: used });
-        } else {
-          actions.push({ pool: t.pool, skipped: "apify_budget_exhausted", used });
-        }
+        actions.push({ pool: t.pool, skipped: "apify_disabled_no_credits", gap });
       }
+    }
 
-      // Apollo direct enrichment (sync) — fire-and-forget invoke a worker
-      if (recipe.apollo) {
-        // Use existing _shared/apollo helper via a thin worker so we don't recreate it here.
-        actions.push({ pool: t.pool, queued: "apollo", titles: recipe.apollo.titles, gap });
-        // The unified-enrichment-waterfall-v2 (next function) will pick raw candidates up.
-      }
+    // Kick the Apollo discovery worker (fills raw_buyer_candidates from Apollo for all pools).
+    try {
+      const r = await fetch(`${SUPABASE_URL}/functions/v1/buyer-pool-apollo-discovery`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: "{}",
+      });
+      const j = await r.json().catch(() => ({}));
+      actions.push({ apollo_discovery: j });
+    } catch (e: any) {
+      actions.push({ apollo_discovery_error: String(e?.message ?? e) });
+    }
+
+    // Kick the promote worker (drains raw_buyer_candidates → buyer_pools).
+    try {
+      const r = await fetch(`${SUPABASE_URL}/functions/v1/buyer-pool-promote`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: "{}",
+      });
+      const j = await r.json().catch(() => ({}));
+      actions.push({ promote: j });
+    } catch (e: any) {
+      actions.push({ promote_error: String(e?.message ?? e) });
     }
 
     return new Response(JSON.stringify({ ok: true, actions }), {

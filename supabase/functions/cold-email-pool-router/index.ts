@@ -39,89 +39,111 @@ interface BuyerRow {
   send_count: number;
 }
 
+// Each template returns subject/text/html + a tracked CTA URL with utm + buyer_id.
+// CTAs route to live landing pages on detroitwebagent.com.
+function ctaUrl(path: string, b: BuyerRow, campaign: string): string {
+  const u = new URL(`https://detroitwebagent.com${path}`);
+  u.searchParams.set("utm_source", "cold_email");
+  u.searchParams.set("utm_medium", "email");
+  u.searchParams.set("utm_campaign", campaign);
+  u.searchParams.set("bid", b.id);
+  return u.toString();
+}
+
 const TEMPLATES: Record<string, (b: BuyerRow) => { subject: string; html: string; text: string; key: string }> = {
   staffing_agency: (b) => {
     const first = (b.contact_name || "there").split(" ")[0];
+    const link = ctaUrl("/talent-radar", b, "staffing_v2");
     return {
-      key: "staffing_v1",
-      subject: `${first} — predictable nurse pipeline for ${b.company_name}?`,
-      text: `Hi ${first},\n\nWe surface licensed nurses + allied health pros within 48hrs of their license posting on NURSYS. Most agencies hear about them 2 weeks later from job boards.\n\nWorth a quick look? Reply "yes" and I'll send a 90-second loom.\n\n— Matt\nDetroit Web Agency\n(313) 992-1219\n\nReply STOP to opt out.`,
-      html: poolHtml(`Hi ${first},`, `We surface licensed nurses + allied health pros within 48hrs of their license posting on NURSYS — most agencies hear about them 2 weeks later from job boards.`, `Want a 90-second loom showing what your ${b.state || "MI"} pipeline would look like?`),
+      key: "staffing_v2",
+      subject: `${first} — 48-hr nurse alerts for ${b.company_name}?`,
+      text: `Hi ${first},\n\nWe surface licensed nurses + allied health pros within 48hrs of their license posting on the state registry. Most agencies hear about them 2 weeks later from job boards.\n\nFor a ${b.state || "Michigan"} staffing agency that means first-call advantage on every new license.\n\n7-day free trial → ${link}\n\nOr just reply "sample" and I'll send 5 fresh names from this week.\n\n— Matt Michels\nDetroit Web Agency · (313) 992-1219\n\nReply STOP to opt out.`,
+      html: poolHtml(`Hi ${first},`, `We surface licensed nurses + allied health pros within <b>48 hours</b> of their license posting on the state registry — most agencies hear about them 2 weeks later from job boards.<br><br>For a ${b.state || "Michigan"} staffing agency that means <b>first-call advantage</b> on every new license.`, `Start your free 7-day trial →`, link, "sample"),
     };
   },
   hospital_hr: (b) => {
     const first = (b.contact_name || "there").split(" ")[0];
+    const link = ctaUrl("/talent-radar/healthcare", b, "hospital_v2");
     return {
-      key: "hospital_hr_v1",
+      key: "hospital_v2",
       subject: `${b.company_name} — fill nursing reqs 11 days faster`,
-      text: `Hi ${first},\n\nWe alert hospital HR teams the moment a nurse hits their state license registry. Hospitals using us close reqs ~11 days faster than waiting for Indeed/LinkedIn.\n\nQuick 15-min look this week?\n\n— Matt\nDetroit Web Agency\n(313) 992-1219\n\nReply STOP to opt out.`,
-      html: poolHtml(`Hi ${first},`, `We alert hospital HR teams the moment a nurse hits the state license registry — hospitals using us close reqs ~11 days faster than Indeed/LinkedIn alone.`, `Quick 15-min look this week?`),
+      text: `Hi ${first},\n\nWe alert hospital HR teams the moment a nurse hits the state license registry. Hospitals using us close reqs ~11 days faster than waiting for Indeed or LinkedIn.\n\nSee how it works → ${link}\n\nWorth a 15-min look this week?\n\n— Matt Michels\nDetroit Web Agency · (313) 992-1219\n\nReply STOP to opt out.`,
+      html: poolHtml(`Hi ${first},`, `We alert hospital HR teams the moment a nurse hits the state license registry — hospitals using us close reqs <b>~11 days faster</b> than Indeed/LinkedIn alone.`, `See how it works →`, link, "demo"),
     };
   },
   trade_contractor: (b) => {
     const first = (b.contact_name || "there").split(" ")[0];
+    const link = ctaUrl("/trade-radar", b, "trade_v2");
     return {
-      key: "trade_v1",
-      subject: `${first} — homeowners 30 days from refinancing in ${b.city || "your area"}`,
-      text: `Hi ${first},\n\nWe identify homeowners in ${b.city || "your area"} who are 30 days from a refi or new-mortgage closing — high-intent moments where they buy roofing, HVAC, remodels, etc.\n\nWant me to send 5 free sample leads in your zip?\n\n— Matt\nDetroit Web Agency\n(313) 992-1219\n\nReply STOP to opt out.`,
-      html: poolHtml(`Hi ${first},`, `We identify homeowners in ${b.city || "your area"} 30 days from a refi or new-mortgage closing — high-intent moments where they buy roofing, HVAC, remodels.`, `Want 5 free sample leads in your zip?`),
+      key: "trade_v2",
+      subject: `${first} — homeowners 30 days from refi in ${b.city || "your area"}`,
+      text: `Hi ${first},\n\nWe identify homeowners in ${b.city || "your area"} who are 30 days from a refi or new-mortgage closing — high-intent moments where they buy roofing, HVAC, remodels, etc.\n\n5 free sample leads in your zip → ${link}\n\nOr reply "sample" and I'll text them over.\n\n— Matt Michels\nDetroit Web Agency · (313) 992-1219\n\nReply STOP to opt out.`,
+      html: poolHtml(`Hi ${first},`, `We identify homeowners in ${b.city || "your area"} who are <b>30 days from a refi or new-mortgage closing</b> — exact moments where they buy roofing, HVAC, remodels.`, `Get 5 free sample leads in your zip →`, link, "sample"),
     };
   },
   mortgage_lo: (b) => {
     const first = (b.contact_name || "there").split(" ")[0];
+    const link = ctaUrl("/mortgage-radar", b, "mortgage_lo_v2");
     return {
-      key: "mortgage_lo_v1",
-      subject: `${first} — pre-FSBO + pre-refi leads in your zip`,
-      text: `Hi ${first},\n\nWe surface FSBOs, divorces, and rate-trigger refi candidates 2-4 weeks before they hit Zillow. ~$149/mo flat for your zip.\n\nWant a free 7-day trial?\n\n— Matt\nDetroit Web Agency\n(313) 992-1219\n\nReply STOP to opt out.`,
-      html: poolHtml(`Hi ${first},`, `We surface FSBOs, divorces, and rate-trigger refi candidates 2–4 weeks before they hit Zillow. $149/mo flat for your zip.`, `Free 7-day trial?`),
+      key: "mortgage_lo_v2",
+      subject: `${first} — pre-FSBO + pre-refi leads in your zip ($149/mo)`,
+      text: `Hi ${first},\n\nWe surface FSBOs, divorces, and rate-trigger refi candidates 2-4 weeks before they hit Zillow. $149/mo flat for your zip — no per-lead fees.\n\nFree 7-day trial → ${link}\n\n— Matt Michels\nDetroit Web Agency · (313) 992-1219\n\nReply STOP to opt out.`,
+      html: poolHtml(`Hi ${first},`, `We surface FSBOs, divorces, and rate-trigger refi candidates <b>2–4 weeks before they hit Zillow</b>. $149/mo flat for your zip — no per-lead fees.`, `Start your free 7-day trial →`, link, "trial"),
     };
   },
   property_manager: (b) => {
     const first = (b.contact_name || "there").split(" ")[0];
+    const link = ctaUrl("/missed-call-catch", b, "pm_v2");
     return {
-      key: "pm_v1",
+      key: "pm_v2",
       subject: `${b.company_name} — never miss a tenant call again`,
-      text: `Hi ${first},\n\nWhen your tenants call after-hours, do they leave a voicemail or call your competitor? Our Missed-Call Catch service captures every miss + auto-texts back. $99/mo flat.\n\nWorth a 5-min look?\n\n— Matt\nDetroit Web Agency\n(313) 992-1219\n\nReply STOP to opt out.`,
-      html: poolHtml(`Hi ${first},`, `When tenants call after-hours, do they leave a voicemail or call your competitor? Our Missed-Call Catch service captures every miss + auto-texts back. $99/mo flat.`, `Worth a 5-min look?`),
+      text: `Hi ${first},\n\nWhen tenants call after-hours, do they leave a voicemail or call your competitor? Our Missed-Call Catch captures every miss + auto-texts back in 60 seconds. $99/mo flat.\n\nSee a 90-second demo → ${link}\n\n— Matt Michels\nDetroit Web Agency · (313) 992-1219\n\nReply STOP to opt out.`,
+      html: poolHtml(`Hi ${first},`, `When tenants call after-hours, do they leave a voicemail or call your competitor? Missed-Call Catch captures every miss + auto-texts back in <b>60 seconds</b>. $99/mo flat.`, `Watch the 90-second demo →`, link, "demo"),
     };
   },
   real_estate: (b) => {
     const first = (b.contact_name || "there").split(" ")[0];
+    const link = ctaUrl("/mortgage-radar", b, "re_v2");
     return {
-      key: "re_v1",
+      key: "re_v2",
       subject: `${first} — FSBO + divorce leads in ${b.city || "your area"}`,
-      text: `Hi ${first},\n\nWe identify FSBOs, divorce filings, and probate openings in ${b.city || "your area"} 2-3 weeks before they hit MLS. Most agents pay for these from Zillow at $40+/lead — we charge $149/mo flat for your whole zip.\n\nFree 7-day trial?\n\n— Matt\n(313) 992-1219\n\nReply STOP to opt out.`,
-      html: poolHtml(`Hi ${first},`, `We identify FSBOs, divorces, and probate openings in ${b.city || "your area"} 2–3 weeks before they hit MLS. $149/mo flat for your zip.`, `Free 7-day trial?`),
+      text: `Hi ${first},\n\nWe identify FSBOs, divorce filings, and probate openings in ${b.city || "your area"} 2-3 weeks before they hit MLS. Most agents pay $40+/lead from Zillow — we charge $149/mo flat for your whole zip.\n\nFree 7-day trial → ${link}\n\n— Matt Michels\nDetroit Web Agency · (313) 992-1219\n\nReply STOP to opt out.`,
+      html: poolHtml(`Hi ${first},`, `We identify FSBOs, divorce filings, and probate openings in ${b.city || "your area"} <b>2–3 weeks before they hit MLS</b>. $149/mo flat for your zip — vs $40+/lead on Zillow.`, `Start your free 7-day trial →`, link, "trial"),
     };
   },
   dental_medical: (b) => {
     const first = (b.contact_name || "there").split(" ")[0];
+    const link = ctaUrl("/missed-call-catch", b, "dental_v2");
     return {
-      key: "dental_v1",
+      key: "dental_v2",
       subject: `${b.company_name} — recover after-hours patient calls`,
-      text: `Hi ${first},\n\nEvery missed call after 5pm is a competitor's new patient. We capture every miss, transcribe the voicemail, and auto-text the patient back within 60 seconds. $99/mo.\n\nWorth a 5-min demo?\n\n— Matt\nDetroit Web Agency\n(313) 992-1219\n\nReply STOP to opt out.`,
-      html: poolHtml(`Hi ${first},`, `Every missed call after 5pm is a competitor's new patient. We capture every miss, transcribe the voicemail, auto-text the patient back within 60 seconds. $99/mo.`, `Worth a 5-min demo?`),
+      text: `Hi ${first},\n\nEvery missed call after 5pm is a competitor's new patient. We capture every miss, transcribe the voicemail, and auto-text the patient back within 60 seconds. $99/mo flat.\n\nSee 90-second demo → ${link}\n\n— Matt Michels\nDetroit Web Agency · (313) 992-1219\n\nReply STOP to opt out.`,
+      html: poolHtml(`Hi ${first},`, `Every missed call after 5pm is a competitor's new patient. We capture every miss, transcribe the voicemail, and auto-text the patient back within <b>60 seconds</b>. $99/mo flat.`, `See the 90-second demo →`, link, "demo"),
     };
   },
   auto_repair: (b) => {
     const first = (b.contact_name || "there").split(" ")[0];
+    const link = ctaUrl("/missed-call-catch", b, "auto_v2");
     return {
-      key: "auto_v1",
+      key: "auto_v2",
       subject: `${b.company_name} — stop losing service calls to voicemail`,
-      text: `Hi ${first},\n\nMost shops lose 15-30% of new-customer calls to voicemail when bays are full. We capture, transcribe, and auto-text back within 60s. $99/mo flat.\n\nQuick demo?\n\n— Matt\nDetroit Web Agency\n(313) 992-1219\n\nReply STOP to opt out.`,
-      html: poolHtml(`Hi ${first},`, `Most shops lose 15–30% of new-customer calls to voicemail when bays are full. We capture, transcribe, auto-text back within 60s. $99/mo flat.`, `Quick demo?`),
+      text: `Hi ${first},\n\nMost shops lose 15-30% of new-customer calls to voicemail when bays are full. We capture, transcribe, and auto-text back within 60 seconds. $99/mo flat.\n\nQuick demo → ${link}\n\n— Matt Michels\nDetroit Web Agency · (313) 992-1219\n\nReply STOP to opt out.`,
+      html: poolHtml(`Hi ${first},`, `Most shops lose <b>15–30% of new-customer calls</b> to voicemail when bays are full. We capture, transcribe, and auto-text back within 60 seconds. $99/mo flat.`, `Watch the 90-second demo →`, link, "demo"),
     };
   },
 };
 
-function poolHtml(greeting: string, body: string, cta: string): string {
+function poolHtml(greeting: string, body: string, ctaText: string, ctaHref: string, fallbackKeyword?: string): string {
   return `<div style="font-family:-apple-system,Segoe UI,sans-serif;font-size:15px;line-height:1.55;color:#0a1628;max-width:560px">
     <p>${greeting}</p>
     <p>${body}</p>
-    <p>${cta}</p>
-    <p>— Matt Michels<br>Detroit Web Agency<br>(313) 992-1219<br><a href="https://detroitwebagent.com">detroitwebagent.com</a></p>
+    <p style="margin:24px 0">
+      <a href="${ctaHref}" style="display:inline-block;background:#00d4ff;color:#0a1628;padding:12px 22px;border-radius:8px;text-decoration:none;font-weight:700">${ctaText}</a>
+    </p>
+    ${fallbackKeyword ? `<p style="font-size:13px;color:#475569">Or just reply "<b>${fallbackKeyword}</b>" and I'll send it over.</p>` : ""}
+    <p style="margin-top:24px">— Matt Michels<br>Detroit Web Agency<br>(313) 992-1219<br><a href="https://detroitwebagent.com" style="color:#0891b2">detroitwebagent.com</a></p>
     <hr style="border:none;border-top:1px solid #e5e7eb;margin:20px 0">
-    <p style="font-size:11px;color:#6b7280">Reply STOP to opt out. Detroit Web Agency, Grosse Pointe, MI.</p>
+    <p style="font-size:11px;color:#6b7280">Reply STOP to opt out. Detroit Web Agency, Grosse Pointe, MI · matt@detroitwebagent.com</p>
   </div>`;
 }
 
@@ -196,12 +218,13 @@ Deno.serve(async (req) => {
     }
 
     // Pull candidates
+    // NOTE: email_verified filter intentionally dropped — Hunter/Snov fail-open in waterfall;
+    // we rely on quality_score >= 6 + 7d bounce kill-switch for safety.
     const { data: candidates } = await sb
       .from("buyer_pools")
       .select("id,pool,company_name,domain,contact_name,contact_title,contact_email,city,state,quality_score,send_count")
       .eq("pool", t.pool)
       .eq("status", "ready")
-      .eq("email_verified", true)
       .gte("quality_score", 6)
       .order("quality_score", { ascending: false })
       .limit(remaining * 4); // overfetch for domain dedupe
