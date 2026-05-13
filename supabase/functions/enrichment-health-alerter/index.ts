@@ -20,16 +20,18 @@ Deno.serve(async (req) => {
   for (const p of PROVIDERS) {
     const { data } = await sb
       .from("enrichment_provider_health")
-      .select("provider, last_429_at, credits_remaining, hit_rate_24h, total_calls_24h")
+      .select("provider, last_429_at, credits_remaining, daily_calls, daily_hits, disabled_until")
       .eq("provider", p)
       .maybeSingle();
     if (!data) continue;
     const ageMs = data.last_429_at ? Date.now() - new Date(data.last_429_at).getTime() : Infinity;
     if (ageMs < 15 * 60 * 1000) issues.push(`${p}: 429 in last 15m`);
     if (typeof data.credits_remaining === "number" && data.credits_remaining <= 0) issues.push(`${p}: credits=0`);
-    if (typeof data.total_calls_24h === "number" && data.total_calls_24h >= 50 &&
-        typeof data.hit_rate_24h === "number" && data.hit_rate_24h < 0.02) {
-      issues.push(`${p}: hit-rate ${(data.hit_rate_24h * 100).toFixed(1)}% over ${data.total_calls_24h} calls`);
+    if (data.disabled_until && new Date(data.disabled_until).getTime() > Date.now()) issues.push(`${p}: disabled`);
+    const calls = data.daily_calls ?? 0;
+    const hits = data.daily_hits ?? 0;
+    if (calls >= 50 && hits / Math.max(calls, 1) < 0.02) {
+      issues.push(`${p}: hit-rate ${((hits / calls) * 100).toFixed(1)}% over ${calls} calls`);
     }
   }
 
