@@ -74,6 +74,12 @@ export default function HOAMeetingMinutes() {
         title="How to Write HOA Meeting Minutes: Free Template + Guide"
         description="Complete guide to HOA meeting minutes: what to include, common mistakes, step-by-step format, and a free template download."
         path="/blog/hoa-meeting-minutes"
+        type="article"
+        article={{
+          author: "Detroit Web Agency",
+          publishedTime: "2026-04-01T00:00:00.000Z",
+          category: "Guides",
+        }}
       />
       <div className="min-h-screen bg-background text-foreground">
         <div className="max-w-6xl mx-auto px-4 py-16">
