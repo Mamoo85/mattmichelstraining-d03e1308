@@ -1,14 +1,17 @@
-// Buyer Pool Promote — drains raw_buyer_candidates with a LIGHTWEIGHT enrichment chain
-// (Hunter.io domain search → Firecrawl contact-page scrape) and upserts qualified rows
-// into buyer_pools.
+// Buyer Pool Promote — drains raw_buyer_candidates with a memory-safe enrichment chain:
+//   Stage 1: Hunter.io domain search
+//   Stage 2: Firecrawl /contact page scrape
+//   Stage 3: OpenRouter Sonar OSINT (Tier 110 — web-search fallback)
 //
-// The full email-waterfall (80+ tiers) was too heavy for edge-runtime memory and tripped
-// WORKER_RESOURCE_LIMIT even at BATCH=3. This lean version handles 10 candidates/run safely.
+// The full 110-tier email-waterfall blows edge-runtime memory (WORKER_RESOURCE_LIMIT)
+// even at BATCH=1 because lazy-importing email-extras-1..6 cumulatively exceeds heap.
+// This lean+OSINT shape stays under the limit and still escapes Apollo dependence.
 //
 // Cron: every 30 min, offset by 15 from orchestrator.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { hunterFindEmail } from "../_shared/hunter.ts";
 import { firecrawlScrape, extractContactInfo } from "../_shared/firecrawl.ts";
+import { openrouterCall } from "../_shared/openrouter.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -18,8 +21,8 @@ const corsHeaders = {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-const BATCH = 10;
-const PER_CANDIDATE_TIMEOUT_MS = 12_000;
+const BATCH = 8;
+const PER_STAGE_TIMEOUT_MS = 10_000;
 
 function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
   return new Promise((resolve, reject) => {
@@ -40,41 +43,69 @@ function scoreCandidate(c: any, emailFound: string | null): number {
   return Math.min(s, 10);
 }
 
-async function leanEnrich(domain: string | null, companyName: string | null): Promise<{ email: string | null; trace: any[] }> {
+async function osintEmailLookup(c: any): Promise<string | null> {
+  const company = c.company_name || c.domain;
+  if (!company) return null;
+  const where = [c.city, c.state].filter(Boolean).join(", ") || "United States";
+  const prompt = `Find the best contact email address for "${company}" located in ${where}. ` +
+    `Prefer owner/president/general-manager. Return ONLY a JSON object: ` +
+    `{"email":"<email or empty>","confidence":0-100}. No prose.`;
+  try {
+    const res = await withTimeout(
+      openrouterCall({
+        model: "perplexity/sonar-pro",
+        user: prompt,
+        json: true,
+        max_tokens: 250,
+      }),
+      PER_STAGE_TIMEOUT_MS,
+      "openrouter_osint",
+    );
+    if (!res?.text) return null;
+    const m = res.text.match(/\{[\s\S]*\}/);
+    if (!m) return null;
+    const parsed = JSON.parse(m[0]);
+    const email = String(parsed.email || "").trim().toLowerCase();
+    if (/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(email)) return email;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+async function leanEnrich(c: any): Promise<{ email: string | null; source: string; trace: any[] }> {
   const trace: any[] = [];
-  if (!domain) return { email: null, trace };
+  const domain = c.domain;
 
-  // Step 1: Hunter.io domain search
-  try {
-    const hunter = await withTimeout(hunterFindEmail(domain), PER_CANDIDATE_TIMEOUT_MS, "hunter");
-    if (hunter?.email) {
-      trace.push({ source: "hunter", email: hunter.email, score: hunter.confidence });
-      return { email: hunter.email, trace };
-    }
-    trace.push({ source: "hunter", result: "no_match" });
-  } catch (e: any) {
-    trace.push({ source: "hunter", error: String(e?.message ?? e).slice(0, 120) });
-  }
+  // 1. Hunter
+  if (domain) {
+    try {
+      const h = await withTimeout(hunterFindEmail(domain), PER_STAGE_TIMEOUT_MS, "hunter");
+      if (h?.email) { trace.push({ source: "hunter", ok: true }); return { email: h.email, source: "hunter", trace }; }
+      trace.push({ source: "hunter", ok: false });
+    } catch (e: any) { trace.push({ source: "hunter", error: String(e?.message ?? e).slice(0, 120) }); }
 
-  // Step 2: Firecrawl contact-page scrape
-  try {
-    const url = `https://${domain}/contact`;
-    const scraped = await withTimeout(firecrawlScrape(url), PER_CANDIDATE_TIMEOUT_MS, "firecrawl");
-    if (scraped?.markdown || scraped?.html) {
-      const info = extractContactInfo(scraped.markdown || scraped.html || "");
-      if (info?.emails?.length) {
-        // prefer non-generic emails
-        const preferred = info.emails.find((e: string) => !/^(info|contact|hello|admin|support|sales)@/i.test(e)) || info.emails[0];
-        trace.push({ source: "firecrawl_contact", email: preferred });
-        return { email: preferred, trace };
+    // 2. Firecrawl /contact
+    try {
+      const sc = await withTimeout(firecrawlScrape(`https://${domain}/contact`), PER_STAGE_TIMEOUT_MS, "firecrawl");
+      if (sc?.markdown || sc?.html) {
+        const info = extractContactInfo(sc.markdown || sc.html || "");
+        if (info?.emails?.length) {
+          const preferred = info.emails.find((e: string) => !/^(info|contact|hello|admin|support|sales)@/i.test(e)) || info.emails[0];
+          trace.push({ source: "firecrawl_contact", ok: true });
+          return { email: preferred, source: "firecrawl_contact", trace };
+        }
       }
-      trace.push({ source: "firecrawl_contact", result: "no_email_extracted" });
-    }
-  } catch (e: any) {
-    trace.push({ source: "firecrawl_contact", error: String(e?.message ?? e).slice(0, 120) });
+      trace.push({ source: "firecrawl_contact", ok: false });
+    } catch (e: any) { trace.push({ source: "firecrawl_contact", error: String(e?.message ?? e).slice(0, 120) }); }
   }
 
-  return { email: null, trace };
+  // 3. OSINT Tier 110 — OpenRouter Sonar web-search
+  const osint = await osintEmailLookup(c);
+  if (osint) { trace.push({ source: "openrouter_osint", ok: true }); return { email: osint, source: "openrouter_osint", trace }; }
+  trace.push({ source: "openrouter_osint", ok: false });
+
+  return { email: null, source: "none", trace };
 }
 
 Deno.serve(async (req) => {
@@ -102,11 +133,13 @@ Deno.serve(async (req) => {
     for (const c of candidates) {
       const enrichedAt = new Date().toISOString();
       let email: string | null = c.contact_email || null;
+      let source = "provided";
       let trace: any = null;
 
-      if (!email && c.domain) {
-        const enr = await leanEnrich(c.domain, c.company_name);
+      if (!email) {
+        const enr = await leanEnrich(c);
         email = enr.email;
+        source = enr.source;
         trace = enr.trace;
       }
 
@@ -115,10 +148,10 @@ Deno.serve(async (req) => {
       if (!email || quality < 5) {
         await sb.from("raw_buyer_candidates").update({
           enriched_at: enrichedAt,
-          rejected_reason: !email ? "no_email_after_lean_waterfall" : "low_quality",
+          rejected_reason: !email ? "no_email_after_lean_plus_osint" : "low_quality",
         }).eq("id", c.id);
         rejected += 1;
-        traces.push({ id: c.id, pool: c.pool, status: "rejected", quality, trace });
+        traces.push({ id: c.id, pool: c.pool, status: "rejected", quality });
         continue;
       }
 
@@ -135,8 +168,8 @@ Deno.serve(async (req) => {
         zip: c.zip,
         quality_score: quality,
         email_verified: false,
-        source_chain: [c.source, ...(Array.isArray(trace) ? trace.map((t: any) => t?.source).filter(Boolean) : [])],
-        enrichment_meta: { trace, raw_id: c.id },
+        source_chain: [c.source, source].filter(Boolean),
+        enrichment_meta: { trace, raw_id: c.id, source },
         status: "ready",
       }, { onConflict: "contact_email", ignoreDuplicates: false });
 
@@ -154,7 +187,7 @@ Deno.serve(async (req) => {
         promoted_at: enrichedAt,
       }).eq("id", c.id);
       promoted += 1;
-      traces.push({ id: c.id, pool: c.pool, status: "promoted", email, quality });
+      traces.push({ id: c.id, pool: c.pool, status: "promoted", email, source, quality });
     }
 
     return new Response(JSON.stringify({
