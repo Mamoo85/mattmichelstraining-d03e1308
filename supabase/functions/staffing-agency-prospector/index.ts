@@ -235,7 +235,8 @@ serve(async (req) => {
     }
 
     return new Response(JSON.stringify({
-      ok: true, sourced, sent: totalSent, d0, d3, d7,
+      ok: true, sourced, apollo_sourced: apolloSourced, places_sourced: placesSourced,
+      sent: totalSent, d0, d3, d7,
       duration_ms: Date.now() - startedAt,
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e: any) {
