@@ -154,12 +154,33 @@ Deno.serve(async (req) => {
       const quality = scoreCandidate(c, email);
 
       if (!email || quality < 5) {
+        // Route phone-only candidates to cold_call_queue instead of dead-ending them.
+        let routed = false;
+        if (!email && c.contact_phone) {
+          const { error: ccqErr } = await sb.from("cold_call_queue").upsert({
+            pool: c.pool,
+            source: c.source,
+            company_name: c.company_name,
+            domain: c.domain,
+            contact_name: c.contact_name,
+            contact_title: c.contact_title,
+            contact_phone: c.contact_phone,
+            city: c.city,
+            state: c.state,
+            zip: c.zip,
+            raw_payload: c.raw_payload || {},
+            source_raw_id: c.id,
+          }, { onConflict: "pool,contact_phone", ignoreDuplicates: true });
+          routed = !ccqErr;
+        }
         await sb.from("raw_buyer_candidates").update({
           enriched_at: enrichedAt,
-          rejected_reason: !email ? "no_email_after_lean_plus_osint" : "low_quality",
+          rejected_reason: routed
+            ? "routed_to_cold_call_queue"
+            : (!email ? "no_email_after_lean_plus_osint" : "low_quality"),
         }).eq("id", c.id);
         rejected += 1;
-        traces.push({ id: c.id, pool: c.pool, status: "rejected", quality });
+        traces.push({ id: c.id, pool: c.pool, status: routed ? "to_cold_call" : "rejected", quality });
         continue;
       }
 
