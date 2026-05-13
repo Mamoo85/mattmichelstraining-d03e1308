@@ -5,7 +5,7 @@
 // The existing buyer-pool-promote function then runs the email waterfall on them.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { apolloPeopleSearch } from "../_shared/apollo.ts";
+import { apolloPeopleSearch, apolloHealth } from "../_shared/apollo.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
