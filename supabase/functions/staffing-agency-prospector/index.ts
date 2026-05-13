@@ -11,6 +11,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { apolloPeopleSearch, apolloOrganizationSearch } from "../_shared/apollo.ts";
+import { extractContactInfo } from "../_shared/firecrawl.ts";
 import { dwaEmail } from "../_shared/dwa-email.ts";
 import { isBlocked } from "../_shared/outreach-blocklist.ts";
 import { sendSMS, ADMIN_PHONE } from "../_shared/twilio.ts";
