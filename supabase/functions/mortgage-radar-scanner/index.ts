@@ -1494,7 +1494,9 @@ serve(async (req) => {
     }
   }
 
-  if (RESEND_API_KEY) {
+  // Only email Matt when there's actual activity — autoscaler fires this every 15 min
+  const hasActivity = inserted > 0 || updated > 0 || alertsQueued > 0 || hotSmsFired > 0;
+  if (RESEND_API_KEY && hasActivity) {
     try {
       await fetch("https://api.resend.com/emails", {
         method: "POST",
