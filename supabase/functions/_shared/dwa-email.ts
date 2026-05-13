@@ -207,9 +207,17 @@ export async function dwaColdEmail(
 
   let html: string;
   if (opts.plainMode) {
-    // Plain mode: send bodyHtml as-is, no dark template. For cold outreach where
-    // the branded wrapper triggers spam filters. bodyHtml must be self-contained HTML.
-    html = opts.bodyHtml;
+    // Plain mode: send bodyHtml as-is, but append ONE bare clickable URL so
+    // the recipient has a self-serve path (not just "reply YES"). One link
+    // keeps spam-score low while restoring conversions. Skip if the body
+    // already contains an http(s) link (caller handled it themselves).
+    const hasLink = /https?:\/\//i.test(opts.bodyHtml);
+    if (!hasLink && opts.ctaUrl) {
+      const linkLine = `<p style="margin:14px 0 0;color:#555;font-size:13px;">Or start it yourself in 60 seconds: <a href="${opts.ctaUrl}" style="color:#0a66c2;">${opts.ctaUrl.replace(/^https?:\/\//, "").split("?")[0]}</a></p>`;
+      html = `${opts.bodyHtml}${linkLine}`;
+    } else {
+      html = opts.bodyHtml;
+    }
   } else {
     const ctaBlock = isTrialEligible(opts.product)
       ? trialCtaHtml({ product: opts.product, url: opts.ctaUrl })
