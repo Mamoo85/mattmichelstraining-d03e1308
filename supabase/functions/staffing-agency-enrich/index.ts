@@ -99,10 +99,38 @@ async function resolveEmail(website: string | null, name: string, phone: string 
     const s = await snovFindEmail(domain);
     if (s) return { email: s.email, contact_name: s.name, via: "snov", resolved_website: realWebsite };
   }
+  const hiringPageEmail = domain ? await scanHiringContactPages(domain) : null;
+  if (hiringPageEmail) return { email: hiringPageEmail, contact_name: null, via: "hiring_page", resolved_website: realWebsite };
   const deep = await deepPublicDirectoryEmail(domain, name, city);
   if (deep?.email) return { email: deep.email, contact_name: null, via: deep.via, resolved_website: realWebsite };
   if (domain) return { email: `info@${domain}`, contact_name: null, via: "domain_fallback", resolved_website: realWebsite };
   return { email: "", contact_name: null, via: "none", resolved_website: null };
+}
+
+async function scanHiringContactPages(domain: string): Promise<string | null> {
+  const pages = ["/", "/contact", "/contact-us", "/careers", "/jobs", "/employment", "/join-our-team", "/work-with-us", "/staffing", "/recruiting"];
+  const emailRe = /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g;
+  const blocked = /^(?:no-?reply|postmaster|webmaster|example|test|admin)@/i;
+  const preferred = /^(?:jobs|careers|hr|recruiting|recruiter|talent|staffing|employment|hiring|info|contact|office)@/i;
+  const hits: string[] = [];
+
+  await Promise.all(pages.map(async (path) => {
+    try {
+      const res = await fetch(`https://${domain}${path}`, {
+        headers: { "User-Agent": "Mozilla/5.0" },
+        signal: AbortSignal.timeout(5000),
+      });
+      if (!res.ok) return;
+      const text = await res.text();
+      for (const email of text.match(emailRe) || []) {
+        const normalized = email.toLowerCase();
+        const emailDomain = normalized.split("@")[1];
+        if (emailDomain === domain && !blocked.test(normalized)) hits.push(normalized);
+      }
+    } catch { /* try next page */ }
+  }));
+
+  return [...new Set(hits)].find((e) => preferred.test(e)) || [...new Set(hits)][0] || null;
 }
 
 async function deepPublicDirectoryEmail(domain: string | null, name: string, city: string | null): Promise<{ email: string; via: string } | null> {
