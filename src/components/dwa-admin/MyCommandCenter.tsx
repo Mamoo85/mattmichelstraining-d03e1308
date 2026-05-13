@@ -86,7 +86,7 @@ const PRODUCTS: ProductTab[] = [
     healthCheck: checkTable("mortgage_radar_clients", (q) => q.eq("email", MATT_EMAIL)) },
   { id: "talent",      group: "core",  emoji: "👷", label: "Talent Radar",
     customerPath: `/talent-radar/dashboard?token=${TALENT_TOK}`, prospectPath: "/talent-radar",
-    healthCheck: checkTable("hire_alert_clients", (q) => q.eq("email", MATT_EMAIL)) },
+    healthCheck: checkTable("hire_alert_clients", (q) => q.ilike("owner_email", MATT_EMAIL)) },
   { id: "site",        group: "core",  emoji: "🛰️", label: "SiteRadar",
     customerPath: `/my-site-radar?token=${SITE_TOK}`, prospectPath: "/site-radar",
     healthCheck: checkTable("field_crm_clients", (q) => q.eq("email", MATT_EMAIL)) },
