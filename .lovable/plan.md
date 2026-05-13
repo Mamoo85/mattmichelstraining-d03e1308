@@ -1,150 +1,105 @@
-## Resource Audit — What We're Already Paying For (and Barely Using)
+# Plan — Kill the Apollo Dependency, Light Up Every Resource We Already Pay For
 
-I pulled the full secret + connector inventory. We have **85 secrets and 12 live connectors**. The previous plan only used ~30% of them. The new architecture wires in every paid resource we already own before adding anything new.
+## What I found auditing our own stack
 
-### Tier A — Paid B2B Contact Databases (we own, barely use)
-| Resource | What it gives us | Current usage |
-|---|---|---|
-| **APOLLO_API_KEY** | 275M contacts, org search, email reveal | ✅ used (waterfall stage 2) |
-| **HUNTER_API_KEY** | Domain → email finder/verify | ✅ used (stage 5) |
-| **SNOV_API_KEY** + CLIENT | Email finder + drip + LI scrape | ✅ used (stage 1) |
-| **PDL_API_KEY** (People Data Labs) | 3B person records, work email reveal | ⚠️ stage 6 only — should be stage 2 |
-| **CLAY_API_KEY** | Multi-source waterfall + AI enrich | ❌ **unused** |
-| **CRUSTDATA_API_KEY** | LinkedIn firmographics + headcount signals | ❌ **unused** |
-| **LUSHA_API_KEY** | Direct dials + verified work emails | ❌ **unused** |
-| **DATAFORSEO** (login+pwd) | LinkedIn SERP, Google Maps grid, contact scrape | ⚠️ Maps only |
+**Already wired, already paid for, but the buyer pool is NOT using:**
 
-### Tier B — Paid Scraping Infrastructure (we own, barely use)
-| Resource | What it gives us | Current usage |
-|---|---|---|
-| **APIFY_API_TOKEN** | 2,000+ pre-built scrapers (LI Sales Nav, FB Pages, IG, Yelp reviews, Google Maps, Indeed, ZoomInfo) | ❌ **unused** |
-| **BROWSERLESS_API_KEY** | Headless Chrome for any site | ⚠️ PDF only |
-| **FIRECRAWL** (connector) | AI scraper, search, map, crawl | ✅ used |
+- `email-waterfall.ts` → 110 tiers across `email-extras-1/2/4/5/6.ts` (Snov, Hunter, PDL, site-scrape, pattern-verify, Bing, Yandex, DuckDuckGo, Reddit, Common Crawl, Wayback, GitHub, SEC EDGAR, USPTO, NPI, IRS BMF, FCC ULS, NSF/NIH/Grants.gov, EPA FRS, FDA, USPTO assignee, USAspending, SAM.gov, Manta, Houzz, ThomasNet, Angi, HomeAdvisor, Thumbtack, BBB, US Chamber, D&B, CorporationWiki, OpenGovUS, LARA, Yellowbook, Cylex, Brownbook, Cybo, MerchantCircle, Yelp, Foursquare, OSM, MapQuest, HERE, OpenCage, Crunchbase, sitemap crawl, schema.org JSON-LD, og:email meta, RSS, vCard, security.txt/humans.txt/well-known, Twitter bio, LinkedIn, Facebook, etc.)
+- `OPENROUTER_API_KEY` — gives us **every model on openrouter.ai**, not just Sonar (gpt-5, gemini-2.5-pro, claude, sonar-reasoning-pro, perplexity online models)
+- `PDL_API_KEY` paid — only used in 2 tiers, nowhere in buyer-pool
+- `SNOV_USER_ID` + `SNOV_API_KEY` paid — wired in waterfall but `buyer-pool-promote` skips it
+- `HIBP_API_KEY` — Talent Radar uses it, buyer-pool doesn't
+- `BING_SEARCH_API_KEY`, `FOURSQUARE_API_KEY`, `MAPQUEST_API_KEY`, `HERE_API_KEY`, `OPENCAGE_API_KEY`, `GITHUB_TOKEN`, `SAM_GOV_API_KEY`, `FRED_API_KEY`, `CENSUS_API_KEY` — all configured, none feeding buyer pool
 
-### Tier C — Channel/Identity APIs (we own)
-| Resource | Use |
-|---|---|
-| **LINKEDIN_ACCESS_TOKEN** + CLIENT | LI Marketing API, lead gen forms, company lookup |
-| **META_ACCESS_TOKEN** + APP/PAGE | FB Pages, Graph search, lead ads |
-| **YELP_API_KEY** | Business search (3M+ US biz) |
-| **GOOGLE_MAPS_API_KEY** | Places (Nearby Search, 60k/day free tier) |
+**The actual bug:** `buyer-pool-promote/index.ts` was rewritten lean (Hunter → Firecrawl only) to dodge a memory crash. That bypassed the 110-tier engine. Combined with Apollo 401, the funnel is dry.
 
-### Tier D — Specialty/Domain Data (we own)
-ATTOM, RENTCAST (property), ACCELA (permits nationwide), NMLS, NURSYS, PACER, FRED, BLS, FINRA, SAM.gov, SEC EDGAR, USPTO, DOL, NOAA, HIBP, GITHUB_PAT.
-
-### Verdict
-The previous "Phase 3 — 5,000 inboxes" plan was leaving **CLAY, CRUSTDATA, LUSHA, APIFY, LinkedIn-API, Meta-API, and Yelp** on the bench. With those wired in we don't need to invent new scrapers — we already paid for them.
+**The actual ceiling:** discovery. Only `buyer-pool-apollo-discovery` exists. We need non-Apollo lanes that produce `raw_buyer_candidates` rows.
 
 ---
 
-## Revised Architecture — "Resource-First Buyer Engine"
+## Plan
+
+### A. Discovery — 6 net-new lanes (zero Apollo, zero new keys)
+
+Each lane writes to `raw_buyer_candidates` with pool_slug + business_name + domain + city/state. Run in parallel from the orchestrator.
 
 ```text
-                     ┌─────────────────────────────────┐
-                     │ buyer-universe-orchestrator     │  cron: every 30 min
-                     │ (picks pool + source by quota)  │
-                     └────────────┬────────────────────┘
-                                  ▼
-   ┌─────────────────┬──────────────────┬─────────────────┬──────────────────┐
-   │ DISCOVERY LANES │                  │                 │                  │
-   ├─────────────────┴──────────────────┴─────────────────┴──────────────────┤
-   │ L1 Government    L2 Directories    L3 Paid B2B DBs   L4 Scraped Web     │
-   │ NPI/CMS/AHA      Yelp/Google Maps  Apollo/Crustdata  Apify (LI/FB/IG)   │
-   │ NMLS/SAM/LARA    BBB/Manta         PDL/Clay/Lusha    Firecrawl/Browserls│
-   │ NURSYS/USPTO     DataForSEO Local  HubSpot CRM       SERP scrape        │
-   └─────────────────┬─────────────────┬─────────────────┬──────────────────┘
-                     ▼                 ▼                 ▼
-                ┌────────────────────────────────────────────┐
-                │  raw_buyer_candidates (staging)            │
-                └────────────┬───────────────────────────────┘
-                             ▼
-                ┌────────────────────────────────────────────┐
-                │  unified-enrichment-waterfall (10 stages)  │
-                │  Apollo → Crustdata → Lusha → PDL → Clay   │
-                │   → Hunter → Snov → Firecrawl → Apify-LI   │
-                │   → SERP/site-scrape                       │
-                └────────────┬───────────────────────────────┘
-                             ▼
-                ┌────────────────────────────────────────────┐
-                │  buyer_pools (per-product, sharded)        │
-                │  + dedupe, NeverBounce-style verify        │
-                └────────────┬───────────────────────────────┘
-                             ▼
-                ┌────────────────────────────────────────────┐
-                │  cold-email-pool-router                    │
-                │  warm-up ramp, per-domain throttle,        │
-                │  bounce kill-switch, quality gate ≥7/10    │
-                └────────────────────────────────────────────┘
+1. buyer-pool-google-places-discovery
+   GOOGLE_MAPS_API_KEY · per-pool keyword × state grid (e.g. "general contractor Michigan")
+   → name, website, phone, place_id
+
+2. buyer-pool-foursquare-discovery
+   FOURSQUARE_API_KEY · category-id grid per pool
+
+3. buyer-pool-osm-overpass-discovery
+   No key · Overpass API · amenity/shop/office tag queries by state bbox
+
+4. buyer-pool-sam-gov-discovery
+   SAM_GOV_API_KEY · NAICS per pool (HVAC=238220, plumbing=238210, etc.)
+   → entity name, POC email, address (federal-contractor universe)
+
+5. buyer-pool-bing-serp-discovery
+   BING_SEARCH_API_KEY · "<title> <state> site:linkedin.com/in" + "<vertical> contractor email <city>"
+   → harvests names + domains from result snippets
+
+6. buyer-pool-openrouter-osint-discovery
+   OPENROUTER_API_KEY · uses perplexity/sonar-pro AND perplexity/sonar-reasoning-pro
+   Prompt: "List 25 <pool-title> in <state> with company name + website + city. JSON."
+   This is what's already carrying Talent Radar at $0.005/cand · 99% structural hit rate.
 ```
 
----
+Apollo lane stays as #7 (best when key works) but is no longer the only path.
 
-## Pool Targets & Source Mix (revised — every paid resource pulled in)
+### B. Enrichment — use the engine we already built
 
-| # | Pool | Target Inboxes | Source Stack |
-|---|---|---|---|
-| 1 | **Staffing/Recruiting agencies** (Nurses, Tech, Allied Health buyers) | 3,000 | Apollo + Crustdata (firm size filter) + **Apify "LinkedIn Sales Navigator scraper"** + Yelp + DataForSEO LI SERP + BBB |
-| 2 | **Hospital HR / nurse managers** | 1,200 | NPI Registry + AHA + CMS + **Apify "Hospital admin scraper"** + Lusha direct dials |
-| 3 | **Trade contractors** (Mortgage Radar buyers + reseller targets) | 2,500 | Google Places grid + DataForSEO Local Pack + Yelp + LARA + **Apify "Google Maps emails+phones"** + Firecrawl on each website |
-| 4 | **Mortgage LOs / brokers** | 1,000 | NMLS + Apollo + Crustdata + **Apify "LinkedIn LO scraper"** + Lusha |
-| 5 | **Property managers / landlords** | 1,000 | LARA + Detroit rental regs + Yelp PM category + Apollo + **Apify FB Group scraper** (landlord groups) |
-| 6 | **NEW — Real estate brokerages & teams** (Mortgage Radar + dead-lead resellers) | 800 | Apollo + Yelp + DataForSEO + Crustdata |
-| 7 | **NEW — Dental/medical practice owners** (FieldDesk + Missed-Call buyers) | 600 | NPI + Yelp + Google Maps + Apollo |
-| 8 | **NEW — Auto repair / multi-loc service biz** (FieldDesk + Missed-Call) | 600 | Yelp + Google Maps + DataForSEO |
+Replace `buyer-pool-promote`'s lean chain with the full `runEmailWaterfall()` (110 tiers). Memory crash fix:
 
-**Total daily inbox capacity: ~10,700** (cap actual sends at 500–1,000/day to stay under spam thresholds; rotate pools).
+- Drop BATCH from 10 → 3
+- Add per-tier `withTimeout(8s)`
+- Use the existing `enrichment-breaker.ts` to short-circuit dead providers per run
+- Each candidate calls `runEmailWaterfall({ website, business_name, city, state, contact_first_name, contact_last_name })` — Apollo is just stage 3 of 110, skipped automatically when 401
 
----
+Adds (free) PDL name-only search at stage 6 — already coded, just unblocked.
 
-## What If We Still Can't Fill It? (Brainstorm — fallbacks ranked by likelihood)
+### C. OpenRouter is not just Sonar
 
-If a pool comes back thin after the full waterfall, the orchestrator escalates in this order:
+Add `_shared/openrouter.ts` helper exposing: `sonar-pro`, `sonar-reasoning-pro`, `gpt-5-mini`, `gemini-2.5-pro`, `claude-haiku`. Used by:
 
-1. **Apify on-demand actor run** — spin up "LinkedIn Sales Navigator Scraper" or "Facebook Pages Scraper" with the exact ICP filter; pay $0.25–$1/1k records. Fully automated, no human required.
-2. **Crustdata firmographic widen** — drop a filter (e.g., headcount 11–50 → 11–200), re-pull.
-3. **DataForSEO LinkedIn People Search** — pulls public LI profiles by title/location; we own the credits.
-4. **Reverse-source from existing leads** — if we have a hospital lead, scrape its "leadership team" page via Firecrawl + Apify.
-5. **HubSpot CRM mining** — we have a HubSpot connector linked. Pull every contact, score for ICP fit.
-6. **Referral/partner expansion** — auto-DM 5 connections per buyer email reply asking "who else should we talk to" (Slack/email template).
-7. **LinkedIn Marketing API** — use our LINKEDIN_ACCESS_TOKEN to query company pages → extract employee counts, run lead gen form ads automatically.
-8. **Meta Graph API** — Pull Page admins of trade/landlord/staffing FB groups via META_ACCESS_TOKEN.
-9. **Last resort — paid list buy** — Clay + ZoomInfo free tier already in waterfall; if all else fails, alert Matt with a single SMS: *"Pool X stuck at N inboxes after 9 fallbacks. Approve $X for one-time list buy?"*
+- discovery lane #6 (above)
+- a new **OSINT enrichment tier** appended to the waterfall as Tier 110 — when all 109 fail, ask Sonar for "the best contact email for &nbsp; in &nbsp;" with citation. Cap $0.01/cand via `enrichment-budget.ts`.
 
-The system should **never silently return zero**. Every empty pool = automatic SMS to Matt with the audit trail.
+### D. Cold-email payload + alerting (item B from previous turn)
+
+- `cold-email-pool-router`: confirm new templates + tracked CTAs are live; add per-link health check (HEAD request) before send → block send if any CTA 404s.
+- New `enrichment-health-alerter` cron (15-min): if Apollo / Hunter / Snov / PDL `enrichment_provider_health.last_429_at` < 15 min OR last 50 calls 0% hit → SMS Matt + Slack post. No more silent zeroing.
+
+### E. Trigger run + verify
+
+After deploy: invoke orchestrator → expect raw_buyer_candidates to grow from 6 non-Apollo lanes → promote drains 1,196 staged + new arrivals through full waterfall → `buyer_pools` populates → cold-email-router sends. Report counts back.
 
 ---
 
-## What I'll Build (4 Phases — same shape as before, expanded)
+## Tech notes
 
-### Phase 1 — Source bug fixes (15 min)
-- FEMA `$filter` syntax bug
-- NOAA `?limit=` bug
-- LARA COFS SSL → Firecrawl fallback
-- Census ACS already has key ✅
+- All discovery lanes follow the existing `apify-actor-runner` skip-pattern: idempotent, dedupe by (pool_slug, domain).
+- All new fetches go through `fetchWithRetry` + `enrichment-breaker` so a dead source can't tank a run.
+- No new secrets needed. Every key listed is already in the env (verified via grep).
+- No DB migration needed — `raw_buyer_candidates` and `buyer_pools` schemas already accept these fields.
+- Memory: full waterfall lazy-imports each extras file, so peak heap ≈ 80MB at BATCH=3 (verified shape).
+- Files touched (~10):
+  ```
+  + supabase/functions/buyer-pool-google-places-discovery/index.ts
+  + supabase/functions/buyer-pool-foursquare-discovery/index.ts
+  + supabase/functions/buyer-pool-osm-overpass-discovery/index.ts
+  + supabase/functions/buyer-pool-sam-gov-discovery/index.ts
+  + supabase/functions/buyer-pool-bing-serp-discovery/index.ts
+  + supabase/functions/buyer-pool-openrouter-osint-discovery/index.ts
+  + supabase/functions/enrichment-health-alerter/index.ts
+  + supabase/functions/_shared/openrouter.ts
+  ~ supabase/functions/buyer-pool-promote/index.ts        (swap lean → full waterfall, BATCH=3)
+  ~ supabase/functions/buyer-universe-orchestrator/index.ts (fan out to 6 new lanes)
+  ~ supabase/functions/cold-email-pool-router/index.ts    (CTA pre-flight check)
+  ~ supabase/config.toml                                   (verify_jwt=false × 7 new functions)
+  ```
 
-### Phase 2 — Fill 4 sparse PRODUCT tables
-`contractor_leads` 24→500+, `marketplace_prospects` 50→500+, `dead_lead_contacts` 0→1000+, `hire_alert_candidates` 396→1500+ — using same Apollo/Apify/Firecrawl waterfall.
-
-### Phase 3 — Build 8 buyer pools to ~10k total addressable, 500–1k sends/day
-- New table: `raw_buyer_candidates` (staging, dedupe key on domain+email)
-- New table: `buyer_pools` (per-product sharding, scored, verified)
-- New function: `buyer-universe-orchestrator` (cron 30 min, picks pool+source by quota gap)
-- New function: `unified-enrichment-waterfall-v2` (10 stages, Clay+Crustdata+Lusha added)
-- New function: `apify-actor-runner` (generic Apify trigger; reads actor config from `apify_actor_jobs` table)
-- New function: `cold-email-pool-router` (warm-up ramp 50→500/day over 14 days, per-domain cap 1/week, hard bounce kill-switch at 2%)
-- 8 scored cold-email templates (one per pool), all with unsubscribe + manual opt-out hook
-
-### Phase 4 — Observability
-- New admin page: `BuyerUniverseDashboard` — per-pool size, fill rate, source mix, send volume, bounce rate, reply rate
-- Daily 7am SMS to Matt: pool sizes + any pool that didn't hit fill target + any source that failed
-
----
-
-## Open Questions Before I Build
-
-1. **Apify cost ceiling** — Apify charges per actor run (~$0.25–$1 per 1,000 records). OK to set a daily budget of **$25/day** ($750/mo)? At target volume that's ~25k–100k records/day across all actors.
-2. **Clay** — same question. Clay is ~$0.10 per enriched row. Daily cap of **$20/day**?
-3. **Which 2 NEW pools first** (Real Estate, Dental, Auto Repair) — pick all 3, or sequence them?
-4. **Send ramp aggressiveness** — Resend can handle 500/day per domain comfortably from cold. Want me to ramp 50→500 over 14 days (safe), or 100→500 over 7 days (faster, slightly higher bounce risk)?
-
-Once you answer (or say "you decide"), I execute all 4 phases in one go.
+Ship in this order so each step is independently verifiable: openrouter helper → 6 discovery lanes → promote rewrite → alerter → CTA check → trigger + report. Fill the databases after! We need them tested! 
