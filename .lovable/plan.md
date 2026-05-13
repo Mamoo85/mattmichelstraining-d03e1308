@@ -1,73 +1,150 @@
-## Goal
+## Resource Audit — What We're Already Paying For (and Barely Using)
 
-Give Matt one place inside `/dwa-admin` to (a) see every radar he sells exactly the way a paying customer sees it, and (b) preview/customize the admin panel that will ship inside every website-build client (starting with DJ Conley / Pat).
+I pulled the full secret + connector inventory. We have **85 secrets and 12 live connectors**. The previous plan only used ~30% of them. The new architecture wires in every paid resource we already own before adding anything new.
 
-## What already exists
+### Tier A — Paid B2B Contact Databases (we own, barely use)
+| Resource | What it gives us | Current usage |
+|---|---|---|
+| **APOLLO_API_KEY** | 275M contacts, org search, email reveal | ✅ used (waterfall stage 2) |
+| **HUNTER_API_KEY** | Domain → email finder/verify | ✅ used (stage 5) |
+| **SNOV_API_KEY** + CLIENT | Email finder + drip + LI scrape | ✅ used (stage 1) |
+| **PDL_API_KEY** (People Data Labs) | 3B person records, work email reveal | ⚠️ stage 6 only — should be stage 2 |
+| **CLAY_API_KEY** | Multi-source waterfall + AI enrich | ❌ **unused** |
+| **CRUSTDATA_API_KEY** | LinkedIn firmographics + headcount signals | ❌ **unused** |
+| **LUSHA_API_KEY** | Direct dials + verified work emails | ❌ **unused** |
+| **DATAFORSEO** (login+pwd) | LinkedIn SERP, Google Maps grid, contact scrape | ⚠️ Maps only |
 
-**Customer-facing radar portals** (23 pages, all live):
-`MyRoofingRadar`, `MyHVACRadar`, `MyPlumbingRadar`, `MyElectricalRadar`, `MyPestControlRadar`, `MyGuttersRadar`, `MyExteriorRadar`, `MyTreeRadar`, `MyRestorationRadar`, `MyDemoJunkRadar`, `MyFoundationRadar`, `MyPaintingRadar`, `MyMortgageRadar`, `MyTechAlert`, `MySiteRadar`, `MyMissedCall`, `MyFieldDesk`, `MyDemandRadar`, `MyBuyerRadar`, `MyContractorLeads`, `MyDeadLeadReactivation`, `MyIndustryPulse`, `MyCounselSearch`.
+### Tier B — Paid Scraping Infrastructure (we own, barely use)
+| Resource | What it gives us | Current usage |
+|---|---|---|
+| **APIFY_API_TOKEN** | 2,000+ pre-built scrapers (LI Sales Nav, FB Pages, IG, Yelp reviews, Google Maps, Indeed, ZoomInfo) | ❌ **unused** |
+| **BROWSERLESS_API_KEY** | Headless Chrome for any site | ⚠️ PDF only |
+| **FIRECRAWL** (connector) | AI scraper, search, map, crawl | ✅ used |
 
-**DJ Conley sandbox** (`/sandbox/djconley/*`): public marketing site mirror (Home, About, Industries, Service, Parts, Products, Projects, Rentals, Education, Resources, Careers, Contact + 6 boiler product pages, Blog) **plus** an Admin Command Center (`AdminShell` + 12 tabs: SiteRadar, Missed-Call, Buyer Radar, FieldDesk, TechAlert, Trade Radar, Outreach, Reviews, Widgets, Reports, Integrations, Team, Settings).
+### Tier C — Channel/Identity APIs (we own)
+| Resource | Use |
+|---|---|
+| **LINKEDIN_ACCESS_TOKEN** + CLIENT | LI Marketing API, lead gen forms, company lookup |
+| **META_ACCESS_TOKEN** + APP/PAGE | FB Pages, Graph search, lead ads |
+| **YELP_API_KEY** | Business search (3M+ US biz) |
+| **GOOGLE_MAPS_API_KEY** | Places (Nearby Search, 60k/day free tier) |
 
-**DWA Admin** (`/dwa-admin`): already has `DJConleyCommandPanel` lazy-loaded and a 5-group sidebar (Today / Customers / Outreach / Products / Ops).
+### Tier D — Specialty/Domain Data (we own)
+ATTOM, RENTCAST (property), ACCELA (permits nationwide), NMLS, NURSYS, PACER, FRED, BLS, FINRA, SAM.gov, SEC EDGAR, USPTO, DOL, NOAA, HIBP, GITHUB_PAT.
 
-**What's missing** is the consolidation Matt is asking for: there's no single "view everything as a customer would" surface, and no admin-side preview of the DJ Conley client admin.
-
----
-
-## Plan
-
-### 1. Enroll Matt in every product (migration)
-
-New migration `supabase/migrations/<ts>_matt_full_enrollment.sql` that upserts a `matt@detroitwebagent.com` row into every client table that doesn't already have one, using SE-Michigan ZIP coverage + `status='active'`:
-`field_crm_clients` (FieldDesk + SiteRadar visitor script), `hire_alert_clients` (TechAlert), `missed_call_clients`, `mortgage_radar_clients`, `contractor_clients`, `dead_lead_campaigns`, `industry_pulse_clients` (Buyer + Demand + Growth), plus all 11 `trade_radar_clients` rows. Idempotent (`ON CONFLICT DO UPDATE`). Phase 44 already enrolled some of these; this migration fills the gaps and standardizes Matt's tokens so the customer pages render real data.
-
-### 2. New tab — "My Command Center" (customer view)
-
-- Add sidebar group `👤 My Stuff` with item `my-command-center` at the top of `DWAAdmin.tsx` GROUPS.
-- New component `src/components/dwa-admin/MyCommandCenter.tsx`:
-  - Top KPI strip (active subscriptions count, total leads this week across all radars, today's signal count, MRR-equivalent if Matt were paying).
-  - Sub-nav of pills, one per product Matt is enrolled in (Trade Radar 11 verticals collapsed into one pill with a vertical sub-picker, then Mortgage / Talent / Site / Missed-Call / FieldDesk / Demand / Buyer / Contractor / Dead Lead / Industry Pulse / Counsel).
-  - Body renders the matching `My*` page component **inline** (not iframed) by importing them as lazy components. They already query Supabase by `auth.uid()` / token, so once Matt is enrolled they "just work."
-  - "Open in new tab" link on each so Matt can pop the customer portal full-screen for screenshots.
-
-### 3. New tab — "Client Admin Sandbox" (DJ Conley preview)
-
-- Sidebar group `🧪 Client Sandbox` with items `dj-conley-site` and `dj-conley-admin`.
-- Component `src/components/dwa-admin/ClientSandboxFrame.tsx`: an iframe wrapper that loads `/sandbox/djconley/` or `/sandbox/djconley/admin` with a top toolbar:
-  - Quick-jump dropdown of all 12 admin tabs.
-  - Device-width toggle (desktop / tablet / mobile).
-  - "Open standalone" button.
-  - "Customize" panel (right rail) for the things Matt will most want to tweak: brand color, logo URL, owner name, owner email, included radar pills. Writes to a `sandbox_tenant_config` table (new) so changes survive reload and we can later promote them into a real client provisioning record.
-
-### 4. DJ Conley parity audit
-
-Deliverable: `knowledge/djconley-parity-audit.md` listing every page on the live djconley.com vs what's in `src/sandbox/djconley/pages/` with status (✅ exact / 🟡 minor delta / ❌ missing) and the "very minor enhancement" deltas Matt wants noted per page. The 18 routes already in `index.tsx` cover the main IA; this step verifies content fidelity (copy, hero photos, product specs, contact info) and flags anything to repaint before the Pat demo.
-
-### 5. Replace placeholder data in DJ Conley admin tabs
-
-The 12 tabs in `src/sandbox/djconley/admin/tabs.tsx` are all hardcoded `TabPlaceholder` demos. For the Pat demo we'll wire the 4 most impactful ones (SiteRadar, Buyer Radar, TechAlert, Reviews) to live Supabase queries scoped by a sandbox `client_id`, so Pat sees actual data in those panels. The other 8 stay as polished mockups (clearly labeled "Sample Data" badge) — same level Pat sees in proposals today.
+### Verdict
+The previous "Phase 3 — 5,000 inboxes" plan was leaving **CLAY, CRUSTDATA, LUSHA, APIFY, LinkedIn-API, Meta-API, and Yelp** on the bench. With those wired in we don't need to invent new scrapers — we already paid for them.
 
 ---
 
-## Technical Details
+## Revised Architecture — "Resource-First Buyer Engine"
 
-- All `My*` pages use `lazyRetry()` and read from Supabase via `useAuth()` or token query param. Inline mounting inside `MyCommandCenter` works because they're already self-contained route components.
-- The iframe approach for the sandbox preview avoids React-Router collisions with the parent `/dwa-admin` route tree.
-- New table `sandbox_tenant_config` (single row keyed by `tenant_slug='djconley'`): `brand_color`, `logo_url`, `owner_name`, `owner_email`, `enabled_radars text[]`, `updated_at`. RLS: admin-only.
-- No edge-function changes required for the customer view — everything Matt needs already runs daily (scanners, digests). Migration #1 just makes sure his rows exist so the dashboards render data instead of empty states.
-- Keep the DWA Admin sidebar additions at the top of `GROUPS` so Matt sees them first on load.
-
-## Out of scope (call out before building)
-
-- Building real auth/seat management for the DJ Conley client admin (it's a sandbox login gate today; productionizing multi-tenant client logins is a separate project).
-- Replacing all 12 DJ Conley admin tabs with live data — only wiring the 4 demo-critical ones for Pat.
-- Any changes to existing customer `My*` pages themselves.
+```text
+                     ┌─────────────────────────────────┐
+                     │ buyer-universe-orchestrator     │  cron: every 30 min
+                     │ (picks pool + source by quota)  │
+                     └────────────┬────────────────────┘
+                                  ▼
+   ┌─────────────────┬──────────────────┬─────────────────┬──────────────────┐
+   │ DISCOVERY LANES │                  │                 │                  │
+   ├─────────────────┴──────────────────┴─────────────────┴──────────────────┤
+   │ L1 Government    L2 Directories    L3 Paid B2B DBs   L4 Scraped Web     │
+   │ NPI/CMS/AHA      Yelp/Google Maps  Apollo/Crustdata  Apify (LI/FB/IG)   │
+   │ NMLS/SAM/LARA    BBB/Manta         PDL/Clay/Lusha    Firecrawl/Browserls│
+   │ NURSYS/USPTO     DataForSEO Local  HubSpot CRM       SERP scrape        │
+   └─────────────────┬─────────────────┬─────────────────┬──────────────────┘
+                     ▼                 ▼                 ▼
+                ┌────────────────────────────────────────────┐
+                │  raw_buyer_candidates (staging)            │
+                └────────────┬───────────────────────────────┘
+                             ▼
+                ┌────────────────────────────────────────────┐
+                │  unified-enrichment-waterfall (10 stages)  │
+                │  Apollo → Crustdata → Lusha → PDL → Clay   │
+                │   → Hunter → Snov → Firecrawl → Apify-LI   │
+                │   → SERP/site-scrape                       │
+                └────────────┬───────────────────────────────┘
+                             ▼
+                ┌────────────────────────────────────────────┐
+                │  buyer_pools (per-product, sharded)        │
+                │  + dedupe, NeverBounce-style verify        │
+                └────────────┬───────────────────────────────┘
+                             ▼
+                ┌────────────────────────────────────────────┐
+                │  cold-email-pool-router                    │
+                │  warm-up ramp, per-domain throttle,        │
+                │  bounce kill-switch, quality gate ≥7/10    │
+                └────────────────────────────────────────────┘
+```
 
 ---
 
-## Open questions before I build
+## Pool Targets & Source Mix (revised — every paid resource pulled in)
 
-1. For the "My Command Center" view, do you want the 11 Trade Radar verticals shown as **one combined feed** (all leads from all 11 verticals merged + filterable), or as **11 separate sub-tabs** like a customer enrolled in all 11 would see? Like a customer would see. 
-2. The DJ Conley sandbox admin currently uses fake demo data on 12 tabs. Should I (a) wire 4 tabs to real data + label the rest "Sample," or (b) wire all 12 to real data scoped to a `djconley` sandbox tenant (longer build)? Real data.
-3. Confirm: the "exact replica of his current website" means content-parity with what's at djconley.com today (I'll pull and diff) — not a redesign, right? Right, don't we already have this? 
+| # | Pool | Target Inboxes | Source Stack |
+|---|---|---|---|
+| 1 | **Staffing/Recruiting agencies** (Nurses, Tech, Allied Health buyers) | 3,000 | Apollo + Crustdata (firm size filter) + **Apify "LinkedIn Sales Navigator scraper"** + Yelp + DataForSEO LI SERP + BBB |
+| 2 | **Hospital HR / nurse managers** | 1,200 | NPI Registry + AHA + CMS + **Apify "Hospital admin scraper"** + Lusha direct dials |
+| 3 | **Trade contractors** (Mortgage Radar buyers + reseller targets) | 2,500 | Google Places grid + DataForSEO Local Pack + Yelp + LARA + **Apify "Google Maps emails+phones"** + Firecrawl on each website |
+| 4 | **Mortgage LOs / brokers** | 1,000 | NMLS + Apollo + Crustdata + **Apify "LinkedIn LO scraper"** + Lusha |
+| 5 | **Property managers / landlords** | 1,000 | LARA + Detroit rental regs + Yelp PM category + Apollo + **Apify FB Group scraper** (landlord groups) |
+| 6 | **NEW — Real estate brokerages & teams** (Mortgage Radar + dead-lead resellers) | 800 | Apollo + Yelp + DataForSEO + Crustdata |
+| 7 | **NEW — Dental/medical practice owners** (FieldDesk + Missed-Call buyers) | 600 | NPI + Yelp + Google Maps + Apollo |
+| 8 | **NEW — Auto repair / multi-loc service biz** (FieldDesk + Missed-Call) | 600 | Yelp + Google Maps + DataForSEO |
+
+**Total daily inbox capacity: ~10,700** (cap actual sends at 500–1,000/day to stay under spam thresholds; rotate pools).
+
+---
+
+## What If We Still Can't Fill It? (Brainstorm — fallbacks ranked by likelihood)
+
+If a pool comes back thin after the full waterfall, the orchestrator escalates in this order:
+
+1. **Apify on-demand actor run** — spin up "LinkedIn Sales Navigator Scraper" or "Facebook Pages Scraper" with the exact ICP filter; pay $0.25–$1/1k records. Fully automated, no human required.
+2. **Crustdata firmographic widen** — drop a filter (e.g., headcount 11–50 → 11–200), re-pull.
+3. **DataForSEO LinkedIn People Search** — pulls public LI profiles by title/location; we own the credits.
+4. **Reverse-source from existing leads** — if we have a hospital lead, scrape its "leadership team" page via Firecrawl + Apify.
+5. **HubSpot CRM mining** — we have a HubSpot connector linked. Pull every contact, score for ICP fit.
+6. **Referral/partner expansion** — auto-DM 5 connections per buyer email reply asking "who else should we talk to" (Slack/email template).
+7. **LinkedIn Marketing API** — use our LINKEDIN_ACCESS_TOKEN to query company pages → extract employee counts, run lead gen form ads automatically.
+8. **Meta Graph API** — Pull Page admins of trade/landlord/staffing FB groups via META_ACCESS_TOKEN.
+9. **Last resort — paid list buy** — Clay + ZoomInfo free tier already in waterfall; if all else fails, alert Matt with a single SMS: *"Pool X stuck at N inboxes after 9 fallbacks. Approve $X for one-time list buy?"*
+
+The system should **never silently return zero**. Every empty pool = automatic SMS to Matt with the audit trail.
+
+---
+
+## What I'll Build (4 Phases — same shape as before, expanded)
+
+### Phase 1 — Source bug fixes (15 min)
+- FEMA `$filter` syntax bug
+- NOAA `?limit=` bug
+- LARA COFS SSL → Firecrawl fallback
+- Census ACS already has key ✅
+
+### Phase 2 — Fill 4 sparse PRODUCT tables
+`contractor_leads` 24→500+, `marketplace_prospects` 50→500+, `dead_lead_contacts` 0→1000+, `hire_alert_candidates` 396→1500+ — using same Apollo/Apify/Firecrawl waterfall.
+
+### Phase 3 — Build 8 buyer pools to ~10k total addressable, 500–1k sends/day
+- New table: `raw_buyer_candidates` (staging, dedupe key on domain+email)
+- New table: `buyer_pools` (per-product sharding, scored, verified)
+- New function: `buyer-universe-orchestrator` (cron 30 min, picks pool+source by quota gap)
+- New function: `unified-enrichment-waterfall-v2` (10 stages, Clay+Crustdata+Lusha added)
+- New function: `apify-actor-runner` (generic Apify trigger; reads actor config from `apify_actor_jobs` table)
+- New function: `cold-email-pool-router` (warm-up ramp 50→500/day over 14 days, per-domain cap 1/week, hard bounce kill-switch at 2%)
+- 8 scored cold-email templates (one per pool), all with unsubscribe + manual opt-out hook
+
+### Phase 4 — Observability
+- New admin page: `BuyerUniverseDashboard` — per-pool size, fill rate, source mix, send volume, bounce rate, reply rate
+- Daily 7am SMS to Matt: pool sizes + any pool that didn't hit fill target + any source that failed
+
+---
+
+## Open Questions Before I Build
+
+1. **Apify cost ceiling** — Apify charges per actor run (~$0.25–$1 per 1,000 records). OK to set a daily budget of **$25/day** ($750/mo)? At target volume that's ~25k–100k records/day across all actors.
+2. **Clay** — same question. Clay is ~$0.10 per enriched row. Daily cap of **$20/day**?
+3. **Which 2 NEW pools first** (Real Estate, Dental, Auto Repair) — pick all 3, or sequence them?
+4. **Send ramp aggressiveness** — Resend can handle 500/day per domain comfortably from cold. Want me to ramp 50→500 over 14 days (safe), or 100→500 over 7 days (faster, slightly higher bounce risk)?
+
+Once you answer (or say "you decide"), I execute all 4 phases in one go.
