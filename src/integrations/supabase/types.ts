@@ -3669,6 +3669,81 @@ export type Database = {
         }
         Relationships: []
       }
+      cold_call_queue: {
+        Row: {
+          attempts: number
+          city: string | null
+          company_name: string | null
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string
+          contact_title: string | null
+          created_at: string
+          disposition: string | null
+          domain: string | null
+          id: string
+          last_attempt_at: string | null
+          next_attempt_at: string | null
+          notes: string | null
+          pool: string
+          raw_payload: Json | null
+          source: string | null
+          source_raw_id: string | null
+          state: string | null
+          status: string
+          updated_at: string
+          zip: string | null
+        }
+        Insert: {
+          attempts?: number
+          city?: string | null
+          company_name?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone: string
+          contact_title?: string | null
+          created_at?: string
+          disposition?: string | null
+          domain?: string | null
+          id?: string
+          last_attempt_at?: string | null
+          next_attempt_at?: string | null
+          notes?: string | null
+          pool: string
+          raw_payload?: Json | null
+          source?: string | null
+          source_raw_id?: string | null
+          state?: string | null
+          status?: string
+          updated_at?: string
+          zip?: string | null
+        }
+        Update: {
+          attempts?: number
+          city?: string | null
+          company_name?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string
+          contact_title?: string | null
+          created_at?: string
+          disposition?: string | null
+          domain?: string | null
+          id?: string
+          last_attempt_at?: string | null
+          next_attempt_at?: string | null
+          notes?: string | null
+          pool?: string
+          raw_payload?: Json | null
+          source?: string | null
+          source_raw_id?: string | null
+          state?: string | null
+          status?: string
+          updated_at?: string
+          zip?: string | null
+        }
+        Relationships: []
+      }
       cold_email_daily_cost_log: {
         Row: {
           cost_per_150_cents: number | null
