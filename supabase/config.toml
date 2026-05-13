@@ -2399,3 +2399,24 @@ verify_jwt = false
 
 [functions.buyer-pool-apollo-discovery]
 verify_jwt = false
+
+[functions.buyer-pool-google-places-discovery]
+verify_jwt = false
+
+[functions.buyer-pool-foursquare-discovery]
+verify_jwt = false
+
+[functions.buyer-pool-osm-overpass-discovery]
+verify_jwt = false
+
+[functions.buyer-pool-sam-gov-discovery]
+verify_jwt = false
+
+[functions.buyer-pool-bing-serp-discovery]
+verify_jwt = false
+
+[functions.buyer-pool-openrouter-osint-discovery]
+verify_jwt = false
+
+[functions.enrichment-health-alerter]
+verify_jwt = false
