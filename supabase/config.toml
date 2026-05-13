@@ -2382,3 +2382,11 @@ verify_jwt = false
 [functions.staffing-agency-enrich]
 verify_jwt = false
 
+[functions.apify-actor-runner]
+verify_jwt = false
+
+[functions.buyer-universe-orchestrator]
+verify_jwt = false
+
+[functions.buyer-pool-promote]
+verify_jwt = false
