@@ -12,9 +12,50 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { apolloPeopleSearch, apolloOrganizationSearch } from "../_shared/apollo.ts";
 import { extractContactInfo } from "../_shared/firecrawl.ts";
+import { hunterFindEmail } from "../_shared/hunter.ts";
 import { dwaEmail } from "../_shared/dwa-email.ts";
 import { isBlocked } from "../_shared/outreach-blocklist.ts";
 import { sendSMS, ADMIN_PHONE } from "../_shared/twilio.ts";
+
+const YELP_API_KEY = Deno.env.get("YELP_API_KEY") || "";
+const SNOV_CLIENT_ID = Deno.env.get("SNOV_CLIENT_ID") || "";
+const SNOV_CLIENT_SECRET = Deno.env.get("SNOV_CLIENT_SECRET") || "";
+
+// Snov.io OAuth + domain-search email lookup. Free tier ~50/mo.
+async function snovFindEmail(domain: string): Promise<{ email: string; name: string | null } | null> {
+  if (!SNOV_CLIENT_ID || !SNOV_CLIENT_SECRET || !domain) return null;
+  try {
+    const tokenRes = await fetch("https://api.snov.io/v1/oauth/access_token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: `grant_type=client_credentials&client_id=${SNOV_CLIENT_ID}&client_secret=${SNOV_CLIENT_SECRET}`,
+      signal: AbortSignal.timeout(8000),
+    });
+    const tok = await tokenRes.json();
+    const access = tok?.access_token;
+    if (!access) return null;
+    const r = await fetch(`https://api.snov.io/v2/domain-emails-with-info?domain=${encodeURIComponent(domain)}&type=all&limit=5&access_token=${access}`, { signal: AbortSignal.timeout(10000) });
+    const j = await r.json();
+    const emails: any[] = j?.emails || j?.data?.emails || [];
+    if (!emails.length) return null;
+    const ownerTitles = ["owner", "president", "founder", "ceo", "director", "manager"];
+    const pick = emails.find((e: any) => ownerTitles.some(t => (e.position || "").toLowerCase().includes(t))) || emails[0];
+    if (!pick?.email) return null;
+    return { email: String(pick.email).toLowerCase(), name: [pick.firstName, pick.lastName].filter(Boolean).join(" ") || null };
+  } catch { return null; }
+}
+
+async function yelpSearchAgencies(location: string, term: string): Promise<any[]> {
+  if (!YELP_API_KEY) return [];
+  try {
+    const r = await fetch(`https://api.yelp.com/v3/businesses/search?term=${encodeURIComponent(term)}&location=${encodeURIComponent(location)}&limit=20`, {
+      headers: { Authorization: `Bearer ${YELP_API_KEY}` }, signal: AbortSignal.timeout(8000),
+    });
+    if (!r.ok) return [];
+    const j = await r.json();
+    return j?.businesses || [];
+  } catch { return []; }
+}
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
