@@ -14,7 +14,7 @@ const corsHeaders = {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-const BATCH = 8; // Waterfall is heavy (Snov→Apollo→Hunter→PDL→Firecrawl + 80 free tiers); larger batches trip WORKER_RESOURCE_LIMIT
+const BATCH = 3; // Waterfall is heavy (Snov→Apollo→Hunter→PDL→Firecrawl + 80 free tiers); BATCH>3 trips WORKER_RESOURCE_LIMIT
 const PER_CANDIDATE_TIMEOUT_MS = 20_000;
 
 function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
