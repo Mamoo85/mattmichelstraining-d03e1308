@@ -58,13 +58,15 @@ Deno.serve(async (req) => {
       // Run waterfall only if we have a domain or company name and no email
       if (!email && (c.domain || c.company_name)) {
         try {
-          const wf = await runEmailWaterfall({
-            company: c.company_name || "",
-            domain: c.domain || undefined,
-            firstName: c.contact_name?.split(" ")?.[0],
-            lastName: c.contact_name?.split(" ")?.slice(1).join(" "),
-            title: c.contact_title || undefined,
-          } as any);
+          const parts = (c.contact_name || "").trim().split(/\s+/);
+          const wf = await runEmailWaterfall(sb, {
+            website: c.domain ? `https://${c.domain}` : null,
+            business_name: c.company_name || null,
+            city: c.city || null,
+            state: c.state || null,
+            contact_first_name: parts[0] || null,
+            contact_last_name: parts.slice(1).join(" ") || null,
+          });
           email = wf?.email ?? null;
           trace = wf?.trace ?? null;
         } catch (e: any) {
@@ -98,7 +100,7 @@ Deno.serve(async (req) => {
         zip: c.zip,
         quality_score: quality,
         email_verified: false,
-        source_chain: [c.source, ...(trace?.providers_tried ?? [])],
+        source_chain: [c.source, ...((Array.isArray(trace) ? trace : []).map((t: any) => t?.source).filter(Boolean))],
         enrichment_meta: { trace, raw_id: c.id },
         status: "ready",
       }, { onConflict: "contact_email", ignoreDuplicates: false });
