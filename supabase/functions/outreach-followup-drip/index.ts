@@ -88,7 +88,7 @@ async function sendFollowup(
     d14: `${companyName} — last note on the 7-day trial`,
   };
 
-  const body = buildBody(touch, firstName, companyName, industry);
+  const body = buildBody(touch, firstName, companyName, industry, city);
   const bodyHtml = body
     .split("\n\n")
     .map((p) => `<p style="color:#e6f1ff;">${p.replace(/\n/g, "<br>")}</p>`)
