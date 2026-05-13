@@ -10,8 +10,8 @@ import { hunterFindEmail } from "../_shared/hunter.ts";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY") || "";
-const SNOV_CLIENT_ID = Deno.env.get("SNOV_CLIENT_ID") || "";
-const SNOV_CLIENT_SECRET = Deno.env.get("SNOV_CLIENT_SECRET") || "";
+const SNOV_CLIENT_ID = Deno.env.get("SNOV_CLIENT_ID") || Deno.env.get("SNOV_USER_ID") || "";
+const SNOV_CLIENT_SECRET = Deno.env.get("SNOV_CLIENT_SECRET") || Deno.env.get("SNOV_API_KEY") || "";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -21,6 +21,7 @@ const corsHeaders = {
 const BATCH_SIZE = 24;          // pending rows per run
 const PARALLEL_CHUNK = 8;       // emails resolved concurrently
 const MAX_ATTEMPTS = 3;
+const BLOCKED_EMAIL_DOMAINS = ["domain.com", "example.com", "edan.io", "facebook.com", "linkedin.com", "yelp.com", "google.com"];
 
 async function snovFindEmail(domain: string): Promise<{ email: string; name: string | null } | null> {
   if (!SNOV_CLIENT_ID || !SNOV_CLIENT_SECRET || !domain) return null;
@@ -49,6 +50,7 @@ function domainOf(website: string | null): string | null {
     const u = website.startsWith("http") ? website : `https://${website}`;
     const host = new URL(u).hostname.replace(/^www\./, "");
     if (/yelp|google|facebook|instagram|linkedin|maps/i.test(host)) return null;
+    if (BLOCKED_EMAIL_DOMAINS.some((d) => host === d || host.endsWith(`.${d}`))) return null;
     return host;
   } catch { return null; }
 }
@@ -104,7 +106,11 @@ async function resolveEmail(website: string | null, name: string, phone: string 
 }
 
 async function deepPublicDirectoryEmail(domain: string | null, name: string, city: string | null): Promise<{ email: string; via: string } | null> {
-  const isEmail = (e: string | null) => !!e && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) && !/^(no-?reply|postmaster|webmaster)@/i.test(e);
+  const isEmail = (e: string | null) => {
+    if (!e || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) || /^(no-?reply|postmaster|webmaster)@/i.test(e)) return false;
+    const d = e.split("@")[1]?.toLowerCase();
+    return !!d && !BLOCKED_EMAIL_DOMAINS.some((blocked) => d === blocked || d.endsWith(`.${blocked}`));
+  };
   const attempts: Array<[string, () => Promise<string | null>]> = [];
 
   if (domain) {
