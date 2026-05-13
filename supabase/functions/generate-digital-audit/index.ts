@@ -5,6 +5,7 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { stealthScrape, reasonToCopy } from "../_shared/stealth-scrape.ts";
+import { requireAdmin } from "../_shared/admin-auth.ts";
 
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
 
@@ -15,6 +16,14 @@ const CORS = {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
+
+  const auth = await requireAdmin(req);
+  if (!auth.ok) {
+    return new Response(JSON.stringify({ error: auth.error }), {
+      status: auth.status, headers: { ...CORS, "Content-Type": "application/json" },
+    });
+  }
+
 
   const json500 = (msg: string) =>
     new Response(JSON.stringify({ error: msg }), {
