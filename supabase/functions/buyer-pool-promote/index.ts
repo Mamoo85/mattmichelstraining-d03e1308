@@ -18,7 +18,7 @@ const corsHeaders = {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-const BATCH = 3;
+const BATCH = 1;
 const PER_CANDIDATE_TIMEOUT_MS = 25_000;
 
 function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
