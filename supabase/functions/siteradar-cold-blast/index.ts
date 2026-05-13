@@ -4,6 +4,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { dwaColdEmail } from "../_shared/dwa-email.ts";
 import { isBlocked } from "../_shared/outreach-blocklist.ts";
 import { isMarketingBlocked } from "../_shared/marketing-kill-switch.ts";
+import { wasContactedRecently } from "../_shared/cold-email-dedup.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -57,6 +58,9 @@ Deno.serve(async (req) => {
       const b = await isBlocked(sb, { email: lead.email, business_name: lead.business_name });
       if (b.blocked) { blockedCount++; continue; }
     } catch (_) {}
+
+    // Cross-product dedup: skip if this address got ANY cold email in last 5 days.
+    if (await wasContactedRecently(sb, lead.email, 5)) { skipped++; continue; }
 
     const subject = `${lead.business_name || "your site"} — see who's actually visiting`;
     const r = await dwaColdEmail({

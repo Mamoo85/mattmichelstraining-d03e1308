@@ -5,6 +5,7 @@ import { dwaEmail, listUnsubHeaders } from "../_shared/dwa-email.ts";
 import { teaserCardHtml } from "../_shared/teaser-card.ts";
 import { isBlocked } from "../_shared/outreach-blocklist.ts";
 import { isMarketingBlocked } from "../_shared/marketing-kill-switch.ts";
+import { wasContactedRecently } from "../_shared/cold-email-dedup.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -80,6 +81,8 @@ Deno.serve(async (req) => {
       const b = await isBlocked(sb, { email: lead.email, business_name: lead.business_name });
       if (b.blocked) { blockedCount++; continue; }
     } catch (_) {}
+
+    if (await wasContactedRecently(sb, lead.email, 5)) { skipped++; continue; }
 
     const subject = `${lead.business_name || "your shop"} — dispatch + tech tracking for $199 flat`;
     const r = await dwaEmail({ to: lead.email, subject, html: emailHtml(lead), headers: listUnsubHeaders(lead.email) });
