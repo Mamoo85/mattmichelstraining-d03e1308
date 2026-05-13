@@ -22548,6 +22548,66 @@ export type Database = {
         }
         Relationships: []
       }
+      staffing_agency_raw_queue: {
+        Row: {
+          address: string | null
+          agency_name: string
+          city: string | null
+          created_at: string
+          dedupe_key: string
+          enrichment_attempts: number
+          enrichment_status: string
+          id: string
+          last_attempt_at: string | null
+          notes: string | null
+          phone: string | null
+          resolved_email: string | null
+          resolved_via: string | null
+          source: string
+          state: string | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          address?: string | null
+          agency_name: string
+          city?: string | null
+          created_at?: string
+          dedupe_key: string
+          enrichment_attempts?: number
+          enrichment_status?: string
+          id?: string
+          last_attempt_at?: string | null
+          notes?: string | null
+          phone?: string | null
+          resolved_email?: string | null
+          resolved_via?: string | null
+          source: string
+          state?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          address?: string | null
+          agency_name?: string
+          city?: string | null
+          created_at?: string
+          dedupe_key?: string
+          enrichment_attempts?: number
+          enrichment_status?: string
+          id?: string
+          last_attempt_at?: string | null
+          notes?: string | null
+          phone?: string | null
+          resolved_email?: string | null
+          resolved_via?: string | null
+          source?: string
+          state?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       str_reputation_clients: {
         Row: {
           active: boolean | null
