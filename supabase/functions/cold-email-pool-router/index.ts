@@ -167,6 +167,30 @@ Deno.serve(async (req) => {
   const dryRun = req.headers.get("x-dry-run") === "1";
   const summary: any[] = [];
 
+  // CTA pre-flight cache (per-run): strip query, HEAD-check landing page once.
+  // If 4xx/5xx → block all sends using that template this run.
+  const ctaHealth = new Map<string, boolean>();
+  async function ctaIsLive(fullUrl: string): Promise<boolean> {
+    const base = fullUrl.split("?")[0];
+    if (ctaHealth.has(base)) return ctaHealth.get(base)!;
+    let ok = true;
+    try {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 6000);
+      let res = await fetch(base, { method: "HEAD", redirect: "follow", signal: ctrl.signal });
+      // Some hosts return 405 for HEAD — fall back to GET.
+      if (res.status === 405 || res.status === 403) {
+        res = await fetch(base, { method: "GET", redirect: "follow", signal: ctrl.signal });
+      }
+      clearTimeout(t);
+      ok = res.status >= 200 && res.status < 400;
+    } catch {
+      ok = false;
+    }
+    ctaHealth.set(base, ok);
+    return ok;
+  }
+
   // 1. Get active pool targets
   const { data: targets } = await sb
     .from("buyer_universe_targets")
