@@ -2208,6 +2208,9 @@ verify_jwt = false
 [functions.siteradar-cold-blast]
 verify_jwt = false
 
+[functions.agency-blast-scheduler]
+verify_jwt = false
+
 [functions.trade-radar-outreach]
 verify_jwt = false
 
