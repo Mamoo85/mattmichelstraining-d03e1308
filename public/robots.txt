@@ -41,5 +41,5 @@ Allow: /
 User-agent: facebookexternalhit
 Allow: /
 
-Sitemap: https://www.mattmichelstraining.com/sitemap.xml
+Sitemap: https://m2training.lovable.app/sitemap.xml
 Sitemap: https://eauvubfpanpeuxsrqesu.supabase.co/functions/v1/sitemap-hire

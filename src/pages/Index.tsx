@@ -56,7 +56,7 @@ const Index = () => (
   <div className="min-h-screen bg-background">
     <SEOHead
       title="Matt Michels Training | M2 Elite Strength & Conditioning"
-      description="Expert personal training, strength and conditioning, and sports performance coaching in Grosse Pointe, MI. Matt Michels Training (M2) specializes in youth athlete development, powerlifting, functional fitness, post-rehab training, and custom workout programming."
+      description="Personal training, strength &amp; conditioning, and sports performance coaching in Grosse Pointe, MI. Youth athletes, powerlifting, post-rehab &amp; custom programs."
       path="/"
     />
     <script
