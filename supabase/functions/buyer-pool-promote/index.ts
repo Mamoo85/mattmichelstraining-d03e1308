@@ -1,10 +1,14 @@
-// Buyer Pool Promote — drains raw_buyer_candidates, runs the existing
-// email-waterfall (Snov→Apollo→Hunter→PDL→Firecrawl→free sources),
-// upserts qualified rows into buyer_pools.
+// Buyer Pool Promote — drains raw_buyer_candidates with a LIGHTWEIGHT enrichment chain
+// (Hunter.io domain search → Firecrawl contact-page scrape) and upserts qualified rows
+// into buyer_pools.
 //
-// Designed to run alongside orchestrator (cron every 30 min, offset by 15).
+// The full email-waterfall (80+ tiers) was too heavy for edge-runtime memory and tripped
+// WORKER_RESOURCE_LIMIT even at BATCH=3. This lean version handles 10 candidates/run safely.
+//
+// Cron: every 30 min, offset by 15 from orchestrator.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { runEmailWaterfall } from "../_shared/email-waterfall.ts";
+import { hunterFindEmail } from "../_shared/hunter.ts";
+import { firecrawlScrape, extractContactInfo } from "../_shared/firecrawl.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -14,12 +18,12 @@ const corsHeaders = {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-const BATCH = 3; // Waterfall is heavy (Snov→Apollo→Hunter→PDL→Firecrawl + 80 free tiers); BATCH>3 trips WORKER_RESOURCE_LIMIT
-const PER_CANDIDATE_TIMEOUT_MS = 20_000;
+const BATCH = 10;
+const PER_CANDIDATE_TIMEOUT_MS = 12_000;
 
-function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
+function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
   return new Promise((resolve, reject) => {
-    const t = setTimeout(() => reject(new Error(`waterfall timeout ${ms}ms`)), ms);
+    const t = setTimeout(() => reject(new Error(`${label} timeout ${ms}ms`)), ms);
     p.then((v) => { clearTimeout(t); resolve(v); }, (e) => { clearTimeout(t); reject(e); });
   });
 }
@@ -34,6 +38,43 @@ function scoreCandidate(c: any, emailFound: string | null): number {
   if (c.contact_phone) s += 1;
   if (c.zip || c.city) s += 1;
   return Math.min(s, 10);
+}
+
+async function leanEnrich(domain: string | null, companyName: string | null): Promise<{ email: string | null; trace: any[] }> {
+  const trace: any[] = [];
+  if (!domain) return { email: null, trace };
+
+  // Step 1: Hunter.io domain search
+  try {
+    const hunter = await withTimeout(hunterFindEmail(domain), PER_CANDIDATE_TIMEOUT_MS, "hunter");
+    if (hunter?.email) {
+      trace.push({ source: "hunter", email: hunter.email, score: hunter.confidence });
+      return { email: hunter.email, trace };
+    }
+    trace.push({ source: "hunter", result: "no_match" });
+  } catch (e: any) {
+    trace.push({ source: "hunter", error: String(e?.message ?? e).slice(0, 120) });
+  }
+
+  // Step 2: Firecrawl contact-page scrape
+  try {
+    const url = `https://${domain}/contact`;
+    const scraped = await withTimeout(firecrawlScrape(url), PER_CANDIDATE_TIMEOUT_MS, "firecrawl");
+    if (scraped?.markdown || scraped?.html) {
+      const info = extractContactInfo(scraped.markdown || scraped.html || "");
+      if (info?.emails?.length) {
+        // prefer non-generic emails
+        const preferred = info.emails.find((e: string) => !/^(info|contact|hello|admin|support|sales)@/i.test(e)) || info.emails[0];
+        trace.push({ source: "firecrawl_contact", email: preferred });
+        return { email: preferred, trace };
+      }
+      trace.push({ source: "firecrawl_contact", result: "no_email_extracted" });
+    }
+  } catch (e: any) {
+    trace.push({ source: "firecrawl_contact", error: String(e?.message ?? e).slice(0, 120) });
+  }
+
+  return { email: null, trace };
 }
 
 Deno.serve(async (req) => {
@@ -63,23 +104,10 @@ Deno.serve(async (req) => {
       let email: string | null = c.contact_email || null;
       let trace: any = null;
 
-      // Run waterfall only if we have a domain or company name and no email
-      if (!email && (c.domain || c.company_name)) {
-        try {
-          const parts = (c.contact_name || "").trim().split(/\s+/);
-          const wf = await withTimeout(runEmailWaterfall(sb, {
-            website: c.domain ? `https://${c.domain}` : null,
-            business_name: c.company_name || null,
-            city: c.city || null,
-            state: c.state || null,
-            contact_first_name: parts[0] || null,
-            contact_last_name: parts.slice(1).join(" ") || null,
-          }), PER_CANDIDATE_TIMEOUT_MS);
-          email = wf?.email ?? null;
-          trace = wf?.trace ?? null;
-        } catch (e: any) {
-          trace = { error: String(e?.message ?? e) };
-        }
+      if (!email && c.domain) {
+        const enr = await leanEnrich(c.domain, c.company_name);
+        email = enr.email;
+        trace = enr.trace;
       }
 
       const quality = scoreCandidate(c, email);
@@ -87,14 +115,13 @@ Deno.serve(async (req) => {
       if (!email || quality < 5) {
         await sb.from("raw_buyer_candidates").update({
           enriched_at: enrichedAt,
-          rejected_reason: !email ? "no_email_after_waterfall" : "low_quality",
+          rejected_reason: !email ? "no_email_after_lean_waterfall" : "low_quality",
         }).eq("id", c.id);
         rejected += 1;
-        traces.push({ id: c.id, pool: c.pool, status: "rejected", quality });
+        traces.push({ id: c.id, pool: c.pool, status: "rejected", quality, trace });
         continue;
       }
 
-      // Upsert into buyer_pools
       const { error: upErr } = await sb.from("buyer_pools").upsert({
         pool: c.pool,
         company_name: c.company_name || c.domain || "Unknown",
@@ -108,7 +135,7 @@ Deno.serve(async (req) => {
         zip: c.zip,
         quality_score: quality,
         email_verified: false,
-        source_chain: [c.source, ...((Array.isArray(trace) ? trace : []).map((t: any) => t?.source).filter(Boolean))],
+        source_chain: [c.source, ...(Array.isArray(trace) ? trace.map((t: any) => t?.source).filter(Boolean) : [])],
         enrichment_meta: { trace, raw_id: c.id },
         status: "ready",
       }, { onConflict: "contact_email", ignoreDuplicates: false });
