@@ -108,6 +108,7 @@ const AdminColdEmailAudit = lazyRetry(() => import("./pages/admin/AdminColdEmail
 const LinkHealth = lazyRetry(() => import("./pages/admin/LinkHealth"));
 const TrialDripPreview = lazyRetry(() => import("./pages/admin/TrialDripPreview"));
 const ScannerHealth = lazyRetry(() => import("./pages/admin/ScannerHealth"));
+const DatabaseMatrix = lazyRetry(() => import("./pages/admin/DatabaseMatrix"));
 const AdminScannerMonitoring = lazyRetry(() => import("./pages/admin/AdminScannerMonitoring"));
 const ColdEmailRamp = lazyRetry(() => import("./pages/admin/ColdEmailRamp"));
 const TrialReactivationCampaign = lazyRetry(() => import("./pages/admin/TrialReactivationCampaign"));
@@ -1048,6 +1049,7 @@ const App = () => {
                       <Route path="/dwa-admin/link-health" element={<AgencyAdminRoute><LinkHealth /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/trial-drip" element={<AgencyAdminRoute><TrialDripPreview /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/scanner-health" element={<AgencyAdminRoute><ScannerHealth /></AgencyAdminRoute>} />
+                      <Route path="/dwa-admin/database-matrix" element={<AgencyAdminRoute><DatabaseMatrix /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/cold-email-ramp" element={<AgencyAdminRoute><ColdEmailRamp /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/techalert-prospects" element={<AgencyAdminRoute><AdminTechAlertProspects /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/scanner-hub" element={<AgencyAdminRoute><AdminScannerHub /></AgencyAdminRoute>} />

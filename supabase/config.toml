@@ -2393,3 +2393,6 @@ verify_jwt = false
 
 [functions.buyer-pool-promote]
 verify_jwt = false
+
+[functions.admin-database-matrix]
+verify_jwt = false
