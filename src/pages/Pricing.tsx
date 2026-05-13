@@ -186,6 +186,15 @@ const Pricing = () => {
         title="Pricing — Expert Strength Coaching Plans"
         description="Online strength coaching from $19.99/mo. Custom programming from $149.99/mo. Elite 1-on-1 from $349.99/mo. No contracts."
         path="/pricing"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: FAQ_ITEMS.map((f) => ({
+            "@type": "Question",
+            name: f.question,
+            acceptedAnswer: { "@type": "Answer", text: f.answer },
+          })),
+        }}
       />
       <AppNavbar />
       <div className="container pt-24 pb-16">
