@@ -125,21 +125,26 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Kick the Apollo discovery worker (fills raw_buyer_candidates from Apollo for all pools).
-    try {
-      const r = await fetch(`${SUPABASE_URL}/functions/v1/buyer-pool-apollo-discovery`, {
+    // Fan out to ALL discovery lanes (Apollo + 6 non-Apollo). Parallel.
+    const LANES = [
+      "buyer-pool-apollo-discovery",
+      "buyer-pool-google-places-discovery",
+      "buyer-pool-foursquare-discovery",
+      "buyer-pool-osm-overpass-discovery",
+      "buyer-pool-sam-gov-discovery",
+      "buyer-pool-bing-serp-discovery",
+      "buyer-pool-openrouter-osint-discovery",
+    ];
+    const laneResults = await Promise.allSettled(LANES.map(async (fn) => {
+      const r = await fetch(`${SUPABASE_URL}/functions/v1/${fn}`, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
-          "Content-Type": "application/json",
-        },
+        headers: { Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`, "Content-Type": "application/json" },
         body: "{}",
       });
       const j = await r.json().catch(() => ({}));
-      actions.push({ apollo_discovery: j });
-    } catch (e: any) {
-      actions.push({ apollo_discovery_error: String(e?.message ?? e) });
-    }
+      return { fn, status: r.status, result: j };
+    }));
+    laneResults.forEach((r, i) => actions.push(r.status === "fulfilled" ? r.value : { fn: LANES[i], error: String((r as any).reason) }));
 
     // Kick the promote worker (drains raw_buyer_candidates → buyer_pools).
     try {
