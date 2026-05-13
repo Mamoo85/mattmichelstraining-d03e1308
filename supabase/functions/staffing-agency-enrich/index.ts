@@ -189,7 +189,7 @@ serve(async (req) => {
             failed++;
             continue;
           }
-          const domain = domainOf(row.website) || email.split("@")[1];
+          const domain = domainOf(row.website) || domainOf(`https://${email.split("@")[1]}`) || email.split("@")[1];
           const { error: upErr } = await sb.from("staffing_agency_prospects").upsert({
             agency_name: row.agency_name,
             contact_name,
