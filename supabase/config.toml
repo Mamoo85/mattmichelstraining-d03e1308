@@ -2420,3 +2420,6 @@ verify_jwt = false
 
 [functions.enrichment-health-alerter]
 verify_jwt = false
+
+[functions.pipeline-autoscaler]
+verify_jwt = false
