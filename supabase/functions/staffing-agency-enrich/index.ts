@@ -77,13 +77,13 @@ async function resolveEmail(website: string | null, name: string, phone: string 
     domain = domainOf(realWebsite);
   }
   // shadow-rebind for downstream
-  if (website && domain) {
+  if (realWebsite && domain) {
     try {
       const c = await Promise.race([
-        extractContactInfo(website),
+        extractContactInfo(realWebsite),
         new Promise<null>((res) => setTimeout(() => res(null), 12000)),
       ]) as any;
-      if (c?.email) return { email: c.email.toLowerCase(), contact_name: c.name || null, via: "firecrawl" };
+      if (c?.email) return { email: c.email.toLowerCase(), contact_name: c.name || null, via: "firecrawl", resolved_website: realWebsite };
     } catch { /* */ }
   }
   if (domain) {
@@ -91,14 +91,14 @@ async function resolveEmail(website: string | null, name: string, phone: string 
       hunterFindEmail(domain),
       new Promise<null>((res) => setTimeout(() => res(null), 8000)),
     ]) as any;
-    if (h?.email) return { email: h.email.toLowerCase(), contact_name: [h.first_name, h.last_name].filter(Boolean).join(" ") || null, via: "hunter" };
+    if (h?.email) return { email: h.email.toLowerCase(), contact_name: [h.first_name, h.last_name].filter(Boolean).join(" ") || null, via: "hunter", resolved_website: realWebsite };
   }
   if (domain) {
     const s = await snovFindEmail(domain);
-    if (s) return { email: s.email, contact_name: s.name, via: "snov" };
+    if (s) return { email: s.email, contact_name: s.name, via: "snov", resolved_website: realWebsite };
   }
-  if (domain) return { email: `info@${domain}`, contact_name: null, via: "domain_fallback" };
-  return { email: "", contact_name: null, via: "none" };
+  if (domain) return { email: `info@${domain}`, contact_name: null, via: "domain_fallback", resolved_website: realWebsite };
+  return { email: "", contact_name: null, via: "none", resolved_website: null };
 }
 
 serve(async (req) => {
