@@ -10,8 +10,8 @@ import { hunterFindEmail } from "../_shared/hunter.ts";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY") || "";
-const SNOV_CLIENT_ID = Deno.env.get("SNOV_CLIENT_ID") || "";
-const SNOV_CLIENT_SECRET = Deno.env.get("SNOV_CLIENT_SECRET") || "";
+const SNOV_CLIENT_ID = Deno.env.get("SNOV_CLIENT_ID") || Deno.env.get("SNOV_USER_ID") || "";
+const SNOV_CLIENT_SECRET = Deno.env.get("SNOV_CLIENT_SECRET") || Deno.env.get("SNOV_API_KEY") || "";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -21,6 +21,7 @@ const corsHeaders = {
 const BATCH_SIZE = 24;          // pending rows per run
 const PARALLEL_CHUNK = 8;       // emails resolved concurrently
 const MAX_ATTEMPTS = 3;
+const BLOCKED_EMAIL_DOMAINS = ["domain.com", "example.com", "edan.io", "facebook.com", "linkedin.com", "yelp.com", "google.com"];
 
 async function snovFindEmail(domain: string): Promise<{ email: string; name: string | null } | null> {
   if (!SNOV_CLIENT_ID || !SNOV_CLIENT_SECRET || !domain) return null;
@@ -49,6 +50,7 @@ function domainOf(website: string | null): string | null {
     const u = website.startsWith("http") ? website : `https://${website}`;
     const host = new URL(u).hostname.replace(/^www\./, "");
     if (/yelp|google|facebook|instagram|linkedin|maps/i.test(host)) return null;
+    if (BLOCKED_EMAIL_DOMAINS.some((d) => host === d || host.endsWith(`.${d}`))) return null;
     return host;
   } catch { return null; }
 }
@@ -97,8 +99,81 @@ async function resolveEmail(website: string | null, name: string, phone: string 
     const s = await snovFindEmail(domain);
     if (s) return { email: s.email, contact_name: s.name, via: "snov", resolved_website: realWebsite };
   }
+  const hiringPageEmail = domain ? await scanHiringContactPages(domain) : null;
+  if (hiringPageEmail) return { email: hiringPageEmail, contact_name: null, via: "hiring_page", resolved_website: realWebsite };
+  const deep = await deepPublicDirectoryEmail(domain, name, city);
+  if (deep?.email) return { email: deep.email, contact_name: null, via: deep.via, resolved_website: realWebsite };
   if (domain) return { email: `info@${domain}`, contact_name: null, via: "domain_fallback", resolved_website: realWebsite };
   return { email: "", contact_name: null, via: "none", resolved_website: null };
+}
+
+async function scanHiringContactPages(domain: string): Promise<string | null> {
+  const pages = ["/", "/contact", "/contact-us", "/careers", "/jobs", "/employment", "/join-our-team", "/work-with-us", "/staffing", "/recruiting"];
+  const emailRe = /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g;
+  const blocked = /^(?:no-?reply|postmaster|webmaster|example|test|admin)@/i;
+  const preferred = /^(?:jobs|careers|hr|recruiting|recruiter|talent|staffing|employment|hiring|info|contact|office)@/i;
+  const hits: string[] = [];
+
+  await Promise.all(pages.map(async (path) => {
+    try {
+      const res = await fetch(`https://${domain}${path}`, {
+        headers: { "User-Agent": "Mozilla/5.0" },
+        signal: AbortSignal.timeout(5000),
+      });
+      if (!res.ok) return;
+      const text = await res.text();
+      for (const email of text.match(emailRe) || []) {
+        const normalized = email.toLowerCase();
+        const emailDomain = normalized.split("@")[1];
+        if (emailDomain === domain && !blocked.test(normalized)) hits.push(normalized);
+      }
+    } catch { /* try next page */ }
+  }));
+
+  return [...new Set(hits)].find((e) => preferred.test(e)) || [...new Set(hits)][0] || null;
+}
+
+async function deepPublicDirectoryEmail(domain: string | null, name: string, city: string | null): Promise<{ email: string; via: string } | null> {
+  const isEmail = (e: string | null) => {
+    if (!e || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) || /^(no-?reply|postmaster|webmaster)@/i.test(e)) return false;
+    const d = e.split("@")[1]?.toLowerCase();
+    return !!d && !BLOCKED_EMAIL_DOMAINS.some((blocked) => d === blocked || d.endsWith(`.${blocked}`));
+  };
+  const attempts: Array<[string, () => Promise<string | null>]> = [];
+
+  if (domain) {
+    attempts.push(
+      ["sitemap_crawl", async () => (await import("../_shared/email-extras-2.ts")).sitemapCrawlEmail(domain)],
+      ["firecrawl_contact", async () => (await import("../_shared/email-extras-6.ts")).firecrawlContactEmail(domain)],
+      ["bing_domain_scrape", async () => (await import("../_shared/email-extras-6.ts")).bingDomainEmailScrape(domain)],
+      ["firecrawl_about_team", async () => (await import("../_shared/email-extras-6.ts")).firecrawlAboutTeamEmail(domain)],
+      ["mx_existence_pattern", async () => (await import("../_shared/email-extras-6.ts")).mxExistencePatternEmail(domain)],
+      ["pagespeed_dom", async () => (await import("../_shared/email-extras-6.ts")).pagespeedDomEmail(domain)],
+      ["internet_archive_contact", async () => (await import("../_shared/email-extras-6.ts")).internetArchiveContactPagesEmail(domain)],
+    );
+  }
+
+  attempts.push(
+    ["google_places_deep", async () => (await import("../_shared/email-extras-6.ts")).googleMapsWebsiteMultipage(name, city || undefined)],
+    ["linkedin_public", async () => (await import("../_shared/email-extras-2.ts")).linkedinSlugEmail(name)],
+    ["facebook_public", async () => (await import("../_shared/email-extras-2.ts")).facebookPageEmail(name)],
+    ["bbb_profile", async () => (await import("../_shared/email-extras-5.ts")).bbbProfileEmail(name, city || undefined)],
+    ["chamber_of_commerce", async () => (await import("../_shared/email-extras-5.ts")).chamberOfCommerceEmail(name, city || undefined)],
+    ["michigan_business", async () => (await import("../_shared/email-extras-5.ts")).michiganBusinessEmail(name)],
+    ["bing_serp", async () => (await import("../_shared/email-extras-1.ts")).bingSerpEmail(name, domain || undefined)],
+    ["duckduckgo", async () => (await import("../_shared/email-extras-1.ts")).duckduckgoEmail(name)],
+    ["yelp_html_scrape", async () => (await import("../_shared/email-extras-6.ts")).yelpHtmlScrapeEmail(name, city || undefined)],
+  );
+
+  for (const [via, fn] of attempts) {
+    try {
+      const email = await Promise.race([fn(), new Promise<null>((res) => setTimeout(() => res(null), 7000))]);
+      if (isEmail(email)) return { email: email!.toLowerCase(), via };
+    } catch (e) {
+      console.log(`deep source ${via} failed:`, e instanceof Error ? e.message : String(e));
+    }
+  }
+  return null;
 }
 
 serve(async (req) => {
@@ -142,7 +217,7 @@ serve(async (req) => {
             failed++;
             continue;
           }
-          const domain = domainOf(row.website) || email.split("@")[1];
+          const domain = domainOf(row.website) || domainOf(`https://${email.split("@")[1]}`) || email.split("@")[1];
           const { error: upErr } = await sb.from("staffing_agency_prospects").upsert({
             agency_name: row.agency_name,
             contact_name,
