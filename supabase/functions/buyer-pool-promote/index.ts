@@ -1,14 +1,14 @@
-// Buyer Pool Promote — drains raw_buyer_candidates with a LIGHTWEIGHT enrichment chain
-// (Hunter.io domain search → Firecrawl contact-page scrape) and upserts qualified rows
-// into buyer_pools.
+// Buyer Pool Promote — drains raw_buyer_candidates through the FULL 110-tier
+// email waterfall (site_scrape → snov → apollo → pattern_verify → hunter → pdl
+// → free Tiers 7–89 → OSINT Tier 110 via OpenRouter Sonar) and upserts qualified
+// rows into buyer_pools.
 //
-// The full email-waterfall (80+ tiers) was too heavy for edge-runtime memory and tripped
-// WORKER_RESOURCE_LIMIT even at BATCH=3. This lean version handles 10 candidates/run safely.
-//
-// Cron: every 30 min, offset by 15 from orchestrator.
+// Memory-safe shape: BATCH=3, per-candidate 25s timeout, lazy-imported extras
+// inside the waterfall. Apollo is just stage 3 of 110 — when its key is dead
+// the run skips it and continues.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { hunterFindEmail } from "../_shared/hunter.ts";
-import { firecrawlScrape, extractContactInfo } from "../_shared/firecrawl.ts";
+import { runEmailWaterfall } from "../_shared/email-waterfall.ts";
+import { openrouterCall } from "../_shared/openrouter.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -18,8 +18,8 @@ const corsHeaders = {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-const BATCH = 10;
-const PER_CANDIDATE_TIMEOUT_MS = 12_000;
+const BATCH = 3;
+const PER_CANDIDATE_TIMEOUT_MS = 25_000;
 
 function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
   return new Promise((resolve, reject) => {
@@ -40,41 +40,33 @@ function scoreCandidate(c: any, emailFound: string | null): number {
   return Math.min(s, 10);
 }
 
-async function leanEnrich(domain: string | null, companyName: string | null): Promise<{ email: string | null; trace: any[] }> {
-  const trace: any[] = [];
-  if (!domain) return { email: null, trace };
-
-  // Step 1: Hunter.io domain search
+// Tier 110 — OSINT fallback via OpenRouter Sonar (web-search). Capped by
+// caller via per-candidate timeout. Returns first email found in citations.
+async function osintEmailLookup(c: any): Promise<string | null> {
+  const company = c.company_name || c.domain;
+  if (!company) return null;
+  const where = [c.city, c.state].filter(Boolean).join(", ") || "United States";
+  const prompt = `Find the best contact email address for "${company}" located in ${where}. ` +
+    `Prefer owner/president/general-manager. Return ONLY a JSON object: ` +
+    `{"email":"<email or empty>","source_url":"<url or empty>","confidence":0-100}. No prose.`;
   try {
-    const hunter = await withTimeout(hunterFindEmail(domain), PER_CANDIDATE_TIMEOUT_MS, "hunter");
-    if (hunter?.email) {
-      trace.push({ source: "hunter", email: hunter.email, score: hunter.confidence });
-      return { email: hunter.email, trace };
-    }
-    trace.push({ source: "hunter", result: "no_match" });
-  } catch (e: any) {
-    trace.push({ source: "hunter", error: String(e?.message ?? e).slice(0, 120) });
+    const res = await openrouterCall({
+      model: "perplexity/sonar-pro",
+      user: prompt,
+      json: true,
+      max_tokens: 300,
+      timeout_ms: 15_000,
+    });
+    if (!res?.text) return null;
+    const m = res.text.match(/\{[\s\S]*\}/);
+    if (!m) return null;
+    const parsed = JSON.parse(m[0]);
+    const email = String(parsed.email || "").trim().toLowerCase();
+    if (/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(email)) return email;
+    return null;
+  } catch {
+    return null;
   }
-
-  // Step 2: Firecrawl contact-page scrape
-  try {
-    const url = `https://${domain}/contact`;
-    const scraped = await withTimeout(firecrawlScrape(url), PER_CANDIDATE_TIMEOUT_MS, "firecrawl");
-    if (scraped?.markdown || scraped?.html) {
-      const info = extractContactInfo(scraped.markdown || scraped.html || "");
-      if (info?.emails?.length) {
-        // prefer non-generic emails
-        const preferred = info.emails.find((e: string) => !/^(info|contact|hello|admin|support|sales)@/i.test(e)) || info.emails[0];
-        trace.push({ source: "firecrawl_contact", email: preferred });
-        return { email: preferred, trace };
-      }
-      trace.push({ source: "firecrawl_contact", result: "no_email_extracted" });
-    }
-  } catch (e: any) {
-    trace.push({ source: "firecrawl_contact", error: String(e?.message ?? e).slice(0, 120) });
-  }
-
-  return { email: null, trace };
 }
 
 Deno.serve(async (req) => {
@@ -102,12 +94,44 @@ Deno.serve(async (req) => {
     for (const c of candidates) {
       const enrichedAt = new Date().toISOString();
       let email: string | null = c.contact_email || null;
+      let source = "provided";
       let trace: any = null;
 
-      if (!email && c.domain) {
-        const enr = await leanEnrich(c.domain, c.company_name);
-        email = enr.email;
-        trace = enr.trace;
+      if (!email) {
+        // Stages 1–109: full waterfall
+        try {
+          const wf = await withTimeout(
+            runEmailWaterfall(sb, {
+              website: c.domain ? `https://${c.domain}` : c.website || "",
+              business_name: c.company_name || undefined,
+              city: c.city || undefined,
+              state: c.state || undefined,
+              contact_first_name: c.contact_first_name || undefined,
+              contact_last_name: c.contact_last_name || undefined,
+            }),
+            PER_CANDIDATE_TIMEOUT_MS,
+            "waterfall",
+          );
+          if (wf?.email) {
+            email = wf.email;
+            source = wf.source;
+            trace = wf.trace;
+          } else {
+            trace = wf?.trace ?? null;
+          }
+        } catch (e: any) {
+          trace = [{ source: "waterfall", error: String(e?.message ?? e).slice(0, 160) }];
+        }
+
+        // Stage 110: OSINT fallback via OpenRouter
+        if (!email) {
+          const osint = await osintEmailLookup(c).catch(() => null);
+          if (osint) {
+            email = osint;
+            source = "openrouter_osint";
+            trace = [...(Array.isArray(trace) ? trace : []), { source: "openrouter_osint", ok: true }];
+          }
+        }
       }
 
       const quality = scoreCandidate(c, email);
@@ -115,10 +139,10 @@ Deno.serve(async (req) => {
       if (!email || quality < 5) {
         await sb.from("raw_buyer_candidates").update({
           enriched_at: enrichedAt,
-          rejected_reason: !email ? "no_email_after_lean_waterfall" : "low_quality",
+          rejected_reason: !email ? "no_email_after_full_waterfall" : "low_quality",
         }).eq("id", c.id);
         rejected += 1;
-        traces.push({ id: c.id, pool: c.pool, status: "rejected", quality, trace });
+        traces.push({ id: c.id, pool: c.pool, status: "rejected", quality });
         continue;
       }
 
@@ -135,8 +159,8 @@ Deno.serve(async (req) => {
         zip: c.zip,
         quality_score: quality,
         email_verified: false,
-        source_chain: [c.source, ...(Array.isArray(trace) ? trace.map((t: any) => t?.source).filter(Boolean) : [])],
-        enrichment_meta: { trace, raw_id: c.id },
+        source_chain: [c.source, source].filter(Boolean),
+        enrichment_meta: { trace, raw_id: c.id, source },
         status: "ready",
       }, { onConflict: "contact_email", ignoreDuplicates: false });
 
@@ -154,7 +178,7 @@ Deno.serve(async (req) => {
         promoted_at: enrichedAt,
       }).eq("id", c.id);
       promoted += 1;
-      traces.push({ id: c.id, pool: c.pool, status: "promoted", email, quality });
+      traces.push({ id: c.id, pool: c.pool, status: "promoted", email, source, quality });
     }
 
     return new Response(JSON.stringify({
