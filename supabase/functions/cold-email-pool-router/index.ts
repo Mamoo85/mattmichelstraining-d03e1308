@@ -296,6 +296,23 @@ Deno.serve(async (req) => {
         continue;
       }
 
+      // ATOMIC CLAIM — flip status ready→sending. Only the run that actually
+      // updates the row proceeds. Prevents concurrent invocations from sending
+      // the same buyer 2-3x within the same second (the 7d domain check above
+      // races when multiple runs fire in parallel).
+      const { data: claimed, error: claimErr } = await sb
+        .from("buyer_pools")
+        .update({ status: "sending", last_send_at: new Date().toISOString() })
+        .eq("id", b.id)
+        .eq("status", "ready")
+        .select("id")
+        .maybeSingle();
+      if (claimErr || !claimed) {
+        // Another concurrent run already claimed this buyer — skip silently.
+        usedDomains.add(dom);
+        continue;
+      }
+
       const r = await dwaEmail({
         to: b.contact_email,
         subject: msg.subject,
