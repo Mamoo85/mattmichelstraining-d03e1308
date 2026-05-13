@@ -5,7 +5,7 @@
 // The existing buyer-pool-promote function then runs the email waterfall on them.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { apolloPeopleSearch } from "../_shared/apollo.ts";
+import { apolloPeopleSearch, apolloHealth } from "../_shared/apollo.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -83,6 +83,15 @@ Deno.serve(async (req) => {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
+  }
+
+  // Up-front health check so we don't silently get 0 results from a bad/expired key
+  const health = await apolloHealth();
+  if (!health.ok) {
+    return new Response(JSON.stringify({
+      ok: false,
+      error: `Apollo health check failed: ${health.status} ${health.error || ""}`.slice(0, 300),
+    }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
   try {
