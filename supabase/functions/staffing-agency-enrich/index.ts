@@ -125,7 +125,7 @@ serve(async (req) => {
     for (let i = 0; i < pending.length; i += PARALLEL_CHUNK) {
       const chunk = pending.slice(i, i + PARALLEL_CHUNK);
       const results = await Promise.all(chunk.map(async (row) => {
-        const { email, contact_name, via } = await resolveEmail(row.website);
+        const { email, contact_name, via } = await resolveEmail(row.website, row.agency_name, row.phone, row.city);
         return { row, email, contact_name, via };
       }));
       // Apply DB updates serially (cheap)
