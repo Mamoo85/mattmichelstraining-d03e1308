@@ -185,7 +185,7 @@ async function sendDripBatch(sb: any, stage: "d0" | "d3" | "d7", remaining: numb
   return sent;
 }
 
-// Fallback: Google Places + Firecrawl website scrape (works without Apollo API tier)
+// Fallback waterfall: Google Places + Yelp → Firecrawl scrape → Hunter → Snov → info@domain
 const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY") || "";
 const MI_QUERIES = [
   "healthcare staffing agency in Detroit MI",
@@ -194,95 +194,121 @@ const MI_QUERIES = [
   "healthcare staffing in Ann Arbor MI",
   "nurse staffing in Warren MI",
   "medical staffing in Flint MI",
+  "home health agency in Detroit MI",
+  "assisted living in Detroit MI",
 ];
+const YELP_LOCATIONS = ["Detroit, MI", "Grand Rapids, MI", "Lansing, MI", "Ann Arbor, MI", "Warren, MI", "Flint, MI"];
+const YELP_TERMS = ["nurse staffing", "healthcare staffing", "home health agency", "assisted living"];
 
-async function sourceFromGooglePlaces(sb: any): Promise<number> {
-  if (!GOOGLE_MAPS_API_KEY) return 0;
-  let inserted = 0;
+interface SourcedAgency { name: string; website: string | null; phone: string | null; address: string | null; source: string; }
+
+async function fetchGooglePlaces(): Promise<SourcedAgency[]> {
+  if (!GOOGLE_MAPS_API_KEY) return [];
+  const out: SourcedAgency[] = [];
   for (const query of MI_QUERIES) {
     try {
-      const res = await fetch(
-        `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&key=${GOOGLE_MAPS_API_KEY}`,
-      );
+      const res = await fetch(`https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&key=${GOOGLE_MAPS_API_KEY}`, { signal: AbortSignal.timeout(8000) });
       const data = await res.json();
-      const places = (data.results || []).slice(0, 8);
-      for (const place of places) {
-        // get place details for website + phone
-        const detRes = await fetch(
-          `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.place_id}&fields=name,website,formatted_phone_number,formatted_address&key=${GOOGLE_MAPS_API_KEY}`,
-        );
-        const det = (await detRes.json()).result || {};
-        const website = det.website;
-        if (!website) continue;
-        const domain = website.replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0];
-
-        // try to scrape contact email from site
-        let email: string | null = null;
-        let contactName: string | null = null;
+      if (data.status && data.status !== "OK" && data.status !== "ZERO_RESULTS") console.log(`places ${query}: ${data.status} ${data.error_message || ""}`);
+      for (const place of (data.results || []).slice(0, 10)) {
         try {
-          const contact = await extractContactInfo(website);
-          if (contact?.email) {
-            email = contact.email.toLowerCase();
-            contactName = contact.name || null;
-          }
-        } catch (_) { /* ignore */ }
-
-        // fallback to info@domain if scrape failed (low-quality but still deliverable for D0)
-        if (!email) email = `info@${domain}`;
-
-        const { error } = await sb.from("staffing_agency_prospects").upsert({
-          agency_name: det.name || place.name,
-          contact_name: contactName,
-          contact_title: null,
-          email,
-          phone: det.formatted_phone_number || null,
-          city: (det.formatted_address || "").split(",")[1]?.trim() || null,
-          state: "MI",
-          domain,
-          apollo_id: null,
-          source: "google_places",
-          status: "new",
-        }, { onConflict: "email", ignoreDuplicates: true });
-        if (!error) inserted++;
+          const detRes = await fetch(`https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.place_id}&fields=name,website,formatted_phone_number,formatted_address&key=${GOOGLE_MAPS_API_KEY}`, { signal: AbortSignal.timeout(8000) });
+          const det = (await detRes.json()).result || {};
+          out.push({ name: det.name || place.name, website: det.website || null, phone: det.formatted_phone_number || null, address: det.formatted_address || place.formatted_address || null, source: "google_places" });
+        } catch (e) { console.log(`place detail fail: ${(e as Error).message}`); }
       }
-    } catch (e) {
-      console.error(`Google Places source failed for ${query}:`, e);
+    } catch (e) { console.log(`places query fail ${query}: ${(e as Error).message}`); }
+  }
+  return out;
+}
+
+async function fetchYelp(): Promise<SourcedAgency[]> {
+  const out: SourcedAgency[] = [];
+  for (const loc of YELP_LOCATIONS) {
+    for (const term of YELP_TERMS) {
+      const biz = await yelpSearchAgencies(loc, term);
+      for (const b of biz.slice(0, 8)) {
+        out.push({ name: b.name, website: b.url || null, phone: b.phone || null, address: b.location?.display_address?.join(", ") || null, source: "yelp" });
+      }
     }
   }
-  return inserted;
+  return out;
+}
+
+async function resolveEmail(_name: string, website: string | null): Promise<{ email: string; contact_name: string | null; via: string }> {
+  const domain = website ? website.replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0] : null;
+  if (website) {
+    try {
+      const c = await extractContactInfo(website);
+      if (c?.email) return { email: c.email.toLowerCase(), contact_name: c.name || null, via: "firecrawl" };
+    } catch { /* */ }
+  }
+  if (domain) {
+    const h = await hunterFindEmail(domain);
+    if (h?.email) return { email: h.email.toLowerCase(), contact_name: [h.first_name, h.last_name].filter(Boolean).join(" ") || null, via: "hunter" };
+  }
+  if (domain) {
+    const s = await snovFindEmail(domain);
+    if (s) return { email: s.email, contact_name: s.name, via: "snov" };
+  }
+  if (domain) return { email: `info@${domain}`, contact_name: null, via: "domain_fallback" };
+  return { email: "", contact_name: null, via: "none" };
+}
+
+async function sourceFromAllFallbacks(sb: any): Promise<{ inserted: number; via: Record<string, number>; raw_found: number }> {
+  const places = await fetchGooglePlaces();
+  const yelps = await fetchYelp();
+  const all = [...places, ...yelps];
+  const seen = new Set<string>();
+  const uniq = all.filter(a => { const k = `${a.name}|${a.phone || ""}`.toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; });
+  const via: Record<string, number> = {};
+  let inserted = 0;
+  for (const a of uniq) {
+    try {
+      const { email, contact_name, via: emailVia } = await resolveEmail(a.name, a.website);
+      if (!email) continue;
+      const domain = a.website ? a.website.replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0] : email.split("@")[1];
+      const { error } = await sb.from("staffing_agency_prospects").upsert({
+        agency_name: a.name, contact_name, contact_title: null, email, phone: a.phone,
+        city: (a.address || "").split(",")[1]?.trim() || null, state: "MI",
+        domain, apollo_id: null, source: a.source, status: "new",
+      }, { onConflict: "email", ignoreDuplicates: true });
+      if (!error) { inserted++; via[`${a.source}+${emailVia}`] = (via[`${a.source}+${emailVia}`] || 0) + 1; }
+      else console.log(`upsert err ${a.name}: ${error.message}`);
+    } catch (e) { console.log(`upsert fail ${a.name}: ${(e as Error).message}`); }
+  }
+  return { inserted, via, raw_found: uniq.length };
 }
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const url = new URL(req.url);
+  const dryRun = url.searchParams.get("dry_run") === "1";
 
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
   const startedAt = Date.now();
-
   try {
-    const apolloSourced = await sourceFromApollo(sb);
-    const placesSourced = await sourceFromGooglePlaces(sb);
-    const sourced = apolloSourced + placesSourced;
+    const apolloSourced = await sourceFromApollo(sb).catch(e => { console.log("apollo fail:", e.message); return 0; });
+    const fallback = await sourceFromAllFallbacks(sb);
+    const sourced = apolloSourced + fallback.inserted;
 
-    let remaining = DAILY_SEND_CAP;
-    const d7 = await sendDripBatch(sb, "d7", remaining); remaining -= d7;
-    const d3 = await sendDripBatch(sb, "d3", remaining); remaining -= d3;
-    const d0 = await sendDripBatch(sb, "d0", remaining); remaining -= d0;
-    const totalSent = d0 + d3 + d7;
-
-    if (totalSent > 0 && TWILIO_PHONE) {
-      await sendSMS(ADMIN_PHONE, TWILIO_PHONE,
-        `[Staffing Cold Email] ${totalSent} sent (${d0} D0, ${d3} D3, ${d7} D7). ${sourced} new prospects sourced.`,
-        "staffing_outreach").catch(() => {});
+    let d0 = 0, d3 = 0, d7 = 0;
+    if (!dryRun) {
+      let remaining = DAILY_SEND_CAP;
+      d7 = await sendDripBatch(sb, "d7", remaining); remaining -= d7;
+      d3 = await sendDripBatch(sb, "d3", remaining); remaining -= d3;
+      d0 = await sendDripBatch(sb, "d0", remaining); remaining -= d0;
     }
-
+    const totalSent = d0 + d3 + d7;
+    if (totalSent > 0 && TWILIO_PHONE) {
+      await sendSMS(ADMIN_PHONE, TWILIO_PHONE, `[Staffing Cold Email] ${totalSent} sent. ${sourced} new prospects sourced.`, "staffing_outreach").catch(() => {});
+    }
     return new Response(JSON.stringify({
-      ok: true, sourced, apollo_sourced: apolloSourced, places_sourced: placesSourced,
-      sent: totalSent, d0, d3, d7,
-      duration_ms: Date.now() - startedAt,
+      ok: true, sourced, apollo_sourced: apolloSourced, fallback_sourced: fallback.inserted, raw_agencies_found: fallback.raw_found, via_breakdown: fallback.via,
+      sent: totalSent, d0, d3, d7, dry_run: dryRun, duration_ms: Date.now() - startedAt,
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e: any) {
     console.error("staffing-agency-prospector failed:", e);
-    return new Response(JSON.stringify({ ok: false, error: e.message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });
