@@ -282,6 +282,14 @@ Deno.serve(async (req) => {
 
       const msg = tpl(b);
 
+      // CTA pre-flight: refuse to send if landing page is broken.
+      const ctaMatch = msg.html.match(/href="(https?:\/\/[^"]+)"/);
+      const ctaHref = ctaMatch?.[1] || "";
+      if (ctaHref && !(await ctaIsLive(ctaHref))) {
+        summary.push({ pool: t.pool, status: "cta_dead", url: ctaHref.split("?")[0] });
+        break; // skip rest of this pool — same broken CTA in every email
+      }
+
       if (dryRun) {
         poolSent++;
         usedDomains.add(dom);
