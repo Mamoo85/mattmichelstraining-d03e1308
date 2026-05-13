@@ -73,34 +73,42 @@ async function osintEmailLookup(c: any): Promise<string | null> {
   }
 }
 
+async function tryFirecrawl(url: string): Promise<string | null> {
+  try {
+    const sc = await withTimeout(firecrawlScrape(url), PER_STAGE_TIMEOUT_MS, `firecrawl ${url}`);
+    if (!sc?.markdown && !sc?.html) return null;
+    const info = extractContactInfo(sc.markdown || sc.html || "");
+    if (!info?.emails?.length) return null;
+    const preferred = info.emails.find((e: string) => !/^(info|contact|hello|admin|support|sales|office)@/i.test(e));
+    return preferred || info.emails[0];
+  } catch { return null; }
+}
+
 async function leanEnrich(c: any): Promise<{ email: string | null; source: string; trace: any[] }> {
   const trace: any[] = [];
-  const domain = c.domain;
+  const domain = c.domain?.replace(/^www\./, "");
 
-  // 1. Hunter
   if (domain) {
+    // 1. Hunter
     try {
       const h = await withTimeout(hunterFindEmail(domain), PER_STAGE_TIMEOUT_MS, "hunter");
       if (h?.email) { trace.push({ source: "hunter", ok: true }); return { email: h.email, source: "hunter", trace }; }
       trace.push({ source: "hunter", ok: false });
     } catch (e: any) { trace.push({ source: "hunter", error: String(e?.message ?? e).slice(0, 120) }); }
 
-    // 2. Firecrawl /contact
-    try {
-      const sc = await withTimeout(firecrawlScrape(`https://${domain}/contact`), PER_STAGE_TIMEOUT_MS, "firecrawl");
-      if (sc?.markdown || sc?.html) {
-        const info = extractContactInfo(sc.markdown || sc.html || "");
-        if (info?.emails?.length) {
-          const preferred = info.emails.find((e: string) => !/^(info|contact|hello|admin|support|sales)@/i.test(e)) || info.emails[0];
-          trace.push({ source: "firecrawl_contact", ok: true });
-          return { email: preferred, source: "firecrawl_contact", trace };
-        }
+    // 2. Firecrawl waterfall: homepage → /contact → /about
+    for (const path of ["", "/contact", "/contact-us", "/about"]) {
+      const url = `https://${domain}${path}`;
+      const found = await tryFirecrawl(url);
+      if (found) {
+        trace.push({ source: `firecrawl${path || "_home"}`, ok: true });
+        return { email: found, source: `firecrawl${path || "_home"}`, trace };
       }
-      trace.push({ source: "firecrawl_contact", ok: false });
-    } catch (e: any) { trace.push({ source: "firecrawl_contact", error: String(e?.message ?? e).slice(0, 120) }); }
+    }
+    trace.push({ source: "firecrawl_all", ok: false });
   }
 
-  // 3. OSINT Tier 110 — OpenRouter Sonar web-search
+  // 3. OSINT Tier 110 — OpenRouter Sonar web-search (now with json fix)
   const osint = await osintEmailLookup(c);
   if (osint) { trace.push({ source: "openrouter_osint", ok: true }); return { email: osint, source: "openrouter_osint", trace }; }
   trace.push({ source: "openrouter_osint", ok: false });
