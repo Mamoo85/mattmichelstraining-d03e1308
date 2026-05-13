@@ -67,14 +67,14 @@ Deno.serve(async (req) => {
       if (!email && (c.domain || c.company_name)) {
         try {
           const parts = (c.contact_name || "").trim().split(/\s+/);
-          const wf = await runEmailWaterfall(sb, {
+          const wf = await withTimeout(runEmailWaterfall(sb, {
             website: c.domain ? `https://${c.domain}` : null,
             business_name: c.company_name || null,
             city: c.city || null,
             state: c.state || null,
             contact_first_name: parts[0] || null,
             contact_last_name: parts.slice(1).join(" ") || null,
-          });
+          }), PER_CANDIDATE_TIMEOUT_MS);
           email = wf?.email ?? null;
           trace = wf?.trace ?? null;
         } catch (e: any) {
