@@ -192,6 +192,9 @@ Deno.serve(async (req) => {
       if (block.blocked) { blocked++; continue; }
     } catch (_) { /* fail open */ }
 
+    // Cross-product dedup: skip if any cold email sent to this address in last 5 days.
+    if (await wasContactedRecently(sb, lead.email, 5)) { skipped++; continue; }
+
     const pitch = pitchFor(lead);
     const subject = pitch.subject(lead.business_name || "your shop", lead.city || "Michigan");
     const html = plainEmailHtml(lead, pitch);
