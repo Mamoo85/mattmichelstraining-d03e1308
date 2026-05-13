@@ -11,18 +11,48 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const RATE_LIMIT_PER_HOUR = 5;
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
     const { url, email } = await req.json();
-    if (!url) {
+    if (!url || typeof url !== "string") {
       return new Response(JSON.stringify({ error: "url required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+    // Validate URL — only http/https public schemes
+    let parsed: URL;
+    try {
+      parsed = new URL(url.trim().startsWith("http") ? url.trim() : `https://${url.trim()}`);
+    } catch {
+      return new Response(JSON.stringify({ error: "invalid url" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    if (!["http:", "https:"].includes(parsed.protocol)) {
+      return new Response(JSON.stringify({ error: "only http(s) urls allowed" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    if (email && (typeof email !== "string" || !EMAIL_RE.test(email))) {
+      return new Response(JSON.stringify({ error: "invalid email" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // IP-based rate limit (5 req/hour)
+    const ip = (req.headers.get("x-forwarded-for") || "").split(",")[0].trim() || "unknown";
+    const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    try {
+      const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      const { count } = await sb.from("free_generation_log")
+        .select("id", { count: "exact", head: true })
+        .eq("ip_address", ip)
+        .gte("created_at", since);
+      if ((count ?? 0) >= RATE_LIMIT_PER_HOUR) {
+        return new Response(JSON.stringify({ success: false, message: "Rate limit reached. Try again in an hour." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      await sb.from("free_generation_log").insert({ ip_address: ip });
+    } catch (e) { console.warn("rate limit check failed:", e); }
 
     if (email) {
       try {
-        const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
         await sb.from("free_tool_leads").insert({
           email,
           tool_used: "ada_risk_scanner",

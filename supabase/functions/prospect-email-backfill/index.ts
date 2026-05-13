@@ -31,15 +31,15 @@ serve(async (req) => {
   const userClient = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, {
     global: { headers: { Authorization: authHeader } },
   });
-  const { data: claims } = await userClient.auth.getClaims(token);
-  if (!claims?.claims?.sub) {
+  const { data: { user } } = await userClient.auth.getUser(token);
+  if (!user?.id) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
   const { data: isAdmin } = await supabase.rpc("has_role", {
-    _user_id: claims.claims.sub, _role: "admin",
+    _user_id: user.id, _role: "admin",
   });
   if (!isAdmin) {
     return new Response(JSON.stringify({ error: "Admin only" }), {
