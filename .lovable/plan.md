@@ -1,105 +1,54 @@
-# Plan — Kill the Apollo Dependency, Light Up Every Resource We Already Pay For
+## Why nothing loads + frame is small
 
-## What I found auditing our own stack
+Every `/my-*` portal is gated by either `?email=` (FieldDesk, Demand Radar, Mortgage Radar) or `?token=` against a `dashboard_token` / `dispatch_token` column (SiteRadar, Buyer Radar, Missed-Call, TechAlert). The "My Command Center" admin tab iframes those routes with **no query string**, so every one returns "No email in URL" / "Invalid or expired link." On top of that, Matt isn't actually rowed into several of the client tables yet, so even a correct token would 404.
 
-**Already wired, already paid for, but the buyer pool is NOT using:**
+The frame is small because the iframe sits inside the admin shell with `h-[calc(100vh-3.5rem)]` minus the toolbar — about 55% of the screen.
 
-- `email-waterfall.ts` → 110 tiers across `email-extras-1/2/4/5/6.ts` (Snov, Hunter, PDL, site-scrape, pattern-verify, Bing, Yandex, DuckDuckGo, Reddit, Common Crawl, Wayback, GitHub, SEC EDGAR, USPTO, NPI, IRS BMF, FCC ULS, NSF/NIH/Grants.gov, EPA FRS, FDA, USPTO assignee, USAspending, SAM.gov, Manta, Houzz, ThomasNet, Angi, HomeAdvisor, Thumbtack, BBB, US Chamber, D&B, CorporationWiki, OpenGovUS, LARA, Yellowbook, Cylex, Brownbook, Cybo, MerchantCircle, Yelp, Foursquare, OSM, MapQuest, HERE, OpenCage, Crunchbase, sitemap crawl, schema.org JSON-LD, og:email meta, RSS, vCard, security.txt/humans.txt/well-known, Twitter bio, LinkedIn, Facebook, etc.)
-- `OPENROUTER_API_KEY` — gives us **every model on openrouter.ai**, not just Sonar (gpt-5, gemini-2.5-pro, claude, sonar-reasoning-pro, perplexity online models)
-- `PDL_API_KEY` paid — only used in 2 tiers, nowhere in buyer-pool
-- `SNOV_USER_ID` + `SNOV_API_KEY` paid — wired in waterfall but `buyer-pool-promote` skips it
-- `HIBP_API_KEY` — Talent Radar uses it, buyer-pool doesn't
-- `BING_SEARCH_API_KEY`, `FOURSQUARE_API_KEY`, `MAPQUEST_API_KEY`, `HERE_API_KEY`, `OPENCAGE_API_KEY`, `GITHUB_TOKEN`, `SAM_GOV_API_KEY`, `FRED_API_KEY`, `CENSUS_API_KEY` — all configured, none feeding buyer pool
+## Plan — 3 fixes, one pass
 
-**The actual bug:** `buyer-pool-promote/index.ts` was rewritten lean (Hunter → Firecrawl only) to dodge a memory crash. That bypassed the 110-tier engine. Combined with Apollo 401, the funnel is dry.
+### 1. Enroll Matt in every product (one migration)
 
-**The actual ceiling:** discovery. Only `buyer-pool-apollo-discovery` exists. We need non-Apollo lanes that produce `raw_buyer_candidates` rows.
+Idempotent UPSERT into every `*_clients` table with a deterministic shared token so the Command Center can pass it without lookup:
 
----
+- `trade_radar_clients` — all 11 verticals (re-affirm Phase 31 enrollment, set `dashboard_token = 'matt-cmd-center-dwa'`)
+- `mortgage_radar_clients`
+- `hire_alert_clients` (TechAlert)
+- `field_crm_clients` (covers FieldDesk **and** SiteRadar — needs `dispatch_token`, `visitor_script_key`, `email = matt@detroitwebagent.com`)
+- `missed_call_clients` (`dashboard_token`)
+- `industry_pulse_clients` × 3 rows (`buyer_type` = contractor / supplier / growth — covers Demand Radar, Buyer Radar, Growth Radar)
+- `contractor_clients` (Contractor Leads + Dead Lead Reactivation)
+- `dead_lead_campaigns` linked to Matt's contractor row
 
-## Plan
+All tokens set to the same string `matt-cmd-center-dwa` for simplicity (admin-only, gated by `has_role` so safe). Status = active, trial_status = founders, ZIP coverage = SE Michigan.
 
-### A. Discovery — 6 net-new lanes (zero Apollo, zero new keys)
+### 2. Rewrite `MyCommandCenter.tsx` to actually pass auth
 
-Each lane writes to `raw_buyer_candidates` with pool_slug + business_name + domain + city/state. Run in parallel from the orchestrator.
+- Each `PRODUCTS` entry gets **two** paths:
+  - `customerPath` — current `/my-*` URL **with** `?email=matt@detroitwebagent.com&token=matt-cmd-center-dwa` appended
+  - `prospectPath` — the public marketing/landing URL (`/field-service`, `/mortgage-radar`, `/hire-alert`, `/site-radar`, `/contractor-leads`, etc.)
+- Add a **View mode** toggle in the toolbar: `👤 Customer view` ↔ `🎯 Prospect view` — flips the iframe `src` to either path
+- This gives Matt one place to QA every product as both a paying customer **and** a cold visitor
 
-```text
-1. buyer-pool-google-places-discovery
-   GOOGLE_MAPS_API_KEY · per-pool keyword × state grid (e.g. "general contractor Michigan")
-   → name, website, phone, place_id
+### 3. Make the frame much bigger
 
-2. buyer-pool-foursquare-discovery
-   FOURSQUARE_API_KEY · category-id grid per pool
+- Add a **⛶ Maximize** button next to "Open standalone"
+- When maximized, render the iframe in a portal `<Dialog>` that covers the whole viewport (escapes the admin shell sidebar entirely)
+- Default unmaximized: bump iframe min-height to `calc(100vh - 9rem)` and let the toolbar collapse into a single row when product is selected (saves ~80px), so the iframe is ~85% of screen instead of ~55%
+- Persist preferred mode + maximized state in localStorage
 
-3. buyer-pool-osm-overpass-discovery
-   No key · Overpass API · amenity/shop/office tag queries by state bbox
+### 4. Verify
 
-4. buyer-pool-sam-gov-discovery
-   SAM_GOV_API_KEY · NAICS per pool (HVAC=238220, plumbing=238210, etc.)
-   → entity name, POC email, address (federal-contractor universe)
+After Lovable applies the migration: open Command Center → click each of the 23 product pills in both Customer and Prospect mode → confirm none show "Access denied" / "Invalid or expired link" / "No email in URL." Report back any portal that still gates incorrectly so we can patch its specific check.
 
-5. buyer-pool-bing-serp-discovery
-   BING_SEARCH_API_KEY · "<title> <state> site:linkedin.com/in" + "<vertical> contractor email <city>"
-   → harvests names + domains from result snippets
+## Files
 
-6. buyer-pool-openrouter-osint-discovery
-   OPENROUTER_API_KEY · uses perplexity/sonar-pro AND perplexity/sonar-reasoning-pro
-   Prompt: "List 25 <pool-title> in <state> with company name + website + city. JSON."
-   This is what's already carrying Talent Radar at $0.005/cand · 99% structural hit rate.
+```
++ supabase/migrations/YYYYMMDD_matt_full_enrollment_command_center.sql
+~ src/components/dwa-admin/MyCommandCenter.tsx
 ```
 
-Apollo lane stays as #7 (best when key works) but is no longer the only path.
+## Notes
 
-### B. Enrichment — use the engine we already built
-
-Replace `buyer-pool-promote`'s lean chain with the full `runEmailWaterfall()` (110 tiers). Memory crash fix:
-
-- Drop BATCH from 10 → 3
-- Add per-tier `withTimeout(8s)`
-- Use the existing `enrichment-breaker.ts` to short-circuit dead providers per run
-- Each candidate calls `runEmailWaterfall({ website, business_name, city, state, contact_first_name, contact_last_name })` — Apollo is just stage 3 of 110, skipped automatically when 401
-
-Adds (free) PDL name-only search at stage 6 — already coded, just unblocked.
-
-### C. OpenRouter is not just Sonar
-
-Add `_shared/openrouter.ts` helper exposing: `sonar-pro`, `sonar-reasoning-pro`, `gpt-5-mini`, `gemini-2.5-pro`, `claude-haiku`. Used by:
-
-- discovery lane #6 (above)
-- a new **OSINT enrichment tier** appended to the waterfall as Tier 110 — when all 109 fail, ask Sonar for "the best contact email for &nbsp; in &nbsp;" with citation. Cap $0.01/cand via `enrichment-budget.ts`.
-
-### D. Cold-email payload + alerting (item B from previous turn)
-
-- `cold-email-pool-router`: confirm new templates + tracked CTAs are live; add per-link health check (HEAD request) before send → block send if any CTA 404s.
-- New `enrichment-health-alerter` cron (15-min): if Apollo / Hunter / Snov / PDL `enrichment_provider_health.last_429_at` < 15 min OR last 50 calls 0% hit → SMS Matt + Slack post. No more silent zeroing.
-
-### E. Trigger run + verify
-
-After deploy: invoke orchestrator → expect raw_buyer_candidates to grow from 6 non-Apollo lanes → promote drains 1,196 staged + new arrivals through full waterfall → `buyer_pools` populates → cold-email-router sends. Report counts back.
-
----
-
-## Tech notes
-
-- All discovery lanes follow the existing `apify-actor-runner` skip-pattern: idempotent, dedupe by (pool_slug, domain).
-- All new fetches go through `fetchWithRetry` + `enrichment-breaker` so a dead source can't tank a run.
-- No new secrets needed. Every key listed is already in the env (verified via grep).
-- No DB migration needed — `raw_buyer_candidates` and `buyer_pools` schemas already accept these fields.
-- Memory: full waterfall lazy-imports each extras file, so peak heap ≈ 80MB at BATCH=3 (verified shape).
-- Files touched (~10):
-  ```
-  + supabase/functions/buyer-pool-google-places-discovery/index.ts
-  + supabase/functions/buyer-pool-foursquare-discovery/index.ts
-  + supabase/functions/buyer-pool-osm-overpass-discovery/index.ts
-  + supabase/functions/buyer-pool-sam-gov-discovery/index.ts
-  + supabase/functions/buyer-pool-bing-serp-discovery/index.ts
-  + supabase/functions/buyer-pool-openrouter-osint-discovery/index.ts
-  + supabase/functions/enrichment-health-alerter/index.ts
-  + supabase/functions/_shared/openrouter.ts
-  ~ supabase/functions/buyer-pool-promote/index.ts        (swap lean → full waterfall, BATCH=3)
-  ~ supabase/functions/buyer-universe-orchestrator/index.ts (fan out to 6 new lanes)
-  ~ supabase/functions/cold-email-pool-router/index.ts    (CTA pre-flight check)
-  ~ supabase/config.toml                                   (verify_jwt=false × 7 new functions)
-  ```
-
-Ship in this order so each step is independently verifiable: openrouter helper → 6 discovery lanes → promote rewrite → alerter → CTA check → trigger + report. Fill the databases after! We need them tested! 
+- The shared `matt-cmd-center-dwa` token is safe because the entire `/dwa-admin` route is already gated by `AgencyAdminRoute` — only authenticated admins ever see this page.
+- If you'd rather NOT share a token across products, I can generate per-product UUIDs and embed them in the Command Center file directly. The single-token approach is just less code.
+- Some portals (Talent Radar, Counsel Search, Add-ons, Team) use auth session instead of token — those already work for Matt; they'll keep working unchanged.
