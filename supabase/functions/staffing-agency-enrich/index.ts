@@ -97,8 +97,49 @@ async function resolveEmail(website: string | null, name: string, phone: string 
     const s = await snovFindEmail(domain);
     if (s) return { email: s.email, contact_name: s.name, via: "snov", resolved_website: realWebsite };
   }
+  const deep = await deepPublicDirectoryEmail(domain, name, city);
+  if (deep?.email) return { email: deep.email, contact_name: null, via: deep.via, resolved_website: realWebsite };
   if (domain) return { email: `info@${domain}`, contact_name: null, via: "domain_fallback", resolved_website: realWebsite };
   return { email: "", contact_name: null, via: "none", resolved_website: null };
+}
+
+async function deepPublicDirectoryEmail(domain: string | null, name: string, city: string | null): Promise<{ email: string; via: string } | null> {
+  const isEmail = (e: string | null) => !!e && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) && !/^(no-?reply|postmaster|webmaster)@/i.test(e);
+  const attempts: Array<[string, () => Promise<string | null>]> = [];
+
+  if (domain) {
+    attempts.push(
+      ["sitemap_crawl", async () => (await import("../_shared/email-extras-2.ts")).sitemapCrawlEmail(domain)],
+      ["firecrawl_contact", async () => (await import("../_shared/email-extras-6.ts")).firecrawlContactEmail(domain)],
+      ["bing_domain_scrape", async () => (await import("../_shared/email-extras-6.ts")).bingDomainEmailScrape(domain)],
+      ["firecrawl_about_team", async () => (await import("../_shared/email-extras-6.ts")).firecrawlAboutTeamEmail(domain)],
+      ["mx_existence_pattern", async () => (await import("../_shared/email-extras-6.ts")).mxExistencePatternEmail(domain)],
+      ["pagespeed_dom", async () => (await import("../_shared/email-extras-6.ts")).pagespeedDomEmail(domain)],
+      ["internet_archive_contact", async () => (await import("../_shared/email-extras-6.ts")).internetArchiveContactPagesEmail(domain)],
+    );
+  }
+
+  attempts.push(
+    ["google_places_deep", async () => (await import("../_shared/email-extras-6.ts")).googleMapsWebsiteMultipage(name, city || undefined)],
+    ["linkedin_public", async () => (await import("../_shared/email-extras-2.ts")).linkedinSlugEmail(name)],
+    ["facebook_public", async () => (await import("../_shared/email-extras-2.ts")).facebookPageEmail(name)],
+    ["bbb_profile", async () => (await import("../_shared/email-extras-5.ts")).bbbProfileEmail(name, city || undefined)],
+    ["chamber_of_commerce", async () => (await import("../_shared/email-extras-5.ts")).chamberOfCommerceEmail(name, city || undefined)],
+    ["michigan_business", async () => (await import("../_shared/email-extras-5.ts")).michiganBusinessEmail(name)],
+    ["bing_serp", async () => (await import("../_shared/email-extras-1.ts")).bingSerpEmail(name, domain || undefined)],
+    ["duckduckgo", async () => (await import("../_shared/email-extras-1.ts")).duckduckgoEmail(name)],
+    ["yelp_html_scrape", async () => (await import("../_shared/email-extras-6.ts")).yelpHtmlScrapeEmail(name, city || undefined)],
+  );
+
+  for (const [via, fn] of attempts) {
+    try {
+      const email = await Promise.race([fn(), new Promise<null>((res) => setTimeout(() => res(null), 7000))]);
+      if (isEmail(email)) return { email: email!.toLowerCase(), via };
+    } catch (e) {
+      console.log(`deep source ${via} failed:`, e instanceof Error ? e.message : String(e));
+    }
+  }
+  return null;
 }
 
 serve(async (req) => {
