@@ -175,6 +175,10 @@ export async function apolloPeopleSearch(params: {
     ...(titleFilter ? { person_titles: titleFilter } : {}),
   } as Record<string, unknown>);
 
+  if (!res.ok) {
+    console.warn(`[apollo.peopleSearch] status=${res.status} error=${(res.error || "").slice(0, 200)}`);
+  }
+
   const people = (res.data?.people || []) as ApolloContact[];
   // Client-side scrub for excluded titles
   return people.filter((p) => {
