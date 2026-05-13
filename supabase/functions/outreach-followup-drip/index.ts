@@ -131,7 +131,7 @@ serve(wrapServe("outreach-followup-drip", async (req) => {
     // Fetch candidates: D0 was sent (last_contact_date set), not replied, not yet finished
     const { data: targets, error } = await sb
       .from("outreach_leads")
-      .select("id, business_name, owner_name, first_name, owner_email, enriched_email, validated_email, email, industry, last_contact_date, followup_d3_sent_at, followup_d7_sent_at, followup_d14_sent_at")
+      .select("id, business_name, owner_name, first_name, owner_email, enriched_email, validated_email, email, industry, city, last_contact_date, followup_d3_sent_at, followup_d7_sent_at, followup_d14_sent_at")
       .not("last_contact_date", "is", null)
       .is("replied_at", null)
       .is("followup_d14_sent_at", null)
@@ -150,6 +150,10 @@ serve(wrapServe("outreach-followup-drip", async (req) => {
       const email = t.owner_email || t.enriched_email || t.validated_email || t.email;
       if (!email) { skipped++; continue; }
 
+      // Industry gate — skip non-trades verticals (manufacturing, property mgmt,
+      // restaurants, etc.) since this pitch is contractor-only.
+      if (!isTradesIndustry(t.industry as string | null)) { skipped++; continue; }
+
       const d0At = new Date(t.last_contact_date as string).getTime();
       const daysSinceD0 = (now - d0At) / 86400000;
 
@@ -163,21 +167,24 @@ serve(wrapServe("outreach-followup-drip", async (req) => {
       const block = await isBlocked(sb, { email: String(email), business_name: t.business_name as string });
       if (block.blocked) { skipped++; continue; }
 
-      // Frequency cap: skip if 2+ sends in last 7 days
-      const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString();
-      const { count: recentSends } = await sb
-        .from("email_send_log")
-        .select("id", { count: "exact", head: true })
-        .ilike("recipient_email", String(email).trim().toLowerCase())
-        .in("status", ["sent", "queued", "pending"])
-        .gte("created_at", sevenDaysAgo);
-      if ((recentSends ?? 0) > 2) { skipped++; continue; }
+      // Frequency cap: max 1 send per 5 days across ALL templates/products.
+      // Stops cross-product collisions (siteradar + techalert + missed-call
+      // hitting the same address in one day).
+      if (await wasContactedRecently(sb, String(email), 5)) { skipped++; continue; }
 
       const firstName = (t.first_name as string) ||
         (t.owner_name ? String(t.owner_name).split(" ")[0] : "there");
       const company = (t.business_name as string) || "your business";
 
-      const r = await sendFollowup(sb, String(email), firstName, company, t.industry as string | null, touch);
+      const r = await sendFollowup(
+        sb,
+        String(email),
+        firstName,
+        company,
+        t.industry as string | null,
+        (t.city as string | null) ?? null,
+        touch,
+      );
 
       if (!r.ok) {
         console.error(`[outreach-drip] ${company} ${touch}: ${r.err}`);
