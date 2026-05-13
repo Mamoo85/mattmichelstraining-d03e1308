@@ -58,12 +58,12 @@ Deno.serve(async (req) => {
     });
     const token = authHeader.replace("Bearer ", "");
     const { data: { user }, error: userErr } = await userClient.auth.getUser(token);
-    if (claimsErr || !claims?.claims) {
+    if (userErr || !user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
     const userId = user.id as string;
-    const userEmail = (claims.claims.email as string | undefined) || null;
+    const userEmail = (user.email as string | undefined) || null;
 
     const body = await req.json().catch(() => ({}));
     const { outreach_lead_id, subject, body: messageBody } = body || {};
