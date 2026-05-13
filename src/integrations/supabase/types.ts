@@ -1334,6 +1334,51 @@ export type Database = {
         }
         Relationships: []
       }
+      apify_actor_jobs: {
+        Row: {
+          actor_id: string
+          apify_run_id: string | null
+          cost_usd: number | null
+          created_at: string
+          error: string | null
+          finished_at: string | null
+          id: string
+          input_payload: Json
+          pool: string
+          results_count: number | null
+          started_at: string | null
+          status: string
+        }
+        Insert: {
+          actor_id: string
+          apify_run_id?: string | null
+          cost_usd?: number | null
+          created_at?: string
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          input_payload: Json
+          pool: string
+          results_count?: number | null
+          started_at?: string | null
+          status?: string
+        }
+        Update: {
+          actor_id?: string
+          apify_run_id?: string | null
+          cost_usd?: number | null
+          created_at?: string
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          input_payload?: Json
+          pool?: string
+          results_count?: number | null
+          started_at?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       apify_run_batches: {
         Row: {
           alerts_sent: number | null
@@ -1995,6 +2040,84 @@ export type Database = {
         }
         Relationships: []
       }
+      buyer_pools: {
+        Row: {
+          bounce_count: number | null
+          city: string | null
+          company_name: string
+          contact_email: string
+          contact_name: string | null
+          contact_phone: string | null
+          contact_title: string | null
+          created_at: string
+          domain: string | null
+          email_verified: boolean | null
+          enrichment_meta: Json | null
+          id: string
+          last_send_at: string | null
+          pool: string
+          quality_score: number
+          reply_at: string | null
+          send_count: number | null
+          source_chain: Json | null
+          state: string | null
+          status: string
+          unsub_at: string | null
+          updated_at: string
+          zip: string | null
+        }
+        Insert: {
+          bounce_count?: number | null
+          city?: string | null
+          company_name: string
+          contact_email: string
+          contact_name?: string | null
+          contact_phone?: string | null
+          contact_title?: string | null
+          created_at?: string
+          domain?: string | null
+          email_verified?: boolean | null
+          enrichment_meta?: Json | null
+          id?: string
+          last_send_at?: string | null
+          pool: string
+          quality_score?: number
+          reply_at?: string | null
+          send_count?: number | null
+          source_chain?: Json | null
+          state?: string | null
+          status?: string
+          unsub_at?: string | null
+          updated_at?: string
+          zip?: string | null
+        }
+        Update: {
+          bounce_count?: number | null
+          city?: string | null
+          company_name?: string
+          contact_email?: string
+          contact_name?: string | null
+          contact_phone?: string | null
+          contact_title?: string | null
+          created_at?: string
+          domain?: string | null
+          email_verified?: boolean | null
+          enrichment_meta?: Json | null
+          id?: string
+          last_send_at?: string | null
+          pool?: string
+          quality_score?: number
+          reply_at?: string | null
+          send_count?: number | null
+          source_chain?: Json | null
+          state?: string | null
+          status?: string
+          unsub_at?: string | null
+          updated_at?: string
+          zip?: string | null
+        }
+        Relationships: []
+      }
       buyer_radar_accounts: {
         Row: {
           business_name: string
@@ -2187,6 +2310,57 @@ export type Database = {
           last_used_at?: string | null
           token?: string
           user_agent?: string | null
+        }
+        Relationships: []
+      }
+      buyer_universe_targets: {
+        Row: {
+          active: boolean
+          apify_daily_budget_usd: number | null
+          clay_daily_budget_usd: number | null
+          daily_send_cap: number
+          display_name: string
+          notes: string | null
+          pool: string
+          ramp_ceiling: number
+          ramp_day_started: string | null
+          ramp_days: number
+          ramp_floor: number
+          source_priority: Json
+          target_inboxes: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          apify_daily_budget_usd?: number | null
+          clay_daily_budget_usd?: number | null
+          daily_send_cap?: number
+          display_name: string
+          notes?: string | null
+          pool: string
+          ramp_ceiling?: number
+          ramp_day_started?: string | null
+          ramp_days?: number
+          ramp_floor?: number
+          source_priority?: Json
+          target_inboxes?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          apify_daily_budget_usd?: number | null
+          clay_daily_budget_usd?: number | null
+          daily_send_cap?: number
+          display_name?: string
+          notes?: string | null
+          pool?: string
+          ramp_ceiling?: number
+          ramp_day_started?: string | null
+          ramp_days?: number
+          ramp_floor?: number
+          source_priority?: Json
+          target_inboxes?: number
+          updated_at?: string
         }
         Relationships: []
       }
@@ -3533,6 +3707,56 @@ export type Database = {
           spend_cents?: number
         }
         Relationships: []
+      }
+      cold_email_pool_sends: {
+        Row: {
+          bounced_at: string | null
+          buyer_id: string | null
+          domain: string | null
+          id: string
+          opened_at: string | null
+          pool: string
+          replied_at: string | null
+          resend_id: string | null
+          sent_at: string
+          status: string
+          template_key: string
+        }
+        Insert: {
+          bounced_at?: string | null
+          buyer_id?: string | null
+          domain?: string | null
+          id?: string
+          opened_at?: string | null
+          pool: string
+          replied_at?: string | null
+          resend_id?: string | null
+          sent_at?: string
+          status?: string
+          template_key: string
+        }
+        Update: {
+          bounced_at?: string | null
+          buyer_id?: string | null
+          domain?: string | null
+          id?: string
+          opened_at?: string | null
+          pool?: string
+          replied_at?: string | null
+          resend_id?: string | null
+          sent_at?: string
+          status?: string
+          template_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cold_email_pool_sends_buyer_id_fkey"
+            columns: ["buyer_id"]
+            isOneToOne: false
+            referencedRelation: "buyer_pools"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       cold_email_ramp_history: {
         Row: {
@@ -19177,6 +19401,69 @@ export type Database = {
           updated_at?: string
           user_agent?: string | null
           zip_codes?: string[] | null
+        }
+        Relationships: []
+      }
+      raw_buyer_candidates: {
+        Row: {
+          city: string | null
+          company_name: string | null
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          contact_title: string | null
+          created_at: string
+          dedupe_key: string | null
+          domain: string | null
+          enriched_at: string | null
+          id: string
+          pool: string
+          promoted_at: string | null
+          raw_payload: Json | null
+          rejected_reason: string | null
+          source: string
+          state: string | null
+          zip: string | null
+        }
+        Insert: {
+          city?: string | null
+          company_name?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          contact_title?: string | null
+          created_at?: string
+          dedupe_key?: string | null
+          domain?: string | null
+          enriched_at?: string | null
+          id?: string
+          pool: string
+          promoted_at?: string | null
+          raw_payload?: Json | null
+          rejected_reason?: string | null
+          source: string
+          state?: string | null
+          zip?: string | null
+        }
+        Update: {
+          city?: string | null
+          company_name?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          contact_title?: string | null
+          created_at?: string
+          dedupe_key?: string | null
+          domain?: string | null
+          enriched_at?: string | null
+          id?: string
+          pool?: string
+          promoted_at?: string | null
+          raw_payload?: Json | null
+          rejected_reason?: string | null
+          source?: string
+          state?: string | null
+          zip?: string | null
         }
         Relationships: []
       }
