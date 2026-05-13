@@ -47,7 +47,10 @@ export async function openrouterCall(opts: OpenRouterCallOpts): Promise<OpenRout
     messages,
     max_tokens: opts.max_tokens ?? 1200,
   };
-  if (opts.json) body.response_format = { type: "json_object" };
+  // Perplexity rejects json_object format; only OpenAI/Anthropic/Google accept it.
+  if (opts.json && !opts.model.startsWith("perplexity/")) {
+    body.response_format = { type: "json_object" };
+  }
 
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), opts.timeout_ms ?? 25000);
