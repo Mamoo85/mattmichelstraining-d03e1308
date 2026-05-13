@@ -11,6 +11,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { apolloPeopleSearch, apolloOrganizationSearch } from "../_shared/apollo.ts";
+import { extractContactInfo } from "../_shared/firecrawl.ts";
 import { dwaEmail } from "../_shared/dwa-email.ts";
 import { isBlocked } from "../_shared/outreach-blocklist.ts";
 import { sendSMS, ADMIN_PHONE } from "../_shared/twilio.ts";
@@ -143,6 +144,73 @@ async function sendDripBatch(sb: any, stage: "d0" | "d3" | "d7", remaining: numb
   return sent;
 }
 
+// Fallback: Google Places + Firecrawl website scrape (works without Apollo API tier)
+const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY") || "";
+const MI_QUERIES = [
+  "healthcare staffing agency in Detroit MI",
+  "nurse staffing agency in Grand Rapids MI",
+  "medical staffing agency in Lansing MI",
+  "healthcare staffing in Ann Arbor MI",
+  "nurse staffing in Warren MI",
+  "medical staffing in Flint MI",
+];
+
+async function sourceFromGooglePlaces(sb: any): Promise<number> {
+  if (!GOOGLE_MAPS_API_KEY) return 0;
+  let inserted = 0;
+  for (const query of MI_QUERIES) {
+    try {
+      const res = await fetch(
+        `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&key=${GOOGLE_MAPS_API_KEY}`,
+      );
+      const data = await res.json();
+      const places = (data.results || []).slice(0, 8);
+      for (const place of places) {
+        // get place details for website + phone
+        const detRes = await fetch(
+          `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.place_id}&fields=name,website,formatted_phone_number,formatted_address&key=${GOOGLE_MAPS_API_KEY}`,
+        );
+        const det = (await detRes.json()).result || {};
+        const website = det.website;
+        if (!website) continue;
+        const domain = website.replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0];
+
+        // try to scrape contact email from site
+        let email: string | null = null;
+        let contactName: string | null = null;
+        try {
+          const contact = await extractContactInfo(website);
+          if (contact?.email) {
+            email = contact.email.toLowerCase();
+            contactName = contact.name || null;
+          }
+        } catch (_) { /* ignore */ }
+
+        // fallback to info@domain if scrape failed (low-quality but still deliverable for D0)
+        if (!email) email = `info@${domain}`;
+
+        const { error } = await sb.from("staffing_agency_prospects").upsert({
+          agency_name: det.name || place.name,
+          contact_name: contactName,
+          contact_title: null,
+          email,
+          phone: det.formatted_phone_number || null,
+          city: (det.formatted_address || "").split(",")[1]?.trim() || null,
+          state: "MI",
+          domain,
+          apollo_id: null,
+          source: "google_places",
+          status: "new",
+        }, { onConflict: "email", ignoreDuplicates: true });
+        if (!error) inserted++;
+      }
+    } catch (e) {
+      console.error(`Google Places source failed for ${query}:`, e);
+    }
+  }
+  return inserted;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
@@ -150,7 +218,9 @@ serve(async (req) => {
   const startedAt = Date.now();
 
   try {
-    const sourced = await sourceFromApollo(sb);
+    const apolloSourced = await sourceFromApollo(sb);
+    const placesSourced = await sourceFromGooglePlaces(sb);
+    const sourced = apolloSourced + placesSourced;
 
     let remaining = DAILY_SEND_CAP;
     const d7 = await sendDripBatch(sb, "d7", remaining); remaining -= d7;
@@ -165,7 +235,8 @@ serve(async (req) => {
     }
 
     return new Response(JSON.stringify({
-      ok: true, sourced, sent: totalSent, d0, d3, d7,
+      ok: true, sourced, apollo_sourced: apolloSourced, places_sourced: placesSourced,
+      sent: totalSent, d0, d3, d7,
       duration_ms: Date.now() - startedAt,
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e: any) {

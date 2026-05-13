@@ -11721,6 +11721,48 @@ export type Database = {
         }
         Relationships: []
       }
+      inventory_alerts: {
+        Row: {
+          backfill_invoked: boolean | null
+          backfill_result: Json | null
+          created_at: string
+          fresh_row_count: number
+          id: string
+          message: string | null
+          product_slug: string
+          row_count: number
+          sms_sent: boolean | null
+          status: string
+          threshold: number
+        }
+        Insert: {
+          backfill_invoked?: boolean | null
+          backfill_result?: Json | null
+          created_at?: string
+          fresh_row_count: number
+          id?: string
+          message?: string | null
+          product_slug: string
+          row_count: number
+          sms_sent?: boolean | null
+          status: string
+          threshold: number
+        }
+        Update: {
+          backfill_invoked?: boolean | null
+          backfill_result?: Json | null
+          created_at?: string
+          fresh_row_count?: number
+          id?: string
+          message?: string | null
+          product_slug?: string
+          row_count?: number
+          sms_sent?: boolean | null
+          status?: string
+          threshold?: number
+        }
+        Relationships: []
+      }
       inventory_items: {
         Row: {
           avg_daily_usage: number | null
@@ -11761,6 +11803,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      inventory_watchlist: {
+        Row: {
+          active: boolean
+          backfill_function: string | null
+          created_at: string
+          display_name: string
+          freshness_column: string | null
+          freshness_days: number
+          id: string
+          inventory_table: string
+          min_rows: number
+          product_slug: string
+        }
+        Insert: {
+          active?: boolean
+          backfill_function?: string | null
+          created_at?: string
+          display_name: string
+          freshness_column?: string | null
+          freshness_days?: number
+          id?: string
+          inventory_table: string
+          min_rows?: number
+          product_slug: string
+        }
+        Update: {
+          active?: boolean
+          backfill_function?: string | null
+          created_at?: string
+          display_name?: string
+          freshness_column?: string | null
+          freshness_days?: number
+          id?: string
+          inventory_table?: string
+          min_rows?: number
+          product_slug?: string
+        }
+        Relationships: []
       }
       job_notes: {
         Row: {
