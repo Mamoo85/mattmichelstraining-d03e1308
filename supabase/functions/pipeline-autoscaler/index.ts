@@ -65,12 +65,14 @@ Deno.serve(async (req) => {
   }
 
   // Log run
-  await sb.from("error_logs").insert({
-    function_name: "pipeline-autoscaler",
-    severity: "info",
-    message: `Autoscaler fired ${Object.values(fired).reduce((a, b) => a + b, 0)} invocations`,
-    context: { report, fired },
-  }).catch(() => {});
+  try {
+    await sb.from("error_logs").insert({
+      function_name: "pipeline-autoscaler",
+      severity: "info",
+      message: `Autoscaler fired ${Object.values(fired).reduce((a, b) => a + b, 0)} invocations`,
+      context: { report, fired },
+    });
+  } catch {}
 
   return new Response(JSON.stringify({ ok: true, report, fired }, null, 2), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
