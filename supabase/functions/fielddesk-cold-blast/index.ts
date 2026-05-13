@@ -82,6 +82,8 @@ Deno.serve(async (req) => {
       if (b.blocked) { blockedCount++; continue; }
     } catch (_) {}
 
+    if (await wasContactedRecently(sb, lead.email, 5)) { skipped++; continue; }
+
     const subject = `${lead.business_name || "your shop"} — dispatch + tech tracking for $199 flat`;
     const r = await dwaEmail({ to: lead.email, subject, html: emailHtml(lead), headers: listUnsubHeaders(lead.email) });
     if (r.ok) {
