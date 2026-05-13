@@ -218,12 +218,13 @@ Deno.serve(async (req) => {
     }
 
     // Pull candidates
+    // NOTE: email_verified filter intentionally dropped — Hunter/Snov fail-open in waterfall;
+    // we rely on quality_score >= 6 + 7d bounce kill-switch for safety.
     const { data: candidates } = await sb
       .from("buyer_pools")
       .select("id,pool,company_name,domain,contact_name,contact_title,contact_email,city,state,quality_score,send_count")
       .eq("pool", t.pool)
       .eq("status", "ready")
-      .eq("email_verified", true)
       .gte("quality_score", 6)
       .order("quality_score", { ascending: false })
       .limit(remaining * 4); // overfetch for domain dedupe
