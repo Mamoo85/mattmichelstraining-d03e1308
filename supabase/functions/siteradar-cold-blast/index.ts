@@ -59,6 +59,9 @@ Deno.serve(async (req) => {
       if (b.blocked) { blockedCount++; continue; }
     } catch (_) {}
 
+    // Cross-product dedup: skip if this address got ANY cold email in last 5 days.
+    if (await wasContactedRecently(sb, lead.email, 5)) { skipped++; continue; }
+
     const subject = `${lead.business_name || "your site"} — see who's actually visiting`;
     const r = await dwaColdEmail({
       to: lead.email,
