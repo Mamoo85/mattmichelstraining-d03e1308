@@ -142,6 +142,7 @@ export async function openrouterCall(opts: OpenRouterCallOpts): Promise<OpenRout
     });
     if (!r.ok) {
       console.warn(`openrouter ${opts.model} ${r.status}`, await r.text().catch(() => ""));
+      if (reserved) recordSpend(-PRE_RESERVE_USD).catch(() => {}); // refund reservation on failure
       return null;
     }
     const data = await r.json();
