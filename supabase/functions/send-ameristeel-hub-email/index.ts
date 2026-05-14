@@ -12,7 +12,8 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   const to = "tdamman@ameristeel.com";
-  const hub = "https://detroitwebagent.com/hub/ameristeel-2026-trial-hub";
+  const utm = "utm_source=email&utm_medium=trial_hub&utm_campaign=ameristeel_trials&utm_content=single_hub_link";
+  const hub = `https://detroitwebagent.com/hub/ameristeel-2026-trial-hub?${utm}`;
   const subject = "Tripp — your AmeriSteel trial dashboard (one link, all 5 tools)";
 
   const body = `
