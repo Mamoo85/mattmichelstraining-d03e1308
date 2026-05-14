@@ -14,12 +14,11 @@ const OPENROUTER_KEY = Deno.env.get("OPENROUTER_API_KEY") || "";
 const ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
 
 // ---------------------------------------------------------------------------
-// Daily spend cap (cost control until paying customers ramp).
-//   - Through 2026-05-19 (this week): $25/day grace cap (legacy budget).
-//   - From  2026-05-20 onward:        $5/day hard cap.
+// Daily spend cap — HARD CAP at $5/day per Matt's explicit budget.
 // Override via env OPENROUTER_DAILY_CAP_USD (numeric, dollars).
-// Spend is tracked in public.openrouter_daily_spend via RPC.
-// Failures of the gate are fail-OPEN (we never block on infra error).
+// Spend tracked in public.openrouter_daily_spend; gate is fail-CLOSED on
+// over-cap and fail-OPEN on infra error (so a Supabase outage doesn't kill
+// every scanner — but if the ledger says we're over, we BLOCK).
 // ---------------------------------------------------------------------------
 const SUPA_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPA_SRK =
@@ -29,14 +28,12 @@ const SUPA_SRK =
 function dailyCapUsd(): number {
   const override = Number(Deno.env.get("OPENROUTER_DAILY_CAP_USD") || "");
   if (Number.isFinite(override) && override > 0) return override;
-  // Detroit-local "today" — matches the RPC's timezone.
-  const fmt = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/Detroit",
-    year: "numeric", month: "2-digit", day: "2-digit",
-  });
-  const today = fmt.format(new Date()); // YYYY-MM-DD
-  return today >= "2026-05-20" ? 5 : 25;
+  return 5; // hard cap
 }
+
+// Conservative estimated cost reserved BEFORE we make the call — prevents the
+// race where 100 parallel callers each see "spent < cap" and all fire.
+const PRE_RESERVE_USD = 0.01;
 
 async function rpc(fn: string, body: Record<string, unknown> = {}): Promise<any> {
   if (!SUPA_URL || !SUPA_SRK) return null;
