@@ -10074,6 +10074,60 @@ export type Database = {
         }
         Relationships: []
       }
+      google_api_spend_log: {
+        Row: {
+          api: string
+          called_at: string
+          cost_cents: number
+          function_name: string
+          id: number
+          meta: Json | null
+        }
+        Insert: {
+          api: string
+          called_at?: string
+          cost_cents?: number
+          function_name: string
+          id?: number
+          meta?: Json | null
+        }
+        Update: {
+          api?: string
+          called_at?: string
+          cost_cents?: number
+          function_name?: string
+          id?: number
+          meta?: Json | null
+        }
+        Relationships: []
+      }
+      google_budget_config: {
+        Row: {
+          alert_sent_at: string | null
+          daily_cap_cents: number
+          id: number
+          kill_switch: boolean
+          monthly_cap_cents: number
+          updated_at: string
+        }
+        Insert: {
+          alert_sent_at?: string | null
+          daily_cap_cents?: number
+          id?: number
+          kill_switch?: boolean
+          monthly_cap_cents?: number
+          updated_at?: string
+        }
+        Update: {
+          alert_sent_at?: string | null
+          daily_cap_cents?: number
+          id?: number
+          kill_switch?: boolean
+          monthly_cap_cents?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       google_qa_clients: {
         Row: {
           active: boolean | null
