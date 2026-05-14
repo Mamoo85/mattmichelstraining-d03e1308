@@ -1,111 +1,107 @@
-## Why your bill exploded
+## What I found
 
-You have ~25 edge functions calling paid Google APIs daily. Three SKUs are doing the damage:
+- **OpenRouter is not hard-capped at $5/day right now.** The shared helper intentionally allows **$25/day until 2026-05-20**, then $5/day. Today’s logged OpenRouter spend is already about **$23.47 across 1,902 calls**, with **0 blocked calls**.
+- **Many OpenRouter call sites bypass the shared budget helper entirely.** I found direct `fetch("https://openrouter.ai/api/v1/chat/completions")` calls across scanner/enrichment functions, so the current ledger cannot enforce a true global cap.
+- **AmeriSteel hub tracking is not implemented yet.** There is a `trial_bundles` hub and a generic `trial_funnel_events` table, but no hub click table, no CTA-step completion state, and the one-link email does not include UTM params.
+- **Digest status today:**
+  - Mortgage Radar cron ran today, but `mortgage-radar-am-digest` recorded **digests_sent: 0** even though there are **3 active Mortgage Radar clients** and **128 leads in the last 24h**. This needs a query/recipient/debug fix, not just another cron.
+  - SiteRadar weekly digest cron is **missing from the live cron list**; only `siteradar-cold-blast-daily` exists. Also there are **0 paid active SiteRadar clients** by the current weekly-digest filter, so the trial/provisioned accounts would be skipped.
+  - TechAlert weekly digest is scheduled **Mondays only**, not daily. The last Monday run failed with `job startup timeout`; there is no retry job for it.
+- **X/screenshots:** the UI appears to be an **agent observability/control-room dashboard**: a game-like map of autonomous agents/workstations, each showing live task state, product/listing work, revenue/orders/conversion metrics, and queue progress. It is likely not “watching AI think” directly; it is visualizing logs/events from multiple agents and commerce channels in real time.
 
-| API | Cost | Where it's used | Daily volume estimate |
-|---|---|---|---|
-| **Address Validation** | $5 / 1,000 | Every lead in `trade-radar-scanner` (11 verticals), `mortgage-radar-scanner`, `dead-lead-pool-refresh`, `enrich-prospect-pool` | 5,000–15,000 calls/day |
-| **Places API (Details + Text Search)** | $17 / 1,000 | `techalert-prospect-hunter`, `channel-prospector`, `contractor-prospector`, `b2b-*-scraper`, `enrich-supply-buyers`, `cold-email-rank-buyers`, `industry-pulse-scanner` (10+ functions) | 500–2,000 calls/day |
-| **Street View Static** | $7 / 1,000 | URL embedded in EVERY `trade_radar_leads` row → billed when admin/customer views the lead card | 1,000–5,000 views/day |
+## Plan
 
-The 24h cache helps but doesn't matter when the source data churns daily (new BSEED permits every morning) — Census ACS, ArcGIS scans, and prospect discovery hit Google fresh every run.
+### 1. Make OpenRouter $5/day a real hard cap immediately
 
-You're right: **almost all of this is free elsewhere.**
+- Update the shared OpenRouter helper to default to **$5/day now**, removing the temporary `$25/day` grace window.
+- Add a **pre-call reservation gate** instead of only recording cost after the response:
+  - reserve a conservative estimated cost before making the request;
+  - block if the reservation would exceed `$5`;
+  - record blocked attempts in `openrouter_daily_spend.blocked_count`.
+- Add/update database RPCs so the cap is enforced atomically in the database, not with race-prone read-then-call logic.
+- Refactor high-volume direct OpenRouter call sites to use the shared helper or a new shared guarded fetch wrapper.
+- For low-value/high-frequency jobs, disable OpenRouter fallback first and prefer free/Lovable Gateway/free-source paths.
+- Add admin visibility to today’s spend/calls/blocked count if an existing admin budget page exists; otherwise keep it queryable in the ledger.
 
----
+### 2. Add UTM tracking and click logging for AmeriSteel teaser/hub emails
 
-## The fix — 4 layers
+- Add a dedicated `trial_hub_events` table with fields for:
+  - `bundle_token`, `email`, `product_key`, `event_type`, `cta_step`, `utm`, `metadata`, `user_agent`, `referrer`, `created_at`.
+- Create a lightweight `trial-hub-track` backend function:
+  - `POST` records `hub_view`, `email_click`, `tile_open`, and `cta_step_completed` events;
+  - validates token/product/event names;
+  - returns a safe JSON response.
+- Update the single AmeriSteel hub email link to include UTM params, for example:
+  - `utm_source=email`
+  - `utm_medium=trial_hub`
+  - `utm_campaign=ameristeel_trials`
+  - `utm_content=single_hub_link`
+- Update teaser email links so each product CTA includes distinct `utm_content` and product identifiers.
+- If possible, replace direct product links with tracked hub links first, then let the hub record the click before navigation.
 
-### Layer 1 — Hard budget kill switch (deploys first, stops the bleeding today)
+### 3. Record CTA-step completion and show progress in the AmeriSteel hub
 
-New shared module `_shared/google-budget-gate.ts`:
-- New table `google_api_spend_log` tracks every Google call: `function_name`, `api` (`address_validation` / `places` / `streetview`), `cost_cents`, `called_at`
-- New helper `canCallGoogle(api): Promise<boolean>` — checks today's spend + month-to-date spend against caps
-- New table `google_budget_config`: `daily_cap_cents` (default $1.00), `monthly_cap_cents` (default $15.00 — leaves $5 buffer under your $20 target), kill-switch boolean
-- When over budget: function returns `false`, caller falls through to free alternative (or skips)
-- Admin SMS alert when 80% of monthly cap hit
-- All 25 Google call sites get a 1-line guard: `if (!await canCallGoogle("address_validation")) return freeFallback(...)`
+- Extend `hub-summary` to return progress per product:
+  - email clicked;
+  - hub viewed;
+  - product dashboard opened;
+  - setup step completed / needs setup;
+  - last activity time.
+- Update `TrialHub.tsx` to:
+  - log hub views on load;
+  - log tile opens before navigation;
+  - show each product tile’s progress state (`Not opened`, `Opened`, `Setup needed`, `Active`, etc.);
+  - display an overall progress bar/count for all 5 trials.
+- For AmeriSteel-specific “setup needed” states:
+  - SiteRadar: needs script installed before real data is expected.
+  - Missed-Call: needs phone forwarding before real captures are expected.
+  - Demand/Buyer/Industry Pulse: can be marked active after first dashboard open or live count returned.
 
-### Layer 2 — Free address validation (replaces 95% of Address Validation API calls)
+### 4. Fix digest delivery reliability and observability
 
-Rewrite `_shared/anti-hallucination.ts → validateAddress()` with this waterfall:
-1. **Cache** (existing 24h cache) — already free
-2. **US Census Geocoder** — *https://geocoding.geo.census.gov* — free, unlimited, no key, US-only, returns lat/lon + confidence + matched address. Perfect for Detroit/Michigan addresses. ~99% coverage of BSEED permit data.
-3. **Nominatim (OpenStreetMap)** — free, 1 req/sec rate limit, global fallback for non-US or Census misses
-4. **Google Address Validation** — only if both above fail AND `score >= 7` AND budget allows. For low-score speculative leads, just accept the address as-is without validation.
+- **Mortgage Radar**
+  - Inspect why today’s function returned `digests_sent: 0` despite clients/leads.
+  - Fix filtering so active clients with valid emails receive proof-of-work digests even on zero matching leads.
+  - Add stronger heartbeat metadata: clients considered, clients skipped with reason, emails attempted, emails sent, errors.
+  - Ensure the cron uses the service-role vault key pattern, not the public anon key.
+- **SiteRadar**
+  - Restore live cron for `site-radar-weekly-digest-monday` with the correct vault key.
+  - Decide in code to include trial/provisioned SiteRadar clients, not only paid clients with `stripe_subscription_id`.
+  - Add a retry cron similar to Mortgage Radar.
+  - Add email-send logging so missing digests show up in `email_send_log`.
+- **TechAlert / Talent Radar**
+  - Add a retry cron for `techalert-weekly-digest-monday`.
+  - Change the digest sender to log into `email_send_log` and heartbeat `sent/skipped/errors`.
+  - Keep it weekly unless you want a separate daily Talent Radar digest; today’s “missing daily” expectation conflicts with the code comment/schedule that says weekly.
+- After fixing, manually invoke the relevant digest functions with safe `force/debug` mode and report exactly which emails were attempted/sent/skipped.
 
-This alone cuts Address Validation API spend by ~95%.
+### 5. Translate the screenshot/X concept into a possible DWA agent control-room UI
 
-### Layer 3 — Free Places / business discovery (replaces Places API)
+- Document the observed pattern as a DWA “Agent Command Center” concept:
+  - real-time map/grid of agents;
+  - agent status lanes (`scanning`, `enriching`, `writing`, `sending`, `waiting`, `blocked`);
+  - product/channel nodes (Etsy-like equivalent for us: Stripe products, lead markets, email/SMS/fax/postcard channels);
+  - live revenue/conversion/cost gauges;
+  - per-agent log playback.
+- If you want it built after these fixes, I’d implement it as an admin-only dashboard backed by `agent_heartbeats`, `email_send_log`, scanner logs, Stripe events, and OpenRouter spend — no fake animation, only real events.
 
-Replace Google Places calls in `techalert-prospect-hunter`, `channel-prospector`, `contractor-prospector`, `b2b-*-scraper` etc. with a waterfall:
-1. **OpenStreetMap Overpass API** — free, returns businesses by category + bounding box (HVAC, electrician, plumber, etc.) for the entire Detroit metro. Already used in your `email-extras-1.ts` for one source — expand to primary.
-2. **OpenCorporates** — already a free source you use — for company verification
-3. **Yelp Fusion API** — free 5,000 calls/day (need 1 secret) — better contact data than OSM
-4. **Google Places** — only if all free sources return empty AND budget allows AND vertical is high-value (TechAlert prospects, mortgage radar)
+## Files/areas likely to change
 
-You already have most of these wired in `_shared/email-extras-*.ts` — this just promotes them from "tier 30" to "primary" and demotes Google to "fallback only."
+- `supabase/functions/_shared/openrouter.ts`
+- Direct OpenRouter functions under `supabase/functions/*/index.ts`
+- New migration for OpenRouter cap RPCs and `trial_hub_events`
+- `supabase/functions/hub-summary/index.ts`
+- New `supabase/functions/trial-hub-track/index.ts`
+- `supabase/functions/send-ameristeel-hub-email/index.ts`
+- `supabase/functions/send-teaser-email/index.ts` / `_shared/teaser-emails.ts` / `_shared/dwa-email.ts`
+- `src/pages/TrialHub.tsx`
+- Digest functions and cron migrations for Mortgage Radar, SiteRadar, and TechAlert
 
-### Layer 4 — Kill Street View baked-in fetches
+## Validation
 
-Today: every trade radar lead row stores `street_view_url` containing `?key=AIza...` — every page view of a lead card = $0.007. Multiply by Matt + admin + 30+ paying customers viewing leads daily = $30–$100/mo just on image loads.
-
-Fix:
-- Stop generating `street_view_url` at insert time
-- Replace lead card image with **link to Google Maps** (`https://www.google.com/maps?q=lat,lon`) — opens in new tab, zero API cost, customer still sees the property
-- Optional: lazy-load a free **Mapillary** street-level photo (free API, OSM-backed) when the user clicks "see street view"
-- Migration to null out existing `street_view_url` values (and remove the API key from any cached HTML)
-
----
-
-## You also need to do these 2 things in Google Cloud Console (1 minute each)
-
-I can't do these — they require your Google account login:
-
-1. **Set quota limits** (hard ceiling, even if my code has a bug):
-   - APIs & Services → Quotas
-   - Address Validation API → set requests/day to **500**
-   - Places API → set requests/day to **100**
-   - Maps Static / Street View → set requests/day to **200**
-
-2. **Set a billing budget alert**:
-   - Billing → Budgets & alerts → Create budget → $20/mo, alerts at 50%/90%/100%
-   - This won't auto-stop charges but you'll get an email before it gets out of hand again
-
----
-
-## Files I'll touch
-
-**New (4):**
-- `supabase/functions/_shared/google-budget-gate.ts`
-- `supabase/functions/_shared/free-geocode.ts` (Census + Nominatim)
-- `supabase/functions/_shared/free-places.ts` (Overpass + Yelp)
-- `supabase/migrations/<ts>_google_budget_and_streetview_cleanup.sql` (creates tables, nulls street_view_url, RLS)
-
-**Modified (~12):**
-- `_shared/anti-hallucination.ts` — waterfall `validateAddress`
-- `trade-radar-scanner/index.ts` — drop street_view_url generation
-- `mortgage-radar-scanner/index.ts` — same
-- `techalert-prospect-hunter/index.ts` — Overpass first, Places fallback
-- `channel-prospector/index.ts`, `contractor-prospector/index.ts` — same pattern
-- `b2b-dental-scraper/index.ts`, `b2b-industrial-scraper/index.ts` — same
-- `enrich-supply-buyers/index.ts`, `cold-email-rank-buyers/index.ts` — same
-- `industry-pulse-scanner/index.ts`, `missed-call-prospect-scanner/index.ts` — same
-- Frontend `TradeRadarLeadCard.tsx` (and Mortgage equivalent) — replace Street View `<img>` with "View on Google Maps" link
-
-**New admin page (1):**
-- `src/pages/AdminGoogleSpend.tsx` — shows today's calls, MTD spend, projected monthly, kill switch toggle
-
----
-
-## Expected outcome
-
-| Metric | Before | After |
-|---|---|---|
-| Address Validation calls/day | ~10,000 | ~500 (hard quota) |
-| Places API calls/day | ~1,000 | ~100 |
-| Street View image loads | ~3,000 | 0 (replaced with free Maps link) |
-| Monthly Google bill | ~$1,000 | **<$15** |
-| Lead quality | Same | Same (Census is actually MORE accurate for US addresses than Google) |
-
-Approve this and I'll ship layers 1 + 4 first (immediate bleeding stop — within minutes), then layers 2 + 3 (the proper free-source migration) right after.
+- Query OpenRouter ledger after a simulated over-cap attempt and confirm calls are blocked at `$5/day`.
+- Open the AmeriSteel hub with UTM params and confirm `trial_hub_events` records view/click/tile events.
+- Confirm hub-summary returns progress state and the UI renders it.
+- Manually trigger digest functions and verify `email_send_log` + `agent_heartbeats` show sent/skipped/error counts.
+- Confirm SiteRadar and TechAlert weekly digest crons/retries appear in `cron.job` with recent successful runs.
+- Make sure im enrolled in all radars like we have discussed so im getting the daily emails as if I were a real customer 
