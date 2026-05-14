@@ -1,0 +1,4 @@
+src/** text eol=lf
+supabase/functions/** text eol=lf
+supabase/migrations/** text eol=lf
+.github/workflows/** text eol=lf
