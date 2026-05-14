@@ -12,6 +12,9 @@
 
 const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY") || "";
 
+import { freeGeocode } from "./free-geocode.ts";
+import { canCallGoogle, logGoogleCall } from "./google-budget-gate.ts";
+
 // -----------------------------------------------------------------------------
 // 1. PLACEHOLDER PATTERNS — the real LLM tells.
 // -----------------------------------------------------------------------------
