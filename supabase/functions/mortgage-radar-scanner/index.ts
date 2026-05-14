@@ -38,10 +38,10 @@ const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY") || "";
 const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY") || "";
 const DWA_PHONE = "+13139921219";
 
-function streetViewUrl(address: string, city: string, zip: string): string {
-  if (!GOOGLE_MAPS_API_KEY || !address) return "";
-  const loc = encodeURIComponent(`${address}, ${city || ""} ${zip || ""}, MI`);
-  return `https://maps.googleapis.com/maps/api/streetview?size=600x300&location=${loc}&fov=80&key=${GOOGLE_MAPS_API_KEY}`;
+function streetViewUrl(_address: string, _city: string, _zip: string): string {
+  // Disabled: previously baked the API key into stored URLs and was billed on every page view.
+  // UI now links directly to free Google Maps (no API cost). See google-budget-gate.ts.
+  return "";
 }
 
 
