@@ -27624,6 +27624,7 @@ export type Database = {
       mp_signal_velocity: { Args: { p_lead_id: string }; Returns: number }
       mp_zip_heat_index: { Args: { p_zip: string }; Returns: number }
       next_enrich_stage: { Args: { _candidate_id: string }; Returns: string }
+      openrouter_record_blocked: { Args: never; Returns: undefined }
       openrouter_record_spend: { Args: { _cost: number }; Returns: number }
       openrouter_today_spend: { Args: never; Returns: number }
       prune_enrichment_provider_latency: { Args: never; Returns: number }
