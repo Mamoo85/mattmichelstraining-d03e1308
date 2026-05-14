@@ -193,3 +193,70 @@ export async function sonarJsonList(
     return null;
   }
 }
+
+// ---------------------------------------------------------------------------
+// openrouterGuardedFetch — drop-in replacement for direct
+// `fetch("https://openrouter.ai/api/v1/chat/completions", { ... })` callers.
+// Enforces the same daily $5 cap as openrouterCall(), with reservation +
+// reconciliation. Returns null when the cap is exceeded so callers can
+// short-circuit gracefully (mirror their existing "no key" branch).
+// ---------------------------------------------------------------------------
+export async function openrouterGuardedFetch(
+  init: RequestInit & { body: string },
+): Promise<Response | null> {
+  if (!OPENROUTER_KEY) return null;
+  let reserved = false;
+  try {
+    const cap = dailyCapUsd();
+    const newTotal = await rpc("openrouter_record_spend", { _cost: PRE_RESERVE_USD });
+    if (typeof newTotal === "number" && Number.isFinite(newTotal)) {
+      reserved = true;
+      if (newTotal > cap) {
+        await rpc("openrouter_record_blocked").catch(() => {});
+        await rpc("openrouter_record_spend", { _cost: -PRE_RESERVE_USD }).catch(() => {});
+        console.warn(`openrouter daily cap reached (guarded): $${newTotal.toFixed(2)} > $${cap}`);
+        return null;
+      }
+    }
+  } catch (e) {
+    console.warn("openrouter guarded cap check failed (fail-open)", String((e as any)?.message ?? e));
+  }
+  try {
+    const headers = new Headers(init.headers || {});
+    if (!headers.has("Authorization")) headers.set("Authorization", `Bearer ${OPENROUTER_KEY}`);
+    if (!headers.has("Content-Type")) headers.set("Content-Type", "application/json");
+    const r = await fetch(ENDPOINT, { ...init, headers });
+    if (!r.ok) {
+      if (reserved) recordSpend(-PRE_RESERVE_USD).catch(() => {});
+      return r;
+    }
+    // Tee the response so the caller can still .json() it AND we can read cost.
+    const cloned = r.clone();
+    cloned.json().then((data) => {
+      const cost = Number(data?.usage?.cost ?? data?.usage?.total_cost ?? 0) || 0;
+      const delta = cost - PRE_RESERVE_USD;
+      if (reserved && Math.abs(delta) > 0.000001) recordSpend(delta).catch(() => {});
+      else if (!reserved && cost > 0) recordSpend(cost).catch(() => {});
+    }).catch(() => {
+      if (reserved) recordSpend(-PRE_RESERVE_USD).catch(() => {});
+    });
+    return r;
+  } catch (e) {
+    if (reserved) recordSpend(-PRE_RESERVE_USD).catch(() => {});
+    console.warn("openrouter guarded fetch error", String((e as any)?.message ?? e));
+    return null;
+  }
+}
+
+// Pre-flight check that does NOT reserve. Useful for callers who want to skip
+// expensive prep work when they know they're already over budget.
+export async function openrouterCanSpend(): Promise<boolean> {
+  if (!OPENROUTER_KEY) return false;
+  try {
+    const cap = dailyCapUsd();
+    const spent = await todaysSpend();
+    return spent < cap;
+  } catch {
+    return true; // fail-open on infra error
+  }
+}
