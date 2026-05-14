@@ -172,6 +172,38 @@ export default function AdminDWAOverview() {
 
   return (
     <div className="space-y-6 p-1">
+      {/* Quick links */}
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        <a
+          href="https://supabase.com/dashboard/project/eauvubfpanpeuxsrqesu"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: "inline-flex", alignItems: "center", gap: 8,
+            background: "linear-gradient(135deg,#00d4ff,#0891b2)",
+            color: "#0a1628", padding: "10px 16px", borderRadius: 8,
+            fontWeight: 800, fontSize: 13, textDecoration: "none",
+            boxShadow: "0 4px 12px rgba(0,212,255,0.3)",
+          }}
+        >
+          <ExternalLink size={14} /> Open Supabase Dashboard (Primary)
+        </a>
+        <a
+          href="https://supabase.com/dashboard/project/zmyczlfuufhngzovkjdh"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: "inline-flex", alignItems: "center", gap: 8,
+            background: "#1e3a5f", color: "#e2e8f0",
+            padding: "10px 16px", borderRadius: 8,
+            fontWeight: 700, fontSize: 13, textDecoration: "none",
+            border: "1px solid #334155",
+          }}
+        >
+          <ExternalLink size={14} /> Secondary Project
+        </a>
+      </div>
+
       {/* 90-day revenue clock */}
       <div style={{ background: "#0d1f3c", border: "1px solid #1e3a5f", borderRadius: 12, padding: "20px 24px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
