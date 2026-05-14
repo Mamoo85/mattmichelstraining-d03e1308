@@ -165,12 +165,12 @@ export default function TrialHub() {
                       isFocused ? "border-[#00d4ff]" : "border-white/10 hover:border-[#00d4ff]/60"
                     }`}
                   >
-                    <a href={p.href} className="block">
+                    <a href={p.href} className="block" onClick={() => trackTileOpen(p.key)}>
                       <div
                         className="text-[11px] uppercase tracking-widest font-semibold mb-2"
                         style={{ color: p.accent }}
                       >
-                        Trial · Active{isFocused ? " · Featured" : ""}
+                        Trial · {typeof p.count === "number" && p.count > 0 ? "Active" : "Setup needed"}{isFocused ? " · Featured" : ""}
                       </div>
                       <div className="flex items-baseline justify-between">
                         <h2 className="text-lg sm:text-xl font-bold">{p.label}</h2>
