@@ -1,0 +1,11 @@
+name: Register Actions
+
+on:
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Confirm GitHub Actions is reading workflows
+        run: echo "GitHub Actions workflow registration is working."
