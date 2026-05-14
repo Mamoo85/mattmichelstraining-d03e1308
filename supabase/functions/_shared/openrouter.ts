@@ -158,6 +158,7 @@ export async function openrouterCall(opts: OpenRouterCallOpts): Promise<OpenRout
     return { text, raw: data, cost_usd: cost };
   } catch (e) {
     console.warn(`openrouter ${opts.model} error`, String((e as any)?.message ?? e));
+    if (reserved) recordSpend(-PRE_RESERVE_USD).catch(() => {}); // refund reservation on exception
     return null;
   } finally {
     clearTimeout(t);
