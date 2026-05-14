@@ -147,8 +147,11 @@ export async function openrouterCall(opts: OpenRouterCallOpts): Promise<OpenRout
     const data = await r.json();
     const text = data?.choices?.[0]?.message?.content ?? "";
     const cost = Number(data?.usage?.cost ?? data?.usage?.total_cost ?? 0) || undefined;
-    if (cost && cost > 0) {
-      // Fire-and-forget — never block the response on the ledger.
+    // Reconcile: subtract the reservation, add the real cost. Fire-and-forget.
+    if (reserved) {
+      const delta = (cost && cost > 0 ? cost : 0) - PRE_RESERVE_USD;
+      if (Math.abs(delta) > 0.000001) recordSpend(delta).catch(() => {});
+    } else if (cost && cost > 0) {
       recordSpend(cost).catch(() => {});
     }
     return { text, raw: data, cost_usd: cost };
