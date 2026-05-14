@@ -35,7 +35,38 @@ export default function TrialHub() {
         else setError(j.error || "not_found");
       })
       .catch(() => setError("network"));
+
+    // Fire-and-forget hub_view event with UTM params
+    const utm: Record<string, string> = {};
+    ["utm_source","utm_medium","utm_campaign","utm_content","utm_term"].forEach((k) => {
+      const v = searchParams.get(k);
+      if (v) utm[k] = v;
+    });
+    fetch(`${SUPABASE_URL}/functions/v1/trial-hub-track`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        bundle_token: token,
+        event_type: "hub_view",
+        utm: Object.keys(utm).length ? utm : null,
+        referrer: document.referrer || null,
+      }),
+    }).catch(() => {});
   }, [token]);
+
+  const trackTileOpen = (productKey: string) => {
+    if (!token) return;
+    fetch(`${SUPABASE_URL}/functions/v1/trial-hub-track`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        bundle_token: token,
+        event_type: "tile_open",
+        product_key: productKey,
+      }),
+      keepalive: true,
+    }).catch(() => {});
+  };
 
   const daysLeft = data?.bundle?.expires_at
     ? Math.max(0, Math.ceil((new Date(data.bundle.expires_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
@@ -134,12 +165,12 @@ export default function TrialHub() {
                       isFocused ? "border-[#00d4ff]" : "border-white/10 hover:border-[#00d4ff]/60"
                     }`}
                   >
-                    <a href={p.href} className="block">
+                    <a href={p.href} className="block" onClick={() => trackTileOpen(p.key)}>
                       <div
                         className="text-[11px] uppercase tracking-widest font-semibold mb-2"
                         style={{ color: p.accent }}
                       >
-                        Trial · Active{isFocused ? " · Featured" : ""}
+                        Trial · {typeof p.count === "number" && p.count > 0 ? "Active" : "Setup needed"}{isFocused ? " · Featured" : ""}
                       </div>
                       <div className="flex items-baseline justify-between">
                         <h2 className="text-lg sm:text-xl font-bold">{p.label}</h2>
