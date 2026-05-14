@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { wrapServe } from "../_shared/telemetry.ts";
+import { checkAndConsume } from "../_shared/api-budget.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -34,7 +35,7 @@ async function scanGoogleMaps(query:string,city:string,industry:string):Promise<
     const res=await fetch(`https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(`${query} ${city}`)}&key=${GOOGLE_MAPS_API_KEY}`,{signal:AbortSignal.timeout(10_000)});
     if(!res.ok)return [];
     const data=await res.json();
-    for(const place of (data.results||[]).slice(0,20)) {
+    for(const place of (data.results||[]).slice(0,3)) {
       if(!place.name)continue;
       let phone:string|null=null,website:string|null=null;
       if(place.place_id){try{const dr=await fetch(`https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.place_id}&fields=formatted_phone_number,website&key=${GOOGLE_MAPS_API_KEY}`,{signal:AbortSignal.timeout(8_000)});if(dr.ok){const dd=await dr.json();phone=dd.result?.formatted_phone_number||null;website=dd.result?.website||null;}}catch(_){}}
@@ -69,6 +70,8 @@ async function scanSAMEntities():Promise<ProspectRow[]> {
 
 serve(wrapServe("outreach-prospect-replenisher",async(_req)=>{
   const sb=createClient(SUPABASE_URL,SUPABASE_SERVICE_KEY);
+  const mapsOk=await checkAndConsume(sb,"google_maps",20,"google_maps_details");
+  if(!mapsOk.allowed)console.log("[replenisher] google_maps daily cap hit, skipping Maps scan");
   const startedAt=Date.now();let inserted=0,skipped=0;
   const {data:existing}=await sb.from("outreach_leads").select("business_name,city,email").gte("created_at",new Date(Date.now()-90*86400000).toISOString());
   const existingKeys=new Set<string>();
@@ -77,9 +80,9 @@ serve(wrapServe("outreach-prospect-replenisher",async(_req)=>{
   allProspects.push(...await scanBSEEDContractors());
   allProspects.push(...await scanSAMEntities());
   const dayOfYear=Math.floor((Date.now()-new Date(new Date().getFullYear(),0,0).getTime())/86400000);
-  const queriesThisRun=[...QUERIES.slice(dayOfYear%QUERIES.length),...QUERIES.slice(0,dayOfYear%QUERIES.length)].slice(0,15);
+  const queriesThisRun=[...QUERIES.slice(dayOfYear%QUERIES.length),...QUERIES.slice(0,dayOfYear%QUERIES.length)].slice(0,5);
   const citiesThisRun=[...CITIES.slice(dayOfYear%CITIES.length),...CITIES.slice(0,dayOfYear%CITIES.length)].slice(0,5);
-  for(const {q,industry} of queriesThisRun){if(allProspects.length>=DAILY_TARGET*2)break;allProspects.push(...await scanGoogleMaps(q,citiesThisRun[Math.floor(Math.random()*citiesThisRun.length)],industry));await new Promise(r=>setTimeout(r,300));}
+  for(const {q,industry} of (mapsOk.allowed?queriesThisRun:[])){if(allProspects.length>=DAILY_TARGET*2)break;allProspects.push(...await scanGoogleMaps(q,citiesThisRun[Math.floor(Math.random()*citiesThisRun.length)],industry));await new Promise(r=>setTimeout(r,300));}
   for(const prospect of allProspects){
     if(inserted>=DAILY_TARGET)break;
     const emailKey=prospect.email?.toLowerCase();const bizKey=`${prospect.business_name.toLowerCase()}|${(prospect.city||"").toLowerCase()}`;

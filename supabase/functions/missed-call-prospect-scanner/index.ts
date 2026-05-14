@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { sendSMS, ADMIN_PHONE } from "../_shared/twilio.ts";
 import { wrapServe } from "../_shared/telemetry.ts";
+import { checkAndConsume } from "../_shared/api-budget.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -77,6 +78,8 @@ async function googleMapsSearch(query:string,cityState:string):Promise<ProspectR
 
 serve(wrapServe("missed-call-prospect-scanner",async(_req)=>{
   const sb=createClient(SUPABASE_URL,SUPABASE_SERVICE_KEY);
+  const mapsOk=await checkAndConsume(sb,"google_maps",24,"google_maps_details");
+  if(!mapsOk.allowed)console.log("[mc-scanner] google_maps daily cap hit, skipping Maps scans");
   const startedAt=Date.now();let inserted=0,skipped=0;
   const {data:existing}=await sb.from("outreach_leads").select("business_name,city,email").gte("created_at",new Date(Date.now()-90*86400000).toISOString());
   const existingKeys=new Set<string>();
@@ -86,14 +89,14 @@ serve(wrapServe("missed-call-prospect-scanner",async(_req)=>{
   for(const group of LARA_LICENSE_GROUPS){
     const hotCounties=await scanLARANewLicenses(group);
     if(hotCounties.length>0)laraSignalSummary.push(`${group.name}: ${hotCounties.map(c=>`${c.county}(${c.count})`).join(", ")}`);
-    for(const {county,count} of hotCounties.slice(0,2)){
+    for(const {county,count} of (mapsOk.allowed?hotCounties.slice(0,2):[])){
       const countyCities=Object.entries(CITY_COUNTY).filter(([,c])=>c===county).map(([city])=>city).slice(0,3);
       for(const city of countyCities){const rows=await googleMapsSearch(group.mapsQuery,`${city} MI`);for(const row of rows)allProspects.push({...row,industry:group.industry,source:`lara_signal_${group.name}`});if(count>=5)await new Promise(r=>setTimeout(r,200));}
     }
   }
   const dayOfYear=Math.floor((Date.now()-new Date(new Date().getFullYear(),0,0).getTime())/86400000);
   const queriesThisRun=[...DIRECT_SCAN_QUERIES.slice(dayOfYear%DIRECT_SCAN_QUERIES.length),...DIRECT_SCAN_QUERIES.slice(0,dayOfYear%DIRECT_SCAN_QUERIES.length)].slice(0,8);
-  for(const {q,industry,cities} of queriesThisRun){if(allProspects.length>=DAILY_TARGET*2)break;const rows=await googleMapsSearch(q,cities[dayOfYear%cities.length]);for(const row of rows)allProspects.push({...row,industry});await new Promise(r=>setTimeout(r,300));}
+  for(const {q,industry,cities} of (mapsOk.allowed?queriesThisRun:[])){if(allProspects.length>=DAILY_TARGET*2)break;const rows=await googleMapsSearch(q,cities[dayOfYear%cities.length]);for(const row of rows)allProspects.push({...row,industry});await new Promise(r=>setTimeout(r,300));}
   for(const prospect of allProspects){
     if(inserted>=DAILY_TARGET)break;
     const emailKey=prospect.email?.toLowerCase();const bizKey=`${prospect.business_name.toLowerCase()}|${(prospect.city||"").toLowerCase()}`;
