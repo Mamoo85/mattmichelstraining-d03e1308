@@ -35,7 +35,7 @@ async function scanGoogleMaps(query:string,city:string,industry:string):Promise<
     const res=await fetch(`https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(`${query} ${city}`)}&key=${GOOGLE_MAPS_API_KEY}`,{signal:AbortSignal.timeout(10_000)});
     if(!res.ok)return [];
     const data=await res.json();
-    for(const place of (data.results||[]).slice(0,5)) {
+    for(const place of (data.results||[]).slice(0,3)) {
       if(!place.name)continue;
       let phone:string|null=null,website:string|null=null;
       if(place.place_id){try{const dr=await fetch(`https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.place_id}&fields=formatted_phone_number,website&key=${GOOGLE_MAPS_API_KEY}`,{signal:AbortSignal.timeout(8_000)});if(dr.ok){const dd=await dr.json();phone=dd.result?.formatted_phone_number||null;website=dd.result?.website||null;}}catch(_){}}
