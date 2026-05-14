@@ -1334,6 +1334,30 @@ export type Database = {
         }
         Relationships: []
       }
+      api_usage_daily: {
+        Row: {
+          cents_used: number
+          id: number
+          service: string
+          updated_at: string
+          usage_date: string
+        }
+        Insert: {
+          cents_used?: number
+          id?: number
+          service: string
+          updated_at?: string
+          usage_date?: string
+        }
+        Update: {
+          cents_used?: number
+          id?: number
+          service?: string
+          updated_at?: string
+          usage_date?: string
+        }
+        Relationships: []
+      }
       apify_actor_jobs: {
         Row: {
           actor_id: string
