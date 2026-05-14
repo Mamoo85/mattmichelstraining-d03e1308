@@ -1,119 +1,111 @@
-## Cold Email Quality Audit — Findings & Fix Plan
+## Why your bill exploded
 
-I audited the cold email system end-to-end (102 outreach/drip functions, the shared `dwa-email.ts` sender, recent `email_send_log` activity, and the three emails in your screenshots). Here's what's actually happening and what I'll fix.
+You have ~25 edge functions calling paid Google APIs daily. Three SKUs are doing the damage:
 
----
-
-### Finding 1 — Wrong industry pitched (clarity bug)
-
-**Screenshot evidence:** "We help **manufacturing** owners near AJ Rose Manufacturing Co…", "three other **commercial property management** owners…"
-
-**Root cause:** `supabase/functions/outreach-followup-drip/index.ts` line 24:
-```ts
-const trade = industry || "contractor";
-```
-Whatever string is in `outreach_leads.industry` gets dropped verbatim into the body. So a manufacturer gets pitched as a manufacturer, even though Missed-Call/Dead-Lead Reactivation/permit signals are **trades/contractor** offers. A factory owner reads "we help manufacturing businesses capture missed calls" and immediately knows the email isn't for them.
-
-The D7 body also says "**near** {companyName}" referring to other owners "near" the recipient's own company — confusing phrasing.
-
-**Fix:**
-- Add an `isTradesIndustry()` whitelist (HVAC, plumbing, electrical, roofing, gutters, pest, restoration, exterior, foundation, demo/junk, tree, painting). If industry isn't in the whitelist, **skip** the email entirely (don't pitch contractors-only product to a factory).
-- Rewrite D7 opener: "Three other {city} {trade} owners kicked off a free week this week" — use city, not "near {their own company}".
-- Same audit pass on `techalert-followup-drip` and `hoa-cold-outreach`.
-
----
-
-### Finding 2 — No links in plain-mode emails (intentional but broken)
-
-**Root cause:** `supabase/functions/_shared/dwa-email.ts` lines 209–219:
-```ts
-if (opts.plainMode) {
-  html = opts.bodyHtml;   // CTA block skipped entirely
-} else {
-  html = dwaWrap(`${visuals}${opts.bodyHtml}\n${ctaBlock}`);
-}
-```
-`outreach-followup-drip` passes `plainMode: true` to look human (avoid spam filters), and the body has no inline link — so `ctaUrl` (the trial signup URL) is built and passed but **never rendered**. The recipient has no way to click through; they can only reply "YES."
-
-This was an intentional spam-avoidance choice, but it kills self-serve conversions and leaves Matt as the only path to start a trial.
-
-**Fix:** In plain mode, append a single discreet plaintext link at the end of the body — looks human, still clickable:
-```
-Or start it yourself in 60 seconds:
-https://detroitwebagent.com/start-trial?...
-```
-One bare URL per email is the sweet spot for inbox placement (low spam risk, high CTR). Apply across all `plainMode: true` callers.
-
----
-
-### Finding 3 — Duplicate sends (confirmed in production)
-
-**Evidence from `email_send_log` last 7 days:**
-
-| Recipient | Sends | Templates | Window |
+| API | Cost | Where it's used | Daily volume estimate |
 |---|---|---|---|
-| info@motorcityplumber.com | **4** | siteradar_cold_blast, techalert_cold_d0 | 4 days |
-| info@absoluteroofing.com | 3 | siteradar_cold_blast (×3 same day) | 06:47 → 15:01 same day |
-| info@bovaelectric.com | 3 | siteradar_cold_blast (×3 same day) | same day |
-| corporateoffice@prmg.net | 3 | dwa_product_blast_missed_call, multi_service_pitch_1, web_drip_d1 | 14h |
-| (12 more contractors) | 3 each | siteradar_cold_blast same template, same day | 8h apart |
+| **Address Validation** | $5 / 1,000 | Every lead in `trade-radar-scanner` (11 verticals), `mortgage-radar-scanner`, `dead-lead-pool-refresh`, `enrich-prospect-pool` | 5,000–15,000 calls/day |
+| **Places API (Details + Text Search)** | $17 / 1,000 | `techalert-prospect-hunter`, `channel-prospector`, `contractor-prospector`, `b2b-*-scraper`, `enrich-supply-buyers`, `cold-email-rank-buyers`, `industry-pulse-scanner` (10+ functions) | 500–2,000 calls/day |
+| **Street View Static** | $7 / 1,000 | URL embedded in EVERY `trade_radar_leads` row → billed when admin/customer views the lead card | 1,000–5,000 views/day |
 
-**Two distinct duplicate causes:**
+The 24h cache helps but doesn't matter when the source data churns daily (new BSEED permits every morning) — Census ACS, ArcGIS scans, and prospect discovery hit Google fresh every run.
 
-**A) `siteradar-cold-blast` has no email-level dedup.** It checks `isBlocked()` (suppression/unsubscribe) but does NOT check `email_send_log` for prior sends. The autoscaler firing it 2–3× per cycle re-sends the same template to the same address hours apart.
-
-**B) Cross-product collision.** Same prospect lives in `outreach_leads`, `contractor_clients` enrichment pool, `siteradar` prospect list, and `dwa-product-blast` queue. Each blaster runs independently with its own dedup scoped to its own table. Result: a roofer gets a SiteRadar pitch at 6am, a Missed-Call pitch at 11am, and a TechAlert pitch the next morning.
-
-**Fix:**
-1. Add a shared helper `_shared/cold-email-dedup.ts` with `wasContactedRecently(sb, email, days = 5)` querying `email_send_log` for any send (any template) in the window.
-2. Wire it into all cold blasters: `siteradar-cold-blast`, `techalert-outreach`, `dwa-product-blast`, `contractor-outreach-email-blast`, `outreach-email-blast`, `multi-service-drip`, `web-design-drip`, `mortgage-radar-outreach`, `mortgage-radar-lo-blast`, `marketplace-outreach-blast`, `fielddesk-cold-blast`, `hoa-cold-outreach`, `counsel-cold-outreach`, `neo-outreach`. (~14 callers)
-3. Hard rule: **max 1 cold email per recipient per 5 days across all products.** Drip follow-ups (D3/D7/D14) bypass this since they're scheduled by `last_contact_date`, not blasted.
-4. `outreach-followup-drip` already has a per-recipient frequency cap (line 154-162) but allows up to 2 sends/7d — tighten to 1 cold + drips only.
+You're right: **almost all of this is free elsewhere.**
 
 ---
 
-### Finding 4 — Subject line clarity issues
+## The fix — 4 layers
 
-Audit of recent subjects:
-- ✅ Clear: "Re: {Company} — still buried in missed calls?", "{First} — 7-day trial"
-- ⚠️ Vague: "Last note — {Company}" (no value prop), "Quick question {First}"
-- ⚠️ Misleading: "Re:" prefix on a first follow-up implies a prior thread that didn't exist (this is a known cold-email pattern but flirts with deceptive-subject CAN-SPAM territory)
+### Layer 1 — Hard budget kill switch (deploys first, stops the bleeding today)
 
-**Fix:** Subject library audit — every subject must answer "what is this email about?" in <50 chars. Drop "Re:" prefix on D3 (use it only when there genuinely was a prior reply). Standardize D14 subject to "{Company} — last note on the 7-day trial".
+New shared module `_shared/google-budget-gate.ts`:
+- New table `google_api_spend_log` tracks every Google call: `function_name`, `api` (`address_validation` / `places` / `streetview`), `cost_cents`, `called_at`
+- New helper `canCallGoogle(api): Promise<boolean>` — checks today's spend + month-to-date spend against caps
+- New table `google_budget_config`: `daily_cap_cents` (default $1.00), `monthly_cap_cents` (default $15.00 — leaves $5 buffer under your $20 target), kill-switch boolean
+- When over budget: function returns `false`, caller falls through to free alternative (or skips)
+- Admin SMS alert when 80% of monthly cap hit
+- All 25 Google call sites get a 1-line guard: `if (!await canCallGoogle("address_validation")) return freeFallback(...)`
+
+### Layer 2 — Free address validation (replaces 95% of Address Validation API calls)
+
+Rewrite `_shared/anti-hallucination.ts → validateAddress()` with this waterfall:
+1. **Cache** (existing 24h cache) — already free
+2. **US Census Geocoder** — *https://geocoding.geo.census.gov* — free, unlimited, no key, US-only, returns lat/lon + confidence + matched address. Perfect for Detroit/Michigan addresses. ~99% coverage of BSEED permit data.
+3. **Nominatim (OpenStreetMap)** — free, 1 req/sec rate limit, global fallback for non-US or Census misses
+4. **Google Address Validation** — only if both above fail AND `score >= 7` AND budget allows. For low-score speculative leads, just accept the address as-is without validation.
+
+This alone cuts Address Validation API spend by ~95%.
+
+### Layer 3 — Free Places / business discovery (replaces Places API)
+
+Replace Google Places calls in `techalert-prospect-hunter`, `channel-prospector`, `contractor-prospector`, `b2b-*-scraper` etc. with a waterfall:
+1. **OpenStreetMap Overpass API** — free, returns businesses by category + bounding box (HVAC, electrician, plumber, etc.) for the entire Detroit metro. Already used in your `email-extras-1.ts` for one source — expand to primary.
+2. **OpenCorporates** — already a free source you use — for company verification
+3. **Yelp Fusion API** — free 5,000 calls/day (need 1 secret) — better contact data than OSM
+4. **Google Places** — only if all free sources return empty AND budget allows AND vertical is high-value (TechAlert prospects, mortgage radar)
+
+You already have most of these wired in `_shared/email-extras-*.ts` — this just promotes them from "tier 30" to "primary" and demotes Google to "fallback only."
+
+### Layer 4 — Kill Street View baked-in fetches
+
+Today: every trade radar lead row stores `street_view_url` containing `?key=AIza...` — every page view of a lead card = $0.007. Multiply by Matt + admin + 30+ paying customers viewing leads daily = $30–$100/mo just on image loads.
+
+Fix:
+- Stop generating `street_view_url` at insert time
+- Replace lead card image with **link to Google Maps** (`https://www.google.com/maps?q=lat,lon`) — opens in new tab, zero API cost, customer still sees the property
+- Optional: lazy-load a free **Mapillary** street-level photo (free API, OSM-backed) when the user clicks "see street view"
+- Migration to null out existing `street_view_url` values (and remove the API key from any cached HTML)
 
 ---
 
-### Finding 5 — Body language clarity (general pass)
+## You also need to do these 2 things in Google Cloud Console (1 minute each)
 
-Reading through the three screenshot bodies:
-- "Just bumping this up — wanted to make sure my note didn't get buried." ✅ Clear.
-- "We help commercial real estate broker businesses in Detroit capture missed calls, recover dead leads, and surface live homeowner signals…" ⚠️ Three products in one sentence; recipient has to parse. **Lead with the single biggest pain point** for their industry, save the others for the bullet list.
-- "kicked off a free week of Detroit Web Agency" — recipients don't know what "Detroit Web Agency" *is*. **Add a one-line "what we do" descriptor** the first time the brand is mentioned.
+I can't do these — they require your Google account login:
 
-**Fix:** Rewrite all 3 follow-up bodies (D3/D7/D14) with the framework:
-1. Why this email (specific to their industry/city)
-2. One clear value prop (their #1 pain)
-3. The 7-day trial offer + what they get (3 bullets max)
-4. Single CTA: "Reply YES" + bare clickable URL fallback
-5. Signature with phone
+1. **Set quota limits** (hard ceiling, even if my code has a bug):
+   - APIs & Services → Quotas
+   - Address Validation API → set requests/day to **500**
+   - Places API → set requests/day to **100**
+   - Maps Static / Street View → set requests/day to **200**
+
+2. **Set a billing budget alert**:
+   - Billing → Budgets & alerts → Create budget → $20/mo, alerts at 50%/90%/100%
+   - This won't auto-stop charges but you'll get an email before it gets out of hand again
 
 ---
 
-### Implementation plan
+## Files I'll touch
 
-| # | Change | Files |
+**New (4):**
+- `supabase/functions/_shared/google-budget-gate.ts`
+- `supabase/functions/_shared/free-geocode.ts` (Census + Nominatim)
+- `supabase/functions/_shared/free-places.ts` (Overpass + Yelp)
+- `supabase/migrations/<ts>_google_budget_and_streetview_cleanup.sql` (creates tables, nulls street_view_url, RLS)
+
+**Modified (~12):**
+- `_shared/anti-hallucination.ts` — waterfall `validateAddress`
+- `trade-radar-scanner/index.ts` — drop street_view_url generation
+- `mortgage-radar-scanner/index.ts` — same
+- `techalert-prospect-hunter/index.ts` — Overpass first, Places fallback
+- `channel-prospector/index.ts`, `contractor-prospector/index.ts` — same pattern
+- `b2b-dental-scraper/index.ts`, `b2b-industrial-scraper/index.ts` — same
+- `enrich-supply-buyers/index.ts`, `cold-email-rank-buyers/index.ts` — same
+- `industry-pulse-scanner/index.ts`, `missed-call-prospect-scanner/index.ts` — same
+- Frontend `TradeRadarLeadCard.tsx` (and Mortgage equivalent) — replace Street View `<img>` with "View on Google Maps" link
+
+**New admin page (1):**
+- `src/pages/AdminGoogleSpend.tsx` — shows today's calls, MTD spend, projected monthly, kill switch toggle
+
+---
+
+## Expected outcome
+
+| Metric | Before | After |
 |---|---|---|
-| 1 | Add `isTradesIndustry()` filter; skip non-trades from contractor pitches | `outreach-followup-drip`, `techalert-followup-drip`, `hoa-cold-outreach`, new `_shared/industry-filter.ts` |
-| 2 | Append plaintext CTA URL when `plainMode: true` | `_shared/dwa-email.ts` |
-| 3 | New `_shared/cold-email-dedup.ts` + wire into 14 cold blasters | new shared + 14 edge fns |
-| 4 | Rewrite D3/D7/D14 subjects + bodies for clarity | `outreach-followup-drip`, `techalert-followup-drip` |
-| 5 | Tighten frequency cap from 2/7d → 1/5d | `outreach-followup-drip` |
-| 6 | Add "what is DWA" one-liner on first brand mention | drip/blast bodies |
+| Address Validation calls/day | ~10,000 | ~500 (hard quota) |
+| Places API calls/day | ~1,000 | ~100 |
+| Street View image loads | ~3,000 | 0 (replaced with free Maps link) |
+| Monthly Google bill | ~$1,000 | **<$15** |
+| Lead quality | Same | Same (Census is actually MORE accurate for US addresses than Google) |
 
-No DB migrations needed. All changes are edge-function code. Will deploy via Lovable after merge.
-
-### Out of scope (call out, do not change)
-
-- The autoscaler firing functions multiple times per hour is fine — dedup at the email level is the right place to fix this, not at the cron level.
-- The "Re:" prefix on D3 is industry-standard cold-email practice; I'll keep it but only on the bumping-up follow-up.
-- Suppression/unsubscribe (`isBlocked`) is already correct — no change needed.
+Approve this and I'll ship layers 1 + 4 first (immediate bleeding stop — within minutes), then layers 2 + 3 (the proper free-source migration) right after.
