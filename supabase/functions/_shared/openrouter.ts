@@ -91,15 +91,23 @@ export interface OpenRouterResult {
 export async function openrouterCall(opts: OpenRouterCallOpts): Promise<OpenRouterResult | null> {
   if (!OPENROUTER_KEY) return null;
 
-  // Daily cost gate. Fail-OPEN on infra errors.
+  // Daily cost gate — fail-CLOSED on over-cap. Reserve a tiny pre-charge so
+  // parallel callers can't all sneak under the line at once.
+  let reserved = false;
   try {
     const cap = dailyCapUsd();
-    const spent = await todaysSpend();
-    if (spent >= cap) {
-      console.warn(
-        `openrouter daily cap reached: $${spent.toFixed(2)} >= $${cap} — blocking ${opts.model}`,
-      );
-      return null;
+    const newTotal = await rpc("openrouter_record_spend", { _cost: PRE_RESERVE_USD });
+    if (typeof newTotal === "number" && Number.isFinite(newTotal)) {
+      reserved = true;
+      if (newTotal > cap) {
+        // Mark blocked, refund the reservation, and bail.
+        await rpc("openrouter_record_blocked").catch(() => {});
+        await rpc("openrouter_record_spend", { _cost: -PRE_RESERVE_USD }).catch(() => {});
+        console.warn(
+          `openrouter daily cap reached: $${newTotal.toFixed(2)} > $${cap} — blocking ${opts.model}`,
+        );
+        return null;
+      }
     }
   } catch (e) {
     console.warn("openrouter cap check failed (fail-open)", String((e as any)?.message ?? e));
