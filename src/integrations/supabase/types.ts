@@ -25389,6 +25389,51 @@ export type Database = {
         }
         Relationships: []
       }
+      trial_hub_events: {
+        Row: {
+          bundle_token: string
+          created_at: string
+          cta_step: string | null
+          email: string | null
+          event_type: string
+          id: string
+          ip_hash: string | null
+          metadata: Json | null
+          product_key: string | null
+          referrer: string | null
+          user_agent: string | null
+          utm: Json | null
+        }
+        Insert: {
+          bundle_token: string
+          created_at?: string
+          cta_step?: string | null
+          email?: string | null
+          event_type: string
+          id?: string
+          ip_hash?: string | null
+          metadata?: Json | null
+          product_key?: string | null
+          referrer?: string | null
+          user_agent?: string | null
+          utm?: Json | null
+        }
+        Update: {
+          bundle_token?: string
+          created_at?: string
+          cta_step?: string | null
+          email?: string | null
+          event_type?: string
+          id?: string
+          ip_hash?: string | null
+          metadata?: Json | null
+          product_key?: string | null
+          referrer?: string | null
+          user_agent?: string | null
+          utm?: Json | null
+        }
+        Relationships: []
+      }
       trial_reactivation_sends: {
         Row: {
           business_name: string | null
