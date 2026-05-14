@@ -169,20 +169,18 @@ export default function TradeRadarLeadCard({
       )}
 
       <div className="flex flex-col sm:flex-row">
-        {lead.street_view_url && (
-          <div className="sm:w-44 sm:flex-shrink-0 relative overflow-hidden bg-black/30">
-            <img
-              src={lead.street_view_url}
-              alt={`Street view of ${lead.address}`}
-              className="w-full h-40 sm:h-full object-cover"
-              loading="lazy"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t sm:bg-gradient-to-r from-[#0a1628]/80 sm:from-transparent sm:to-[#0a1628]/70 to-transparent" />
-            <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-black/70 backdrop-blur-sm text-[10px] text-white/80 px-2 py-0.5 rounded font-mono uppercase tracking-wider">
-              <MapPin className="w-2.5 h-2.5" />
-              Street View
+        {lead.address && (
+          <a
+            href={`https://www.google.com/maps?q=${encodeURIComponent(`${lead.address}, ${lead.city || ""} ${lead.zip || ""}`)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="sm:w-44 sm:flex-shrink-0 relative overflow-hidden bg-gradient-to-br from-[#00d4ff]/10 to-[#0a1628] border-r border-white/5 flex items-center justify-center h-40 sm:h-auto group/map"
+          >
+            <div className="flex flex-col items-center gap-2 text-white/70 group-hover/map:text-[#00d4ff] transition-colors">
+              <MapPin className="w-8 h-8" />
+              <span className="text-[10px] font-mono uppercase tracking-wider">View on Maps</span>
             </div>
-          </div>
+          </a>
         )}
 
         <div className="flex-1 p-4 sm:p-5 space-y-3.5 min-w-0">
