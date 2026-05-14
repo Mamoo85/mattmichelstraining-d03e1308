@@ -35,7 +35,38 @@ export default function TrialHub() {
         else setError(j.error || "not_found");
       })
       .catch(() => setError("network"));
+
+    // Fire-and-forget hub_view event with UTM params
+    const utm: Record<string, string> = {};
+    ["utm_source","utm_medium","utm_campaign","utm_content","utm_term"].forEach((k) => {
+      const v = searchParams.get(k);
+      if (v) utm[k] = v;
+    });
+    fetch(`${SUPABASE_URL}/functions/v1/trial-hub-track`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        bundle_token: token,
+        event_type: "hub_view",
+        utm: Object.keys(utm).length ? utm : null,
+        referrer: document.referrer || null,
+      }),
+    }).catch(() => {});
   }, [token]);
+
+  const trackTileOpen = (productKey: string) => {
+    if (!token) return;
+    fetch(`${SUPABASE_URL}/functions/v1/trial-hub-track`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        bundle_token: token,
+        event_type: "tile_open",
+        product_key: productKey,
+      }),
+      keepalive: true,
+    }).catch(() => {});
+  };
 
   const daysLeft = data?.bundle?.expires_at
     ? Math.max(0, Math.ceil((new Date(data.bundle.expires_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
