@@ -187,7 +187,15 @@ function isNonContractor(businessName: string): boolean {
   return NON_CONTRACTOR_PATTERNS.some((p) => p.test(businessName));
 }
 
-async function searchGoogleMaps(query: string, apiKey: string): Promise<any[]> {
+async function searchGoogleMaps(query: string, apiKey: string, sb?: any): Promise<any[]> {
+  // Budget gate — refuse Google Places when daily/monthly cap hit.
+  if (sb) {
+    try {
+      const { canCallGoogle, logGoogleCall } = await import("../_shared/google-budget-gate.ts");
+      if (!(await canCallGoogle(sb, "places"))) return [];
+      await logGoogleCall(sb, "contractor-prospector", "places", { query });
+    } catch { /* fail-open if gate module unavailable */ }
+  }
   const res = await fetch("https://places.googleapis.com/v1/places:searchText", {
     method: "POST",
     headers: {
