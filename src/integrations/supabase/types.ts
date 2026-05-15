@@ -7842,6 +7842,8 @@ export type Database = {
           clicked_at: string | null
           complained_at: string | null
           created_at: string
+          delayed_at: string | null
+          delivered_at: string | null
           error_message: string | null
           id: string
           message_id: string | null
@@ -7856,6 +7858,8 @@ export type Database = {
           clicked_at?: string | null
           complained_at?: string | null
           created_at?: string
+          delayed_at?: string | null
+          delivered_at?: string | null
           error_message?: string | null
           id?: string
           message_id?: string | null
@@ -7870,6 +7874,8 @@ export type Database = {
           clicked_at?: string | null
           complained_at?: string | null
           created_at?: string
+          delayed_at?: string | null
+          delivered_at?: string | null
           error_message?: string | null
           id?: string
           message_id?: string | null
