@@ -443,15 +443,19 @@ Deno.serve(async (req) => {
   // Anything else (direct, paid ads, organic, referral) = a real person clicked through.
   const src = (body.source || "direct").toLowerCase();
   const isAutoProvisioned = /teaser|blast|auto|prospect_hunter|seed/.test(src);
-  const prefix = isAutoProvisioned ? "📨 TEASER SENT" : "🎯 NEW TRIAL STARTED";
-  sendSMS(
-    ADMIN_PHONE,
-    TWILIO_FROM,
-    `${prefix} — ${cfg.label}\n${email}${body.business_name ? `\n${body.business_name}` : ""}${body.phone ? `\n${body.phone}` : ""}${founder ? "\n(founder seat)" : ""}\nsrc: ${body.source || "direct"}`,
-    isAutoProvisioned ? "trial_teaser_alert" : "trial_signup_alert",
-    false,
-    { bypassQuietHours: !isAutoProvisioned },
-  ).catch((e) => console.error("[start-radar-trial] admin SMS failed", e));
+  // Only ping Matt for REAL human trial signups. Auto-provisioned teaser blasts
+  // were spamming his phone (one SMS per email sent). Those are tracked in
+  // trial_signups + email_send_log instead.
+  if (!isAutoProvisioned) {
+    sendSMS(
+      ADMIN_PHONE,
+      TWILIO_FROM,
+      `🎯 NEW TRIAL STARTED — ${cfg.label}\n${email}${body.business_name ? `\n${body.business_name}` : ""}${body.phone ? `\n${body.phone}` : ""}${founder ? "\n(founder seat)" : ""}\nsrc: ${body.source || "direct"}`,
+      "trial_signup_alert",
+      false,
+      { bypassQuietHours: true },
+    ).catch((e) => console.error("[start-radar-trial] admin SMS failed", e));
+  }
 
   return new Response(
     JSON.stringify({
