@@ -25,30 +25,35 @@ function buildFollowupBody(touch: Touch, ownerName: string | null, companyName: 
   const first = ownerName ? ownerName.split(" ")[0] : "there";
   const tradeLabel = role.replace(/_/g, " ");
 
+  // Plaintext-style HTML — minimal markup, no colors/backgrounds. Renders the
+  // same in light + dark inboxes and looks like a 1:1 email from Matt.
+  const wrap = (body: string) =>
+    `<div style="font-family:Arial,sans-serif;font-size:15px;color:#111;line-height:1.6;max-width:560px;">${body}</div>`;
+
   if (touch === "d3") {
-    return `
-<p style="color:#e6f1ff;">Hi ${first},</p>
-<p style="color:#e6f1ff;">Just bumping this up — wanted to make sure my note didn't get buried.</p>
-<p style="color:#e6f1ff;">We track the ${tradeLabel} labor market in Metro Detroit daily. Right now there are <strong>fewer than 12 licensed ${tradeLabel}s actively looking</strong> in your area. The ones who are available get snapped up within 48 hours.</p>
-<p style="color:#e6f1ff;">TechAlert puts you on the short list the moment one becomes available — $149/mo, no contract.</p>
-<p style="color:#e6f1ff;">— Matt</p>`;
+    return wrap(`
+<p>Hi ${first},</p>
+<p>Just bumping this up — wanted to make sure my note didn't get buried.</p>
+<p>We track the ${tradeLabel} labor market in Metro Detroit daily. Right now there are fewer than 12 licensed ${tradeLabel}s actively looking in your area. The ones who are available get snapped up within 48 hours.</p>
+<p>TechAlert puts you on the short list the moment one becomes available — $149/mo, no contract.</p>
+<p>— Matt<br>(313) 992-1219</p>`);
   }
 
   if (touch === "d7") {
-    return `
-<p style="color:#e6f1ff;">Hi ${first},</p>
-<p style="color:#e6f1ff;">One more note on the ${tradeLabel} shortage — I know you're busy.</p>
-<p style="color:#e6f1ff;">Three ${companyName}-area contractors signed up for TechAlert this week. When a qualified candidate surfaces, they'll get the alert first.</p>
-<p style="color:#e6f1ff;">Reply "YES" and I'll activate your trial today — no card required.</p>
-<p style="color:#e6f1ff;">— Matt, Detroit Web Agency · (313) 992-1219</p>`;
+    return wrap(`
+<p>Hi ${first},</p>
+<p>One more note on the ${tradeLabel} shortage — I know you're busy.</p>
+<p>Three ${companyName}-area contractors signed up for TechAlert this week. When a qualified candidate surfaces, they'll get the alert first.</p>
+<p>Reply "YES" and I'll activate your trial today — no card required.</p>
+<p>— Matt, Detroit Web Agency · (313) 992-1219</p>`);
   }
 
-  return `
-<p style="color:#e6f1ff;">Hi ${first},</p>
-<p style="color:#e6f1ff;">Last note — I don't want to keep cluttering your inbox.</p>
-<p style="color:#e6f1ff;">If hiring ${tradeLabel}s is still a challenge at ${companyName}, I'd love to show you what TechAlert looks like for your area. Takes 10 minutes on the phone.</p>
-<p style="color:#e6f1ff;"><strong>Call or text me directly: (313) 992-1219</strong></p>
-<p style="color:#e6f1ff;">— Matt Michels<br>Detroit Web Agency</p>`;
+  return wrap(`
+<p>Hi ${first},</p>
+<p>Last note — I don't want to keep cluttering your inbox.</p>
+<p>If hiring ${tradeLabel}s is still a challenge at ${companyName}, I'd love to show you what TechAlert looks like for your area. Takes 10 minutes on the phone.</p>
+<p>Call or text me directly: (313) 992-1219</p>
+<p>— Matt Michels<br>Detroit Web Agency</p>`);
 }
 
 async function sendFollowup(
@@ -69,9 +74,10 @@ async function sendFollowup(
     to,
     subject: subjects[touch],
     bodyHtml: buildFollowupBody(touch, ownerName, companyName, role),
-    product: "TechAlert", // → 30-day trial CTA auto-injected
+    product: "TechAlert",
     ctaUrl: `https://detroitwebagent.com/start-trial?product=techalert&email=${encodeURIComponent(to)}&utm_source=cold_email&utm_medium=email&utm_campaign=techalert_${touch}`,
     templateName: `techalert_followup_${touch}`,
+    plainMode: true,
   }, sb);
   return { ok: r.ok, err: r.error };
 }
