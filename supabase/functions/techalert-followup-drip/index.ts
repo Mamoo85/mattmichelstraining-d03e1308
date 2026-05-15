@@ -74,9 +74,10 @@ async function sendFollowup(
     to,
     subject: subjects[touch],
     bodyHtml: buildFollowupBody(touch, ownerName, companyName, role),
-    product: "TechAlert", // → 30-day trial CTA auto-injected
+    product: "TechAlert",
     ctaUrl: `https://detroitwebagent.com/start-trial?product=techalert&email=${encodeURIComponent(to)}&utm_source=cold_email&utm_medium=email&utm_campaign=techalert_${touch}`,
     templateName: `techalert_followup_${touch}`,
+    plainMode: true,
   }, sb);
   return { ok: r.ok, err: r.error };
 }
