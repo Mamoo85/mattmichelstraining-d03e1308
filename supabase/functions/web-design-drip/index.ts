@@ -204,6 +204,13 @@ serve(async (req) => {
           continue;
         }
 
+        // Cross-template frequency cap (max 2 cold sends per 7d to same recipient)
+        const capChk = await frequencyCapExceeded(sb, email, { currentTemplate: "web_drip" });
+        if (capChk.exceeded) {
+          log("Freq cap exceeded", { email, count: capChk.recentCount });
+          continue;
+        }
+
         // Find which drip step to send next
         const { data: sentLogs } = await sb
           .from("email_send_log")
