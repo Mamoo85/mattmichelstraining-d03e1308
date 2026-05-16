@@ -286,6 +286,8 @@ serve(async () => {
 
   for (const prospect of touch3Prospects || []) {
     try {
+      const capChk = await frequencyCapExceeded(sb, prospect.email, { currentTemplate: "hoa_cold_outreach_t3" });
+      if (capChk.exceeded) continue;
       const emailBody = await generateColdEmail(prospect.company_name, 3);
       if (!emailBody) continue;
 
