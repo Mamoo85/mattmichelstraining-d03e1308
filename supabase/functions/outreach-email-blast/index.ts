@@ -95,7 +95,7 @@ Deno.serve(async (req) => {
         skippedFreq++;
         await sb.from("outreach_sends").insert({
           campaign_id: c.id, target_id: t.id, channel: "email", provider: "resend",
-          recipient_email: t.email, status: "skipped",
+          recipient_email: t.email, status: "suppressed",
           error_message: `freq_cap: ${cap.recentCount} sends in 7d (${cap.recentTemplates.join(",")})`,
         });
         continue;
