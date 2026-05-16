@@ -2,6 +2,7 @@
 // CAN-SPAM compliant + suppression check + audit log + daily cap.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { teaserCardHtml } from "../_shared/teaser-card.ts";
+import { frequencyCapExceeded } from "../_shared/outreach-blocklist.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
