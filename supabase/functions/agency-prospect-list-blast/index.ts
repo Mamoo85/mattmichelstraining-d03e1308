@@ -205,7 +205,7 @@ Output ONLY the 3-sentence intro paragraph. No subject line, no greeting, no sig
     const toAddress = isWhitelabel ? (recipient_email || agency_email) : agency_email;
 
     // Cross-template frequency cap (max 2 cold sends per 7d to same recipient)
-    const capChk = await frequencyCapExceeded(supabase, toAddress, { currentTemplate: "agency_prospect_blast" });
+    const capChk = await frequencyCapExceeded(sb, toAddress, { currentTemplate: "agency_prospect_blast" });
     if (capChk.exceeded) {
       return new Response(JSON.stringify({ ok: false, skipped: true, reason: `freq_cap: ${capChk.recentCount} cold sends in 7d`, templates: capChk.recentTemplates }), {
         status: 200, headers: { ...cors, "Content-Type": "application/json" },
