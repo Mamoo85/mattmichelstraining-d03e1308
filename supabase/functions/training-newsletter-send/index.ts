@@ -362,7 +362,7 @@ serve(async (req) => {
       ? await generateWithLovable(topic, customContent)
       : await generateWithAnthropic(topic, customContent);
 
-    const html = buildEmailHtml(content, issueNum, dateStr);
+    const html = buildEmailHtml(content, issueNum, dateStr); // base HTML without personal banner (for draft + preview)
 
     // Save draft
     const { data: draft } = await sb
