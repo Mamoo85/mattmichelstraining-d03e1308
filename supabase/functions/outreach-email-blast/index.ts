@@ -4,8 +4,9 @@
 // {{business_name}}, {{vertical}}, {{city}}, {{cta_url}}.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { dwaEmail, dwaWrap } from "../_shared/dwa-email.ts";
+import { dwaColdEmail } from "../_shared/dwa-email.ts";
 import { isFounder } from "../_shared/founder-seats.ts";
+import { isBlocked, frequencyCapExceeded } from "../_shared/outreach-blocklist.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
