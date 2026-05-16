@@ -188,6 +188,8 @@ Deno.serve(async (req) => {
     if (!lead.email || !lead.email.includes("@")) { skipped++; continue; }
 
     try {
+      const cap = await frequencyCapExceeded(sb, lead.email, { currentTemplate: "dwa_product_blast" });
+      if (cap.exceeded) { blocked++; continue; }
       const block = await isBlocked(sb, { email: lead.email, business_name: lead.business_name });
       if (block.blocked) { blocked++; continue; }
     } catch (_) { /* fail open */ }
