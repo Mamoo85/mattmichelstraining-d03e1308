@@ -179,6 +179,16 @@ Deno.serve(async (req) => {
         });
         continue;
       }
+      // Cross-template frequency cap
+      const capChk = await frequencyCapExceeded(supabase, p.email || "", { currentTemplate: "contractor_outreach_blast" });
+      if (capChk.exceeded) {
+        skippedSuppressed++;
+        await logAudit(supabase, {
+          prospect_id: p.id, lead_id, channel: "email", event: "suppressed",
+          reason: `freq_cap: ${capChk.recentCount} cold sends in 7d`,
+        });
+        continue;
+      }
 
       const unsubUrl = `${SUPABASE_URL}/functions/v1/contractor-outreach-unsubscribe?id=${p.id}`;
       const subject = `${city} homeowner needs ${trade.toLowerCase()} — claim for $${price}?`;
