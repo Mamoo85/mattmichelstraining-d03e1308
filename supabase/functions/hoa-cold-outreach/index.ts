@@ -253,6 +253,8 @@ serve(async () => {
 
   for (const prospect of touch2Prospects || []) {
     try {
+      const capChk = await frequencyCapExceeded(sb, prospect.email, { currentTemplate: "hoa_cold_outreach_t2" });
+      if (capChk.exceeded) continue;
       const emailBody = await generateColdEmail(prospect.company_name, 2);
       if (!emailBody) continue;
 
