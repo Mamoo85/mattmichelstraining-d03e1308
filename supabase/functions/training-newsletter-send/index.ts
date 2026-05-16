@@ -247,12 +247,17 @@ async function getUnsubscribeTokenMap(sb: any, emails: string[]) {
   return tokenMap;
 }
 
-function buildEmailHtml(content: NewsletterContent, issueNum: number, dateStr: string): string {
+function buildEmailHtml(content: NewsletterContent, issueNum: number, dateStr: string, personalBanner = ""): string {
   return `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;">
+<tr><td align="center" style="padding:24px 16px;">
+${personalBanner}
+<table width="100%" cellpadding="0" cellspacing="0" style="max-width:580px;">
+
+  <!-- Header -->
 <tr><td align="center" style="padding:24px 16px;">
 <table width="100%" cellpadding="0" cellspacing="0" style="max-width:580px;">
 
