@@ -35,6 +35,15 @@ serve(async (req) => {
 
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
+  // OpenRouter spend frozen — return empty success so cron/health checks pass.
+  if (!OPENROUTER_API_KEY) {
+    console.log("lara-business-scraper: OPENROUTER_API_KEY not set — skipping (spend frozen)");
+    return new Response(
+      JSON.stringify({ ok: true, skipped: true, reason: "openrouter_disabled", prospects: 0 }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
+  }
+
   try {
     // Use Sonar to find licensed HVAC/plumbing/boiler businesses in tri-county area
     const prospects: Array<{
