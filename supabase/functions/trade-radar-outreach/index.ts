@@ -6,7 +6,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { generateWithHaiku } from "../_shared/opus.ts";
-import { isRecentlyContacted } from "../_shared/outreach-blocklist.ts";
+import { isRecentlyContacted, frequencyCapExceeded } from "../_shared/outreach-blocklist.ts";
 import { dwaEmail, listUnsubHeaders } from "../_shared/dwa-email.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
