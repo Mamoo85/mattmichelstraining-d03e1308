@@ -83,6 +83,14 @@ serve(async (req) => {
 
     for (const b of buyers) {
       try {
+        if (b.email) {
+          const capChk = await frequencyCapExceeded(sb, b.email, { currentTemplate: "dossier_cold_outreach" });
+          if (capChk.exceeded) {
+            skipped++;
+            results.push({ buyer_id: b.id, company: b.company, skipped: true, reason: `freq_cap: ${capChk.recentCount} cold sends in 7d` });
+            continue;
+          }
+        }
         const { data, error } = await sb.functions.invoke("dossier-cold-outreach", {
           body: {
             signal_id,
