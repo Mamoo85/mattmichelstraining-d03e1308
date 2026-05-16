@@ -6,7 +6,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { generateWithHaiku } from "../_shared/opus.ts";
-import { isRecentlyContacted } from "../_shared/outreach-blocklist.ts";
+import { isRecentlyContacted, frequencyCapExceeded } from "../_shared/outreach-blocklist.ts";
 import { dwaEmail, listUnsubHeaders } from "../_shared/dwa-email.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
@@ -78,6 +78,10 @@ serve(async (req) => {
           totalSkipped++;
           continue;
         }
+
+        // Cross-template frequency cap (max 2 cold sends per 7d to same recipient)
+        const capChk = await frequencyCapExceeded(sb, lead.owner_email, { currentTemplate: `trade_radar_outreach_${client.vertical}` });
+        if (capChk.exceeded) { totalSkipped++; continue; }
 
         try {
           const signalDisplay = (lead.signal_type || "recent activity").replace(/_/g, " ");

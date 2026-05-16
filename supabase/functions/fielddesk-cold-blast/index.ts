@@ -3,7 +3,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { dwaEmail, listUnsubHeaders } from "../_shared/dwa-email.ts";
 import { teaserCardHtml } from "../_shared/teaser-card.ts";
-import { isBlocked } from "../_shared/outreach-blocklist.ts";
+import { isBlocked, frequencyCapExceeded } from "../_shared/outreach-blocklist.ts";
 import { isMarketingBlocked } from "../_shared/marketing-kill-switch.ts";
 import { wasContactedRecently } from "../_shared/cold-email-dedup.ts";
 
@@ -78,6 +78,8 @@ Deno.serve(async (req) => {
     if ((lead.drip_campaign_status as any)?.last_product_pitched === "field_crm") { skipped++; continue; }
 
     try {
+      const cap = await frequencyCapExceeded(sb, lead.email, { currentTemplate: "fielddesk_cold_blast" });
+      if (cap.exceeded) { blockedCount++; continue; }
       const b = await isBlocked(sb, { email: lead.email, business_name: lead.business_name });
       if (b.blocked) { blockedCount++; continue; }
     } catch (_) {}

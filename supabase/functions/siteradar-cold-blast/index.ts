@@ -2,7 +2,7 @@
 // Plain HTML body (no dark template, no card image) — deliverability-safe.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { dwaColdEmail } from "../_shared/dwa-email.ts";
-import { isBlocked } from "../_shared/outreach-blocklist.ts";
+import { isBlocked, frequencyCapExceeded } from "../_shared/outreach-blocklist.ts";
 import { isMarketingBlocked } from "../_shared/marketing-kill-switch.ts";
 import { wasContactedRecently } from "../_shared/cold-email-dedup.ts";
 
@@ -55,6 +55,8 @@ Deno.serve(async (req) => {
     if ((lead.drip_campaign_status as any)?.last_product_pitched === "site_radar") { skipped++; continue; }
 
     try {
+      const cap = await frequencyCapExceeded(sb, lead.email, { currentTemplate: "siteradar_cold_blast" });
+      if (cap.exceeded) { blockedCount++; continue; }
       const b = await isBlocked(sb, { email: lead.email, business_name: lead.business_name });
       if (b.blocked) { blockedCount++; continue; }
     } catch (_) {}

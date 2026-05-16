@@ -9,6 +9,7 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { frequencyCapExceeded } from "../_shared/outreach-blocklist.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -82,6 +83,14 @@ serve(async (req) => {
 
     for (const b of buyers) {
       try {
+        if (b.email) {
+          const capChk = await frequencyCapExceeded(sb, b.email, { currentTemplate: "dossier_cold_outreach" });
+          if (capChk.exceeded) {
+            skipped++;
+            results.push({ buyer_id: b.id, company: b.company, skipped: true, reason: `freq_cap: ${capChk.recentCount} cold sends in 7d` });
+            continue;
+          }
+        }
         const { data, error } = await sb.functions.invoke("dossier-cold-outreach", {
           body: {
             signal_id,

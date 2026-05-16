@@ -12,6 +12,7 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { frequencyCapExceeded } from "../_shared/outreach-blocklist.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -219,6 +220,8 @@ serve(async () => {
 
   for (const prospect of pendingProspects || []) {
     try {
+      const capChk = await frequencyCapExceeded(sb, prospect.email, { currentTemplate: "hoa_cold_outreach_t1" });
+      if (capChk.exceeded) continue;
       const emailBody = await generateColdEmail(prospect.company_name, 1);
       if (!emailBody) continue;
 
@@ -250,6 +253,8 @@ serve(async () => {
 
   for (const prospect of touch2Prospects || []) {
     try {
+      const capChk = await frequencyCapExceeded(sb, prospect.email, { currentTemplate: "hoa_cold_outreach_t2" });
+      if (capChk.exceeded) continue;
       const emailBody = await generateColdEmail(prospect.company_name, 2);
       if (!emailBody) continue;
 
@@ -281,6 +286,8 @@ serve(async () => {
 
   for (const prospect of touch3Prospects || []) {
     try {
+      const capChk = await frequencyCapExceeded(sb, prospect.email, { currentTemplate: "hoa_cold_outreach_t3" });
+      if (capChk.exceeded) continue;
       const emailBody = await generateColdEmail(prospect.company_name, 3);
       if (!emailBody) continue;
 

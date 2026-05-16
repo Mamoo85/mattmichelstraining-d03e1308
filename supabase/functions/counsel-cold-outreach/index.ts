@@ -1,6 +1,7 @@
 // counsel-cold-outreach — daily 8am ET — sends D0 cold email to enriched MI attorney prospects
 // 30/day cap. Professional HTML email with one-click 7-day free trial CTA.
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { frequencyCapExceeded } from "../_shared/outreach-blocklist.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -104,6 +105,9 @@ Deno.serve(async (req) => {
   let sent = 0, failed = 0;
   for (const p of (prospects || [])) {
     if (!p.email) continue;
+    // Cross-template frequency cap
+    const capChk = await frequencyCapExceeded(sb, p.email, { currentTemplate: "counsel_cold_outreach" });
+    if (capChk.exceeded) continue;
     // Suppression check
     const { data: blocked } = await sb.from("outreach_blocklist").select("email").eq("email", p.email).maybeSingle().then((r) => r).catch(() => ({ data: null }));
     if (blocked) {

@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { dwaColdEmail } from "../_shared/dwa-email.ts";
 import { dashboardPreviewHtml, pickProductForIndustry, missedRevenue } from "../_shared/dashboard-preview.ts";
+import { frequencyCapExceeded } from "../_shared/outreach-blocklist.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -200,6 +201,13 @@ serve(async (req) => {
 
         if (suppressed && suppressed.length > 0) {
           log("Email suppressed", { email });
+          continue;
+        }
+
+        // Cross-template frequency cap (max 2 cold sends per 7d to same recipient)
+        const capChk = await frequencyCapExceeded(sb, email, { currentTemplate: "web_drip" });
+        if (capChk.exceeded) {
+          log("Freq cap exceeded", { email, count: capChk.recentCount });
           continue;
         }
 

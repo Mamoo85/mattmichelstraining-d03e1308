@@ -11,6 +11,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { dwaEmail, dwaWrap } from "../_shared/dwa-email.ts";
 import { checkEmailSanity } from "../_shared/email-sanity.ts";
+import { frequencyCapExceeded } from "../_shared/outreach-blocklist.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -65,6 +66,10 @@ Deno.serve(async (req) => {
     // Suppression check
     const { data: sup } = await sb.from("suppressed_emails").select("email").eq("email", email).maybeSingle();
     if (sup) { skipped++; continue; }
+
+    // Cross-template frequency cap (max 2 cold sends per 7d to same recipient)
+    const cap = await frequencyCapExceeded(sb, email, { currentTemplate: "techalert_teaser_blast" });
+    if (cap.exceeded) { skipped++; events.push({ email, action: "skipped_freq_cap", count: cap.recentCount }); continue; }
 
     if (dryRun) { events.push({ email, action: "would_send" }); continue; }
 
