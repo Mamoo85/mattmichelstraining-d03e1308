@@ -24654,11 +24654,15 @@ export type Database = {
           dashboard_token: string | null
           email: string
           id: string
+          is_whitelabel: boolean
           phone: string | null
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
           trial_ends_at: string | null
           vertical: string
+          whitelabel_brand: string | null
+          whitelabel_from_email: string | null
+          whitelabel_logo_url: string | null
           zip_codes: string[]
         }
         Insert: {
@@ -24673,11 +24677,15 @@ export type Database = {
           dashboard_token?: string | null
           email: string
           id?: string
+          is_whitelabel?: boolean
           phone?: string | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           trial_ends_at?: string | null
           vertical: string
+          whitelabel_brand?: string | null
+          whitelabel_from_email?: string | null
+          whitelabel_logo_url?: string | null
           zip_codes?: string[]
         }
         Update: {
@@ -24692,11 +24700,15 @@ export type Database = {
           dashboard_token?: string | null
           email?: string
           id?: string
+          is_whitelabel?: boolean
           phone?: string | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           trial_ends_at?: string | null
           vertical?: string
+          whitelabel_brand?: string | null
+          whitelabel_from_email?: string | null
+          whitelabel_logo_url?: string | null
           zip_codes?: string[]
         }
         Relationships: []
