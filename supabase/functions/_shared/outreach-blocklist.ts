@@ -141,6 +141,62 @@ export async function isRecentlyContacted(
 }
 
 /**
+ * Cross-template per-recipient frequency cap.
+ * Returns { exceeded: true } if `recipient_email` received >= `maxSends`
+ * cold-outreach emails from ANY template within the last `windowDays`.
+ * Reads from `email_send_log` (status='sent') and matches by recipient_email.
+ *
+ * Defaults: max 2 cold sends per 7 days across ALL templates.
+ * Honors metadata.cold === true OR templates listed in COLD_TEMPLATE_PREFIXES.
+ */
+const COLD_TEMPLATE_HINTS = [
+  "cold", "outreach", "blast", "drip", "teaser", "prospect",
+  "techalert-", "siteradar-", "fielddesk-", "contractor-outreach",
+  "dossier-", "hoa-", "counsel-", "storm-", "dwa-product",
+  "web-design-", "agency-prospect", "ameristeel", "trade-radar-outreach",
+];
+
+export async function frequencyCapExceeded(
+  supabase: any,
+  recipientEmail: string,
+  opts: { maxSends?: number; windowDays?: number; currentTemplate?: string } = {},
+): Promise<{ exceeded: boolean; recentCount: number; recentTemplates: string[] }> {
+  const max = opts.maxSends ?? 2;
+  const days = opts.windowDays ?? 7;
+  const email = normEmail(recipientEmail);
+  if (!email) return { exceeded: false, recentCount: 0, recentTemplates: [] };
+
+  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+  try {
+    const { data, error } = await supabase
+      .from("email_send_log")
+      .select("template_name, metadata, created_at")
+      .eq("recipient_email", email)
+      .eq("status", "sent")
+      .gte("created_at", since)
+      .limit(50);
+    if (error) {
+      console.error("[freq-cap] query error:", error.message);
+      return { exceeded: false, recentCount: 0, recentTemplates: [] };
+    }
+    const coldRows = (data ?? []).filter((r: any) => {
+      if (r?.metadata?.cold === true) return true;
+      const t = (r?.template_name || "").toLowerCase();
+      return COLD_TEMPLATE_HINTS.some((h) => t.includes(h));
+    });
+    const templates = coldRows.map((r: any) => r.template_name);
+    return {
+      exceeded: coldRows.length >= max,
+      recentCount: coldRows.length,
+      recentTemplates: templates,
+    };
+  } catch (e) {
+    console.error("[freq-cap] error:", (e as Error).message);
+    return { exceeded: false, recentCount: 0, recentTemplates: [] };
+  }
+}
+
+/**
  * Record that we just sent cold outreach to this prospect.
  * Writes a 90-day cooldown row. Paying clients already have NULL (forever) rows
  * via DB triggers — those take precedence.
