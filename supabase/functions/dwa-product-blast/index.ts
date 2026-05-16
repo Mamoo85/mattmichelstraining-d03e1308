@@ -14,7 +14,7 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { dwaColdEmail } from "../_shared/dwa-email.ts";
-import { isBlocked } from "../_shared/outreach-blocklist.ts";
+import { isBlocked, frequencyCapExceeded } from "../_shared/outreach-blocklist.ts";
 import { wasContactedRecently } from "../_shared/cold-email-dedup.ts";
 import { isMarketingBlocked } from "../_shared/marketing-kill-switch.ts";
 
