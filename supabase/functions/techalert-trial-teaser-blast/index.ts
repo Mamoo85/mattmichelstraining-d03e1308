@@ -67,6 +67,10 @@ Deno.serve(async (req) => {
     const { data: sup } = await sb.from("suppressed_emails").select("email").eq("email", email).maybeSingle();
     if (sup) { skipped++; continue; }
 
+    // Cross-template frequency cap (max 2 cold sends per 7d to same recipient)
+    const cap = await frequencyCapExceeded(sb, email, { currentTemplate: "techalert_teaser_blast" });
+    if (cap.exceeded) { skipped++; events.push({ email, action: "skipped_freq_cap", count: cap.recentCount }); continue; }
+
     if (dryRun) { events.push({ email, action: "would_send" }); continue; }
 
     // Provision trial(s)
