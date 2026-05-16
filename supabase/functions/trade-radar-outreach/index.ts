@@ -79,6 +79,10 @@ serve(async (req) => {
           continue;
         }
 
+        // Cross-template frequency cap (max 2 cold sends per 7d to same recipient)
+        const capChk = await frequencyCapExceeded(sb, lead.owner_email, { currentTemplate: `trade_radar_outreach_${client.vertical}` });
+        if (capChk.exceeded) { totalSkipped++; continue; }
+
         try {
           const signalDisplay = (lead.signal_type || "recent activity").replace(/_/g, " ");
           const jobValue = lead.estimated_job_value
