@@ -258,10 +258,6 @@ ${personalBanner}
 <table width="100%" cellpadding="0" cellspacing="0" style="max-width:580px;">
 
   <!-- Header -->
-<tr><td align="center" style="padding:24px 16px;">
-<table width="100%" cellpadding="0" cellspacing="0" style="max-width:580px;">
-
-  <!-- Header -->
   <tr><td style="background:#1e293b;padding:20px 28px;border-radius:10px 10px 0 0;">
     <p style="margin:0;color:#e8621a;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;">M2 Development</p>
     <p style="margin:4px 0 0;color:#94a3b8;font-size:12px;">Issue #${issueNum} · ${dateStr} · Real Training. Real Results.</p>
