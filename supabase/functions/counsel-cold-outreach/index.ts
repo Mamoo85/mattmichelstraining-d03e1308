@@ -105,6 +105,9 @@ Deno.serve(async (req) => {
   let sent = 0, failed = 0;
   for (const p of (prospects || [])) {
     if (!p.email) continue;
+    // Cross-template frequency cap
+    const capChk = await frequencyCapExceeded(sb, p.email, { currentTemplate: "counsel_cold_outreach" });
+    if (capChk.exceeded) continue;
     // Suppression check
     const { data: blocked } = await sb.from("outreach_blocklist").select("email").eq("email", p.email).maybeSingle().then((r) => r).catch(() => ({ data: null }));
     if (blocked) {
