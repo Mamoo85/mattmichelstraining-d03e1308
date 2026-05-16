@@ -92,25 +92,25 @@ Deno.serve(async (req) => {
 
     const firstName = (lead.owner_name || "").split(" ")[0] || "there";
     const biz = lead.business_name || "your shop";
-    const inner = `
-      <h1 style="color:#00d4ff;font-size:22px;margin:0 0 14px;">Hey ${firstName} — built you a 7-day preview</h1>
-      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;">
-        I run Detroit Web Agency. We monitor hiring activity at competitor shops in your area
-        and surface skilled trades workers who just became available — before they hit the job boards.
-      </p>
-      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;">
-        I pre-loaded a dashboard for ${biz}. <strong>7 days, no credit card.</strong>
-        See who's available in your zip codes, then decide.
-      </p>
-      <p style="margin:18px 0 0;font-size:13px;color:#a8b8d0;">
-        Reply STOP to opt out. Detroit Web Agency, Grosse Pointe MI 48230.
-      </p>
-    `;
-    const html = dwaWrap(inner, { ctaText: "Open my preview dashboard →", ctaUrl: magicUrl });
+    const plainText = `Hey ${firstName},
+
+I run Detroit Web Agency. We watch hiring activity at competitor shops in your area and surface skilled trades workers who just became available — before they hit the job boards.
+
+I pre-loaded a preview dashboard for ${biz}. 7 days, no credit card. See who's available in your zip codes, then decide if it's worth keeping.
+
+Open it here: ${magicUrl}
+
+— Matt
+Detroit Web Agency
+(313) 992-1219
+
+Reply STOP to opt out. Detroit Web Agency, Grosse Pointe MI 48230.`;
+
+    const html = `<pre style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;line-height:1.6;color:#111;white-space:pre-wrap;margin:0;">${plainText.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]!))}</pre>`;
 
     const send = await dwaEmail({
       to: email,
-      subject: `${firstName}, 3 trades workers just left a competitor near ${biz}`,
+      subject: `${firstName}, quick preview for ${biz}`,
       html,
     });
 
