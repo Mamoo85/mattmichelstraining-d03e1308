@@ -381,6 +381,25 @@ serve(async (req) => {
 
     if (previewOnly) {
       ensureResendConfigured();
+      // Try to personalize preview for Matt
+      let previewHtml = html;
+      try {
+        const { data: mattUser } = await sb
+          .from("profiles")
+          .select("user_id, athlete_name, full_name")
+          .eq("email", "matt@mattmichelstraining.com")
+          .maybeSingle();
+        if (mattUser?.user_id) {
+          const scorecard = await getWeeklyScorecard(sb, mattUser.user_id, mattUser.athlete_name || mattUser.full_name || "Matt");
+          const banner = buildPersonalizedBanner(scorecard);
+          previewHtml = buildEmailHtml(content, issueNum, dateStr, banner);
+        } else {
+          previewHtml = buildEmailHtml(content, issueNum, dateStr, buildGenericJoinBanner());
+        }
+      } catch (e) {
+        console.warn("[TRAINING-NEWSLETTER] preview personalization failed:", e);
+      }
+
       const previewResponse = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
@@ -388,7 +407,7 @@ serve(async (req) => {
           from: "M² Training <matt@mattmichelstraining.com>",
           to: ["matt@mattmichelstraining.com"],
           subject: `[PREVIEW — ${provider.toUpperCase()}] ${content.subject}`,
-          html: html.replace("{{unsubscribe_token}}", "preview"),
+          html: previewHtml.replace("{{unsubscribe_token}}", "preview"),
         }),
       });
 
