@@ -452,13 +452,41 @@ serve(async (req) => {
     ensureResendConfigured();
     const unsubscribeTokenMap = await getUnsubscribeTokenMap(sb, recipientEmails);
 
+    // Map subscriber emails -> profiles for personalization
+    const { data: matchedProfiles } = await sb
+      .from("profiles")
+      .select("user_id, email, athlete_name, full_name")
+      .in("email", recipientEmails);
+    const profileByEmail = new Map<string, { user_id: string; name: string }>();
+    for (const p of (matchedProfiles || []) as any[]) {
+      if (p?.email) profileByEmail.set(String(p.email).toLowerCase(), {
+        user_id: p.user_id,
+        name: p.athlete_name || p.full_name || "",
+      });
+    }
+    const genericBanner = buildGenericJoinBanner();
+    const genericHtml = buildEmailHtml(content, issueNum, dateStr, genericBanner);
+
     let sent = 0;
     const failures: string[] = [];
-    const batchSize = 50;
+    const batchSize = 25;
     for (let i = 0; i < recipientEmails.length; i += batchSize) {
       const batch = recipientEmails.slice(i, i + batchSize);
       const batchResults = await Promise.allSettled(
         batch.map(async (email) => {
+          // Build per-recipient HTML
+          let personalHtml = genericHtml;
+          const prof = profileByEmail.get(email);
+          if (prof?.user_id) {
+            try {
+              const scorecard = await getWeeklyScorecard(sb, prof.user_id, prof.name);
+              personalHtml = buildEmailHtml(content, issueNum, dateStr, buildPersonalizedBanner(scorecard));
+            } catch (err) {
+              console.warn(`[TRAINING-NEWSLETTER] personalization failed for ${email}:`, err);
+              // Fall back to generic banner
+            }
+          }
+
           const response = await fetch("https://api.resend.com/emails", {
             method: "POST",
             headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
@@ -466,7 +494,7 @@ serve(async (req) => {
               from: "Matt Michels <matt@mattmichelstraining.com>",
               to: [email],
               subject: content.subject,
-              html: html.replace("{{unsubscribe_token}}", unsubscribeTokenMap.get(email) || ""),
+              html: personalHtml.replace("{{unsubscribe_token}}", unsubscribeTokenMap.get(email) || ""),
             }),
           });
 
