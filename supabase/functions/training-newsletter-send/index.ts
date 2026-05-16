@@ -5,6 +5,7 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { getWeeklyScorecard, buildPersonalizedBanner, buildGenericJoinBanner } from "../_shared/training-personalization.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -246,13 +247,14 @@ async function getUnsubscribeTokenMap(sb: any, emails: string[]) {
   return tokenMap;
 }
 
-function buildEmailHtml(content: NewsletterContent, issueNum: number, dateStr: string): string {
+function buildEmailHtml(content: NewsletterContent, issueNum: number, dateStr: string, personalBanner = ""): string {
   return `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;">
 <tr><td align="center" style="padding:24px 16px;">
+${personalBanner}
 <table width="100%" cellpadding="0" cellspacing="0" style="max-width:580px;">
 
   <!-- Header -->
@@ -360,7 +362,7 @@ serve(async (req) => {
       ? await generateWithLovable(topic, customContent)
       : await generateWithAnthropic(topic, customContent);
 
-    const html = buildEmailHtml(content, issueNum, dateStr);
+    const html = buildEmailHtml(content, issueNum, dateStr); // base HTML without personal banner (for draft + preview)
 
     // Save draft
     const { data: draft } = await sb
@@ -379,6 +381,25 @@ serve(async (req) => {
 
     if (previewOnly) {
       ensureResendConfigured();
+      // Try to personalize preview for Matt
+      let previewHtml = html;
+      try {
+        const { data: mattUser } = await sb
+          .from("profiles")
+          .select("user_id, athlete_name, full_name")
+          .eq("email", "matt@mattmichelstraining.com")
+          .maybeSingle();
+        if (mattUser?.user_id) {
+          const scorecard = await getWeeklyScorecard(sb, mattUser.user_id, mattUser.athlete_name || mattUser.full_name || "Matt");
+          const banner = buildPersonalizedBanner(scorecard);
+          previewHtml = buildEmailHtml(content, issueNum, dateStr, banner);
+        } else {
+          previewHtml = buildEmailHtml(content, issueNum, dateStr, buildGenericJoinBanner());
+        }
+      } catch (e) {
+        console.warn("[TRAINING-NEWSLETTER] preview personalization failed:", e);
+      }
+
       const previewResponse = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
@@ -386,7 +407,7 @@ serve(async (req) => {
           from: "M² Training <matt@mattmichelstraining.com>",
           to: ["matt@mattmichelstraining.com"],
           subject: `[PREVIEW — ${provider.toUpperCase()}] ${content.subject}`,
-          html: html.replace("{{unsubscribe_token}}", "preview"),
+          html: previewHtml.replace("{{unsubscribe_token}}", "preview"),
         }),
       });
 
@@ -431,13 +452,41 @@ serve(async (req) => {
     ensureResendConfigured();
     const unsubscribeTokenMap = await getUnsubscribeTokenMap(sb, recipientEmails);
 
+    // Map subscriber emails -> profiles for personalization
+    const { data: matchedProfiles } = await sb
+      .from("profiles")
+      .select("user_id, email, athlete_name, full_name")
+      .in("email", recipientEmails);
+    const profileByEmail = new Map<string, { user_id: string; name: string }>();
+    for (const p of (matchedProfiles || []) as any[]) {
+      if (p?.email) profileByEmail.set(String(p.email).toLowerCase(), {
+        user_id: p.user_id,
+        name: p.athlete_name || p.full_name || "",
+      });
+    }
+    const genericBanner = buildGenericJoinBanner();
+    const genericHtml = buildEmailHtml(content, issueNum, dateStr, genericBanner);
+
     let sent = 0;
     const failures: string[] = [];
-    const batchSize = 50;
+    const batchSize = 25;
     for (let i = 0; i < recipientEmails.length; i += batchSize) {
       const batch = recipientEmails.slice(i, i + batchSize);
       const batchResults = await Promise.allSettled(
         batch.map(async (email) => {
+          // Build per-recipient HTML
+          let personalHtml = genericHtml;
+          const prof = profileByEmail.get(email);
+          if (prof?.user_id) {
+            try {
+              const scorecard = await getWeeklyScorecard(sb, prof.user_id, prof.name);
+              personalHtml = buildEmailHtml(content, issueNum, dateStr, buildPersonalizedBanner(scorecard));
+            } catch (err) {
+              console.warn(`[TRAINING-NEWSLETTER] personalization failed for ${email}:`, err);
+              // Fall back to generic banner
+            }
+          }
+
           const response = await fetch("https://api.resend.com/emails", {
             method: "POST",
             headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
@@ -445,7 +494,7 @@ serve(async (req) => {
               from: "Matt Michels <matt@mattmichelstraining.com>",
               to: [email],
               subject: content.subject,
-              html: html.replace("{{unsubscribe_token}}", unsubscribeTokenMap.get(email) || ""),
+              html: personalHtml.replace("{{unsubscribe_token}}", unsubscribeTokenMap.get(email) || ""),
             }),
           });
 
