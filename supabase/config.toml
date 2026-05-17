@@ -2436,5 +2436,8 @@ verify_jwt = false
 [functions.etsy-sales-sync]
 verify_jwt = false
 
+[functions.pod-etsy-publisher]
+verify_jwt = false
+
 [functions.etsy-winner-prioritizer]
 verify_jwt = false
