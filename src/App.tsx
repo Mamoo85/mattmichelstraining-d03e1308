@@ -57,6 +57,7 @@ const EmbedCapture = lazyRetry(() => import("./pages/EmbedCapture"));
 const AgencyAdminRoute = lazyRetry(() => import("./components/layout/AgencyAdminRoute"));
 const AdminHealth = lazyRetry(() => import("./pages/AdminHealth"));
 const PodDashboard = lazyRetry(() => import("./pages/PodDashboard"));
+const PodSeoPerformance = lazyRetry(() => import("./pages/PodSeoPerformance"));
 const ClientRoute = lazyRetry(() => import("./components/layout/ClientRoute"));
 const FreeSiteScanner = lazyRetry(() => import("./pages/FreeSiteScanner"));
 const FreeToolsHub = lazyRetry(() => import("./pages/FreeToolsHub"));
