@@ -253,6 +253,14 @@ Return STRICT JSON only: {"title":"...","tags":["..",".."],"description":"..."}`
       source,
       source_run_id: run_id,
       status: "published",
+      seo_optimized_at: new Date().toISOString(),
+      seo_baseline: {
+        views: 0,
+        favorites: 0,
+        sales: 0,
+        revenue_cents: 0,
+        captured_at: new Date().toISOString(),
+      },
     })
     .select("id")
     .single();

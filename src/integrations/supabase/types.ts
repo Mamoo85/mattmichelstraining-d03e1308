@@ -17065,6 +17065,8 @@ export type Database = {
           product_type: string
           published_at: string
           retail_price_cents: number | null
+          seo_baseline: Json | null
+          seo_optimized_at: string | null
           source: string | null
           source_run_id: string | null
           status: string
@@ -17084,6 +17086,8 @@ export type Database = {
           product_type: string
           published_at?: string
           retail_price_cents?: number | null
+          seo_baseline?: Json | null
+          seo_optimized_at?: string | null
           source?: string | null
           source_run_id?: string | null
           status?: string
@@ -17103,6 +17107,8 @@ export type Database = {
           product_type?: string
           published_at?: string
           retail_price_cents?: number | null
+          seo_baseline?: Json | null
+          seo_optimized_at?: string | null
           source?: string | null
           source_run_id?: string | null
           status?: string
