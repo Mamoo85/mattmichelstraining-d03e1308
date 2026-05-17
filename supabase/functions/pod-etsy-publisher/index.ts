@@ -12,11 +12,16 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const PRINTIFY_TOKEN = Deno.env.get("PRINTIFY_API_TOKEN")!;
-const PRINTIFY_SHOP_ID = Deno.env.get("PRINTIFY_SHOP_ID")!;
+const PRINTIFY_TOKEN = Deno.env.get("PRINTIFY_API_TOKEN") ?? "";
+const PRINTIFY_SHOP_ID = Deno.env.get("PRINTIFY_SHOP_ID") ?? "";
 const PRIMARY_URL =
-  Deno.env.get("PRIMARY_SUPABASE_URL") ?? "https://eauvubfpanpeuxsrqesu.supabase.co";
-const PRIMARY_KEY = Deno.env.get("PRIMARY_SERVICE_ROLE_KEY")!;
+  Deno.env.get("PRIMARY_SUPABASE_URL") ??
+  Deno.env.get("SUPABASE_URL") ??
+  "https://eauvubfpanpeuxsrqesu.supabase.co";
+const PRIMARY_KEY =
+  Deno.env.get("PRIMARY_SERVICE_ROLE_KEY") ??
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ??
+  "";
 
 const primary = createClient(PRIMARY_URL, PRIMARY_KEY, {
   auth: { persistSession: false },
