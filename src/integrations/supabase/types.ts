@@ -8762,6 +8762,57 @@ export type Database = {
         }
         Relationships: []
       }
+      etsy_trend_runs: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          error: string | null
+          failure_count: number
+          id: string
+          niche: string
+          niche_rationale: string | null
+          products_failed: Json | null
+          products_planned: Json | null
+          products_published: Json | null
+          run_date: string
+          status: string
+          success_count: number
+          trend_signals: Json | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          error?: string | null
+          failure_count?: number
+          id?: string
+          niche: string
+          niche_rationale?: string | null
+          products_failed?: Json | null
+          products_planned?: Json | null
+          products_published?: Json | null
+          run_date?: string
+          status?: string
+          success_count?: number
+          trend_signals?: Json | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          error?: string | null
+          failure_count?: number
+          id?: string
+          niche?: string
+          niche_rationale?: string | null
+          products_failed?: Json | null
+          products_planned?: Json | null
+          products_published?: Json | null
+          run_date?: string
+          status?: string
+          success_count?: number
+          trend_signals?: Json | null
+        }
+        Relationships: []
+      }
       exercise_library: {
         Row: {
           barbell_alternative_id: string | null
