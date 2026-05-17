@@ -17010,6 +17010,163 @@ export type Database = {
         }
         Relationships: []
       }
+      pod_listing_stats: {
+        Row: {
+          created_at: string
+          id: string
+          listing_id: string
+          num_favorers: number | null
+          revenue_cents: number | null
+          sales_count: number | null
+          snapshot_date: string
+          views: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          listing_id: string
+          num_favorers?: number | null
+          revenue_cents?: number | null
+          sales_count?: number | null
+          snapshot_date?: string
+          views?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          listing_id?: string
+          num_favorers?: number | null
+          revenue_cents?: number | null
+          sales_count?: number | null
+          snapshot_date?: string
+          views?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pod_listing_stats_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "pod_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pod_listings: {
+        Row: {
+          created_at: string
+          description: string | null
+          etsy_listing_id: number | null
+          id: string
+          image_prompt: string | null
+          last_synced_at: string | null
+          niche: string
+          printify_id: string
+          product_name: string
+          product_type: string
+          published_at: string
+          retail_price_cents: number | null
+          source: string | null
+          source_run_id: string | null
+          status: string
+          tags: string[] | null
+          title: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          etsy_listing_id?: number | null
+          id?: string
+          image_prompt?: string | null
+          last_synced_at?: string | null
+          niche: string
+          printify_id: string
+          product_name: string
+          product_type: string
+          published_at?: string
+          retail_price_cents?: number | null
+          source?: string | null
+          source_run_id?: string | null
+          status?: string
+          tags?: string[] | null
+          title?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          etsy_listing_id?: number | null
+          id?: string
+          image_prompt?: string | null
+          last_synced_at?: string | null
+          niche?: string
+          printify_id?: string
+          product_name?: string
+          product_type?: string
+          published_at?: string
+          retail_price_cents?: number | null
+          source?: string | null
+          source_run_id?: string | null
+          status?: string
+          tags?: string[] | null
+          title?: string | null
+        }
+        Relationships: []
+      }
+      pod_publish_logs: {
+        Row: {
+          attempt: number
+          created_at: string
+          duration_ms: number | null
+          error: string | null
+          http_status: number | null
+          id: string
+          listing_id: string | null
+          meta: Json | null
+          niche: string | null
+          ok: boolean
+          product_name: string | null
+          run_id: string | null
+          stage: string
+        }
+        Insert: {
+          attempt?: number
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          http_status?: number | null
+          id?: string
+          listing_id?: string | null
+          meta?: Json | null
+          niche?: string | null
+          ok: boolean
+          product_name?: string | null
+          run_id?: string | null
+          stage: string
+        }
+        Update: {
+          attempt?: number
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          http_status?: number | null
+          id?: string
+          listing_id?: string | null
+          meta?: Json | null
+          niche?: string | null
+          ok?: boolean
+          product_name?: string | null
+          run_id?: string | null
+          stage?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pod_publish_logs_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "pod_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       podcast_clients: {
         Row: {
           active: boolean | null
@@ -27195,6 +27352,19 @@ export type Database = {
           hits: number | null
           misses: number | null
           stage: string | null
+        }
+        Relationships: []
+      }
+      pod_niche_performance: {
+        Row: {
+          conversion_pct: number | null
+          last_published_at: string | null
+          listings: number | null
+          niche: string | null
+          total_favorites: number | null
+          total_revenue_cents: number | null
+          total_sales: number | null
+          total_views: number | null
         }
         Relationships: []
       }

@@ -56,6 +56,7 @@ const AgencyClientPortal = lazyRetry(() => import("./pages/AgencyClientPortal"))
 const EmbedCapture = lazyRetry(() => import("./pages/EmbedCapture"));
 const AgencyAdminRoute = lazyRetry(() => import("./components/layout/AgencyAdminRoute"));
 const AdminHealth = lazyRetry(() => import("./pages/AdminHealth"));
+const PodDashboard = lazyRetry(() => import("./pages/PodDashboard"));
 const ClientRoute = lazyRetry(() => import("./components/layout/ClientRoute"));
 const FreeSiteScanner = lazyRetry(() => import("./pages/FreeSiteScanner"));
 const FreeToolsHub = lazyRetry(() => import("./pages/FreeToolsHub"));
@@ -1022,7 +1023,8 @@ const App = () => {
                      <Route path="/trial-welcome" element={<ProtectedRoute><TrialWelcome /></ProtectedRoute>} />
                      <Route path="/assessment" element={<ProtectedRoute><Assessment /></ProtectedRoute>} />
                       <Route path="/admin" element={<AgencyAdminRoute><Admin /></AgencyAdminRoute>} />
-                      <Route path="/admin/health" element={<AgencyAdminRoute><AdminHealth /></AgencyAdminRoute>} />
+                       <Route path="/admin/health" element={<AgencyAdminRoute><AdminHealth /></AgencyAdminRoute>} />
+                       <Route path="/admin/pod-dashboard" element={<AgencyAdminRoute><PodDashboard /></AgencyAdminRoute>} />
                        <Route path="/dwa-admin" element={<AgencyAdminRoute><DWAAdmin /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/scanner-sources" element={<AgencyAdminRoute><AdminScannerSources /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/scanner-monitoring" element={<AgencyAdminRoute><AdminScannerMonitoring /></AgencyAdminRoute>} />
