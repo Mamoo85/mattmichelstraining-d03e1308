@@ -144,6 +144,16 @@ async function publishOne(row: {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  if (!PRINTIFY_TOKEN || !PRINTIFY_SHOP_ID) {
+    return new Response(
+      JSON.stringify({
+        error: "Missing PRINTIFY_API_TOKEN or PRINTIFY_SHOP_ID secret on this project.",
+        hint: "Add both as edge function secrets, then re-invoke.",
+      }),
+      { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
+  }
+
   // Find all SEO-optimized listings that never made it to Etsy.
   const { data: rows, error } = await primary
     .from("pod_listings")
