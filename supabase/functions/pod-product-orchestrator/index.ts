@@ -84,6 +84,77 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ error: "missing product fields" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
+  // Etsy SEO optimization — auto-rewrite title/tags/description for max searchability.
+  // Runs on EVERY product before Printify upload. Falls back to originals on any error.
+  const seoT0 = Date.now();
+  try {
+    const LOVABLE_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (LOVABLE_KEY) {
+      const seoPrompt = `You are an Etsy SEO expert. Optimize this print-on-demand listing for maximum Etsy search visibility.
+
+Niche: ${niche}
+Product type: ${product.type}
+Base name: ${product.name}
+Current title: ${product.title || product.name}
+Current description: ${product.description || "(none)"}
+Current tags: ${(product.tags || []).join(", ") || "(none)"}
+
+Rules (STRICT):
+- title: <=140 chars, front-loaded with highest-intent buyer keyword, comma-separated phrases, no ALL CAPS, no emoji
+- tags: EXACTLY 13 tags, each <=20 chars, multi-word phrases preferred, all unique, lowercase, no punctuation
+- description: 600-900 chars, opens with a keyword-rich sentence, then 4-5 short benefit bullets prefixed with "- ", then a one-line gift/occasion closer
+
+Return STRICT JSON only: {"title":"...","tags":["..",".."],"description":"..."}`;
+
+      const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${LOVABLE_KEY}`,
+          "User-Agent": "curl/8",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-pro",
+          messages: [{ role: "user", content: seoPrompt }],
+          response_format: { type: "json_object" },
+        }),
+      });
+      if (resp.ok) {
+        const j = await resp.json();
+        const content = j?.choices?.[0]?.message?.content;
+        const parsed = JSON.parse(content);
+        if (parsed?.title && Array.isArray(parsed?.tags) && parsed?.description) {
+          product.title = String(parsed.title).slice(0, 140);
+          product.tags = parsed.tags
+            .map((t: any) => String(t).toLowerCase().replace(/[^a-z0-9 ]/g, "").trim().slice(0, 20))
+            .filter((t: string, i: number, a: string[]) => t && a.indexOf(t) === i)
+            .slice(0, 13);
+          product.description = String(parsed.description);
+          await logStage({
+            run_id, product_name: product.name, niche,
+            stage: "etsy_seo_optimize", attempt: 1, ok: true,
+            duration_ms: Date.now() - seoT0,
+            meta: { title_len: product.title.length, tag_count: product.tags.length, desc_len: product.description.length },
+          });
+        }
+      } else {
+        await logStage({
+          run_id, product_name: product.name, niche,
+          stage: "etsy_seo_optimize", attempt: 1, ok: false,
+          http_status: resp.status, duration_ms: Date.now() - seoT0,
+          error: `HTTP ${resp.status}`,
+        });
+      }
+    }
+  } catch (e: any) {
+    await logStage({
+      run_id, product_name: product.name, niche,
+      stage: "etsy_seo_optimize", attempt: 1, ok: false,
+      duration_ms: Date.now() - seoT0,
+      error: e?.message || String(e),
+    });
+  }
+
   // Dedupe — block products with same normalized name in same niche unless force=true
   if (!force) {
     const { data: existing } = await sb
