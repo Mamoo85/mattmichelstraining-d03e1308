@@ -2426,3 +2426,6 @@ verify_jwt = false
 
 [functions.pipeline-autoscaler]
 verify_jwt = false
+
+[functions.etsy-trend-scanner]
+verify_jwt = false
