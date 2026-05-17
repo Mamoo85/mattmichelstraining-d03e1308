@@ -71,7 +71,11 @@ serve(async (req) => {
       .eq("active", true)
       .eq("fielddesk_cross_sell_sent", false)
       .gte("created_at", thirtyDaysAgo.toISOString())
-      .lte("created_at", twentyEightDaysAgo.toISOString());
+      .lte("created_at", twentyEightDaysAgo.toISOString())
+      // Guard: skip Matt's own test accounts
+      .not("owner_email", "ilike", "%detroitwebagent.com")
+      .not("owner_email", "ilike", "%mattmichelstraining.com")
+      .not("owner_email", "ilike", "matt@%");
 
     if (error) throw error;
     if (!clients?.length) {
