@@ -68,12 +68,12 @@ Niche rules:
 - NEVER pick: Father's Day, graduation, dad gifts.
 - Vary 5 products across mug/tshirt/hoodie/tote so format risk is spread.
 
-Image prompt rules (MANDATORY each product):
-- Pure solid white #FFFFFF background. No gradients, no cream, no shadows.
-- MUGS: design ≤50% width, 35% white space left+right, 20% top/bottom.
-- SHIRTS/HOODIES/TOTES: centered with 15% white padding all sides.
-- Specify typography (e.g. "chunky condensed sans-serif athletic block letters"), 2-4 hex colors, layout.
-- No brand names, no copyrighted characters, no real people. Flat vector print-ready.
+Image prompt rules (MANDATORY each product — read carefully, these prevent white boxes on dark garments):
+- SHIRTS / HOODIES / TOTES: design MUST be on a fully TRANSPARENT background (alpha=0, no color fill of any kind). Begin the imagePrompt with the exact phrase: "Isolated print-ready graphic on a 100% transparent background, no background rectangle, no white box, no canvas fill —". The artwork itself (text, illustration, badge) should fill ~75–85% of the canvas (no tiny floating design in the middle). Padding lives in the canvas alpha, NOT a white rectangle.
+- MUGS: design on pure solid white #FFFFFF background (mug print area is white). Artwork ≤55% of canvas width, centered, with generous white margin so nothing wraps around the handle.
+- All artwork: high-contrast, bold, flat vector style, clean edges, no drop shadows, no gradients, no photographic textures, no faces, no watermarks, no mockup garments — just the standalone print graphic.
+- Specify typography (e.g. "chunky condensed sans-serif athletic block letters"), 2–4 hex colors that pop on BOTH black and white garments (avoid pure black ink for apparel — use bone white / cream / a single accent color), and layout.
+- No brand names, no copyrighted characters, no real people.
 
 Etsy SEO rules (MANDATORY each product):
 - title: ≤140 chars, front-load 2–3 high-intent keywords, include product type, gift angle. No emojis. Example: "Funny Pickleball Mug Dink Responsibly Coffee Cup Gift For Pickleball Player Coach Birthday Christmas".
@@ -132,13 +132,28 @@ Return ${opts.count} product specs as strict JSON per the system schema.`;
 }
 
 async function publishViaOrchestrator(product: ProductSpec, niche: string, runId: string) {
+  // Mugs print on a white ceramic surface — solid white bg is fine and avoids alpha-edge artifacts.
+  // Everything else (tees, hoodies, totes) prints on dark/colored fabric — MUST be transparent PNG
+  // or you get the visible white rectangle around the design seen in shop screenshots.
+  const transparentBackground = product.type !== "mug";
+  const enrichedProduct = {
+    ...product,
+    transparentBackground,
+    // Hints the image generator can act on; harmless if ignored.
+    imageOptions: {
+      transparent_background: transparentBackground,
+      format: "png",
+      // Fill more of the print area so the artwork doesn't look like a small sticker.
+      fill_ratio: transparentBackground ? 0.82 : 0.55,
+    },
+  };
   const resp = await fetch(ORCHESTRATOR_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
     },
-    body: JSON.stringify({ product, niche, run_id: runId, source: "trend_scanner" }),
+    body: JSON.stringify({ product: enrichedProduct, niche, run_id: runId, source: "trend_scanner" }),
   });
   const text = await resp.text();
   try { return { http: resp.status, ...JSON.parse(text) }; }
