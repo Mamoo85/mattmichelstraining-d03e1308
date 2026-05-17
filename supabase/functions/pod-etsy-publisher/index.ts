@@ -83,8 +83,8 @@ async function publishOne(row: {
 
     let etsyListingId: number | undefined;
     let etsyUrl: string | undefined;
-    for (let i = 0; i < 10; i++) {
-      await new Promise((r) => setTimeout(r, 3000));
+    for (let i = 0; i < 30; i++) {
+      await new Promise((r) => setTimeout(r, 5000));
       const get = await fetch(
         `https://api.printify.com/v1/shops/${PRINTIFY_SHOP_ID}/products/${row.printify_id}.json`,
         { headers: { Authorization: `Bearer ${PRINTIFY_TOKEN}` } },
