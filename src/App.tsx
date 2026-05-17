@@ -1026,6 +1026,7 @@ const App = () => {
                       <Route path="/admin" element={<AgencyAdminRoute><Admin /></AgencyAdminRoute>} />
                        <Route path="/admin/health" element={<AgencyAdminRoute><AdminHealth /></AgencyAdminRoute>} />
                        <Route path="/admin/pod-dashboard" element={<AgencyAdminRoute><PodDashboard /></AgencyAdminRoute>} />
+                       <Route path="/admin/pod-seo-performance" element={<AgencyAdminRoute><PodSeoPerformance /></AgencyAdminRoute>} />
                        <Route path="/dwa-admin" element={<AgencyAdminRoute><DWAAdmin /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/scanner-sources" element={<AgencyAdminRoute><AdminScannerSources /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/scanner-monitoring" element={<AgencyAdminRoute><AdminScannerMonitoring /></AgencyAdminRoute>} />
