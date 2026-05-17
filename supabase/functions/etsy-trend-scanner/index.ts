@@ -132,13 +132,28 @@ Return ${opts.count} product specs as strict JSON per the system schema.`;
 }
 
 async function publishViaOrchestrator(product: ProductSpec, niche: string, runId: string) {
+  // Mugs print on a white ceramic surface — solid white bg is fine and avoids alpha-edge artifacts.
+  // Everything else (tees, hoodies, totes) prints on dark/colored fabric — MUST be transparent PNG
+  // or you get the visible white rectangle around the design seen in shop screenshots.
+  const transparentBackground = product.type !== "mug";
+  const enrichedProduct = {
+    ...product,
+    transparentBackground,
+    // Hints the image generator can act on; harmless if ignored.
+    imageOptions: {
+      transparent_background: transparentBackground,
+      format: "png",
+      // Fill more of the print area so the artwork doesn't look like a small sticker.
+      fill_ratio: transparentBackground ? 0.82 : 0.55,
+    },
+  };
   const resp = await fetch(ORCHESTRATOR_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
     },
-    body: JSON.stringify({ product, niche, run_id: runId, source: "trend_scanner" }),
+    body: JSON.stringify({ product: enrichedProduct, niche, run_id: runId, source: "trend_scanner" }),
   });
   const text = await resp.text();
   try { return { http: resp.status, ...JSON.parse(text) }; }
