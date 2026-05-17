@@ -32,9 +32,20 @@ interface Result {
   printify_id: string;
   title: string;
   ok: boolean;
-  etsy_listing_id?: string;
+  etsy_listing_id?: number;
   etsy_url?: string;
   error?: string;
+}
+
+async function logStage(listingId: string, ok: boolean, meta: Record<string, unknown>, error?: string) {
+  await primary.from("pod_publish_logs").insert({
+    listing_id: listingId,
+    stage: "etsy_publish",
+    attempt: 1,
+    ok,
+    error: error ?? null,
+    meta,
+  });
 }
 
 async function publishOne(row: {
@@ -43,7 +54,6 @@ async function publishOne(row: {
   title: string;
 }): Promise<Result> {
   try {
-    // 1) Tell Printify to publish to Etsy (sales channel external publish).
     const pubRes = await fetch(
       `https://api.printify.com/v1/shops/${PRINTIFY_SHOP_ID}/products/${row.printify_id}/publish.json`,
       {
@@ -66,11 +76,12 @@ async function publishOne(row: {
 
     if (!pubRes.ok) {
       const text = await pubRes.text();
-      return { ...row, ok: false, error: `publish ${pubRes.status}: ${text.slice(0, 300)}` };
+      const err = `publish ${pubRes.status}: ${text.slice(0, 300)}`;
+      await logStage(row.id, false, { printifyId: row.printify_id }, err);
+      return { ...row, ok: false, error: err };
     }
 
-    // 2) Poll product until external.id (etsy listing) appears (max ~30s).
-    let etsyListingId: string | undefined;
+    let etsyListingId: number | undefined;
     let etsyUrl: string | undefined;
     for (let i = 0; i < 10; i++) {
       await new Promise((r) => setTimeout(r, 3000));
@@ -80,64 +91,50 @@ async function publishOne(row: {
       );
       if (!get.ok) continue;
       const json = await get.json();
-      if (json?.external?.id) {
-        etsyListingId = String(json.external.id);
-        etsyUrl = json.external.handle ?? undefined;
+      const extId = json?.external?.id;
+      if (extId) {
+        etsyListingId = Number(extId);
+        etsyUrl = json.external.handle ?? `https://www.etsy.com/listing/${etsyListingId}`;
         break;
       }
-      // Mark publishing as succeeded so Printify finalizes the listing.
-      await fetch(
-        `https://api.printify.com/v1/shops/${PRINTIFY_SHOP_ID}/products/${row.printify_id}/publishing_succeeded.json`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${PRINTIFY_TOKEN}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            external: { id: "", handle: "" },
-          }),
-        },
-      ).catch(() => {});
     }
 
     if (!etsyListingId) {
-      return {
-        ...row,
-        ok: false,
-        error: "Publish accepted but Etsy listing id not returned within 30s",
-      };
+      const err = "Publish accepted but Etsy listing id not returned within 30s";
+      await logStage(row.id, false, { printifyId: row.printify_id }, err);
+      return { ...row, ok: false, error: err };
     }
 
-    // 3) Backfill primary DB.
     const { error } = await primary
       .from("pod_listings")
       .update({
         etsy_listing_id: etsyListingId,
-        etsy_url: etsyUrl ?? `https://www.etsy.com/listing/${etsyListingId}`,
-        status: "published_to_etsy",
+        published_at: new Date().toISOString(),
       })
       .eq("id", row.id);
 
     if (error) {
+      await logStage(row.id, false, { printifyId: row.printify_id, etsyListingId }, `db update: ${error.message}`);
       return { ...row, ok: false, error: `db update: ${error.message}` };
     }
 
-    await primary.from("pod_publish_logs").insert({
-      listing_id: row.id,
-      stage: "etsy_publish",
-      status: "ok",
-      detail: { etsy_listing_id: etsyListingId, etsy_url: etsyUrl },
+    await logStage(row.id, true, {
+      printifyId: row.printify_id,
+      etsy_listing_id: etsyListingId,
+      etsy_url: etsyUrl,
     });
 
-    return {
-      ...row,
-      ok: true,
-      etsy_listing_id: etsyListingId,
-      etsy_url: etsyUrl ?? `https://www.etsy.com/listing/${etsyListingId}`,
-    };
+    return { ...row, ok: true, etsy_listing_id: etsyListingId, etsy_url: etsyUrl };
   } catch (e) {
-    return { ...row, ok: false, error: String(e?.message ?? e) };
+    const err = String((e as Error)?.message ?? e);
+    await logStage(row.id, false, { printifyId: row.printify_id }, err);
+    return { ...row, ok: false, error: err };
+  }
+}
+
+async function runBatch(rows: { id: string; printify_id: string; title: string }[]) {
+  for (const r of rows) {
+    await publishOne(r);
   }
 }
 
@@ -148,13 +145,11 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         error: "Missing PRINTIFY_API_TOKEN or PRINTIFY_SHOP_ID secret on this project.",
-        hint: "Add both as edge function secrets, then re-invoke.",
       }),
       { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
 
-  // Find all SEO-optimized listings that never made it to Etsy.
   const { data: rows, error } = await primary
     .from("pod_listings")
     .select("id, printify_id, title")
@@ -169,17 +164,18 @@ Deno.serve(async (req) => {
     });
   }
 
-  const results: Result[] = [];
-  for (const r of rows ?? []) {
-    results.push(await publishOne(r as any));
-  }
+  const queued = (rows ?? []) as { id: string; printify_id: string; title: string }[];
+
+  // Run in background so the HTTP response returns immediately. Polling +
+  // multi-listing processing can exceed ~30s easily; client checks DB after.
+  // @ts-ignore EdgeRuntime is provided by Supabase Edge runtime
+  EdgeRuntime.waitUntil(runBatch(queued));
 
   return new Response(
     JSON.stringify({
-      processed: results.length,
-      succeeded: results.filter((r) => r.ok).length,
-      failed: results.filter((r) => !r.ok).length,
-      results,
+      queued: queued.length,
+      ids: queued.map((r) => r.id),
+      note: "Publishing in background. Poll pod_listings.etsy_listing_id in ~1-3 min.",
     }),
     { headers: { ...corsHeaders, "Content-Type": "application/json" } },
   );
