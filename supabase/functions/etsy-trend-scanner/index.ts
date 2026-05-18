@@ -73,7 +73,7 @@ ${nicheRule}
 
 Image prompt rules (MANDATORY each product — read carefully, these prevent white boxes on dark garments):
 - SHIRTS / HOODIES / TOTES: design MUST be on a fully TRANSPARENT background (alpha=0, no color fill of any kind). Begin the imagePrompt with the exact phrase: "Isolated print-ready graphic on a 100% transparent background, no background rectangle, no white box, no canvas fill —". The artwork itself (text, illustration, badge) should fill ~75–85% of the canvas (no tiny floating design in the middle). Padding lives in the canvas alpha, NOT a white rectangle.
-- MUGS: design on pure solid white #FFFFFF background (mug print area is white). Artwork ≤55% of canvas width, centered, with generous white margin so nothing wraps around the handle.
+- MUGS: design on pure solid white #FFFFFF background (mug print area is white). CRITICAL: ALL artwork (text + illustration) MUST fit inside the CENTER 30% of the canvas — roughly the middle third horizontally and vertically. The outer 70% must be empty white space. This is non-negotiable: anything outside the center 30% wraps around the mug cylinder and is cut off. Keep designs simple, compact, and centered — short text (max 3 short lines), small icon. Do NOT fill the canvas.
 - All artwork: high-contrast, bold, flat vector style, clean edges, no drop shadows, no gradients, no photographic textures, no faces, no watermarks, no mockup garments — just the standalone print graphic.
 - Specify typography (e.g. "chunky condensed sans-serif athletic block letters"), 2–4 hex colors that pop on BOTH black and white garments (avoid pure black ink for apparel — use bone white / cream / a single accent color), and layout.
 - No brand names, no copyrighted characters, no real people.
