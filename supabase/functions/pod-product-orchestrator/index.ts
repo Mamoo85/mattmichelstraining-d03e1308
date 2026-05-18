@@ -8,6 +8,7 @@
 // Returns: { ok, printifyId?, listingId?, skipped?, attempts, logs }
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { preflightProduct } from "../_shared/pod-preflight.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -153,6 +154,21 @@ Return STRICT JSON only: {"title":"...","tags":["..",".."],"description":"..."}`
       duration_ms: Date.now() - seoT0,
       error: e?.message || String(e),
     });
+  }
+
+  // Preflight quality gate — refuse to publish junk to Etsy
+  const pre = preflightProduct(product);
+  if (!pre.ok) {
+    await logStage({
+      run_id, product_name: product.name, niche,
+      stage: "preflight", attempt: 1, ok: false, duration_ms: 0,
+      error: pre.reasons.join("; "),
+      meta: { reasons: pre.reasons, warnings: pre.warnings },
+    });
+    return new Response(JSON.stringify({
+      ok: false, skipped: true, reason: "preflight_failed",
+      preflight: pre,
+    }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
   // Dedupe — block products with same normalized name in same niche unless force=true

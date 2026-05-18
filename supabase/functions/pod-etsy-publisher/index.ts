@@ -81,10 +81,14 @@ async function publishOne(row: {
       return { ...row, ok: false, error: err };
     }
 
+    // Poll Printify for up to 5 minutes — Etsy mint times are often 1-3 min,
+    // and occasionally longer. Previous 30s window was logging false failures.
     let etsyListingId: number | undefined;
     let etsyUrl: string | undefined;
-    for (let i = 0; i < 30; i++) {
-      await new Promise((r) => setTimeout(r, 5000));
+    const MAX_POLLS = 60;        // 60 * 5s = 5 minutes
+    const POLL_INTERVAL_MS = 5000;
+    for (let i = 0; i < MAX_POLLS; i++) {
+      await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
       const get = await fetch(
         `https://api.printify.com/v1/shops/${PRINTIFY_SHOP_ID}/products/${row.printify_id}.json`,
         { headers: { Authorization: `Bearer ${PRINTIFY_TOKEN}` } },
@@ -100,9 +104,14 @@ async function publishOne(row: {
     }
 
     if (!etsyListingId) {
-      const err = "Publish accepted but Etsy listing id not returned within 30s";
-      await logStage(row.id, false, { printifyId: row.printify_id }, err);
-      return { ...row, ok: false, error: err };
+      // Not a hard failure — Printify accepted publish, Etsy is just slow.
+      // Mark "pending" so the next sweep can pick it up without alerting.
+      const note = `Publish accepted; Etsy listing id not returned within ${(MAX_POLLS * POLL_INTERVAL_MS) / 1000}s — will retry next sweep`;
+      await logStage(row.id, true, {
+        printifyId: row.printify_id,
+        pending: true,
+      }, note);
+      return { ...row, ok: false, error: note };
     }
 
     const { error } = await primary
