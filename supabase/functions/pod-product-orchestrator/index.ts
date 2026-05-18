@@ -80,6 +80,7 @@ Deno.serve(async (req) => {
   const run_id: string | null = body?.run_id ?? null;
   const source: string = body?.source || "auto";
   const force: boolean = body?.force === true;
+  const allowExcludedHoliday: boolean = body?.allow_excluded_holiday === true;
 
   if (!product || !product.name || !product.imagePrompt || !product.type) {
     return new Response(JSON.stringify({ error: "missing product fields" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -157,7 +158,7 @@ Return STRICT JSON only: {"title":"...","tags":["..",".."],"description":"..."}`
   }
 
   // Preflight quality gate — refuse to publish junk to Etsy
-  const pre = preflightProduct(product);
+  const pre = preflightProduct(product, { allowExcludedHoliday });
   if (!pre.ok) {
     await logStage({
       run_id, product_name: product.name, niche,

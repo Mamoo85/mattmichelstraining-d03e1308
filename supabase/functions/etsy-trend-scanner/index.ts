@@ -60,13 +60,16 @@ async function callAI(systemPrompt: string, userPrompt: string): Promise<string>
   return data.choices?.[0]?.message?.content ?? "";
 }
 
-function buildSystemPrompt(count: number): string {
+function buildSystemPrompt(count: number, forcedNiche?: string): string {
+  const nicheRule = forcedNiche
+    ? `- The niche is FORCED to "${forcedNiche}" — use it exactly, do not substitute, do not refuse.`
+    : `- Pick niches with PROVEN Etsy buyer intent (upcoming holiday <60d, pet owners, nurses/teachers/trades, hobbies, occupational pride, viral memes with staying power).
+- NEVER pick: Father's Day, graduation, dad gifts.`;
   return `You are an autonomous Etsy POD store strategist. Pick ONE trending niche, then design exactly ${count} distinct POD products in it, each optimized for Etsy search.
 
 Niche rules:
-- Pick niches with PROVEN Etsy buyer intent (upcoming holiday <60d, pet owners, nurses/teachers/trades, hobbies, occupational pride, viral memes with staying power).
-- NEVER pick: Father's Day, graduation, dad gifts.
-- Vary 5 products across mug/tshirt/hoodie/tote so format risk is spread.
+${nicheRule}
+- Vary products across mug/tshirt/hoodie/tote so format risk is spread.
 
 Image prompt rules (MANDATORY each product — read carefully, these prevent white boxes on dark garments):
 - SHIRTS / HOODIES / TOTES: design MUST be on a fully TRANSPARENT background (alpha=0, no color fill of any kind). Begin the imagePrompt with the exact phrase: "Isolated print-ready graphic on a 100% transparent background, no background rectangle, no white box, no canvas fill —". The artwork itself (text, illustration, badge) should fill ~75–85% of the canvas (no tiny floating design in the middle). Padding lives in the canvas alpha, NOT a white rectangle.
@@ -131,7 +134,7 @@ ${titles}
 Return ${opts.count} product specs as strict JSON per the system schema.`;
 }
 
-async function publishViaOrchestrator(product: ProductSpec, niche: string, runId: string) {
+async function publishViaOrchestrator(product: ProductSpec, niche: string, runId: string, allowExcludedHoliday: boolean) {
   // Mugs print on a white ceramic surface — solid white bg is fine and avoids alpha-edge artifacts.
   // Everything else (tees, hoodies, totes) prints on dark/colored fabric — MUST be transparent PNG
   // or you get the visible white rectangle around the design seen in shop screenshots.
@@ -153,7 +156,10 @@ async function publishViaOrchestrator(product: ProductSpec, niche: string, runId
       "Content-Type": "application/json",
       Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
     },
-    body: JSON.stringify({ product: enrichedProduct, niche, run_id: runId, source: "trend_scanner" }),
+    body: JSON.stringify({
+      product: enrichedProduct, niche, run_id: runId, source: "trend_scanner",
+      allow_excluded_holiday: allowExcludedHoliday,
+    }),
   });
   const text = await resp.text();
   try { return { http: resp.status, ...JSON.parse(text) }; }
@@ -198,7 +204,7 @@ Deno.serve(async (req) => {
     runId = runRow.id;
 
     const raw = await callAI(
-      buildSystemPrompt(count),
+      buildSystemPrompt(count, forcedNiche),
       buildUserPrompt({ recentNiches, recentTitles: recentTitlesInNiche, count, forcedNiche, intent }),
     );
     let plan: NichePlan;
@@ -226,37 +232,43 @@ Deno.serve(async (req) => {
       status: "publishing",
     }).eq("id", runId);
 
-    const published: any[] = [];
-    const failed: any[] = [];
-    const skipped: any[] = [];
-    for (const product of products) {
-      const r = await publishViaOrchestrator(product, plan.niche, runId);
-      if (r?.ok && r?.printifyId) {
-        published.push({ name: product.name, type: product.type, printifyId: r.printifyId, attempts: r.attempts });
-      } else if (r?.skipped) {
-        skipped.push({ name: product.name, reason: r.reason });
-      } else {
-        failed.push({ name: product.name, type: product.type, attempts: r?.attempts, error: r?.error || r?.raw });
+    // Run publishes in background — 10 products easily exceed the 150s edge timeout.
+    // Response returns immediately with the plan; caller polls etsy_trend_runs for completion.
+    const allowExcludedHoliday = !!forcedNiche; // forced niches override the EXCLUDED list
+    const runPublishes = async () => {
+      const published: any[] = [];
+      const failed: any[] = [];
+      const skipped: any[] = [];
+      for (const product of products) {
+        const r = await publishViaOrchestrator(product, plan.niche, runId!, allowExcludedHoliday);
+        if (r?.ok && r?.printifyId) {
+          published.push({ name: product.name, type: product.type, printifyId: r.printifyId, attempts: r.attempts });
+        } else if (r?.skipped) {
+          skipped.push({ name: product.name, reason: r.reason });
+        } else {
+          failed.push({ name: product.name, type: product.type, attempts: r?.attempts, error: r?.error || r?.raw });
+        }
       }
-    }
-
-    const status = failed.length === 0
-      ? (published.length === 0 ? "skipped_all_duplicates" : "completed")
-      : (published.length === 0 ? "failed" : "partial");
-
-    await sb.from("etsy_trend_runs").update({
-      products_published: published,
-      products_failed: failed,
-      success_count: published.length,
-      failure_count: failed.length,
-      status,
-      completed_at: new Date().toISOString(),
-    }).eq("id", runId);
+      const status = failed.length === 0
+        ? (published.length === 0 ? "skipped_all_duplicates" : "completed")
+        : (published.length === 0 ? "failed" : "partial");
+      await sb.from("etsy_trend_runs").update({
+        products_published: published,
+        products_failed: failed,
+        success_count: published.length,
+        failure_count: failed.length,
+        status,
+        completed_at: new Date().toISOString(),
+      }).eq("id", runId);
+    };
+    // @ts-ignore — EdgeRuntime is injected by Supabase Edge runtime
+    EdgeRuntime.waitUntil(runPublishes());
 
     return new Response(JSON.stringify({
       runId, niche: plan.niche, rationale: plan.rationale,
-      published_count: published.length, failed_count: failed.length, skipped_count: skipped.length,
-      published, failed, skipped,
+      planned_count: products.length,
+      note: "Publishing in background — poll etsy_trend_runs.status (completed | partial | failed) for results.",
+      products_planned: products.map(p => ({ name: p.name, type: p.type })),
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 });
   } catch (e: any) {
     const msg = e?.message || String(e);
