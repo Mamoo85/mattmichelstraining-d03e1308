@@ -1,0 +1,1 @@
+SELECT cron.unschedule('etsy-trend-scanner-daily');
