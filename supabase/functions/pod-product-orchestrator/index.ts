@@ -156,6 +156,21 @@ Return STRICT JSON only: {"title":"...","tags":["..",".."],"description":"..."}`
     });
   }
 
+  // Preflight quality gate — refuse to publish junk to Etsy
+  const pre = preflightProduct(product);
+  if (!pre.ok) {
+    await logStage({
+      run_id, product_name: product.name, niche,
+      stage: "preflight", attempt: 1, ok: false, duration_ms: 0,
+      error: pre.reasons.join("; "),
+      meta: { reasons: pre.reasons, warnings: pre.warnings },
+    });
+    return new Response(JSON.stringify({
+      ok: false, skipped: true, reason: "preflight_failed",
+      preflight: pre,
+    }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
+
   // Dedupe — block products with same normalized name in same niche unless force=true
   if (!force) {
     const { data: existing } = await sb
