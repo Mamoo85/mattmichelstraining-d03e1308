@@ -59,6 +59,17 @@ async function updateEtsy(listingId: number, title: string, description: string,
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
+  const url = new URL(req.url);
+  if (url.searchParams.get("diag") === "1") {
+    return new Response(JSON.stringify({
+      etsy_api_key_len: ETSY_API_KEY.length,
+      etsy_access_token_len: ETSY_ACCESS_TOKEN.length,
+      etsy_shop_id: ETSY_SHOP_ID,
+    }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
+
+
+
   let ids: string[] | undefined;
   try {
     const j = await req.json();
