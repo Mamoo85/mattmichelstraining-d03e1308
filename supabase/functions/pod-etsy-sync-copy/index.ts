@@ -122,11 +122,14 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { data: listings, error } = await primary
+    const limit = Number(url.searchParams.get("limit") || "0");
+    let q = primary
       .from("pod_listings")
       .select("id, printify_id, etsy_listing_id, product_name, title, description, tags")
       .not("etsy_listing_id", "is", null)
       .not("printify_id", "is", null);
+    if (limit > 0) q = q.limit(limit);
+    const { data: listings, error } = await q;
     if (error) throw error;
 
     const rows = listings ?? [];
