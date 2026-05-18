@@ -138,13 +138,15 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const limit = Number(url.searchParams.get("limit") || "0");
+    const limit = Number(url.searchParams.get("limit") || "5");
+    const sinceISO = new Date(Date.now() - 60 * 60 * 1000).toISOString(); // 1h ago
     let q = primary
       .from("pod_listings")
-      .select("id, printify_id, etsy_listing_id, product_name, title, description, tags")
+      .select("id, printify_id, etsy_listing_id, product_name, title, description, tags, last_synced_at")
       .not("etsy_listing_id", "is", null)
-      .not("printify_id", "is", null);
-    if (limit > 0) q = q.limit(limit);
+      .not("printify_id", "is", null)
+      .or(`last_synced_at.is.null,last_synced_at.lt.${sinceISO}`)
+      .limit(limit);
     const { data: listings, error } = await q;
     if (error) throw error;
 
