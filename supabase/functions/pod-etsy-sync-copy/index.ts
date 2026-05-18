@@ -59,7 +59,23 @@ async function syncOne(row: any) {
     tags: sanitizeTags(row.tags),
   };
 
-  // 1) Update product on Printify
+  // 1) Release editing lock if Printify is holding the product as "published" on Etsy.
+  //    publishing_succeeded.json clears is_locked so we can PUT new copy.
+  await fetch(
+    `https://api.printify.com/v1/shops/${PRINTIFY_SHOP_ID}/products/${printify_id}/publishing_succeeded.json`,
+    {
+      method: "POST",
+      headers: { Authorization: `Bearer ${PRINTIFY_TOKEN}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        external: {
+          id: String(row.etsy_listing_id),
+          handle: `https://www.etsy.com/listing/${row.etsy_listing_id}`,
+        },
+      }),
+    },
+  ).catch(() => {});
+
+  // 2) Update product on Printify
   const putRes = await fetch(
     `https://api.printify.com/v1/shops/${PRINTIFY_SHOP_ID}/products/${printify_id}.json`,
     {
