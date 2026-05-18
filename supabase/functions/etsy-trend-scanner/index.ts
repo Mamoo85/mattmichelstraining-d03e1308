@@ -117,9 +117,13 @@ function buildUserPrompt(opts: {
 
   let nicheBlock: string;
   if (opts.forcedNiche) {
+    const isFathersDay = /father|dad/i.test(opts.forcedNiche);
+    const fdAngles = isFathersDay
+      ? `\n\nFATHER'S DAY FRESH-ANGLE MANDATE: The "dad" angle is OVERSATURATED in our store (35+ live dad listings). DO NOT create generic Dad / Father / Daddy products. Instead pick from these UNDERSERVED audiences and rotate so 10 products cover at least 6 different audiences:\n  - Step Dad / Bonus Dad\n  - Grandpa / Pawpaw / Papa / Grandfather (first-time grandpa angle is hot)\n  - Uncle / Funcle\n  - Father-in-Law / Bonus Father-in-Law\n  - Military Dad / Veteran Dad\n  - Hockey Dad / Soccer Dad / Basketball Dad / Baseball Dad (sport-specific, NOT generic "sports dad")\n  - DIY / Handyman / Tool Dad\n  - Tech / IT / Engineer Dad\n  - Trucker Dad / Mechanic Dad / Firefighter Dad / Police Dad\n  - First-Time Dad (pregnancy reveal angle)\n  - Dog Dad of a SPECIFIC breed (German Shepherd Dad, Golden Retriever Dad, etc.) — generic "Dog Dad" is taken\nForbidden concepts (already live, DO NOT make variants): Dad Jokes, Reel Cool Dad, Man Myth Legend, Grill Master/Grill Sergeant/Grillin Chillin, World's Okayest Dad, New Dad Survival Kit, Lawnfather, Dad Bod, I Paused My Game, Hi Hungry I'm Dad, Tired Dads Club, Dad Est 2026, Ain't No Hood Like Fatherhood, Girl Dad, Periodic Table Dad Jokes, Resting My Eyes, BBQ Dad, Fishing Dad (generic), Golf Dad, Dog Dad Coffee, First Father's Day Mug.`
+      : "";
     nicheBlock = `FORCED NICHE: "${opts.forcedNiche}". Intent: ${opts.intent || "fresh variants"}.
 Generate ${opts.count} NEW products inside this niche that do NOT duplicate any of the existing titles below.
-Use fresh angles: different inside jokes, different audience sub-segments (beginner vs pro, mom vs dad, coach vs player), different formats (mug/tee/hoodie/tote), different visual styles.`;
+Use fresh angles: different inside jokes, different audience sub-segments (beginner vs pro, mom vs dad, coach vs player), different formats (mug/tee/hoodie/tote), different visual styles.${fdAngles}`;
   } else {
     nicheBlock = `Pick a NEW trending niche relevant to ${today} (upcoming holiday <60d, seasonal moment, viral trend, or evergreen high-volume hobby community).
 Recently used niches (DO NOT REPEAT): ${recent}
