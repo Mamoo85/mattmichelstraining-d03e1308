@@ -129,17 +129,20 @@ Deno.serve(async (req) => {
       .not("printify_id", "is", null);
     if (error) throw error;
 
-    const results: any[] = [];
-    for (const row of listings ?? []) {
-      results.push(await syncOne(row));
-      await new Promise((r) => setTimeout(r, 600)); // gentle pacing
-    }
+    const rows = listings ?? [];
+    // Fire-and-forget background work — proxy would otherwise time out
+    const work = (async () => {
+      for (const row of rows) {
+        try { await syncOne(row); } catch (e) { console.error("syncOne crash", row.id, e); }
+        await new Promise((r) => setTimeout(r, 600));
+      }
+    })();
+    // @ts-ignore Deno Deploy / Supabase edge runtime
+    if (typeof EdgeRuntime !== "undefined") EdgeRuntime.waitUntil(work);
 
     return new Response(JSON.stringify({
-      total: results.length,
-      ok: results.filter((r) => r.ok).length,
-      failed: results.filter((r) => !r.ok).length,
-      results,
+      queued: rows.length,
+      message: "Sync started in background. Check pod_publish_logs for per-listing results.",
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e: any) {
     return new Response(JSON.stringify({ error: e.message }), {
