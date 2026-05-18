@@ -1,59 +1,129 @@
-// Pushes cleaned title/description/tags from pod_listings rows directly
-// to Etsy via the Etsy Open API v3 updateListing endpoint.
-// POST body: { ids?: string[] }  // optional listing UUIDs; default = all with etsy_listing_id
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+// Sync cleaned title/description/tags from pod_listings -> Printify -> Etsy.
+// Everything routes through Printify (registered Etsy OAuth app); we never
+// call Etsy directly. Flow per listing:
+//   1) PUT /v1/shops/{shop}/products/{id}.json  (title, description, tags)
+//   2) POST /v1/shops/{shop}/products/{id}/publish.json  (push to Etsy)
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+
+const PRINTIFY_TOKEN = Deno.env.get("PRINTIFY_API_TOKEN")!;
+const PRINTIFY_SHOP_ID = Deno.env.get("PRINTIFY_SHOP_ID")!;
+const SB_URL = Deno.env.get("SUPABASE_URL")!;
+const SB_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const primary = createClient(SB_URL, SB_KEY);
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const ETSY_API_KEY = Deno.env.get("ETSY_API_KEY") ?? "";
-const ETSY_ACCESS_TOKEN = Deno.env.get("ETSY_ACCESS_TOKEN") ?? "";
-const ETSY_SHOP_ID = Deno.env.get("ETSY_SHOP_ID") ?? "";
-
-const SB_URL = Deno.env.get("SUPABASE_URL") ?? "";
-const SB_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-const sb = createClient(SB_URL, SB_KEY, { auth: { persistSession: false } });
-
+function clampTitle(t: string): string {
+  return (t || "").trim().slice(0, 140);
+}
+function cleanDesc(d: string): string {
+  return (d || "").replace(/\r\n/g, "\n").trim().slice(0, 4000);
+}
 function sanitizeTags(tags: unknown): string[] {
   if (!Array.isArray(tags)) return [];
-  const cleaned = tags
-    .map((t) => String(t).toLowerCase().replace(/[^a-z0-9 ]/g, "").trim())
-    .filter((t) => t.length >= 3 && t.length <= 20);
-  const uniq = Array.from(new Set(cleaned));
-  return uniq.slice(0, 13);
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const raw of tags) {
+    const t = String(raw || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9 ]/g, "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 20);
+    if (!t || seen.has(t)) continue;
+    seen.add(t);
+    out.push(t);
+    if (out.length >= 13) break;
+  }
+  return out;
 }
 
-function clampTitle(t: string): string {
-  const s = String(t).replace(/\s+/g, " ").trim();
-  if (s.length <= 140) return s;
-  const cut = s.slice(0, 138);
-  const lc = cut.lastIndexOf(",");
-  return (lc > 60 ? cut.slice(0, lc) : cut).trim();
-}
-
-function cleanDesc(d: string): string {
-  return String(d).replace(/^[\s]*[-•*]\s+/gm, "").replace(/\n{3,}/g, "\n\n").trim();
-}
-
-async function updateEtsy(listingId: number, title: string, description: string, tags: string[]) {
-  const url = `https://openapi.etsy.com/v3/application/shops/${ETSY_SHOP_ID}/listings/${listingId}`;
-  const body = new URLSearchParams();
-  body.set("title", title);
-  body.set("description", description);
-  tags.forEach((t) => body.append("tags", t));
-  const r = await fetch(url, {
-    method: "PATCH",
-    headers: {
-      "x-api-key": ETSY_API_KEY,
-      Authorization: `Bearer ${ETSY_ACCESS_TOKEN}`,
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: body.toString(),
+async function logStage(listing_id: string, ok: boolean, payload: unknown, error?: string) {
+  await primary.from("pod_publish_logs").insert({
+    listing_id,
+    stage: "etsy_update_copy",
+    ok,
+    payload,
+    error: error ?? null,
   });
-  const text = await r.text();
-  return { ok: r.ok, status: r.status, body: text.slice(0, 500) };
+}
+
+async function syncOne(row: any) {
+  const printify_id = row.printify_id;
+  const body = {
+    title: clampTitle(row.title || row.product_name || ""),
+    description: cleanDesc(row.description || ""),
+    tags: sanitizeTags(row.tags),
+  };
+
+  // 1) Release editing lock if Printify is holding the product as "published" on Etsy.
+  //    publishing_succeeded.json clears is_locked so we can PUT new copy.
+  await fetch(
+    `https://api.printify.com/v1/shops/${PRINTIFY_SHOP_ID}/products/${printify_id}/publishing_succeeded.json`,
+    {
+      method: "POST",
+      headers: { Authorization: `Bearer ${PRINTIFY_TOKEN}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        external: {
+          id: String(row.etsy_listing_id),
+          handle: `https://www.etsy.com/listing/${row.etsy_listing_id}`,
+        },
+      }),
+    },
+  ).catch(() => {});
+
+  // 2) Update product on Printify
+  const putRes = await fetch(
+    `https://api.printify.com/v1/shops/${PRINTIFY_SHOP_ID}/products/${printify_id}.json`,
+    {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${PRINTIFY_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    },
+  );
+  if (!putRes.ok) {
+    const text = await putRes.text();
+    const err = `printify PUT ${putRes.status}: ${text.slice(0, 300)}`;
+    await logStage(row.id, false, { printify_id, body }, err);
+    return { id: row.id, ok: false, error: err };
+  }
+
+  // 2) Re-publish to push the new copy to Etsy
+  const pubRes = await fetch(
+    `https://api.printify.com/v1/shops/${PRINTIFY_SHOP_ID}/products/${printify_id}/publish.json`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${PRINTIFY_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        title: true,
+        description: true,
+        tags: true,
+        images: false,
+        variants: false,
+        keyFeatures: false,
+        shipping_template: false,
+      }),
+    },
+  );
+  if (!pubRes.ok) {
+    const text = await pubRes.text();
+    const err = `printify publish ${pubRes.status}: ${text.slice(0, 300)}`;
+    await logStage(row.id, false, { printify_id, body }, err);
+    return { id: row.id, ok: false, error: err };
+  }
+
+  await primary.from("pod_listings").update({ last_synced_at: new Date().toISOString() }).eq("id", row.id);
+  await logStage(row.id, true, { printify_id, body });
+  return { id: row.id, ok: true };
 }
 
 Deno.serve(async (req) => {
@@ -62,62 +132,43 @@ Deno.serve(async (req) => {
   const url = new URL(req.url);
   if (url.searchParams.get("diag") === "1") {
     return new Response(JSON.stringify({
-      etsy_api_key_len: ETSY_API_KEY.length,
-      etsy_access_token_len: ETSY_ACCESS_TOKEN.length,
-      etsy_shop_id: ETSY_SHOP_ID,
+      printify_token_len: PRINTIFY_TOKEN?.length ?? 0,
+      printify_shop_id: PRINTIFY_SHOP_ID,
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
-
-
-  let ids: string[] | undefined;
   try {
-    const j = await req.json();
-    if (Array.isArray(j?.ids)) ids = j.ids;
-  } catch (_) { /* no body */ }
+    const limit = Number(url.searchParams.get("limit") || "5");
+    const sinceISO = new Date(Date.now() - 60 * 60 * 1000).toISOString(); // 1h ago
+    let q = primary
+      .from("pod_listings")
+      .select("id, printify_id, etsy_listing_id, product_name, title, description, tags, last_synced_at")
+      .not("etsy_listing_id", "is", null)
+      .not("printify_id", "is", null)
+      .or(`last_synced_at.is.null,last_synced_at.lt.${sinceISO}`)
+      .limit(limit);
+    const { data: listings, error } = await q;
+    if (error) throw error;
 
-  let q = sb.from("pod_listings")
-    .select("id, etsy_listing_id, title, description, tags")
-    .not("etsy_listing_id", "is", null);
-  if (ids?.length) q = q.in("id", ids);
+    const rows = listings ?? [];
+    // Sequential with pacing — Printify rate-limits aggressive parallel calls
+    const results: any[] = [];
+    for (const r of rows) {
+      try { results.push(await syncOne(r)); }
+      catch (e) { results.push({ id: r.id, ok: false, error: String(e) }); }
+      await new Promise((res) => setTimeout(res, 2500));
+    }
 
-  const { data, error } = await q;
-  if (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    return new Response(JSON.stringify({
+      total: results.length,
+      ok: results.filter((r) => r.ok).length,
+      failed: results.filter((r) => !r.ok).length,
+      results,
+    }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  } catch (e: any) {
+    return new Response(JSON.stringify({ error: e.message }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
-
-  const results: any[] = [];
-  for (const row of data ?? []) {
-    const title = clampTitle(row.title ?? "");
-    const description = cleanDesc(row.description ?? "");
-    const tags = sanitizeTags(row.tags);
-    if (!title || !description || tags.length === 0) {
-      results.push({ id: row.id, etsy_listing_id: row.etsy_listing_id, ok: false, error: "missing fields" });
-      continue;
-    }
-    try {
-      const res = await updateEtsy(row.etsy_listing_id, title, description, tags);
-      await sb.from("pod_publish_logs").insert({
-        listing_id: row.id,
-        stage: "etsy_update_copy",
-        attempt: 1,
-        ok: res.ok,
-        error: res.ok ? null : res.body,
-        meta: { etsy_listing_id: row.etsy_listing_id, status: res.status, tags_count: tags.length, title_len: title.length },
-      });
-      results.push({ id: row.id, etsy_listing_id: row.etsy_listing_id, ok: res.ok, status: res.status, error: res.ok ? undefined : res.body });
-    } catch (e) {
-      results.push({ id: row.id, etsy_listing_id: row.etsy_listing_id, ok: false, error: String(e) });
-    }
-    await new Promise((r) => setTimeout(r, 500)); // rate-limit gentle
-  }
-
-  return new Response(JSON.stringify({
-    total: results.length,
-    succeeded: results.filter((r) => r.ok).length,
-    failed: results.filter((r) => !r.ok).length,
-    results,
-  }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 });
