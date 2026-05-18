@@ -54,6 +54,39 @@ async function publishOne(row: {
   title: string;
 }): Promise<Result> {
   try {
+    // Pre-publish: wait for ALL mockup angles to finish rendering on Printify.
+    // Otherwise Etsy receives only the primary mockup and flags low image count
+    // (this caused 45 of 90 listings to show only 1 photo).
+    // Strategy: poll product until images.length is stable across 3 consecutive
+    // checks (10s apart) or we hit 3 minutes. Most products have 6-10 mockups.
+    let lastCount = -1;
+    let stableHits = 0;
+    let finalCount = 0;
+    const READY_MAX_POLLS = 18;        // 18 * 10s = 3 min cap
+    const READY_INTERVAL_MS = 10000;
+    for (let i = 0; i < READY_MAX_POLLS; i++) {
+      const get = await fetch(
+        `https://api.printify.com/v1/shops/${PRINTIFY_SHOP_ID}/products/${row.printify_id}.json`,
+        { headers: { Authorization: `Bearer ${PRINTIFY_TOKEN}` } },
+      );
+      if (get.ok) {
+        const j = await get.json();
+        const count = Array.isArray(j?.images) ? j.images.length : 0;
+        if (count > 0 && count === lastCount) {
+          stableHits++;
+          if (stableHits >= 2) { finalCount = count; break; } // stable across 3 checks
+        } else {
+          stableHits = 0;
+        }
+        lastCount = count;
+        finalCount = count;
+      }
+      await new Promise((r) => setTimeout(r, READY_INTERVAL_MS));
+    }
+    await logStage(row.id, true, {
+      printifyId: row.printify_id, stage_detail: "mockups_ready", mockup_count: finalCount,
+    });
+
     const pubRes = await fetch(
       `https://api.printify.com/v1/shops/${PRINTIFY_SHOP_ID}/products/${row.printify_id}/publish.json`,
       {

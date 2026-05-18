@@ -42,7 +42,7 @@ export interface PreflightResult {
   warnings: string[];
 }
 
-export function preflightProduct(p: PreflightProduct): PreflightResult {
+export function preflightProduct(p: PreflightProduct, opts?: { allowExcludedHoliday?: boolean }): PreflightResult {
   const reasons: string[] = [];
   const warnings: string[] = [];
   const title = (p.title || p.name || "").trim();
@@ -52,7 +52,7 @@ export function preflightProduct(p: PreflightProduct): PreflightResult {
 
   // ---- Title ----
   if (!title) reasons.push("missing_title");
-  if (title.length > 135) reasons.push(`title_too_long_${title.length}`);
+  if (title.length > 140) reasons.push(`title_too_long_${title.length}`); // Etsy hard cap = 140
   if (title.length < 30) reasons.push(`title_too_short_${title.length}`);
   if (FORBIDDEN_IN_TITLE.test(title)) reasons.push("title_contains_emoji");
   if (/[A-Z]{6,}/.test(title)) warnings.push("title_has_long_uppercase_run");
@@ -86,8 +86,10 @@ export function preflightProduct(p: PreflightProduct): PreflightResult {
   for (const ph of BANNED_PHRASES) {
     if (allText.includes(ph)) reasons.push(`banned_phrase:${ph}`);
   }
-  for (const ph of EXCLUDED_HOLIDAYS) {
-    if (allText.includes(ph)) reasons.push(`excluded_holiday:${ph}`);
+  if (!opts?.allowExcludedHoliday) {
+    for (const ph of EXCLUDED_HOLIDAYS) {
+      if (allText.includes(ph)) reasons.push(`excluded_holiday:${ph}`);
+    }
   }
 
   // ---- Image prompt sanity ----
