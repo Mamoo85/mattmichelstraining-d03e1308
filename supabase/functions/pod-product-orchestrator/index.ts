@@ -8,6 +8,7 @@
 // Returns: { ok, printifyId?, listingId?, skipped?, attempts, logs }
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { preflightProduct } from "../_shared/pod-preflight.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
