@@ -149,8 +149,13 @@ Deno.serve(async (req) => {
     if (error) throw error;
 
     const rows = listings ?? [];
-    // Process in parallel — Printify accepts concurrent requests
-    const results = await Promise.all(rows.map((r) => syncOne(r).catch((e) => ({ id: r.id, ok: false, error: String(e) }))));
+    // Sequential with pacing — Printify rate-limits aggressive parallel calls
+    const results: any[] = [];
+    for (const r of rows) {
+      try { results.push(await syncOne(r)); }
+      catch (e) { results.push({ id: r.id, ok: false, error: String(e) }); }
+      await new Promise((res) => setTimeout(res, 2500));
+    }
 
     return new Response(JSON.stringify({
       total: results.length,
