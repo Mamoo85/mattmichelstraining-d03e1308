@@ -150,12 +150,14 @@ Deno.serve(async (req) => {
 
     stage = "image_gen";
     const prompt = buildPrompt(listing.image_prompt || listing.product_name, listing.product_type);
-    const base64 = await generateImage(prompt);
+    const rawBase64 = await generateImage(prompt);
+
+    stage = "normalize";
+    const base64 = await normalizeToSpec(rawBase64, spec);
 
     stage = "validate";
     const v = await validateImageDimensions(base64, spec);
-    // Soft-fail: Gemini often won't hit exact dims; log mismatch but continue
-    // (Printify will scale to fit the print area).
+    // After normalize this should always pass; log either way.
     const dimsNote = v.ok ? `ok_${v.width}x${v.height}` : (v.reason ?? "unknown");
 
     stage = "upload";
