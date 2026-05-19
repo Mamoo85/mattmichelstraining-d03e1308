@@ -132,14 +132,14 @@ Deno.serve(async (req) => {
     } catch (_) { /* may already be unpublished */ }
 
     stage = "update_product";
-    // Replace every image reference in every placeholder with the new image id.
+    // Reset every placeholder to the new image with spec-driven placement so
+    // full-bleed types fill edge-to-edge and mug art stays in the center 30%.
+    const placement = placeholderPlacement(spec, newImageId);
     const updatedPrintAreas = (product.print_areas || []).map((pa: any) => ({
       ...pa,
       placeholders: (pa.placeholders || []).map((ph: any) => ({
         ...ph,
-        images: (ph.images && ph.images.length > 0)
-          ? ph.images.map((img: any) => ({ ...img, id: newImageId }))
-          : [{ id: newImageId, x: 0.5, y: 0.5, scale: 1, angle: 0 }],
+        images: [placement],
       })),
     }));
     await pf(`/shops/${PRINTIFY_SHOP_ID}/products/${listing.printify_id}.json`, {
