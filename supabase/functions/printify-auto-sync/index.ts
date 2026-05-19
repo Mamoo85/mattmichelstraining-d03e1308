@@ -40,13 +40,14 @@ async function pfFetch(path: string, init: RequestInit = {}) {
 async function listAllProducts(): Promise<PrintifyProduct[]> {
   const all: PrintifyProduct[] = [];
   let page = 1;
+  const limit = 50;
   while (true) {
-    const data = await pfFetch(`/shops/${PRINTIFY_SHOP_ID}/products.json?limit=100&page=${page}`);
+    const data = await pfFetch(`/shops/${PRINTIFY_SHOP_ID}/products.json?limit=${limit}&page=${page}`);
     const items: PrintifyProduct[] = data?.data ?? [];
     all.push(...items);
-    if (items.length < 100) break;
+    if (items.length < limit) break;
     page += 1;
-    if (page > 30) break; // hard cap safety
+    if (page > 50) break; // hard cap safety
   }
   return all;
 }
