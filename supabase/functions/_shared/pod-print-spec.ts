@@ -1,4 +1,5 @@
 // Canonical per-product print-area spec for POD pipeline.
+import { Image, decode } from "https://deno.land/x/imagescript@1.2.17/mod.ts";
 // `width` x `height` = required artwork pixel dimensions for primary placement.
 // `bgMode`:
 //   - "transparent"     → apparel-style isolated graphic on garment fabric (alpha=0)
@@ -95,6 +96,74 @@ export function placeholderPlacement(spec: PrintSpec, imageId: string) {
   }
   // transparent / die_cut / opaque_fullbleed → fill the print area.
   return { id: imageId, x: 0.5, y: 0.5, scale: 1.0, angle: 0 };
+}
+
+function stripProductMockupLanguage(prompt: string, productType: string): string {
+  let out = (prompt || "").trim();
+  if (productType === "phone_case_slim" || productType === "phone_case_tough") {
+    out = out
+      .replace(/\bfor\s+a\s+(slim|tough)\s+phone\s+case\b/gi, "as vertical print artwork")
+      .replace(/\b(slim|tough)\s+phone\s+case\b/gi, "vertical print artwork")
+      .replace(/\bphone\s+case\b/gi, "vertical print artwork")
+      .replace(/\bcase\b/gi, "print artwork");
+  }
+  return out.replace(/\s+/g, " ").trim();
+}
+
+export function buildPrintPrompt(originalPrompt: string, productType: string): string {
+  const spec = getPrintSpec(productType);
+  if (!spec) return originalPrompt;
+  const core = stripProductMockupLanguage(originalPrompt, productType)
+    .replace(/Sized for[^.]*\./gi, "")
+    .replace(/Output dimensions:[^.]*\./gi, "")
+    .replace(/Edge-to-edge full-bleed design[^.]*\./gi, "")
+    .replace(/Isolated print-ready graphic[^.]*\./gi, "")
+    .replace(/Solid pure white[^.]*\./gi, "")
+    .replace(/No watermarks[^.]*\./gi, "")
+    .replace(/No mockup[^.]*\./gi, "")
+    .trim();
+  const productGuard = productType === "phone_case_slim" || productType === "phone_case_tough"
+    ? "CRITICAL: create ONLY the flat 2D artwork file, not a product mockup. Do NOT draw a phone, phone case, iPhone, camera lens, buttons, bevel, white shell, side view, shadowed device, or any object outline. The entire canvas is the printable artwork; background color/design must reach every edge. Keep key text and faces away from the top-left camera cutout safe zone."
+    : "No product mockups, no garments, no device frames — just the standalone print artwork file.";
+  return `${core}\n\n${productGuard}\n${bgPromptFragment(spec, productType)} High-contrast bold flat vector style. No watermarks.`;
+}
+
+export async function normalizeToSpec(base64: string, spec: PrintSpec): Promise<string> {
+  const bytes = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
+  const src = await decode(bytes) as Image;
+  const tw = spec.width, th = spec.height;
+  let out: Image;
+
+  if (spec.bgMode === "opaque_fullbleed" || spec.bgMode === "die_cut") {
+    const scale = Math.max(tw / src.width, th / src.height);
+    const nw = Math.round(src.width * scale);
+    const nh = Math.round(src.height * scale);
+    const scaled = src.clone().resize(nw, nh);
+    out = new Image(tw, th);
+    if (spec.bgMode === "opaque_fullbleed") out.fill(scaled.getPixelAt(1, 1));
+    out.composite(scaled, Math.round((tw - nw) / 2), Math.round((th - nh) / 2));
+  } else if (spec.bgMode === "white_centered") {
+    const innerW = Math.round(tw * 0.33);
+    const scale = Math.min(innerW / src.width, th / src.height);
+    const nw = Math.round(src.width * scale);
+    const nh = Math.round(src.height * scale);
+    const scaled = src.clone().resize(nw, nh);
+    out = new Image(tw, th);
+    out.fill(0xffffffff);
+    out.composite(scaled, Math.round((tw - nw) / 2), Math.round((th - nh) / 2));
+  } else {
+    const scale = Math.min(tw / src.width, th / src.height);
+    const nw = Math.round(src.width * scale);
+    const nh = Math.round(src.height * scale);
+    const scaled = src.clone().resize(nw, nh);
+    out = new Image(tw, th);
+    out.composite(scaled, Math.round((tw - nw) / 2), Math.round((th - nh) / 2));
+  }
+
+  const png = await out.encode();
+  let bin = "";
+  for (let i = 0; i < png.length; i++) bin += String.fromCharCode(png[i]);
+  return btoa(bin);
 }
 
 /** Build the prompt fragment that instructs the image model on bg + dimensions. */
