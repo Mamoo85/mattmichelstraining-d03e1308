@@ -2444,3 +2444,6 @@ verify_jwt = false
 
 [functions.printify-auto-sync]
 verify_jwt = false
+
+[functions.printify-webhook]
+verify_jwt = false
