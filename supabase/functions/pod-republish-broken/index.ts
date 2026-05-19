@@ -70,9 +70,10 @@ Deno.serve(async (req) => {
     } catch (e) {
       results.push({ id: l.id, name: l.product_name, ok: false, error: (e as Error).message });
     }
-    // Stagger to avoid 429
-    await new Promise(r => setTimeout(r, 1500));
+    // Stagger to avoid Printify 429s (smaller delay to fit in 150s edge timeout)
+    await new Promise(r => setTimeout(r, 600));
   }
+
 
   return new Response(JSON.stringify({
     total: results.length,
