@@ -5947,6 +5947,39 @@ export type Database = {
         }
         Relationships: []
       }
+      cron_paused_jobs: {
+        Row: {
+          command: string
+          id: string
+          jobname: string
+          paused_at: string
+          product_slug: string
+          resume_reason: string | null
+          resumed_at: string | null
+          schedule: string
+        }
+        Insert: {
+          command: string
+          id?: string
+          jobname: string
+          paused_at?: string
+          product_slug?: string
+          resume_reason?: string | null
+          resumed_at?: string | null
+          schedule: string
+        }
+        Update: {
+          command?: string
+          id?: string
+          jobname?: string
+          paused_at?: string
+          product_slug?: string
+          resume_reason?: string | null
+          resumed_at?: string | null
+          schedule?: string
+        }
+        Relationships: []
+      }
       cron_schedule_audit: {
         Row: {
           attempted_at: string
@@ -27660,6 +27693,7 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      classify_cron_product: { Args: { _jobname: string }; Returns: string }
       compute_freshness_score: {
         Args: { p_created_at: string; p_half_life_days?: number }
         Returns: number
@@ -27974,6 +28008,10 @@ export type Database = {
         Returns: undefined
       }
       reset_alert_cooldown: { Args: { _kind: string }; Returns: undefined }
+      resume_product_crons: {
+        Args: { _reason?: string; _slug: string }
+        Returns: number
+      }
       revoke_marketplace_access: {
         Args: { p_lead_id: string; p_product: string; p_reason: string }
         Returns: number
