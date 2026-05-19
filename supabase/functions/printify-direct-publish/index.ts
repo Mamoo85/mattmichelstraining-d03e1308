@@ -207,7 +207,12 @@ Deno.serve(async (req) => {
     let etsyListingId: number | null = null;
     if (publish) {
       stage = "publish";
-      // Trigger publish — Etsy listing ID arrives via webhook later
+      // Trigger publish. Printify will render ~5-10 mockups (front/back/lifestyle/
+      // sizing) and push them to Etsy. DO NOT call publishing_succeeded.json here —
+      // that tells Printify "we're done" before mockups finish uploading, which is
+      // why Etsy listings end up with only 1 photo. The printify-webhook handler
+      // finalizes publish state and writes the real etsy_listing_id once Printify
+      // is done.
       await pfFetch(`/shops/${PRINTIFY_SHOP_ID}/products/${printifyId}/publish.json`, {
         method: "POST",
         body: JSON.stringify({
@@ -220,14 +225,8 @@ Deno.serve(async (req) => {
           shipping_template: true,
         }),
       });
-      // Mark as in publishing
-      await pfFetch(`/shops/${PRINTIFY_SHOP_ID}/products/${printifyId}/publishing_succeeded.json`, {
-        method: "POST",
-        body: JSON.stringify({
-          external: { id: printifyId, handle: name.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 80) },
-        }),
-      }).catch(() => { /* webhook will set this normally */ });
     }
+
 
     stage = "db_insert";
     const { data: inserted, error: insErr } = await sb.from("pod_listings").insert({
