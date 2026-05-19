@@ -2441,3 +2441,6 @@ verify_jwt = false
 
 [functions.etsy-winner-prioritizer]
 verify_jwt = false
+
+[functions.printify-auto-sync]
+verify_jwt = false
