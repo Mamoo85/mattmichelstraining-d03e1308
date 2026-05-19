@@ -15,6 +15,9 @@
 // }
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { POD_CATALOG } from "../_shared/pod-printify-catalog.ts";
+import { getPrintSpec, validateImageDimensions, bgPromptFragment } from "../_shared/pod-print-spec.ts";
+
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -146,10 +149,26 @@ Deno.serve(async (req) => {
 
   let stage = "image_gen";
   try {
-    const base64 = await generateImage(imagePrompt);
+    // Inject spec-based bg + dimension instructions so the image generator targets the right canvas.
+    const spec = getPrintSpec(type);
+    const finalPrompt = spec
+      ? `${imagePrompt}\n\n${bgPromptFragment(spec, type)}`
+      : imagePrompt;
+    const base64 = await generateImage(finalPrompt);
+
+    stage = "validate_dims";
+    if (spec) {
+      const v = await validateImageDimensions(base64, spec);
+      if (!v.ok && v.reason !== "not_png") {
+        // Log mismatch but don't hard-fail — Printify scales to fit. Future: re-roll image up to N times.
+        console.warn(`[printify-direct-publish] dim_mismatch type=${type} expected=${spec.width}x${spec.height} got=${v.width}x${v.height}`);
+      }
+    }
 
     stage = "upload";
     const imageId = await uploadImageToPrintify(base64, `${type}-${Date.now()}.png`);
+
+
 
     stage = "create_product";
     const productBody = {
