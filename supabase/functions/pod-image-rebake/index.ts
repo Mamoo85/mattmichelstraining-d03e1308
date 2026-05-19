@@ -9,12 +9,64 @@
 //   2) ad-hoc re-bakes when art looks off
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { Image, decode } from "https://deno.land/x/imagescript@1.2.17/mod.ts";
 import {
   getPrintSpec,
   bgPromptFragment,
   validateImageDimensions,
   placeholderPlacement,
+  type PrintSpec,
 } from "../_shared/pod-print-spec.ts";
+
+// Resize/recanvas generated PNG to the exact print-area pixel dimensions.
+// - opaque_fullbleed / die_cut: cover-fit (scale-up + center-crop) → fills edge-to-edge
+// - transparent: contain-fit on transparent canvas (no stretch, no bg)
+// - white_centered: contain-fit centered on solid white at 33% width (mug center band)
+async function normalizeToSpec(base64: string, spec: PrintSpec): Promise<string> {
+  const bytes = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
+  const src = await decode(bytes) as Image;
+  const tw = spec.width, th = spec.height;
+  let out: Image;
+
+  if (spec.bgMode === "opaque_fullbleed" || spec.bgMode === "die_cut") {
+    // cover: scale so smaller ratio fills, then crop center
+    const scale = Math.max(tw / src.width, th / src.height);
+    const nw = Math.round(src.width * scale);
+    const nh = Math.round(src.height * scale);
+    const scaled = src.clone().resize(nw, nh);
+    out = new Image(tw, th);
+    if (spec.bgMode === "opaque_fullbleed") {
+      // sample top-left edge color to fill any sub-pixel gaps (rare with cover)
+      const edge = scaled.getPixelAt(1, 1);
+      out.fill(edge);
+    }
+    out.composite(scaled, Math.round((tw - nw) / 2), Math.round((th - nh) / 2));
+  } else if (spec.bgMode === "white_centered") {
+    // contain into center 33% of width, vertically centered, white bg
+    const innerW = Math.round(tw * 0.33);
+    const scale = Math.min(innerW / src.width, th / src.height);
+    const nw = Math.round(src.width * scale);
+    const nh = Math.round(src.height * scale);
+    const scaled = src.clone().resize(nw, nh);
+    out = new Image(tw, th);
+    out.fill(0xffffffff);
+    out.composite(scaled, Math.round((tw - nw) / 2), Math.round((th - nh) / 2));
+  } else {
+    // transparent: contain-fit, no background
+    const scale = Math.min(tw / src.width, th / src.height);
+    const nw = Math.round(src.width * scale);
+    const nh = Math.round(src.height * scale);
+    const scaled = src.clone().resize(nw, nh);
+    out = new Image(tw, th); // alpha=0 by default
+    out.composite(scaled, Math.round((tw - nw) / 2), Math.round((th - nh) / 2));
+  }
+
+  const png = await out.encode();
+  // base64 encode
+  let bin = "";
+  for (let i = 0; i < png.length; i++) bin += String.fromCharCode(png[i]);
+  return btoa(bin);
+}
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -98,12 +150,14 @@ Deno.serve(async (req) => {
 
     stage = "image_gen";
     const prompt = buildPrompt(listing.image_prompt || listing.product_name, listing.product_type);
-    const base64 = await generateImage(prompt);
+    const rawBase64 = await generateImage(prompt);
+
+    stage = "normalize";
+    const base64 = await normalizeToSpec(rawBase64, spec);
 
     stage = "validate";
     const v = await validateImageDimensions(base64, spec);
-    // Soft-fail: Gemini often won't hit exact dims; log mismatch but continue
-    // (Printify will scale to fit the print area).
+    // After normalize this should always pass; log either way.
     const dimsNote = v.ok ? `ok_${v.width}x${v.height}` : (v.reason ?? "unknown");
 
     stage = "upload";
@@ -148,13 +202,29 @@ Deno.serve(async (req) => {
     });
 
     stage = "publish";
-    await pf(`/shops/${PRINTIFY_SHOP_ID}/products/${listing.printify_id}/publish.json`, {
-      method: "POST",
-      body: JSON.stringify({
-        title: true, description: true, images: true,
-        variants: true, tags: true, keyFeatures: true, shipping_template: true,
-      }),
-    });
+    // Etsy publish is rate-limited (429s common); fire in background w/ backoff
+    // so the rebake response returns immediately after the image is swapped.
+    const doPublish = async () => {
+      for (let i = 0; i < 6; i++) {
+        try {
+          await pf(`/shops/${PRINTIFY_SHOP_ID}/products/${listing.printify_id}/publish.json`, {
+            method: "POST",
+            body: JSON.stringify({
+              title: true, description: true, images: true,
+              variants: true, tags: true, keyFeatures: true, shipping_template: true,
+            }),
+          });
+          return;
+        } catch (e) {
+          if (!String((e as Error).message).includes("429")) return;
+          await new Promise(r => setTimeout(r, 20_000 * (i + 1)));
+        }
+      }
+    };
+    // @ts-ignore EdgeRuntime is provided by Deno deploy
+    (globalThis as any).EdgeRuntime?.waitUntil
+      ? (globalThis as any).EdgeRuntime.waitUntil(doPublish())
+      : doPublish();
 
     stage = "log";
     await sb.from("pod_publish_logs").insert({
