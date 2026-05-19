@@ -15,7 +15,7 @@
 // }
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { POD_CATALOG } from "../_shared/pod-printify-catalog.ts";
-import { getPrintSpec, validateImageDimensions, bgPromptFragment, placeholderPlacement } from "../_shared/pod-print-spec.ts";
+import { getPrintSpec, validateImageDimensions, placeholderPlacement, buildPrintPrompt, normalizeToSpec } from "../_shared/pod-print-spec.ts";
 
 
 
@@ -149,20 +149,16 @@ Deno.serve(async (req) => {
 
   let stage = "image_gen";
   try {
-    // Inject spec-based bg + dimension instructions so the image generator targets the right canvas.
+    // Inject spec-based guardrails so the image generator creates flat artwork, never product mockups.
     const spec = getPrintSpec(type);
-    const finalPrompt = spec
-      ? `${imagePrompt}\n\n${bgPromptFragment(spec, type)}`
-      : imagePrompt;
-    const base64 = await generateImage(finalPrompt);
+    const finalPrompt = spec ? buildPrintPrompt(imagePrompt, type) : imagePrompt;
+    const rawBase64 = await generateImage(finalPrompt);
+    const base64 = spec ? await normalizeToSpec(rawBase64, spec) : rawBase64;
 
     stage = "validate_dims";
     if (spec) {
       const v = await validateImageDimensions(base64, spec);
-      if (!v.ok && v.reason !== "not_png") {
-        // Log mismatch but don't hard-fail — Printify scales to fit. Future: re-roll image up to N times.
-        console.warn(`[printify-direct-publish] dim_mismatch type=${type} expected=${spec.width}x${spec.height} got=${v.width}x${v.height}`);
-      }
+      if (!v.ok) throw new Error(`dim_mismatch type=${type} expected=${spec.width}x${spec.height} got=${v.width}x${v.height} reason=${v.reason}`);
     }
 
     stage = "upload";
@@ -238,7 +234,7 @@ Deno.serve(async (req) => {
       title: name,
       tags,
       description,
-      image_prompt: imagePrompt,
+      image_prompt: finalPrompt,
       retail_price_cents: price,
       status: publish ? "publishing" : "draft",
       source_run_id: runId,

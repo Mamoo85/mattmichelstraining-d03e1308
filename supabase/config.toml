@@ -1,5 +1,11 @@
 project_id = "zmyczlfuufhngzovkjdh"
 
+[functions.pod-image-rebake]
+verify_jwt = false
+
+[functions.printify-direct-publish]
+verify_jwt = false
+
 [functions.pod-republish-broken]
 verify_jwt = false
 
