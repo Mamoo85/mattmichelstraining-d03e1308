@@ -83,6 +83,20 @@ export function getPrintSpec(productType: string): PrintSpec | null {
   return PRINT_SPECS[productType] ?? null;
 }
 
+/**
+ * Printify placeholder image placement enforcing full-bleed / fit behavior
+ * per bgMode. For mug (`white_centered`) the design lives in the center 30%
+ * of the wrap so we explicitly scale it down; everything else fills the
+ * entire print area edge-to-edge with no auto-centering letterboxing.
+ */
+export function placeholderPlacement(spec: PrintSpec, imageId: string) {
+  if (spec.bgMode === "white_centered") {
+    return { id: imageId, x: 0.5, y: 0.5, scale: 0.33, angle: 0 };
+  }
+  // transparent / die_cut / opaque_fullbleed → fill the print area.
+  return { id: imageId, x: 0.5, y: 0.5, scale: 1.0, angle: 0 };
+}
+
 /** Build the prompt fragment that instructs the image model on bg + dimensions. */
 export function bgPromptFragment(spec: PrintSpec, productType: string): string {
   const dims = `Output dimensions: ${spec.width}x${spec.height} pixels (exact).`;
