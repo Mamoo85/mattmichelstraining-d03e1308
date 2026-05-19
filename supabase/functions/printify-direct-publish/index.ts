@@ -188,13 +188,9 @@ Deno.serve(async (req) => {
             {
               position: entry.primary_placeholder.position,
               images: [
-                {
-                  id: imageId,
-                  x: 0.5,
-                  y: 0.5,
-                  scale: 1,
-                  angle: 0,
-                },
+                spec
+                  ? placeholderPlacement(spec, imageId)
+                  : { id: imageId, x: 0.5, y: 0.5, scale: 1, angle: 0 },
               ],
             },
           ],
