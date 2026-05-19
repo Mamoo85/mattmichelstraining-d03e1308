@@ -1,5 +1,10 @@
 project_id = "zmyczlfuufhngzovkjdh"
 
+[functions.pod-republish-broken]
+verify_jwt = false
+
+
+
 [functions.cold-email-pool-router]
 verify_jwt = false
 
