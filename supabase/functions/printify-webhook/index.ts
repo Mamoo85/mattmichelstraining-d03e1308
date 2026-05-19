@@ -85,7 +85,6 @@ Deno.serve(async (req) => {
       last_synced_at: new Date().toISOString(),
     };
     if (etsyListingId) update.etsy_listing_id = etsyListingId;
-    if (externalHandle) update.etsy_url = externalHandle;
 
     const { error } = await sb
       .from("pod_listings")
