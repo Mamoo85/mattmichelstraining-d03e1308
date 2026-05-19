@@ -117,6 +117,19 @@ Deno.serve(async (req) => {
     stage = "fetch_product";
     const product = await pf(`/shops/${PRINTIFY_SHOP_ID}/products/${listing.printify_id}.json`);
 
+    stage = "unlock_product";
+    // Printify locks products after publish to Etsy. Must mark publish as
+    // succeeded (or unpublish) to re-enable editing.
+    try {
+      await pf(`/shops/${PRINTIFY_SHOP_ID}/products/${listing.printify_id}/publishing_succeeded.json`, {
+        method: "POST",
+        body: JSON.stringify({ external: { id: listing.printify_id, handle: `https://printify.com/app/products/${listing.printify_id}` } }),
+      });
+    } catch (_) { /* idempotent */ }
+    try {
+      await pf(`/shops/${PRINTIFY_SHOP_ID}/products/${listing.printify_id}/unpublish.json`, { method: "POST" });
+    } catch (_) { /* may already be unpublished */ }
+
     stage = "update_product";
     // Replace every image reference in every placeholder with the new image id.
     const updatedPrintAreas = (product.print_areas || []).map((pa: any) => ({
