@@ -15,7 +15,7 @@
 // }
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { POD_CATALOG } from "../_shared/pod-printify-catalog.ts";
-import { getPrintSpec, validateImageDimensions, bgPromptFragment } from "../_shared/pod-print-spec.ts";
+import { getPrintSpec, validateImageDimensions, bgPromptFragment, placeholderPlacement } from "../_shared/pod-print-spec.ts";
 
 
 
