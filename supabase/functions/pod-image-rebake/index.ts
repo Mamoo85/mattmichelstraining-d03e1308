@@ -13,6 +13,7 @@ import {
   getPrintSpec,
   bgPromptFragment,
   validateImageDimensions,
+  placeholderPlacement,
 } from "../_shared/pod-print-spec.ts";
 
 const corsHeaders = {
