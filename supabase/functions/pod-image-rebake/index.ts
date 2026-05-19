@@ -202,25 +202,29 @@ Deno.serve(async (req) => {
     });
 
     stage = "publish";
-    let publishErr: any = null;
-    for (let i = 0; i < 5; i++) {
-      try {
-        await pf(`/shops/${PRINTIFY_SHOP_ID}/products/${listing.printify_id}/publish.json`, {
-          method: "POST",
-          body: JSON.stringify({
-            title: true, description: true, images: true,
-            variants: true, tags: true, keyFeatures: true, shipping_template: true,
-          }),
-        });
-        publishErr = null;
-        break;
-      } catch (e) {
-        publishErr = e;
-        if (!String((e as Error).message).includes("429")) break;
-        await new Promise(r => setTimeout(r, 15_000 * (i + 1)));
+    // Etsy publish is rate-limited (429s common); fire in background w/ backoff
+    // so the rebake response returns immediately after the image is swapped.
+    const doPublish = async () => {
+      for (let i = 0; i < 6; i++) {
+        try {
+          await pf(`/shops/${PRINTIFY_SHOP_ID}/products/${listing.printify_id}/publish.json`, {
+            method: "POST",
+            body: JSON.stringify({
+              title: true, description: true, images: true,
+              variants: true, tags: true, keyFeatures: true, shipping_template: true,
+            }),
+          });
+          return;
+        } catch (e) {
+          if (!String((e as Error).message).includes("429")) return;
+          await new Promise(r => setTimeout(r, 20_000 * (i + 1)));
+        }
       }
-    }
-    if (publishErr) throw publishErr;
+    };
+    // @ts-ignore EdgeRuntime is provided by Deno deploy
+    (globalThis as any).EdgeRuntime?.waitUntil
+      ? (globalThis as any).EdgeRuntime.waitUntil(doPublish())
+      : doPublish();
 
     stage = "log";
     await sb.from("pod_publish_logs").insert({
