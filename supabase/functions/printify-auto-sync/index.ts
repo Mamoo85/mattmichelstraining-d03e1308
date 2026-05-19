@@ -173,13 +173,13 @@ Deno.serve(async (req) => {
   }
 
   const body = await req.json().catch(() => ({}));
-  const mode = body.mode || 'sync_and_audit'; // 'sync_only' | 'audit_only' | 'sync_and_audit'
+  const mode = body.mode || 'sync_and_audit'; // 'sync_only' | 'audit_only' | 'sync_and_audit' | 'cleanup'
 
   try {
     const products = await listAllProducts();
 
     const sync = { attempted: 0, succeeded: 0, failed: 0, published: [] as any[], errors: [] as any[] };
-    if (mode !== 'audit_only') {
+    if (mode === 'sync_only' || mode === 'sync_and_audit') {
       const unpublished = products.filter(p => !p.external?.id && !p.is_locked);
       for (const p of unpublished) {
         sync.attempted += 1;
@@ -194,16 +194,49 @@ Deno.serve(async (req) => {
       }
     }
 
-    const audit = mode === 'sync_only' ? null : {
-      total: products.length,
-      issues: auditProducts(products),
-    };
+    const issues = auditProducts(products);
+
+    // Cleanup mode: auto-delete duplicates (keep newest) + tote blueprints
+    const cleanup = { deleted: [] as any[], errors: [] as any[] };
+    if (mode === 'cleanup') {
+      const toDelete = new Set<string>();
+
+      // Duplicates: keep highest id (newest), delete the rest
+      const dupGroups: Record<string, PrintifyProduct[]> = {};
+      for (const i of issues.filter(x => x.type === 'duplicate')) {
+        const p = products.find(pp => pp.id === i.id);
+        if (!p) continue;
+        const key = `${BLUEPRINT_FAMILY[p.blueprint_id] || p.blueprint_id}::${normalizeTitle(p.title)}`;
+        (dupGroups[key] ||= []).push(p);
+      }
+      for (const group of Object.values(dupGroups)) {
+        const sorted = [...group].sort((a, b) => String(b.id).localeCompare(String(a.id)));
+        for (const dup of sorted.slice(1)) toDelete.add(dup.id);
+      }
+
+      // Totes (deprecated)
+      for (const i of issues.filter(x => x.type === 'tote')) toDelete.add(i.id);
+
+      for (const id of toDelete) {
+        const p = products.find(pp => pp.id === id);
+        try {
+          await pfFetch(`/shops/${PRINTIFY_SHOP_ID}/products/${id}.json`, { method: 'DELETE' });
+          cleanup.deleted.push({ id, title: p?.title });
+        } catch (e) {
+          cleanup.errors.push({ id, title: p?.title, error: String(e).slice(0, 200) });
+        }
+      }
+    }
+
+    const audit = mode === 'sync_only' ? null : { total: products.length, issues };
 
     return new Response(JSON.stringify({
       ok: true,
+      mode,
       total_products: products.length,
       sync,
       audit,
+      cleanup: mode === 'cleanup' ? cleanup : undefined,
       ran_at: new Date().toISOString(),
     }, null, 2), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
