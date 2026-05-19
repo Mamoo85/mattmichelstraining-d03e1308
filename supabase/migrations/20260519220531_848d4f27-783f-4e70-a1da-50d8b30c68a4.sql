@@ -1,0 +1,1 @@
+ALTER TABLE public.pod_listings ADD COLUMN IF NOT EXISTS republished_at timestamptz;
