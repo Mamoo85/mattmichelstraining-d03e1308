@@ -1,3 +1,0 @@
-Add to supabase/config.toml:
-[functions.printify-auto-sync]
-verify_jwt = false
