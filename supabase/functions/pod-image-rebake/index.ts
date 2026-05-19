@@ -202,13 +202,25 @@ Deno.serve(async (req) => {
     });
 
     stage = "publish";
-    await pf(`/shops/${PRINTIFY_SHOP_ID}/products/${listing.printify_id}/publish.json`, {
-      method: "POST",
-      body: JSON.stringify({
-        title: true, description: true, images: true,
-        variants: true, tags: true, keyFeatures: true, shipping_template: true,
-      }),
-    });
+    let publishErr: any = null;
+    for (let i = 0; i < 5; i++) {
+      try {
+        await pf(`/shops/${PRINTIFY_SHOP_ID}/products/${listing.printify_id}/publish.json`, {
+          method: "POST",
+          body: JSON.stringify({
+            title: true, description: true, images: true,
+            variants: true, tags: true, keyFeatures: true, shipping_template: true,
+          }),
+        });
+        publishErr = null;
+        break;
+      } catch (e) {
+        publishErr = e;
+        if (!String((e as Error).message).includes("429")) break;
+        await new Promise(r => setTimeout(r, 15_000 * (i + 1)));
+      }
+    }
+    if (publishErr) throw publishErr;
 
     stage = "log";
     await sb.from("pod_publish_logs").insert({
