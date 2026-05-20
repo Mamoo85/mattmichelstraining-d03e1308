@@ -1,4 +1,6 @@
-// Read current Etsy shop title + announcement.
+// Read current Etsy shop title + announcement (uses OAuth tokens from DB).
+import { getEtsyAuth } from "../_shared/etsy-token.ts";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -6,16 +8,14 @@ const corsHeaders = {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  const ETSY_API_KEY = Deno.env.get("ETSY_API_KEY")!;
-  const ETSY_ACCESS_TOKEN = Deno.env.get("ETSY_ACCESS_TOKEN")!;
-  const ETSY_SHOP_ID = Deno.env.get("ETSY_SHOP_ID")!;
   try {
-    const diag = { key_len: (ETSY_API_KEY||"").length, tok_len: (ETSY_ACCESS_TOKEN||"").length, shop: ETSY_SHOP_ID };
-    const r = await fetch(`https://openapi.etsy.com/v3/application/shops/${ETSY_SHOP_ID}`, {
-      headers: { "x-api-key": ETSY_API_KEY, Authorization: `Bearer ${ETSY_ACCESS_TOKEN}` },
+    const { apiKey, accessToken, shopId } = await getEtsyAuth();
+    if (!shopId) throw new Error("No shop_id — reconnect Etsy");
+    const r = await fetch(`https://openapi.etsy.com/v3/application/shops/${shopId}`, {
+      headers: { "x-api-key": apiKey, Authorization: `Bearer ${accessToken}` },
     });
     const body = await r.text();
-    if (!r.ok) throw new Error(`etsy ${r.status}: ${body} diag=${JSON.stringify(diag)}`);
+    if (!r.ok) throw new Error(`etsy ${r.status}: ${body}`);
     const d = JSON.parse(body);
     return new Response(JSON.stringify({
       ok: true,
