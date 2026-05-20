@@ -10,7 +10,7 @@ const corsHeaders = {
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const DEFAULT_SHOP_ID = "6311589";
+// shop_id is auto-discovered via /v3/application/users/me/shops (no hardcoded default)
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
