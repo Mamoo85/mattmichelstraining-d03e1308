@@ -2482,3 +2482,12 @@ verify_jwt = false
 
 [functions.etsy-oauth-callback]
 verify_jwt = false
+
+[functions.etsy-token-refresh]
+verify_jwt = false
+
+[functions.etsy-product-sync]
+verify_jwt = false
+
+[functions.pod-republish-resume]
+verify_jwt = false
