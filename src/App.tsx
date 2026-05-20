@@ -484,6 +484,7 @@ const DJConleyDemo2 = lazyRetry(() => import("./pages/DJConleyDemo2"));
 const DJConleyDemo3 = lazyRetry(() => import("./pages/DJConleyDemo3"));
 const DJConleyDemo4 = lazyRetry(() => import("./pages/DJConleyDemo4"));
 const DJConleySandbox = lazyRetry(() => import("./sandbox/djconley"));
+const GuildGrain = lazyRetry(() => import("./sandbox/guildgrain"));
 const DemoTemplate = lazyRetry(() => import("./pages/DemoTemplate"));
 const CommunicationsCenter = lazyRetry(() => import("./pages/CommunicationsCenter"));
 const MattSalesPipeline = lazyRetry(() => import("./pages/MattSalesPipeline"));
@@ -693,6 +694,7 @@ const App = () => {
                     <Route path="/demo-djconley-3" element={<DJConleyDemo3 />} />
                     <Route path="/demo-djconley-4" element={<DJConleyDemo4 />} />
                     <Route path="/sandbox/djconley/*" element={<DJConleySandbox />} />
+                    <Route path="/guild-grain/*" element={<GuildGrain />} />
                     <Route path="/demo/:slug" element={<DemoTemplate />} />
                     <Route path="/demo-youngblood-alt2" element={<YoungbloodMockupAlt2 />} />
                     <Route path="/demo-youngblood-alt2/*" element={<YoungbloodMockupAlt2 />} />
