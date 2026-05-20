@@ -289,6 +289,7 @@ export default function DWAAdmin() {
           {activeTab === "strategy-mode" && <Suspense fallback={lazyFallback("strategy mode")}><StrategyModeHub /></Suspense>}
           {activeTab === "field-ops"     && <Suspense fallback={lazyFallback("field ops")}><FieldOpsHub /></Suspense>}
           {activeTab === "command"       && <DWACommandDeck />}
+          {activeTab === "etsy-shop"     && <Suspense fallback={lazyFallback("Etsy Shop")}><EtsyShopAdmin /></Suspense>}
         </div>
       </main>
     </div>
