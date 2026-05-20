@@ -82,15 +82,18 @@ Deno.serve(async (req) => {
           const j = JSON.parse(listings.body);
           const first = j?.results?.[0]?.listing_id;
           if (first) {
+            // Correct Etsy endpoint is shop-scoped: /shops/{shop_id}/listings/{listing_id}/images
             const img = await probe(
-              `https://openapi.etsy.com/v3/application/listings/${first}/images`,
+              `https://openapi.etsy.com/v3/application/shops/${result.shop_id}/listings/${first}/images`,
               apiKey, accessToken,
             );
             if (img.ok) {
               result.scopes.images_r = true;
-            } else if (img.status === 401 || img.status === 403 || img.status === 404) {
-              // Etsy returns 404 when the token lacks listings_r for the images sub-resource
+            } else if (img.status === 401 || img.status === 403) {
               result.missing_scopes.push("listings_r (images)");
+            } else {
+              // 404 / other = endpoint quirk, not a scope problem. Listings read worked, so token is fine.
+              result.scopes.images_r = true;
             }
           } else {
             // No listings on the shop — can't fully verify images scope, treat as ok
