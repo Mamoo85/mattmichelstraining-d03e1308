@@ -8795,6 +8795,113 @@ export type Database = {
         }
         Relationships: []
       }
+      etsy_announcement_log: {
+        Row: {
+          copy: string
+          created_at: string
+          error_message: string | null
+          id: string
+          pushed_ok: boolean
+          schedule_id: string | null
+          trigger: string
+        }
+        Insert: {
+          copy: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          pushed_ok?: boolean
+          schedule_id?: string | null
+          trigger: string
+        }
+        Update: {
+          copy?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          pushed_ok?: boolean
+          schedule_id?: string | null
+          trigger?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "etsy_announcement_log_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "etsy_announcement_schedule"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      etsy_announcement_schedule: {
+        Row: {
+          active: boolean
+          copy: string
+          created_at: string
+          ends_at: string | null
+          id: string
+          kind: string
+          meta: Json
+          priority: number
+          starts_at: string
+        }
+        Insert: {
+          active?: boolean
+          copy: string
+          created_at?: string
+          ends_at?: string | null
+          id?: string
+          kind: string
+          meta?: Json
+          priority?: number
+          starts_at?: string
+        }
+        Update: {
+          active?: boolean
+          copy?: string
+          created_at?: string
+          ends_at?: string | null
+          id?: string
+          kind?: string
+          meta?: Json
+          priority?: number
+          starts_at?: string
+        }
+        Relationships: []
+      }
+      etsy_shop_edits: {
+        Row: {
+          created_at: string
+          edited_by: string | null
+          error_message: string | null
+          field: string
+          id: string
+          new_value: string
+          previous_value: string | null
+          pushed_ok: boolean
+        }
+        Insert: {
+          created_at?: string
+          edited_by?: string | null
+          error_message?: string | null
+          field: string
+          id?: string
+          new_value: string
+          previous_value?: string | null
+          pushed_ok?: boolean
+        }
+        Update: {
+          created_at?: string
+          edited_by?: string | null
+          error_message?: string | null
+          field?: string
+          id?: string
+          new_value?: string
+          previous_value?: string | null
+          pushed_ok?: boolean
+        }
+        Relationships: []
+      }
       etsy_trend_runs: {
         Row: {
           completed_at: string | null
