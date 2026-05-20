@@ -9,6 +9,12 @@ verify_jwt = false
 [functions.pod-republish-broken]
 verify_jwt = false
 
+[functions.pod-audit-dimensions]
+verify_jwt = false
+
+[functions.pod-republish-wrong-dims]
+verify_jwt = false
+
 
 
 [functions.cold-email-pool-router]

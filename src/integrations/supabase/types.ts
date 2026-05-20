@@ -17043,6 +17043,59 @@ export type Database = {
         }
         Relationships: []
       }
+      pod_dimension_audit: {
+        Row: {
+          actual_h: number | null
+          actual_w: number | null
+          audited_at: string
+          bg_mode: string | null
+          detail: string | null
+          expected_h: number | null
+          expected_w: number | null
+          id: string
+          listing_id: string | null
+          printify_id: string
+          product_type: string
+          status: string
+        }
+        Insert: {
+          actual_h?: number | null
+          actual_w?: number | null
+          audited_at?: string
+          bg_mode?: string | null
+          detail?: string | null
+          expected_h?: number | null
+          expected_w?: number | null
+          id?: string
+          listing_id?: string | null
+          printify_id: string
+          product_type: string
+          status: string
+        }
+        Update: {
+          actual_h?: number | null
+          actual_w?: number | null
+          audited_at?: string
+          bg_mode?: string | null
+          detail?: string | null
+          expected_h?: number | null
+          expected_w?: number | null
+          id?: string
+          listing_id?: string | null
+          printify_id?: string
+          product_type?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pod_dimension_audit_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "pod_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pod_listing_stats: {
         Row: {
           created_at: string
