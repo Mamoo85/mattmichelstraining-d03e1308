@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import EtsyScopeBanner from "./EtsyScopeBanner";
+
 
 type ShopInfo = {
   shop_name?: string;
@@ -130,7 +132,9 @@ export default function EtsyShopAdmin() {
 
   return (
     <div className="space-y-6 text-white">
+      <EtsyScopeBanner />
       <header className="flex items-center justify-between flex-wrap gap-3">
+
         <div>
           <h2 className="text-2xl font-bold">Etsy Shop</h2>
           {info && (

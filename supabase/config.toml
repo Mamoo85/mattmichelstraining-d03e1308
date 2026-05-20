@@ -2491,3 +2491,6 @@ verify_jwt = false
 
 [functions.pod-republish-resume]
 verify_jwt = false
+
+[functions.etsy-scope-check]
+verify_jwt = false
