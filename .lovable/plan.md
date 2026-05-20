@@ -1,54 +1,70 @@
+## Scope
 
-## Goal
-Every existing POD product on Printify must have artwork that matches the canonical `PRINT_SPECS` (correct pixel dimensions + correct background mode for the product class). Any future product generation must be physically incapable of publishing with wrong-dimension artwork.
+Two things in **this** project. Guild & Grain marketplace = separate new Lovable project (start when ready).
 
-## Current state
-- `supabase/functions/_shared/pod-print-spec.ts` already defines canonical specs for all 50 product types (apparel = transparent, mugs = white-centered 30%, full-bleed = opaque edge-to-edge, stickers/decals = die-cut).
-- `pod_listings` table has 50 published products (1 of each type, plus extras for tshirt/tote/hoodie/mug).
-- The phone-case fix from the last turn is deployed but only covered 2 SKUs. No system-wide audit has been run.
+---
 
-## Plan
+## 1. Etsy Shop Admin Page (`/dwa-admin` → "Etsy Shop")
 
-### 1. Build a one-shot auditor edge function: `pod-audit-dimensions`
-- For every row in `pod_listings`, GET `https://api.printify.com/v1/shops/{shop_id}/products/{printify_id}.json`.
-- For each `print_areas[].placeholders[].images[]`, fetch the image metadata from Printify (`/uploads/{id}.json`) to read `width` × `height`.
-- Compare against `PRINT_SPECS[product_type]`:
-  - dimension mismatch (>2px tolerance on either axis)
-  - aspect-ratio mismatch (catches stretched/wrong-orientation art)
-  - missing print area for the spec's `position`
-- Write results into a new `pod_dimension_audit` table: `listing_id, product_type, expected_w, expected_h, actual_w, actual_h, bg_mode, status (ok|wrong_dims|wrong_aspect|missing|fetch_error), audited_at`.
-- Return a JSON summary grouped by status.
+Single tab in DWAAdmin with two editable fields (the only ones Etsy's API allows mutating):
 
-### 2. Build the repair function: `pod-republish-wrong-dims`
-- Generalize the existing `pod-republish-broken` function (currently phone-case-only) to handle any product type flagged `wrong_dims` / `wrong_aspect` / `missing` by the auditor.
-- For each broken listing: regenerate artwork via `buildPrintPrompt` → `gpt-image-1` → `normalizeToSpec` (guarantees exact pixel dims) → re-upload to Printify → PUT product with corrected `print_areas`.
-- Idempotent; safe to re-run.
+- **Shop title** (tagline under shop name, ≤55 chars)
+- **Shop announcement** (banner inside shop, ≤2200 chars)
 
-### 3. Lock the standard at publish time
-Add a hard gate to `printify-direct-publish` (already partially there) so any future publish must:
-1. Call `buildPrintPrompt(prompt, productType)` — no raw prompts allowed.
-2. Run output through `normalizeToSpec()` before upload.
-3. Call `validateImageDimensions()` on the final base64 — if not within 2px of spec, throw `dim_violation` and refuse to publish.
-4. After Printify create, immediately call the same auditor in (1) on the new product. If audit returns anything other than `ok`, delete the just-created product and throw — preventing any broken product from ever existing.
+UI:
+- Current values shown (live-fetched from Etsy `getShop`)
+- Edit textarea + "Push to Etsy" button → calls edge function → toast on success
+- Edit history log (last 20 changes, who/when/what) from new `etsy_shop_edits` table
+- Manual-change checklist card explaining what still requires the Etsy dashboard (shop name, banner image, icon)
 
-### 4. CI / cron safety net
-- Add a daily cron `pod-audit-dimensions-cron` (9am UTC) that runs the auditor over all listings and SMSes Matt via `notifyMatt` if any product drifts to non-ok status (e.g., Printify regenerates placement, blueprint changes, etc.).
-- Add a Deno unit test `pod-print-spec.test.ts` asserting every product_type in `POD_CATALOG` has a matching entry in `PRINT_SPECS` so we can never ship a new SKU without a spec.
+Edge functions:
+- `etsy-shop-get` — GET wrapper around Etsy `/shops/{shop_id}`
+- `etsy-shop-update` — PUT to `/shops/{shop_id}` with `title` + `announcement`
 
-### 5. Run order (one-time)
-1. Migration: create `pod_dimension_audit` table.
-2. Deploy `pod-audit-dimensions` + updated `pod-republish-wrong-dims` + updated `printify-direct-publish`.
-3. Run auditor → review summary.
-4. Run repair on every flagged listing.
-5. Re-run auditor → should report 100% ok.
-6. Enable daily cron.
+Requires `ETSY_API_KEY` + `ETSY_ACCESS_TOKEN` + `ETSY_SHOP_ID` secrets (will prompt if missing).
 
-## Technical notes
-- Printify image dims are available on `/uploads/{id}.json` as `width`/`height` (no need to download bytes).
-- `pod_listings.printify_id` is the Printify product id; shop id comes from `PRINTIFY_SHOP_ID` secret.
-- `PRINT_SPECS` already covers all 50 live product_types — no gaps.
-- The publish-time double-check (step 3.4) is the key durability guarantee: even if the image generator returns wrong dims and `normalizeToSpec` somehow fails, the post-create audit will catch it before customers see it.
+---
 
-## Out of scope
-- Changing blueprints/providers (catalog stays as-is).
-- Re-pricing or re-titling — purely a dimensional/visual integrity pass.
+## 2. Automated Announcements
+
+**Recommended trigger mix** (rotates so the banner never goes stale):
+
+| Trigger | Frequency | Copy template |
+|---|---|---|
+| New product published | Real-time on `printify-direct-publish` success | "✨ New drop: {title} — shop now" |
+| Weekly featured product | Mon 9am ET cron, picks top product by recent views/sales | "This week's pick: {title}" |
+| Sale schedule | Admin sets start/end date | "{discount}% off through {end_date}" |
+| Quiet-day fallback | Daily 8am ET if banner >7 days old | Rotates evergreen lines from a copy pool |
+
+Implementation:
+- New table `etsy_announcement_schedule` (id, type, copy, starts_at, ends_at, active, priority)
+- New table `etsy_announcement_log` (what was pushed when, by which trigger)
+- Edge function `etsy-announcement-rotator` — cron daily 13:00 UTC, picks highest-priority active row, calls `etsy-shop-update`
+- Edge function `etsy-announcement-on-publish` — hooked into existing publish flow, queues a "new drop" announcement
+- Admin UI: schedule manager (add sale window, see queue, manual override, pause automation toggle)
+
+---
+
+## 3. Guild & Grain marketplace
+
+Treated as a separate Lovable project. When you're ready, start a new project and paste the original spec — it will live cleanly on its own without polluting DWA/M2.
+
+---
+
+## Files
+
+**New:**
+- `supabase/migrations/<ts>_etsy_shop_admin.sql` — `etsy_shop_edits`, `etsy_announcement_schedule`, `etsy_announcement_log`
+- `supabase/functions/etsy-shop-get/index.ts`
+- `supabase/functions/etsy-shop-update/index.ts`
+- `supabase/functions/etsy-announcement-rotator/index.ts`
+- `supabase/functions/etsy-announcement-on-publish/index.ts`
+- `src/components/dwa-admin/EtsyShopAdmin.tsx`
+- `src/components/dwa-admin/EtsyAnnouncementSchedule.tsx`
+
+**Edited:**
+- `src/pages/DWAAdmin.tsx` — add "Etsy Shop" tab
+- `supabase/functions/printify-direct-publish/index.ts` — fire-and-forget call to `etsy-announcement-on-publish` after Etsy publish succeeds
+- `supabase/config.toml` — register 4 new functions with `verify_jwt = false`
+
+After approval I'll request the Etsy secrets if not already present, then build everything.
