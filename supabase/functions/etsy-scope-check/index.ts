@@ -19,6 +19,20 @@ async function probe(url: string, apiKey: string, accessToken: string) {
   return { status: r.status, ok: r.ok, body: text };
 }
 
+function extractShop(payload: any) {
+  return payload?.shop_id ? payload : (payload?.results?.[0] ?? (Array.isArray(payload) ? payload[0] : null));
+}
+
+async function probeConnectedShop(apiKey: string, accessToken: string) {
+  const me = await probe("https://openapi.etsy.com/v3/application/users/me/shops", apiKey, accessToken);
+  if (me.ok) return me;
+  const userId = accessToken.split(".")[0];
+  if (/^\d+$/.test(userId) && me.status === 400 && /Expected int value/i.test(me.body)) {
+    return probe(`https://openapi.etsy.com/v3/application/users/${userId}/shops`, apiKey, accessToken);
+  }
+  return me;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   const sb = createClient(SUPABASE_URL, SERVICE_ROLE);
@@ -39,18 +53,16 @@ Deno.serve(async (req) => {
     result.connected = true;
 
     // 1) shops_r — auto-discover shop
-    const me = await probe(
-      "https://openapi.etsy.com/v3/application/users/me/shops",
-      apiKey, accessToken,
-    );
+    const me = await probeConnectedShop(apiKey, accessToken);
     if (me.ok) {
       result.scopes.shops_r = true;
       try {
         const j = JSON.parse(me.body);
-        const shop = j?.shop_id ? j : (j?.results?.[0] ?? (Array.isArray(j) ? j[0] : null));
+        const shop = extractShop(j);
         if (shop) {
           result.shop_id = String(shop.shop_id);
           result.shop_name = shop.shop_name ?? null;
+          await sb.from("etsy_oauth_tokens").update({ shop_id: result.shop_id, updated_at: new Date().toISOString() }).eq("key", "default");
         }
       } catch { /* ignore */ }
     } else if (me.status === 401 || me.status === 403) {
