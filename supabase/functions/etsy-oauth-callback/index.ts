@@ -20,7 +20,9 @@ Deno.serve(async (req) => {
     if (!code || !state) return html(`<h2>Missing code/state</h2>`, 400);
 
     const apiKey = Deno.env.get("ETSY_API_KEY");
+    const sharedSecret = Deno.env.get("ETSY_SHARED_SECRET") ?? "";
     if (!apiKey) throw new Error("ETSY_API_KEY missing");
+    const apiKeyCombined = sharedSecret ? `${apiKey}:${sharedSecret}` : apiKey;
 
     const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     const { data: pending } = await sb.from("etsy_oauth_pending").select("*").eq("state", state).maybeSingle();
