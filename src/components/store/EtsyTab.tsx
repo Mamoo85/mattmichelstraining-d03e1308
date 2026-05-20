@@ -69,7 +69,7 @@ const EtsyTab = () => {
   if (!items.length) {
     return (
       <div className="py-12 text-center text-muted-foreground">
-        No active Etsy listings yet. <a className="underline" href="https://www.etsy.com/shop/MattMichelsStore" target="_blank" rel="noreferrer">Visit shop ↗</a>
+        No active Etsy listings yet. <a className="underline" href="https://www.etsy.com/shop/Yarningforyoubylisa" target="_blank" rel="noreferrer">Visit shop ↗</a>
       </div>
     );
   }
