@@ -23,6 +23,26 @@ async function etsyFetch(url: string, apiKey: string, accessToken: string) {
   return JSON.parse(t);
 }
 
+function extractShop(payload: any) {
+  return payload?.shop_id ? payload : (payload?.results?.[0] ?? (Array.isArray(payload) ? payload[0] : null));
+}
+
+async function discoverConnectedShop(apiKey: string, accessToken: string) {
+  try {
+    const me = await etsyFetch("https://openapi.etsy.com/v3/application/users/me/shops", apiKey, accessToken);
+    const shop = extractShop(me);
+    if (shop?.shop_id) return shop;
+  } catch (e) {
+    console.warn("users/me/shops failed; falling back to token user id", (e as Error).message);
+  }
+  const userId = accessToken.split(".")[0];
+  if (!/^\d+$/.test(userId)) throw new Error("shop_discovery_failed: unable to derive Etsy user id from token");
+  const byId = await etsyFetch(`https://openapi.etsy.com/v3/application/users/${userId}/shops`, apiKey, accessToken);
+  const shop = extractShop(byId);
+  if (!shop?.shop_id) throw new Error(`shop_discovery_failed: ${JSON.stringify(byId).slice(0, 300)}`);
+  return shop;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   const sb = createClient(SUPABASE_URL, SERVICE_ROLE);
@@ -39,21 +59,10 @@ Deno.serve(async (req) => {
     if (body.shop_id) {
       shopId = String(body.shop_id);
     } else {
-      const me = await etsyFetch(
-        "https://openapi.etsy.com/v3/application/users/me/shops",
-        apiKey,
-        accessToken,
-      );
-      // Etsy returns either a single shop object or { results: [...] } depending on account
-      const discovered =
-        me?.shop_id ??
-        me?.results?.[0]?.shop_id ??
-        (Array.isArray(me) ? me[0]?.shop_id : null);
-      if (!discovered) {
-        throw new Error(`shop_discovery_failed: ${JSON.stringify(me).slice(0, 300)}`);
-      }
-      shopId = String(discovered);
-      console.log("auto-discovered shop_id:", shopId, "name:", me?.shop_name ?? me?.results?.[0]?.shop_name);
+      const shop = await discoverConnectedShop(apiKey, accessToken);
+      shopId = String(shop.shop_id);
+      await sb.from("etsy_oauth_tokens").update({ shop_id: shopId, updated_at: new Date().toISOString() }).eq("key", "default");
+      console.log("auto-discovered shop_id:", shopId, "name:", shop.shop_name);
     }
 
     const seen = new Set<number>();
