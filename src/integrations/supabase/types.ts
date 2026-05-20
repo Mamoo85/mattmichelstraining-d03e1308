@@ -8869,6 +8869,57 @@ export type Database = {
         }
         Relationships: []
       }
+      etsy_oauth_pending: {
+        Row: {
+          code_verifier: string
+          created_at: string
+          redirect_back: string | null
+          state: string
+        }
+        Insert: {
+          code_verifier: string
+          created_at?: string
+          redirect_back?: string | null
+          state: string
+        }
+        Update: {
+          code_verifier?: string
+          created_at?: string
+          redirect_back?: string | null
+          state?: string
+        }
+        Relationships: []
+      }
+      etsy_oauth_tokens: {
+        Row: {
+          access_token: string
+          expires_at: string
+          key: string
+          refresh_token: string
+          scope: string | null
+          shop_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          access_token: string
+          expires_at: string
+          key?: string
+          refresh_token: string
+          scope?: string | null
+          shop_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string
+          expires_at?: string
+          key?: string
+          refresh_token?: string
+          scope?: string | null
+          shop_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       etsy_shop_edits: {
         Row: {
           created_at: string
