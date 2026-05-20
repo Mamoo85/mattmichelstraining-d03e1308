@@ -13,6 +13,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { POD_CATALOG } from "../_shared/pod-printify-catalog.ts";
 import { getPrintSpec, validateImageDimensions, placeholderPlacement, buildPrintPrompt, normalizeToSpec } from "../_shared/pod-print-spec.ts";
+import { validateAndLog } from "../_shared/pod-image-regression.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -113,6 +114,13 @@ Deno.serve(async (req) => {
       const fixed = await normalizeToSpec(raw, spec);
       const v = await validateImageDimensions(fixed, spec);
       if (!v.ok) throw new Error(`post_norm_fail_${v.reason}`);
+
+      // Regression gate: full-bleed + exact-spec dimensional check
+      const bytes = Uint8Array.from(atob(fixed), (c) => c.charCodeAt(0));
+      const reg = await validateAndLog(sb, bytes, t.product_type, {
+        listing_id: t.id, printify_id: t.printify_id, caller: "pod-republish-wrong-dims",
+      });
+      if (!reg.pass) throw new Error(`regression_${reg.reason}`);
 
       const upload: any = await pf(`/uploads/images.json`, {
         method: "POST",
