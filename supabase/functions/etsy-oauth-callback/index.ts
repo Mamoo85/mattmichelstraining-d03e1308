@@ -23,6 +23,12 @@ function safeBackUrl(raw: unknown) {
   }
 }
 
+function redirectBack(raw: unknown, params: Record<string, string>) {
+  const back = new URL(safeBackUrl(raw));
+  for (const [key, value] of Object.entries(params)) back.searchParams.set(key, value);
+  return Response.redirect(back.toString(), 303);
+}
+
 function extractShop(payload: any) {
   return payload?.shop_id ? payload : (payload?.results?.[0] ?? (Array.isArray(payload) ? payload[0] : null));
 }
@@ -34,8 +40,8 @@ Deno.serve(async (req) => {
     const code = url.searchParams.get("code");
     const state = url.searchParams.get("state");
     const err = url.searchParams.get("error");
-    if (err) return html(`<h2>Etsy declined</h2><p>${err}</p><p><a href="${DEFAULT_BACK_URL}">Back</a></p>`, 400);
-    if (!code || !state) return html(`<h2>Missing code/state</h2>`, 400);
+    if (err) return redirectBack(null, { etsy: "declined", error: err });
+    if (!code || !state) return redirectBack(null, { etsy: "error", error: "missing_code_or_state" });
 
     const apiKey = Deno.env.get("ETSY_API_KEY");
     const sharedSecret = Deno.env.get("ETSY_SHARED_SECRET") ?? "";
@@ -44,7 +50,7 @@ Deno.serve(async (req) => {
 
     const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     const { data: pending } = await sb.from("etsy_oauth_pending").select("*").eq("state", state).maybeSingle();
-    if (!pending) return html(`<h2>State expired or unknown</h2><p><a href="${DEFAULT_BACK_URL}">Try again</a></p>`, 400);
+    if (!pending) return redirectBack(null, { etsy: "error", error: "state_expired" });
 
     const projectRef = Deno.env.get("SUPABASE_URL")!.split("//")[1].split(".")[0];
     const redirectUri = `https://${projectRef}.functions.supabase.co/etsy-oauth-callback`;
@@ -63,7 +69,7 @@ Deno.serve(async (req) => {
       body: tokenBody.toString(),
     });
     const tokTxt = await tokR.text();
-    if (!tokR.ok) return html(`<h2>Token exchange failed</h2><pre>${tokTxt}</pre>`, 500);
+    if (!tokR.ok) return redirectBack(pending.redirect_back, { etsy: "error", error: "token_exchange_failed" });
     const tok = JSON.parse(tokTxt) as { access_token: string; refresh_token: string; expires_in: number };
 
     let shopId = "";
@@ -115,13 +121,12 @@ Deno.serve(async (req) => {
     }).then(async (r) => console.log("etsy post-oauth sync", r.status, await r.text())).catch((e) => console.error("etsy post-oauth sync failed", e.message));
     EdgeRuntime.waitUntil(syncPromise);
 
-    const back = safeBackUrl(pending.redirect_back);
-    return html(`<h2>✓ Etsy connected</h2>
-      <p>Shop: <code>${shopName || shopId || "(none found)"}</code>${shopId ? ` <small>(${shopId})</small>` : ""}${shopErr ? `<br><small>shop fetch: ${shopErr}</small>` : ""}</p>
-      <p>Token expires in ${Math.round(tok.expires_in/3600)}h. Auto-refresh enabled.</p>
-      <p>Product/image resync is running now.</p>
-      <p><a href="${back}">Return to admin →</a></p>
-      <script>setTimeout(()=>location.replace(${JSON.stringify(back)}),1200)</script>`);
+    return redirectBack(pending.redirect_back, {
+      etsy: "connected",
+      shop_id: shopId || "unknown",
+      shop: shopName || "unknown",
+      sync: "started",
+    });
   } catch (e) {
     return html(`<h2>Error</h2><pre>${(e as Error).message}</pre>`, 500);
   }
