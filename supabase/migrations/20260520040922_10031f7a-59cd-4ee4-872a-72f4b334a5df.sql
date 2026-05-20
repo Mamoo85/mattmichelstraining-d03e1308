@@ -1,0 +1,1 @@
+UPDATE public.etsy_oauth_tokens SET shop_id = '6311589', updated_at = now() WHERE key = 'default';

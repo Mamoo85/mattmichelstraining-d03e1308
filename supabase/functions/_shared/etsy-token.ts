@@ -8,8 +8,11 @@ export interface EtsyAuth {
 }
 
 export async function getEtsyAuth(sb?: SupabaseClient): Promise<EtsyAuth> {
-  const apiKey = Deno.env.get("ETSY_API_KEY") ?? "";
-  if (!apiKey) throw new Error("ETSY_API_KEY missing");
+  const keystring = Deno.env.get("ETSY_API_KEY") ?? "";
+  const sharedSecret = Deno.env.get("ETSY_SHARED_SECRET") ?? "";
+  if (!keystring) throw new Error("ETSY_API_KEY missing");
+  // Etsy v3 shop/user endpoints require x-api-key in format "keystring:shared_secret"
+  const apiKey = sharedSecret ? `${keystring}:${sharedSecret}` : keystring;
 
   const client = sb ?? createClient(
     Deno.env.get("SUPABASE_URL")!,
@@ -50,9 +53,11 @@ export async function getEtsyAuth(sb?: SupabaseClient): Promise<EtsyAuth> {
 }
 
 async function refreshEtsyToken(apiKey: string, refreshToken: string) {
+  // OAuth token endpoint uses keystring only (strip shared_secret if combined)
+  const clientId = apiKey.split(":")[0];
   const body = new URLSearchParams({
     grant_type: "refresh_token",
-    client_id: apiKey,
+    client_id: clientId,
     refresh_token: refreshToken,
   });
   const r = await fetch("https://api.etsy.com/v3/public/oauth/token", {

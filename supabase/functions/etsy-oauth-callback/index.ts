@@ -20,7 +20,9 @@ Deno.serve(async (req) => {
     if (!code || !state) return html(`<h2>Missing code/state</h2>`, 400);
 
     const apiKey = Deno.env.get("ETSY_API_KEY");
+    const sharedSecret = Deno.env.get("ETSY_SHARED_SECRET") ?? "";
     if (!apiKey) throw new Error("ETSY_API_KEY missing");
+    const apiKeyCombined = sharedSecret ? `${apiKey}:${sharedSecret}` : apiKey;
 
     const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     const { data: pending } = await sb.from("etsy_oauth_pending").select("*").eq("state", state).maybeSingle();
@@ -49,15 +51,19 @@ Deno.serve(async (req) => {
     // Etsy access tokens have format "<user_id>.<random>" — derive user_id, then fetch their primary shop
     const userId = tok.access_token.split(".")[0];
     let shopId = "";
+    let shopErr = "";
     try {
       const shopR = await fetch(`https://openapi.etsy.com/v3/application/users/${userId}/shops`, {
-        headers: { "x-api-key": apiKey, Authorization: `Bearer ${tok.access_token}` },
+        headers: { "x-api-key": apiKeyCombined, Authorization: `Bearer ${tok.access_token}` },
       });
+      const shopTxt = await shopR.text();
       if (shopR.ok) {
-        const shopD = await shopR.json();
+        const shopD = JSON.parse(shopTxt);
         shopId = String(shopD.shop_id ?? shopD.results?.[0]?.shop_id ?? "");
+      } else {
+        shopErr = `${shopR.status}: ${shopTxt}`;
       }
-    } catch (_) { /* best effort */ }
+    } catch (e) { shopErr = (e as Error).message; }
 
     await sb.from("etsy_oauth_tokens").upsert({
       key: "default",
@@ -72,7 +78,7 @@ Deno.serve(async (req) => {
 
     const back = (pending.redirect_back as string) || "/dwa-admin";
     return html(`<h2>✓ Etsy connected</h2>
-      <p>Shop ID: <code>${shopId || "(none found)"}</code></p>
+      <p>Shop ID: <code>${shopId || "(none found)"}</code>${shopErr ? `<br><small>shop fetch: ${shopErr}</small>` : ""}</p>
       <p>Token expires in ${Math.round(tok.expires_in/3600)}h. Auto-refresh enabled.</p>
       <p><a href="${back}">Return to admin →</a></p>
       <script>setTimeout(()=>location.href=${JSON.stringify(back)},2000)</script>`);
