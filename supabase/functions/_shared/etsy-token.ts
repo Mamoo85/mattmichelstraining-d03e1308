@@ -53,9 +53,11 @@ export async function getEtsyAuth(sb?: SupabaseClient): Promise<EtsyAuth> {
 }
 
 async function refreshEtsyToken(apiKey: string, refreshToken: string) {
+  // OAuth token endpoint uses keystring only (strip shared_secret if combined)
+  const clientId = apiKey.split(":")[0];
   const body = new URLSearchParams({
     grant_type: "refresh_token",
-    client_id: apiKey,
+    client_id: clientId,
     refresh_token: refreshToken,
   });
   const r = await fetch("https://api.etsy.com/v3/public/oauth/token", {
