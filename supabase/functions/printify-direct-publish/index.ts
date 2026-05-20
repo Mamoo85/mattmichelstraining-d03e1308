@@ -269,6 +269,15 @@ Deno.serve(async (req) => {
 
     if (insErr) console.error("pod_listings insert error", insErr);
 
+    // Fire-and-forget: queue an Etsy "new drop" announcement if we published
+    if (publish && etsyListingId) {
+      fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/etsy-announcement-on-publish`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}` },
+        body: JSON.stringify({ title: name, product_type: type, listing_id: etsyListingId }),
+      }).catch((e) => console.error("etsy-announcement-on-publish dispatch failed", e));
+    }
+
     return new Response(JSON.stringify({
       ok: true,
       printify_id: printifyId,

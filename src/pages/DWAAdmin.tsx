@@ -66,6 +66,7 @@ const EmailPreflightHarness = lazy(() => import("@/components/dwa-admin/EmailPre
 const AdminToday = lazy(() => import("@/components/dwa-admin/AdminToday"));
 const MyCommandCenter = lazy(() => import("@/components/dwa-admin/MyCommandCenter"));
 const ClientSandboxFrame = lazy(() => import("@/components/dwa-admin/ClientSandboxFrame"));
+const EtsyShopAdmin = lazy(() => import("@/components/dwa-admin/EtsyShopAdmin"));
 
 type Tab =
   | "my-command-center" | "sandbox-site" | "sandbox-admin"
@@ -75,7 +76,7 @@ type Tab =
   | "contractor-leads" | "contractor-onboarding" | "contractor-market" | "fielddesk" | "techalert" | "missed-call" | "missed-call-leads" | "clients-all"
   | "lead-marketplace" | "demand-radar" | "hvb" | "growth-signals" | "visitor-intel" | "the-wire" | "coverage-map" | "trade-radar"
   | "health" | "simulation" | "playbook-hub" | "field-ops" | "command"
-  | "sales-hub" | "buyer-radar-qa" | "mortgage-radar" | "strategy-mode" | "enrichment-audit" | "enrichment-health" | "enrichment-debug" | "reply-inbox" | "client-attribution" | "marketing-tools" | "djconley" | "proposals" | "manual-onboarding" | "suppression-lists" | "system-audit" | "demo-pipeline" | "trial-funnel" | "email-preflight";
+  | "sales-hub" | "buyer-radar-qa" | "mortgage-radar" | "strategy-mode" | "enrichment-audit" | "enrichment-health" | "enrichment-debug" | "reply-inbox" | "client-attribution" | "marketing-tools" | "djconley" | "proposals" | "manual-onboarding" | "suppression-lists" | "system-audit" | "demo-pipeline" | "trial-funnel" | "email-preflight" | "etsy-shop";
 
 const GROUPS: SidebarGroup[] = [
   {
@@ -146,6 +147,7 @@ const GROUPS: SidebarGroup[] = [
       { id: "missed-call-leads", label: "Missed Call Leads" },
       { id: "hvb",               label: "High-Volume Buyers" },
       { id: "growth-signals",    label: "Growth Signals" },
+      { id: "etsy-shop",         label: "🛍️ Etsy Shop" },
     ],
   },
   {
@@ -287,6 +289,7 @@ export default function DWAAdmin() {
           {activeTab === "strategy-mode" && <Suspense fallback={lazyFallback("strategy mode")}><StrategyModeHub /></Suspense>}
           {activeTab === "field-ops"     && <Suspense fallback={lazyFallback("field ops")}><FieldOpsHub /></Suspense>}
           {activeTab === "command"       && <DWACommandDeck />}
+          {activeTab === "etsy-shop"     && <Suspense fallback={lazyFallback("Etsy Shop")}><EtsyShopAdmin /></Suspense>}
         </div>
       </main>
     </div>
