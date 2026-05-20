@@ -66,6 +66,7 @@ const EmailPreflightHarness = lazy(() => import("@/components/dwa-admin/EmailPre
 const AdminToday = lazy(() => import("@/components/dwa-admin/AdminToday"));
 const MyCommandCenter = lazy(() => import("@/components/dwa-admin/MyCommandCenter"));
 const ClientSandboxFrame = lazy(() => import("@/components/dwa-admin/ClientSandboxFrame"));
+const EtsyShopAdmin = lazy(() => import("@/components/dwa-admin/EtsyShopAdmin"));
 
 type Tab =
   | "my-command-center" | "sandbox-site" | "sandbox-admin"
