@@ -8920,6 +8920,104 @@ export type Database = {
         }
         Relationships: []
       }
+      etsy_product_images: {
+        Row: {
+          alt_text: string | null
+          created_at: string
+          image_id: number
+          listing_id: number
+          rank: number
+          url_570xn: string | null
+          url_75x75: string | null
+          url_fullxfull: string | null
+        }
+        Insert: {
+          alt_text?: string | null
+          created_at?: string
+          image_id: number
+          listing_id: number
+          rank?: number
+          url_570xn?: string | null
+          url_75x75?: string | null
+          url_fullxfull?: string | null
+        }
+        Update: {
+          alt_text?: string | null
+          created_at?: string
+          image_id?: number
+          listing_id?: number
+          rank?: number
+          url_570xn?: string | null
+          url_75x75?: string | null
+          url_fullxfull?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "etsy_product_images_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "etsy_products"
+            referencedColumns: ["listing_id"]
+          },
+        ]
+      }
+      etsy_products: {
+        Row: {
+          created_at: string
+          currency: string | null
+          description: string | null
+          etsy_created_ts: number | null
+          etsy_updated_ts: number | null
+          last_synced_at: string
+          listing_id: number
+          materials: string[] | null
+          price_cents: number | null
+          quantity: number | null
+          raw: Json | null
+          shop_id: number
+          state: string | null
+          tags: string[] | null
+          title: string
+          url: string | null
+        }
+        Insert: {
+          created_at?: string
+          currency?: string | null
+          description?: string | null
+          etsy_created_ts?: number | null
+          etsy_updated_ts?: number | null
+          last_synced_at?: string
+          listing_id: number
+          materials?: string[] | null
+          price_cents?: number | null
+          quantity?: number | null
+          raw?: Json | null
+          shop_id: number
+          state?: string | null
+          tags?: string[] | null
+          title: string
+          url?: string | null
+        }
+        Update: {
+          created_at?: string
+          currency?: string | null
+          description?: string | null
+          etsy_created_ts?: number | null
+          etsy_updated_ts?: number | null
+          last_synced_at?: string
+          listing_id?: number
+          materials?: string[] | null
+          price_cents?: number | null
+          quantity?: number | null
+          raw?: Json | null
+          shop_id?: number
+          state?: string | null
+          tags?: string[] | null
+          title?: string
+          url?: string | null
+        }
+        Relationships: []
+      }
       etsy_shop_edits: {
         Row: {
           created_at: string
@@ -8950,6 +9048,33 @@ export type Database = {
           new_value?: string
           previous_value?: string | null
           pushed_ok?: boolean
+        }
+        Relationships: []
+      }
+      etsy_token_refresh_log: {
+        Row: {
+          error: string | null
+          expires_at: string | null
+          id: string
+          ran_at: string
+          refreshed: boolean | null
+          success: boolean
+        }
+        Insert: {
+          error?: string | null
+          expires_at?: string | null
+          id?: string
+          ran_at?: string
+          refreshed?: boolean | null
+          success: boolean
+        }
+        Update: {
+          error?: string | null
+          expires_at?: string | null
+          id?: string
+          ran_at?: string
+          refreshed?: boolean | null
+          success?: boolean
         }
         Relationships: []
       }
@@ -17247,6 +17372,62 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "pod_dimension_audit_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "pod_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pod_image_regression_log: {
+        Row: {
+          caller: string | null
+          edge_white_pct: number | null
+          expected_height: number | null
+          expected_width: number | null
+          height: number | null
+          id: string
+          listing_id: string | null
+          pass: boolean
+          printify_id: string | null
+          product_type: string | null
+          ran_at: string
+          reason: string | null
+          width: number | null
+        }
+        Insert: {
+          caller?: string | null
+          edge_white_pct?: number | null
+          expected_height?: number | null
+          expected_width?: number | null
+          height?: number | null
+          id?: string
+          listing_id?: string | null
+          pass: boolean
+          printify_id?: string | null
+          product_type?: string | null
+          ran_at?: string
+          reason?: string | null
+          width?: number | null
+        }
+        Update: {
+          caller?: string | null
+          edge_white_pct?: number | null
+          expected_height?: number | null
+          expected_width?: number | null
+          height?: number | null
+          id?: string
+          listing_id?: string | null
+          pass?: boolean
+          printify_id?: string | null
+          product_type?: string | null
+          ran_at?: string
+          reason?: string | null
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pod_image_regression_log_listing_id_fkey"
             columns: ["listing_id"]
             isOneToOne: false
             referencedRelation: "pod_listings"
