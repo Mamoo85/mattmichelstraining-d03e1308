@@ -2476,3 +2476,9 @@ verify_jwt = false
 
 [functions.etsy-announcement-on-publish]
 verify_jwt = false
+
+[functions.etsy-oauth-start]
+verify_jwt = false
+
+[functions.etsy-oauth-callback]
+verify_jwt = false

@@ -1,0 +1,82 @@
+// OAuth2 callback. Exchanges code for tokens, stores them, redirects to admin.
+import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+
+const corsHeaders = { "Access-Control-Allow-Origin": "*" };
+
+function html(body: string, status = 200) {
+  return new Response(`<!doctype html><meta charset=utf-8><title>Etsy Connect</title>
+    <style>body{font-family:-apple-system,sans-serif;background:#0a1628;color:#fff;padding:40px;text-align:center}
+    a{color:#00d4ff}</style>${body}`, { status, headers: { "Content-Type": "text/html" } });
+}
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  try {
+    const url = new URL(req.url);
+    const code = url.searchParams.get("code");
+    const state = url.searchParams.get("state");
+    const err = url.searchParams.get("error");
+    if (err) return html(`<h2>Etsy declined</h2><p>${err}</p><p><a href="/dwa-admin">Back</a></p>`, 400);
+    if (!code || !state) return html(`<h2>Missing code/state</h2>`, 400);
+
+    const apiKey = Deno.env.get("ETSY_API_KEY");
+    if (!apiKey) throw new Error("ETSY_API_KEY missing");
+
+    const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const { data: pending } = await sb.from("etsy_oauth_pending").select("*").eq("state", state).maybeSingle();
+    if (!pending) return html(`<h2>State expired or unknown</h2><p><a href="/dwa-admin">Try again</a></p>`, 400);
+
+    const projectRef = Deno.env.get("SUPABASE_URL")!.split("//")[1].split(".")[0];
+    const redirectUri = `https://${projectRef}.functions.supabase.co/etsy-oauth-callback`;
+
+    // Exchange code for tokens
+    const tokenBody = new URLSearchParams({
+      grant_type: "authorization_code",
+      client_id: apiKey,
+      redirect_uri: redirectUri,
+      code,
+      code_verifier: pending.code_verifier as string,
+    });
+    const tokR = await fetch("https://api.etsy.com/v3/public/oauth/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: tokenBody.toString(),
+    });
+    const tokTxt = await tokR.text();
+    if (!tokR.ok) return html(`<h2>Token exchange failed</h2><pre>${tokTxt}</pre>`, 500);
+    const tok = JSON.parse(tokTxt) as { access_token: string; refresh_token: string; expires_in: number };
+
+    // Etsy access tokens have format "<user_id>.<random>" — derive user_id, then fetch their primary shop
+    const userId = tok.access_token.split(".")[0];
+    let shopId = "";
+    try {
+      const shopR = await fetch(`https://openapi.etsy.com/v3/application/users/${userId}/shops`, {
+        headers: { "x-api-key": apiKey, Authorization: `Bearer ${tok.access_token}` },
+      });
+      if (shopR.ok) {
+        const shopD = await shopR.json();
+        shopId = String(shopD.shop_id ?? shopD.results?.[0]?.shop_id ?? "");
+      }
+    } catch (_) { /* best effort */ }
+
+    await sb.from("etsy_oauth_tokens").upsert({
+      key: "default",
+      access_token: tok.access_token,
+      refresh_token: tok.refresh_token,
+      expires_at: new Date(Date.now() + tok.expires_in * 1000).toISOString(),
+      shop_id: shopId || null,
+      updated_at: new Date().toISOString(),
+    });
+
+    await sb.from("etsy_oauth_pending").delete().eq("state", state);
+
+    const back = (pending.redirect_back as string) || "/dwa-admin";
+    return html(`<h2>✓ Etsy connected</h2>
+      <p>Shop ID: <code>${shopId || "(none found)"}</code></p>
+      <p>Token expires in ${Math.round(tok.expires_in/3600)}h. Auto-refresh enabled.</p>
+      <p><a href="${back}">Return to admin →</a></p>
+      <script>setTimeout(()=>location.href=${JSON.stringify(back)},2000)</script>`);
+  } catch (e) {
+    return html(`<h2>Error</h2><pre>${(e as Error).message}</pre>`, 500);
+  }
+});

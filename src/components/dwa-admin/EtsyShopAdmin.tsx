@@ -124,6 +124,10 @@ export default function EtsyShopAdmin() {
     load();
   }
 
+  const projectRef = (import.meta.env.VITE_SUPABASE_URL ?? "").split("//")[1]?.split(".")[0] ?? "";
+  const connectUrl = `https://${projectRef}.functions.supabase.co/etsy-oauth-start?redirect_back=${encodeURIComponent(window.location.pathname)}`;
+  const notConnected = !info && !busy;
+
   return (
     <div className="space-y-6 text-white">
       <header className="flex items-center justify-between flex-wrap gap-3">
@@ -136,13 +140,30 @@ export default function EtsyShopAdmin() {
             </p>
           )}
         </div>
-        <button
-          onClick={toggleAutomation}
-          className={`text-xs px-3 py-1.5 rounded font-semibold border ${automation ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-300" : "border-amber-500/40 bg-amber-500/10 text-amber-300"}`}
-        >
-          Automation: {automation ? "ON" : "PAUSED"}
-        </button>
+        <div className="flex items-center gap-2">
+          <a
+            href={connectUrl}
+            className="text-xs px-3 py-1.5 rounded font-semibold border border-[#00d4ff]/40 bg-[#00d4ff]/10 text-[#00d4ff] hover:bg-[#00d4ff]/20"
+          >
+            {info ? "Reconnect Etsy" : "Connect Etsy"}
+          </a>
+          <button
+            onClick={toggleAutomation}
+            className={`text-xs px-3 py-1.5 rounded font-semibold border ${automation ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-300" : "border-amber-500/40 bg-amber-500/10 text-amber-300"}`}
+          >
+            Automation: {automation ? "ON" : "PAUSED"}
+          </button>
+        </div>
       </header>
+
+      {notConnected && (
+        <div className="p-4 rounded-lg border border-[#00d4ff]/30 bg-[#00d4ff]/5 text-sm">
+          <p className="font-semibold text-[#00d4ff] mb-1">Etsy not connected</p>
+          <p className="text-white/70">Click <b>Connect Etsy</b> above. You'll be sent to Etsy to approve access, then bounced back here. Tokens auto-refresh — one-time only.</p>
+          <p className="text-white/40 text-xs mt-2">First time? Set this exact callback URL in your Etsy app: <code className="bg-black/30 px-1.5 py-0.5 rounded">https://{projectRef}.functions.supabase.co/etsy-oauth-callback</code></p>
+        </div>
+      )}
+
 
       {/* Live editor */}
       <div className={SECTION}>
