@@ -51,15 +51,19 @@ Deno.serve(async (req) => {
     // Etsy access tokens have format "<user_id>.<random>" — derive user_id, then fetch their primary shop
     const userId = tok.access_token.split(".")[0];
     let shopId = "";
+    let shopErr = "";
     try {
       const shopR = await fetch(`https://openapi.etsy.com/v3/application/users/${userId}/shops`, {
-        headers: { "x-api-key": apiKey, Authorization: `Bearer ${tok.access_token}` },
+        headers: { "x-api-key": apiKeyCombined, Authorization: `Bearer ${tok.access_token}` },
       });
+      const shopTxt = await shopR.text();
       if (shopR.ok) {
-        const shopD = await shopR.json();
+        const shopD = JSON.parse(shopTxt);
         shopId = String(shopD.shop_id ?? shopD.results?.[0]?.shop_id ?? "");
+      } else {
+        shopErr = `${shopR.status}: ${shopTxt}`;
       }
-    } catch (_) { /* best effort */ }
+    } catch (e) { shopErr = (e as Error).message; }
 
     await sb.from("etsy_oauth_tokens").upsert({
       key: "default",
