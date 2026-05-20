@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
         if (!images.length) {
           try {
             const imgPage = await etsyFetch(
-              `https://openapi.etsy.com/v3/application/shops/${shopId}/listings/${listingId}/images`,
+              `https://openapi.etsy.com/v3/application/listings/${listingId}/images`,
               apiKey, accessToken,
             );
             images = imgPage.results ?? [];
