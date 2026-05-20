@@ -3,6 +3,7 @@ import SEOHead from "@/components/layout/SEOHead";
 import AppNavbar from "@/components/layout/AppNavbar";
 import StoreTab from "@/components/store/StoreTab";
 import MerchTab from "@/components/store/MerchTab";
+import EtsyTab from "@/components/store/EtsyTab";
 import ExerciseLibrary from "@/components/features/ExerciseLibrary";
 import FixItLibrary from "@/components/features/FixItLibrary";
 import PaywallGate from "@/components/billing/PaywallGate";
@@ -12,6 +13,7 @@ const FirstMonthPromo = lazy(() => import("@/components/landing/FirstMonthPromo"
 const TABS = [
   { key: "store", label: "Digital Programs" },
   { key: "merch", label: "Apparel & Gear" },
+  { key: "etsy", label: "Etsy Shop" },
   { key: "library", label: "Exercise Library" },
   { key: "fixit", label: "Fix It Library" },
 ] as const;
@@ -61,6 +63,7 @@ const Shop = () => {
           </>
         )}
         {activeTab === "merch" && <MerchTab />}
+        {activeTab === "etsy" && <EtsyTab />}
         {activeTab === "library" && (
           <PaywallGate featureKey="exercise_library" featureName="Exercise Library">
             <ExerciseLibrary />

@@ -81,6 +81,7 @@ const CoachHub = lazyRetry(() => import("./pages/CoachHub"));
 const MyTeam = lazyRetry(() => import("./pages/MyTeam"));
 const JoinTeam = lazyRetry(() => import("./pages/JoinTeam"));
 const Shop = lazyRetry(() => import("./pages/Shop"));
+const EtsyProductDetail = lazyRetry(() => import("./pages/EtsyProductDetail"));
 const ForParents = lazyRetry(() => import("./pages/ForParents"));
 const ForNurses = lazyRetry(() => import("./pages/ForNurses"));
 const Welcome = lazyRetry(() => import("./pages/Welcome"));
@@ -633,6 +634,7 @@ const App = () => {
                     <Route path="/reset-password" element={<ResetPassword />} />
                     <Route path="/welcome" element={<Welcome />} />
                     <Route path="/shop" element={<Shop />} />
+                    <Route path="/shop/etsy/:listingId" element={<EtsyProductDetail />} />
                     <Route path="/for-parents" element={<ForParents />} />
                     <Route path="/for-nurses" element={<ForNurses />} />
                     <Route path="/pricing" element={<Pricing />} />
