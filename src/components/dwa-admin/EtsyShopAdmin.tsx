@@ -132,7 +132,9 @@ export default function EtsyShopAdmin() {
 
   return (
     <div className="space-y-6 text-white">
+      <EtsyScopeBanner />
       <header className="flex items-center justify-between flex-wrap gap-3">
+
         <div>
           <h2 className="text-2xl font-bold">Etsy Shop</h2>
           {info && (
