@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
             listing_id: listingId,
             image_id: Number(img.listing_image_id ?? img.image_id ?? idx + 1),
             rank: img.rank ?? idx + 1,
-            url_570xN: img.url_570xN ?? null,
+            url_570xn: img.url_570xn ?? null,
             url_fullxfull: img.url_fullxfull ?? null,
             url_75x75: img.url_75x75 ?? null,
             alt_text: img.alt_text ?? null,

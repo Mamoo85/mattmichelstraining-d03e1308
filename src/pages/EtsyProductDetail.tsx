@@ -18,7 +18,7 @@ interface EtsyProductRow {
 interface EtsyImageRow {
   image_id: number;
   rank: number;
-  url_570xN: string | null;
+  url_570xn: string | null;
   url_fullxfull: string | null;
   alt_text: string | null;
 }
@@ -58,15 +58,15 @@ const EtsyProductDetail = () => {
     return () => { mounted = false; };
   }, [listingId]);
 
-  const heroImg = images[activeIdx]?.url_fullxfull || images[activeIdx]?.url_570xN || "";
-  const seoImage = images[0]?.url_fullxfull || images[0]?.url_570xN || undefined;
+  const heroImg = images[activeIdx]?.url_fullxfull || images[activeIdx]?.url_570xn || "";
+  const seoImage = images[0]?.url_fullxfull || images[0]?.url_570xn || undefined;
 
   const jsonLd = product ? {
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.title,
     description: (product.description || "").slice(0, 500),
-    image: images.map((i) => i.url_fullxfull || i.url_570xN).filter(Boolean),
+    image: images.map((i) => i.url_fullxfull || i.url_570xn).filter(Boolean),
     offers: product.price_cents != null ? {
       "@type": "Offer",
       priceCurrency: product.currency || "USD",
@@ -82,7 +82,7 @@ const EtsyProductDetail = () => {
         title={product ? `${product.title} — Shop` : "Etsy listing"}
         description={product?.description?.slice(0, 155) || "Etsy product detail"}
         path={`/shop/etsy/${listingId}`}
-        image={seoImage}
+        ogImage={seoImage}
       />
       {jsonLd && (
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
@@ -114,7 +114,7 @@ const EtsyProductDetail = () => {
                       onClick={() => setActiveIdx(idx)}
                       className={`flex-shrink-0 w-16 h-16 border-2 overflow-hidden ${idx === activeIdx ? "border-primary" : "border-border"}`}
                     >
-                      <img src={img.url_570xN || img.url_fullxfull || ""} alt={img.alt_text || ""} className="w-full h-full object-cover" />
+                      <img src={img.url_570xn || img.url_fullxfull || ""} alt={img.alt_text || ""} className="w-full h-full object-cover" />
                     </button>
                   ))}
                 </div>

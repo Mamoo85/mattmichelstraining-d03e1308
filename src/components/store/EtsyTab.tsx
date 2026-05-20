@@ -12,7 +12,7 @@ interface EtsyProduct {
 }
 interface EtsyImage {
   listing_id: number;
-  url_570xN: string | null;
+  url_570xn: string | null;
   url_fullxfull: string | null;
   rank: number;
 }
@@ -46,12 +46,12 @@ const EtsyTab = () => {
         if (ids.length) {
           const { data: imgs } = await supabase
             .from("etsy_product_images")
-            .select("listing_id,url_570xN,url_fullxfull,rank")
+            .select("listing_id,url_570xn,url_fullxfull,rank")
             .in("listing_id", ids)
             .order("rank", { ascending: true });
           const first: Record<number, string> = {};
           (imgs as EtsyImage[] | null)?.forEach((i) => {
-            if (!first[i.listing_id]) first[i.listing_id] = i.url_570xN || i.url_fullxfull || "";
+            if (!first[i.listing_id]) first[i.listing_id] = i.url_570xn || i.url_fullxfull || "";
           });
           if (mounted) setImages(first);
         }
