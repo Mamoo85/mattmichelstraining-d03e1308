@@ -29,10 +29,32 @@ Deno.serve(async (req) => {
 
   try {
     const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
-    const shopId = String(body.shop_id ?? DEFAULT_SHOP_ID);
     const hardLimit = Number(body.limit ?? 500);
 
     const { apiKey, accessToken } = await getEtsyAuth(sb);
+
+    // Auto-discover shop_id from the OAuth-authorized account.
+    // Override only if explicitly passed in the body.
+    let shopId: string;
+    if (body.shop_id) {
+      shopId = String(body.shop_id);
+    } else {
+      const me = await etsyFetch(
+        "https://openapi.etsy.com/v3/application/users/me/shops",
+        apiKey,
+        accessToken,
+      );
+      // Etsy returns either a single shop object or { results: [...] } depending on account
+      const discovered =
+        me?.shop_id ??
+        me?.results?.[0]?.shop_id ??
+        (Array.isArray(me) ? me[0]?.shop_id : null);
+      if (!discovered) {
+        throw new Error(`shop_discovery_failed: ${JSON.stringify(me).slice(0, 300)}`);
+      }
+      shopId = String(discovered);
+      console.log("auto-discovered shop_id:", shopId, "name:", me?.shop_name ?? me?.results?.[0]?.shop_name);
+    }
 
     const seen = new Set<number>();
     let upserted = 0, imagesUpserted = 0, offset = 0;
