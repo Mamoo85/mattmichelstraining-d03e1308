@@ -23,6 +23,10 @@ function safeBackUrl(raw: unknown) {
   }
 }
 
+function extractShop(payload: any) {
+  return payload?.shop_id ? payload : (payload?.results?.[0] ?? (Array.isArray(payload) ? payload[0] : null));
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
@@ -72,9 +76,22 @@ Deno.serve(async (req) => {
       const shopTxt = await shopR.text();
       if (shopR.ok) {
         const shopD = JSON.parse(shopTxt);
-        const shop = shopD?.shop_id ? shopD : (shopD?.results?.[0] ?? (Array.isArray(shopD) ? shopD[0] : null));
+        const shop = extractShop(shopD);
         shopId = String(shop?.shop_id ?? "");
         shopName = String(shop?.shop_name ?? "");
+      } else if (shopR.status === 400 && /Expected int value/i.test(shopTxt)) {
+        const userId = tok.access_token.split(".")[0];
+        const fallbackR = await fetch(`https://openapi.etsy.com/v3/application/users/${userId}/shops`, {
+          headers: { "x-api-key": apiKeyCombined, Authorization: `Bearer ${tok.access_token}` },
+        });
+        const fallbackTxt = await fallbackR.text();
+        if (fallbackR.ok) {
+          const shop = extractShop(JSON.parse(fallbackTxt));
+          shopId = String(shop?.shop_id ?? "");
+          shopName = String(shop?.shop_name ?? "");
+        } else {
+          shopErr = `${fallbackR.status}: ${fallbackTxt}`;
+        }
       } else {
         shopErr = `${shopR.status}: ${shopTxt}`;
       }
