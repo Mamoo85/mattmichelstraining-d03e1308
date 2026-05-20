@@ -1128,7 +1128,7 @@ const App = () => {
               
               {!isDJConleyExperience && <Suspense fallback={null}><LegalFooterLazy /></Suspense>}
               {!isDJConleyExperience && <Suspense fallback={null}><CookieBanner /></Suspense>}
-              {!isDJConleyExperience && <Suspense fallback={null}><BottomTabBar /></Suspense>}
+              {!isDJConleyExperience && !(typeof window !== "undefined" && window.location.pathname.startsWith("/guild-grain")) && <Suspense fallback={null}><BottomTabBar /></Suspense>}
               {!isDJConleyExperience && <Suspense fallback={null}><OfflineBadge /></Suspense>}
               <SpeedInsights />
             </BrowserRouter>
