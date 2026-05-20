@@ -147,6 +147,7 @@ const GROUPS: SidebarGroup[] = [
       { id: "missed-call-leads", label: "Missed Call Leads" },
       { id: "hvb",               label: "High-Volume Buyers" },
       { id: "growth-signals",    label: "Growth Signals" },
+      { id: "etsy-shop",         label: "🛍️ Etsy Shop" },
     ],
   },
   {
