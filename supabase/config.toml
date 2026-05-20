@@ -2464,3 +2464,15 @@ verify_jwt = false
 
 [functions.printify-webhook]
 verify_jwt = false
+
+[functions.etsy-shop-get]
+verify_jwt = false
+
+[functions.etsy-shop-update]
+verify_jwt = false
+
+[functions.etsy-announcement-rotator]
+verify_jwt = false
+
+[functions.etsy-announcement-on-publish]
+verify_jwt = false
