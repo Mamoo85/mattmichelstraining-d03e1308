@@ -200,6 +200,32 @@ Deno.serve(async (req) => {
     });
     const printifyId: string = created.id;
 
+    // Post-create dimension audit: confirm Printify stored artwork at expected dims.
+    // If it drifted, delete the just-created product so no broken SKU exists.
+    if (spec) {
+      stage = "post_create_audit";
+      try {
+        const fresh: any = await pfFetch(`/shops/${PRINTIFY_SHOP_ID}/products/${printifyId}.json`);
+        let auditedImageId: string | null = null;
+        for (const a of fresh?.print_areas ?? []) {
+          for (const ph of a.placeholders ?? []) {
+            if (ph.position === spec.position && ph.images?.length) { auditedImageId = ph.images[0].id; break; }
+          }
+          if (auditedImageId) break;
+        }
+        if (!auditedImageId) throw new Error("post_create_no_image");
+        const up: any = await pfFetch(`/uploads/${auditedImageId}.json`);
+        const aw = Number(up?.width ?? 0), ah = Number(up?.height ?? 0);
+        if (Math.abs(aw - spec.width) > 2 || Math.abs(ah - spec.height) > 2) {
+          await pfFetch(`/shops/${PRINTIFY_SHOP_ID}/products/${printifyId}.json`, { method: "DELETE" }).catch(() => {});
+          throw new Error(`post_create_dim_drift expected=${spec.width}x${spec.height} got=${aw}x${ah}`);
+        }
+      } catch (auditErr) {
+        // Re-throw to abort the publish flow.
+        throw auditErr;
+      }
+    }
+
     let etsyListingId: number | null = null;
     if (publish) {
       stage = "publish";
