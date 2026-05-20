@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
 
     const back = (pending.redirect_back as string) || "/dwa-admin";
     return html(`<h2>✓ Etsy connected</h2>
-      <p>Shop ID: <code>${shopId || "(none found)"}</code></p>
+      <p>Shop ID: <code>${shopId || "(none found)"}</code>${shopErr ? `<br><small>shop fetch: ${shopErr}</small>` : ""}</p>
       <p>Token expires in ${Math.round(tok.expires_in/3600)}h. Auto-refresh enabled.</p>
       <p><a href="${back}">Return to admin →</a></p>
       <script>setTimeout(()=>location.href=${JSON.stringify(back)},2000)</script>`);
