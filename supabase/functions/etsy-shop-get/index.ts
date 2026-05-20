@@ -10,11 +10,12 @@ Deno.serve(async (req) => {
   const ETSY_ACCESS_TOKEN = Deno.env.get("ETSY_ACCESS_TOKEN")!;
   const ETSY_SHOP_ID = Deno.env.get("ETSY_SHOP_ID")!;
   try {
+    const diag = { key_len: (ETSY_API_KEY||"").length, tok_len: (ETSY_ACCESS_TOKEN||"").length, shop: ETSY_SHOP_ID };
     const r = await fetch(`https://openapi.etsy.com/v3/application/shops/${ETSY_SHOP_ID}`, {
       headers: { "x-api-key": ETSY_API_KEY, Authorization: `Bearer ${ETSY_ACCESS_TOKEN}` },
     });
     const body = await r.text();
-    if (!r.ok) throw new Error(`etsy ${r.status}: ${body}`);
+    if (!r.ok) throw new Error(`etsy ${r.status}: ${body} diag=${JSON.stringify(diag)}`);
     const d = JSON.parse(body);
     return new Response(JSON.stringify({
       ok: true,
