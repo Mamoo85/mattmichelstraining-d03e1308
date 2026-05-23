@@ -2494,3 +2494,6 @@ verify_jwt = false
 
 [functions.etsy-scope-check]
 verify_jwt = false
+
+[functions.gng-supply-chain-audit]
+verify_jwt = false
