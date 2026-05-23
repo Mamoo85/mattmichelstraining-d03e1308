@@ -7569,6 +7569,48 @@ export type Database = {
         }
         Relationships: []
       }
+      dwa_budget_state: {
+        Row: {
+          auto_lift_on_first_sale: boolean
+          id: number
+          lifted_at: string | null
+          lifted_reason: string | null
+          paused: boolean
+          spent_this_week_usd: number
+          updated_at: string
+          warning_100_sent_at: string | null
+          warning_80_sent_at: string | null
+          week_start: string
+          weekly_cap_usd: number
+        }
+        Insert: {
+          auto_lift_on_first_sale?: boolean
+          id?: number
+          lifted_at?: string | null
+          lifted_reason?: string | null
+          paused?: boolean
+          spent_this_week_usd?: number
+          updated_at?: string
+          warning_100_sent_at?: string | null
+          warning_80_sent_at?: string | null
+          week_start?: string
+          weekly_cap_usd?: number
+        }
+        Update: {
+          auto_lift_on_first_sale?: boolean
+          id?: number
+          lifted_at?: string | null
+          lifted_reason?: string | null
+          paused?: boolean
+          spent_this_week_usd?: number
+          updated_at?: string
+          warning_100_sent_at?: string | null
+          warning_80_sent_at?: string | null
+          week_start?: string
+          weekly_cap_usd?: number
+        }
+        Relationships: []
+      }
       dwa_contractor_referrals: {
         Row: {
           created_at: string
@@ -7683,6 +7725,33 @@ export type Database = {
           tagline?: string
           umbrella_name?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      dwa_spend_ledger: {
+        Row: {
+          cost_usd: number
+          created_at: string
+          function_name: string | null
+          id: string
+          meta: Json | null
+          provider: string
+        }
+        Insert: {
+          cost_usd?: number
+          created_at?: string
+          function_name?: string | null
+          id?: string
+          meta?: Json | null
+          provider: string
+        }
+        Update: {
+          cost_usd?: number
+          created_at?: string
+          function_name?: string | null
+          id?: string
+          meta?: Json | null
+          provider?: string
         }
         Relationships: []
       }
