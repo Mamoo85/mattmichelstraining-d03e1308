@@ -10447,6 +10447,30 @@ export type Database = {
         }
         Relationships: []
       }
+      gng_audit_runs: {
+        Row: {
+          drift_dollars: number | null
+          id: string
+          notes: string | null
+          ran_at: string
+          totals: Json
+        }
+        Insert: {
+          drift_dollars?: number | null
+          id?: string
+          notes?: string | null
+          ran_at?: string
+          totals?: Json
+        }
+        Update: {
+          drift_dollars?: number | null
+          id?: string
+          notes?: string | null
+          ran_at?: string
+          totals?: Json
+        }
+        Relationships: []
+      }
       google_api_spend_log: {
         Row: {
           api: string
@@ -18220,6 +18244,66 @@ export type Database = {
           last_report_at?: string | null
           report_count?: number | null
           stripe_customer_id?: string | null
+        }
+        Relationships: []
+      }
+      printify_products: {
+        Row: {
+          blueprint_id: number | null
+          cost_cents: number | null
+          description: string | null
+          etsy_listing_id: number | null
+          is_locked: boolean | null
+          pf_updated_at: string | null
+          print_provider_id: number | null
+          product_id: string
+          profit_cents: number | null
+          published_to_etsy: boolean | null
+          raw: Json | null
+          retail_cents: number | null
+          shop_id: string | null
+          synced_at: string
+          tags: string[] | null
+          title: string | null
+          visible: boolean | null
+        }
+        Insert: {
+          blueprint_id?: number | null
+          cost_cents?: number | null
+          description?: string | null
+          etsy_listing_id?: number | null
+          is_locked?: boolean | null
+          pf_updated_at?: string | null
+          print_provider_id?: number | null
+          product_id: string
+          profit_cents?: number | null
+          published_to_etsy?: boolean | null
+          raw?: Json | null
+          retail_cents?: number | null
+          shop_id?: string | null
+          synced_at?: string
+          tags?: string[] | null
+          title?: string | null
+          visible?: boolean | null
+        }
+        Update: {
+          blueprint_id?: number | null
+          cost_cents?: number | null
+          description?: string | null
+          etsy_listing_id?: number | null
+          is_locked?: boolean | null
+          pf_updated_at?: string | null
+          print_provider_id?: number | null
+          product_id?: string
+          profit_cents?: number | null
+          published_to_etsy?: boolean | null
+          raw?: Json | null
+          retail_cents?: number | null
+          shop_id?: string | null
+          synced_at?: string
+          tags?: string[] | null
+          title?: string | null
+          visible?: boolean | null
         }
         Relationships: []
       }

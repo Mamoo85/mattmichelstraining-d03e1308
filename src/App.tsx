@@ -82,6 +82,9 @@ const MyTeam = lazyRetry(() => import("./pages/MyTeam"));
 const JoinTeam = lazyRetry(() => import("./pages/JoinTeam"));
 const Shop = lazyRetry(() => import("./pages/Shop"));
 const EtsyProductDetail = lazyRetry(() => import("./pages/EtsyProductDetail"));
+const GuildsAndGrains = lazyRetry(() => import("./pages/GuildsAndGrains"));
+const GiftFinder = lazyRetry(() => import("./pages/GiftFinder"));
+const GiftShare = lazyRetry(() => import("./pages/GiftShare"));
 const ForParents = lazyRetry(() => import("./pages/ForParents"));
 const ForNurses = lazyRetry(() => import("./pages/ForNurses"));
 const Welcome = lazyRetry(() => import("./pages/Welcome"));
@@ -1118,6 +1121,11 @@ const App = () => {
                     <Route path="/bedtime-stories" element={<Navigate to="/" replace />} />
                     <Route path="/tech-alert" element={<Navigate to="/talent-radar" replace />} />
                     <Route path="/trade-radar" element={<Navigate to="/radars" replace />} />
+                    <Route path="/gng" element={<GuildsAndGrains />} />
+                    <Route path="/guild-and-grains" element={<GuildsAndGrains />} />
+                    <Route path="/guilds-and-grains" element={<GuildsAndGrains />} />
+                    <Route path="/gifts" element={<GiftFinder />} />
+                    <Route path="/gift/:listingId" element={<GiftShare />} />
                     <Route path="*" element={<NotFound />} />
                     </Routes>
                   </div>
