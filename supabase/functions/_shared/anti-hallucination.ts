@@ -174,6 +174,9 @@ export async function validateAddress(
       // API-level failure — fail closed.
       return { pass: false, reject_code: "validation_api_error", reject_reason: `Google API ${res.status}` };
     }
+    logSpend?.();
+
+    }
 
     const j = await res.json();
     const result = j?.result || {};
