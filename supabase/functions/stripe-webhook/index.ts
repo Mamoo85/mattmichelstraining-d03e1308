@@ -731,6 +731,41 @@ serve(async (req) => {
           .then(() => {}, () => {});
       }
 
+      // ── DWA BUDGET AUTO-LIFT ──
+      // First paying DWA customer → lift weekly spend cap from $5 → $500.
+      const DWA_TYPES = new Set([
+        "field_service_subscription", "field_crm_subscription",
+        "hire_alert_subscription", "site_radar_subscription",
+        "contractor_lead_subscription", "dead_lead_billing_setup",
+        "missed_call_subscription", "mortgage_radar_subscription",
+        "marketplace_lead_purchase", "bundle_revenue_suite_subscription",
+        "ai_phone_subscription", "ai_reputation_subscription",
+        "trade_radar_subscription", "ads_copy_subscription",
+      ]);
+      if (meta.type && DWA_TYPES.has(meta.type)) {
+        try {
+          const { data: bs } = await sb.from("dwa_budget_state")
+            .select("auto_lift_on_first_sale, lifted_at, weekly_cap_usd").eq("id", 1).maybeSingle();
+          if (bs?.auto_lift_on_first_sale && !bs.lifted_at) {
+            await sb.from("dwa_budget_state").update({
+              weekly_cap_usd: 500,
+              lifted_at: new Date().toISOString(),
+              lifted_reason: `first_sale:${meta.type}:${session.customer_email || ""}`,
+              updated_at: new Date().toISOString(),
+            }).eq("id", 1);
+            try {
+              const { notifyMatt } = await import("../_shared/twilio.ts");
+              const amount = ((session.amount_total || 0) / 100).toFixed(2);
+              await notifyMatt(`💰 First DWA sale! $${amount} from ${meta.type} (${session.customer_email}). Weekly budget cap lifted from $5 → $500.`);
+            } catch { /* notifyMatt may not exist */ }
+          }
+        } catch (e) {
+          console.warn("[dwa-budget] auto-lift failed:", e);
+        }
+      }
+
+
+
       // ── RECEIPT TRACKING (checkout hardening) ──
       // Upsert a receipt row so the success page can poll fulfillment status.
       // Status will be flipped to 'fulfilled' at the end of this handler.
