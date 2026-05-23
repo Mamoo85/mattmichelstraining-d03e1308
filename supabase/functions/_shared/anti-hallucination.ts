@@ -139,9 +139,18 @@ export async function validateAddress(
     return { pass: true, formatted: address, reject_code: undefined, reject_reason: undefined };
   }
 
+  // DWA weekly spend cap gate
+  let logSpend: ((c?: number) => void) | null = null;
+  try {
+    const { assertDwaBudget, BudgetExceeded } = await import("./dwa-budget-gate.ts");
+    try { logSpend = await assertDwaBudget("google_address_validation", undefined, "validateAddress"); }
+    catch (e) { if (e instanceof BudgetExceeded) return { pass: true, formatted: address }; throw e; }
+  } catch { /* gate import failure: fail open */ }
+
   await logGoogleCall(sb, "validateAddress", "address_validation", { zip: input.zip });
 
   try {
+
     const res = await fetch(
       `https://addressvalidation.googleapis.com/v1:validateAddress?key=${GOOGLE_MAPS_API_KEY}`,
       {
