@@ -6,9 +6,19 @@
  * - Logs failures with { status, body_preview } so the diagnostics drawer can show them
  */
 
+import { assertDwaBudget, BudgetExceeded } from "./dwa-budget-gate.ts";
+
 const APOLLO_API_KEY = Deno.env.get("APOLLO_API_KEY") || "";
 const APOLLO_BASE = "https://api.apollo.io/api/v1";
 const DEFAULT_TIMEOUT_MS = 12_000;
+
+function providerForEndpoint(endpoint: string): string {
+  if (endpoint.includes("/organizations/enrich") || endpoint.includes("/mixed_companies")) return "apollo_org_enrich";
+  if (endpoint.includes("/people/match")) return "apollo_people_match";
+  if (endpoint.includes("/mixed_people") || endpoint.includes("/people")) return "apollo_people_search";
+  return "apollo_people_search";
+}
+
 
 export interface ApolloResult<T = any> {
   ok: boolean;
