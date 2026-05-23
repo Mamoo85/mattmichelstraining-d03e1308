@@ -22,14 +22,20 @@ export interface HunterContact {
 export async function hunterFindEmail(domain: string): Promise<HunterContact | null> {
   if (!HUNTER_API_KEY || !domain) return null;
   try {
+    let logSpend: ((c?: number) => void) | null = null;
+    try { logSpend = await assertDwaBudget("hunter_find", undefined, "hunter"); }
+    catch (e) { if (e instanceof BudgetExceeded) return null; throw e; }
+
     const res = await fetch(
       `${HUNTER_BASE}/domain-search?domain=${encodeURIComponent(domain)}&api_key=${HUNTER_API_KEY}&limit=10`,
       { signal: AbortSignal.timeout(10_000) },
     );
     if (!res.ok) return null;
+    logSpend?.();
     const data = await res.json();
     const emails: any[] = data?.data?.emails || [];
     if (!emails.length) return null;
+
 
     // Prefer owner/president/GM titles; fall back to highest-confidence email
     const ownerTitles = ["owner", "president", "gm", "general manager", "principal", "director", "founder", "vp", "vice president"];
