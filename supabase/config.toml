@@ -2497,3 +2497,12 @@ verify_jwt = false
 
 [functions.gng-supply-chain-audit]
 verify_jwt = false
+
+[functions.gng-drift-detector]
+verify_jwt = false
+
+[functions.gng-sms-inbound]
+verify_jwt = false
+
+[functions.gng-price-floor-queue]
+verify_jwt = false
