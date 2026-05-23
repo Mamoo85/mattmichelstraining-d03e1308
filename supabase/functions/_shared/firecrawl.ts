@@ -28,6 +28,10 @@ export async function firecrawlScrape(url: string, options?: {
 }): Promise<FirecrawlResult | null> {
   if (!FIRECRAWL_API_KEY || !url) return null;
   try {
+    let logSpend: ((c?: number) => void) | null = null;
+    try { logSpend = await assertDwaBudget("firecrawl", undefined, "firecrawl"); }
+    catch (e) { if (e instanceof BudgetExceeded) return null; throw e; }
+
     const res = await fetch(`${FIRECRAWL_BASE}/scrape`, {
       method: "POST",
       headers: {
@@ -42,8 +46,10 @@ export async function firecrawlScrape(url: string, options?: {
       signal: AbortSignal.timeout(options?.timeout ?? 12_000),
     });
     if (!res.ok) return null;
+    logSpend?.();
     const data = await res.json();
     return data?.data || null;
+
   } catch {
     return null;
   }
