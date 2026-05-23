@@ -65,12 +65,18 @@ export async function hunterFindEmail(domain: string): Promise<HunterContact | n
 export async function hunterVerifyEmail(email: string): Promise<{ deliverable: boolean; score: number } | null> {
   if (!HUNTER_API_KEY || !email) return null;
   try {
+    let logSpend: ((c?: number) => void) | null = null;
+    try { logSpend = await assertDwaBudget("hunter_verify", undefined, "hunter"); }
+    catch (e) { if (e instanceof BudgetExceeded) return null; throw e; }
+
     const res = await fetch(
       `${HUNTER_BASE}/email-verifier?email=${encodeURIComponent(email)}&api_key=${HUNTER_API_KEY}`,
       { signal: AbortSignal.timeout(10_000) },
     );
     if (!res.ok) return null;
+    logSpend?.();
     const data = await res.json();
+
     return {
       deliverable: data?.data?.result === "deliverable",
       score: data?.data?.score || 0,
