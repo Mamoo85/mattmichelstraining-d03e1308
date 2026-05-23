@@ -2,8 +2,11 @@
 // Used as the second tier in the email extraction waterfall (Apollo → Hunter → Firecrawl).
 // Free tier: 25 domain searches/month. Paid: $49/mo for 500.
 
+import { assertDwaBudget, BudgetExceeded } from "./dwa-budget-gate.ts";
+
 const HUNTER_API_KEY = Deno.env.get("HUNTER_API_KEY") || Deno.env.get("HUNTER_IO_API_KEY") || "";
 const HUNTER_BASE = "https://api.hunter.io/v2";
+
 
 export interface HunterContact {
   email: string;
