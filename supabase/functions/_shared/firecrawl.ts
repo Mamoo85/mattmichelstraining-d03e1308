@@ -2,8 +2,11 @@
 // Used for fax number extraction, contact page scraping, and structured data extraction.
 // Always falls back gracefully — never throws.
 
+import { assertDwaBudget, BudgetExceeded } from "./dwa-budget-gate.ts";
+
 const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY") || "";
 const FIRECRAWL_BASE = "https://api.firecrawl.dev/v1";
+
 
 export interface FirecrawlResult {
   markdown?: string;
