@@ -74,7 +74,7 @@ const GiftShare = () => {
         title={`${p.title} — Guilds & Grains`}
         description={(p.description || "").slice(0, 155)}
         path={`/gift/${p.listing_id}`}
-        image={heroImg || undefined}
+        ogImage={heroImg || undefined}
       />
       <script type="application/ld+json" dangerouslySetInnerHTML={{
         __html: JSON.stringify({
