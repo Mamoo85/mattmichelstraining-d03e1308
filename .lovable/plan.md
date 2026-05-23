@@ -1,75 +1,93 @@
 ## Goal
-Make the public Shop page reflect the live Etsy catalog (shop_id `6311589`), keep OAuth tokens fresh on a schedule, deep-link every Etsy item to a generated product page, finish the in-flight republish run for POD listings still on the old prompt/dims, and add a pre-publish regression check that blocks any image that isn't full-bleed + spec-normalized.
+
+1. Pull from git, refresh project memory.
+2. Run a **live** price + supply-chain audit across all 501 active Etsy listings and their Printify origins. Definitively answer "who leads the dance."
+3. Deliver a 10-point Harvard-grade plan to turn Yarningforyoubylisa → **GNG (Guilds & Grains)** into a hands-off machine: more views, more clicks, better QC, less manual work.
+4. Rebrand the Etsy shop end-to-end and build the customer-facing **/gng**, **/guild-and-grains**, **/gifts**, **/gift/:listingId** pages on m2training.
 
 ---
 
-## 1. Scheduled Etsy OAuth refresh
+## Phase 1 — Sync & memory refresh
 
-Token refresh exists inline in `_shared/etsy-token.ts` (refreshes when <60s left). Add a **proactive** cron so tokens never expire between user requests.
+- `git fetch && git pull` on dev branch.
+- Read `CLAUDE.md` "Current Session State" and update `mem://index.md` Core with: Phase 45 deploy state, Etsy OAuth (Yarningforyoubylisa, shop_id 6311589, 211→501 active listings), POD republish queue status.
+- Add a new memory `mem://features/gng-rebrand` capturing: rebrand decision (Yarningforyoubylisa → Guilds & Grains), Etsy=storefront/Printify=source-of-truth (after audit confirms), customer pages live at /gng + /guild-and-grains + /gifts + /gift/:id.
 
-- New edge function `etsy-token-refresh` (verify_jwt=false): calls `getEtsyAuth()` with a forced refresh path (refresh if <12h remaining), updates `etsy_oauth_tokens`, writes a row to a new `etsy_token_refresh_log` table, SMS Matt on failure.
-- pg_cron: every 6 hours (uses the hardcoded URL + `SUPABASE_SERVICE_ROLE_KEY_VAULT` pattern per CLAUDE.md).
-- Migration: `etsy_token_refresh_log` table (id, ran_at, success, expires_at, error) + cron schedule.
+## Phase 2 — Live audit (the test answer)
 
-## 2. Etsy product sync (shop_id 6311589)
+Run inside a single edge function `gng-supply-chain-audit` (admin-only) so the data is reproducible, not a one-shot script:
 
-New tables (migration):
-- `etsy_products` — `listing_id bigint pk`, `shop_id`, `title`, `description`, `price_cents`, `currency`, `url`, `state`, `tags text[]`, `materials text[]`, `quantity`, `created_ts`, `updated_ts`, `last_synced_at`, `raw jsonb`.
-- `etsy_product_images` — `listing_id`, `image_id`, `rank`, `url_570xN`, `url_fullxfull`, `alt_text`.
-- RLS: public SELECT (anon), service_role write.
+**Step A — Pull both sides:**
+- Etsy: 501 active listings already in `etsy_products` + `etsy_product_images` (price, title, tags, qty, url).
+- Printify: hit `/v1/shops/{shop_id}/products.json` paginated → write to new `printify_products` table (blueprint_id, print_provider_id, variant prices, cost, profit, published_to_etsy, etsy_listing_id mapping, last_modified).
 
-New edge function `etsy-product-sync` (verify_jwt=false):
-- `GET /v3/application/shops/6311589/listings/active` with pagination (limit=100, offset).
-- For each listing → upsert into `etsy_products`, fetch `/listings/{id}/images` → upsert `etsy_product_images`.
-- Soft-delete: mark `state='removed'` for listing_ids that disappear from active feed.
-- pg_cron: every 60 min.
+**Step B — Match & diff:**
+- Join on `etsy_listing_id` (Printify stores it when published). Bucket each listing:
+  - `synced` — both sides agree on price + title + active state
+  - `price_drift` — Etsy price ≠ Printify retail price (>$0.50 delta)
+  - `orphan_etsy` — Etsy listing not in Printify (manually created, no POD link)
+  - `orphan_printify` — Printify product not published to Etsy
+  - `margin_thin` — profit < 30% after Etsy fees (6.5% txn + $0.20 + 13% transaction+payment)
+  - `dim_fail` — has row in `pod_dimension_audit` with status≠'ok'
 
-## 3. Shop page wires to live Etsy data + product detail pages
+**Step C — Who leads the dance:** Decision matrix based on:
+- % of listings created via `printify-direct-publish` vs manually on Etsy
+- Direction of last-modified timestamps (Printify newer → Printify leads; Etsy newer → Etsy leads)
+- Presence of `printify.product_id` in `etsy_products.raw`
 
-Frontend:
-- New `src/components/store/EtsyTab.tsx` — fetches `etsy_products` (Supabase client, anon SELECT), grid of cards: image, title, price, "View" button.
-- Add tab "Etsy Shop" to `src/pages/Shop.tsx` `TABS` array.
-- New route `/shop/etsy/:listingId` → `src/pages/EtsyProductDetail.tsx`:
-  - Loads `etsy_products` + `etsy_product_images` rows.
-  - Image carousel, full description (rendered as markdown/plain text), price, materials, tags.
-  - Two CTAs: **"Buy on Etsy"** (deep link to `etsy_products.url`) and **"Add to favorites"** (local).
-  - `<SEOHead>` with title/description/og:image + JSON-LD `Product` schema.
-- Wire route in `src/App.tsx` (lazyRetry).
+Expected verdict (based on existing `printify-auto-sync` + `pod-etsy-publisher` infra): **Printify leads.** Audit confirms or flips it.
 
-## 4. Finish the POD republish run
+**Step D — Report:** New `/dwa-admin` tab "GNG Supply Audit" rendering the buckets, drift dollar value, thin-margin SKUs, and a "Resync drifted" button calling `printify-auto-sync` for just those listings.
 
-`pod-republish-wrong-dims` already exists and pulls listings whose latest `pod_dimension_audit` is `wrong_dims | wrong_aspect | missing`.
+## Phase 3 — The 10-point GNG automation playbook
 
-- Add a new function `pod-republish-resume` (or extend existing) that queries `pod_listings` where `republished_at IS NULL` AND `published_at < <prompt cutoff timestamp>` AND status='published', batches in chunks of 10 with concurrency 2, calls the existing republish pipeline.
-- One-shot run triggered from admin button + cron daily 04:00 ET until queue is empty (function self-disables when 0 rows match).
-- Writes progress to `pod_publish_logs`.
+Built into a new `src/pages/dwa-admin/GNGPlaybook.tsx` as a checklist with status pills (todo / wired / live) so it doubles as the implementation tracker.
 
-## 5. Pre-publish image regression gate
+1. **Printify as single source of truth.** Lock manual Etsy edits via daily `etsy-drift-detector` cron — if Etsy title/price/desc diverges from Printify, auto-revert and SMS Lisa with the diff.
+2. **Dynamic margin-floor pricing.** New `gng-price-optimizer` runs nightly: pulls Printify cost + variant, applies floor (cost × 2.4 + $4.50 fees), bumps Etsy price via `etsy-shop-update` if drift > 5%. Never undercuts margin.
+3. **Pre-publish QC gate (already partially built via `pod-image-regression-log`).** Extend `_shared/pod-image-regression.ts` so NO Printify product publishes to Etsy without full-bleed + correct DPI + transparent-bg check + AI brand-consistency score (Gemini 2.5 Flash Image judges against 5 reference mockups). Fail → quarantine + Slack/SMS, never silent.
+4. **AI-written SEO listings.** `gng-listing-writer` (Gemini 2.5 Pro) generates title (140-char Etsy max, front-loaded keyword), 13 tags from Etsy trending-tag scraper (`etsy-trend-scanner` exists), description with story + materials + care, all from Printify blueprint metadata. Runs on every new Printify product.
+5. **Hero-image auto-mockup pipeline.** Nano Banana 2 generates 5 lifestyle scenes per product (kitchen shelf, gift unboxing, holiday flatlay, nursery, in-hand scale). Replaces Printify's generic mockups. QC gate from #3 validates output.
+6. **Trending-tag rotation.** Weekly cron pulls Etsy's "trending searches" via Etsy API + Marmalead-style scraping (Firecrawl on competitor top sellers), rewrites the 13 tags on bottom-50% performers (by `etsy_sales_sync` data). Already have `etsy-winner-prioritizer` — wire it to the rewriter.
+7. **Review-velocity boost.** `etsy-post-purchase-followup` sends branded thank-you email 3 days after delivery (use Resend + ShipStation/Etsy fulfillment webhook), 7 days later asks for review with one-tap link. Targets 4.9★ moat.
+8. **Auto-reply triage.** Etsy Messages API → inbound goes through `gng-message-triage` (Haiku) which auto-replies to FAQs (shipping, customization, returns) using a curated knowledge base, escalates only edge cases to Lisa via SMS. Cuts inbox by ~70%.
+9. **Cross-channel funnel.** /gng + /guild-and-grains + /gifts pages built on m2training (Phase 4) drive higher-margin direct-to-Stripe Printify orders, bypassing Etsy's 13% take. Etsy stays for discovery + reviews; m2training is the conversion engine. UTM tags + Pinterest/IG auto-poster (`gng-social-rotator` posts new listings to 3 channels on publish).
+10. **Weekly autopilot digest.** Monday 8am email to Lisa + Matt: new listings published, drift fixed, QC fails quarantined, top sellers, dead stock (no views in 30d → auto-deactivate), review velocity, revenue split (Etsy vs direct). One page, no dashboards to check.
 
-Currently `validateImageDimensions` runs inside republish, but `pod-etsy-publisher` / `printify-direct-publish` paths can bypass.
+## Phase 4 — Storefront pages on m2training
 
-- New shared helper `_shared/pod-image-regression.ts`:
-  - `assertFullBleedAndSpec(buffer, productType)` →
-    1. Decode PNG/JPEG header to get width/height.
-    2. Compare against `getPrintSpec(productType)` exact px + aspect (±0.5% tolerance).
-    3. Sample 4 edge strips (top/bottom/left/right, 8px deep): for non-transparent specs, fail if >5% of edge pixels are pure white/background → guarantees full-bleed.
-    4. For transparent-bg specs, assert alpha>0 coverage across center 80%.
-  - Throws `RegressionError` with reason code; all publish entry points must call it before upload to Printify.
-- Add new table `pod_image_regression_log` (listing_id, ran_at, pass, reason, width, height, expected_w, expected_h).
-- Wire into: `pod-republish-wrong-dims`, `pod-republish-broken`, `pod-etsy-publisher`, `pod-product-orchestrator`, `printify-direct-publish`, `pod-image-rebake`.
-- Failing the gate → `notifyMatt` SMS + skip publish, log entry.
+Single shared storefront component, 4 route aliases (all reuse the existing `src/sandbox/guildgrain/` design system — warm cream, serif headings, artisan vibe):
 
----
+```text
+/gng                  ─┐
+/guild-and-grains     ─┼─→ <GNGStorefront/>  (full catalog, filters, hero, brand story)
+/guilds-and-grains    ─┘
+/gifts                ─→  <GiftFinder/>      (quiz: occasion → recipient → budget → curated subset of GNGStorefront)
+/gift/:listingId      ─→  <GiftShare/>       (single-listing share page, OG image, "send this gift" CTA)
+```
+
+- Pulls live from `etsy_products` + `etsy_product_images` (already wired in `EtsyTab.tsx` — promote that code into a real page).
+- Each card: image carousel, price, "Buy on Etsy ↗" + "Buy direct (save 10%)" buttons (direct route TBD in Phase 3 #9, scaffolded with toast for now).
+- SEOHead with JSON-LD `Product` schema, OG image, canonical.
+- New nav entry on m2training under "Shop" → "Guilds & Grains".
+- Rebrand assets: regenerate logo via Nano Banana 2 ("Guilds & Grains" wordmark, serif, warm earth tones), favicon, og:image.
+- Etsy shop rename: call `etsy-shop-update` with new shop_name="GuildsAndGrains" (Etsy allows 1 rename per account — confirm with Lisa before firing).
 
 ## Technical details
-- All new edge functions: `verify_jwt = false` block in `supabase/config.toml`.
-- All migrations follow the vault-key cron pattern from CLAUDE.md.
-- SMS via `_shared/twilio.ts` `sendSMS`; emails via `m2Email()` (Shop is M2-branded).
-- No changes to the existing `etsy_oauth_tokens` row contract.
-- Etsy v3 rate limit: 10 req/s — sync function uses `await sleep(120)` between page fetches.
-- Shop page treats Etsy tab as additive; no existing tabs touched.
 
-## Out of scope
-- Native checkout (we deep-link to Etsy — they own the cart).
-- Editing Etsy listings from the app (already covered by `etsy-shop-update`).
-- Re-running already-correct POD listings.
+- **Tables added:** `printify_products` (id, etsy_listing_id, blueprint_id, retail_cents, cost_cents, profit_cents, raw jsonb, last_modified, synced_at); `gng_audit_runs` (run_id, ran_at, totals jsonb, drift_dollars).
+- **Edge functions added:** `gng-supply-chain-audit`, `gng-price-optimizer`, `gng-listing-writer`, `gng-message-triage`, `gng-social-rotator`, `etsy-drift-detector`, `etsy-post-purchase-followup`. All `verify_jwt = false` for crons; admin trigger via signed `X-Admin-Key`.
+- **Crons:** drift detector (hourly), price optimizer (3am ET), trend rotation (Sun 4am), weekly digest (Mon 8am ET), social rotator (on Printify webhook).
+- **Secrets needed:** `PRINTIFY_API_KEY` (verify present — used in existing functions), `ETSY_API_KEY` (present), Resend (present).
+- **Frontend chunks:** lazy-load GNG storefront via `lazyRetry`; isolate in Vite manualChunks.
+
+## Out of scope (this loop)
+
+- Native checkout on m2training for direct-Printify orders (Phase 3 item #9 just scaffolds; full Stripe→Printify order pipeline is a follow-up plan).
+- Migrating reviews from Yarningforyoubylisa to new shop name (Etsy auto-carries reviews on rename — no action needed).
+- Killing the `Yarningforyoubylisa` shop URL — Etsy auto-redirects on rename.
+
+---
+
+**Order of work after approval:**
+Phase 1 (5 min) → Phase 2 audit + admin tab + report back numbers (~30 min) → Phase 4 storefront pages (parallel) → Phase 3 #1–#3 + #10 (highest leverage, ship first) → Phase 3 #4–#9 (rolling).
