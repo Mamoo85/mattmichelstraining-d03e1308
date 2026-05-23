@@ -361,7 +361,21 @@ export async function sendSMS(
     console.log(`[SMS] Quiet-hours bypass granted for transactional product: ${product}`);
   }
 
-  // 6. Send via Twilio
+  // 6. Send via Twilio (gate DWA paid spend; never block Matt's personal ADMIN_PHONE alerts)
+  const adminPhone = Deno.env.get("ADMIN_PHONE") || "";
+  const isAdminAlert = adminPhone && to === adminPhone;
+  let logSmsSpend: ((c?: number) => void) | null = null;
+  if (!isAdminAlert) {
+    try {
+      const { assertDwaBudget, BudgetExceeded } = await import("./dwa-budget-gate.ts");
+      try { logSmsSpend = await assertDwaBudget("twilio_sms", undefined, product || "twilio"); }
+      catch (e) {
+        if (e instanceof BudgetExceeded) return { success: false, skipped: true, error: "dwa_budget_exceeded" };
+        throw e;
+      }
+    } catch { /* gate import failed: send anyway */ }
+  }
+
   try {
     const credentials = btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`);
     const params: Record<string, string> = { To: to, From: from, Body: body };
@@ -381,6 +395,8 @@ export async function sendSMS(
     );
 
     const data = await res.json();
+    if (res.ok) logSmsSpend?.();
+
 
     if (!res.ok) {
       console.error(`[SMS] Twilio error ${res.status}: ${JSON.stringify(data)}`);

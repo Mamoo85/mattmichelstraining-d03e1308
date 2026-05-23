@@ -2,8 +2,11 @@
 // Used as the second tier in the email extraction waterfall (Apollo → Hunter → Firecrawl).
 // Free tier: 25 domain searches/month. Paid: $49/mo for 500.
 
+import { assertDwaBudget, BudgetExceeded } from "./dwa-budget-gate.ts";
+
 const HUNTER_API_KEY = Deno.env.get("HUNTER_API_KEY") || Deno.env.get("HUNTER_IO_API_KEY") || "";
 const HUNTER_BASE = "https://api.hunter.io/v2";
+
 
 export interface HunterContact {
   email: string;
@@ -19,14 +22,20 @@ export interface HunterContact {
 export async function hunterFindEmail(domain: string): Promise<HunterContact | null> {
   if (!HUNTER_API_KEY || !domain) return null;
   try {
+    let logSpend: ((c?: number) => void) | null = null;
+    try { logSpend = await assertDwaBudget("hunter_find", undefined, "hunter"); }
+    catch (e) { if (e instanceof BudgetExceeded) return null; throw e; }
+
     const res = await fetch(
       `${HUNTER_BASE}/domain-search?domain=${encodeURIComponent(domain)}&api_key=${HUNTER_API_KEY}&limit=10`,
       { signal: AbortSignal.timeout(10_000) },
     );
     if (!res.ok) return null;
+    logSpend?.();
     const data = await res.json();
     const emails: any[] = data?.data?.emails || [];
     if (!emails.length) return null;
+
 
     // Prefer owner/president/GM titles; fall back to highest-confidence email
     const ownerTitles = ["owner", "president", "gm", "general manager", "principal", "director", "founder", "vp", "vice president"];
@@ -56,12 +65,18 @@ export async function hunterFindEmail(domain: string): Promise<HunterContact | n
 export async function hunterVerifyEmail(email: string): Promise<{ deliverable: boolean; score: number } | null> {
   if (!HUNTER_API_KEY || !email) return null;
   try {
+    let logSpend: ((c?: number) => void) | null = null;
+    try { logSpend = await assertDwaBudget("hunter_verify", undefined, "hunter"); }
+    catch (e) { if (e instanceof BudgetExceeded) return null; throw e; }
+
     const res = await fetch(
       `${HUNTER_BASE}/email-verifier?email=${encodeURIComponent(email)}&api_key=${HUNTER_API_KEY}`,
       { signal: AbortSignal.timeout(10_000) },
     );
     if (!res.ok) return null;
+    logSpend?.();
     const data = await res.json();
+
     return {
       deliverable: data?.data?.result === "deliverable",
       score: data?.data?.score || 0,
