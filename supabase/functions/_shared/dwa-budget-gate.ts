@@ -114,9 +114,9 @@ export async function assertDwaBudget(
       cost_usd: cost,
       meta: meta ?? {},
     }).then(() => {}, () => {});
-    sb.rpc("noop").then(() => {}, () => {}); // placeholder
-    // Best-effort atomic increment via RPC fallback to update
+    // Best-effort spend increment
     sb.from("dwa_budget_state")
+
       .update({
         spent_this_week_usd: state.spent_this_week_usd + cost,
         updated_at: new Date().toISOString(),
