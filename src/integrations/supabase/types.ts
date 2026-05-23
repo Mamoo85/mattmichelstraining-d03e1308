@@ -10447,6 +10447,57 @@ export type Database = {
         }
         Relationships: []
       }
+      gng_approvals: {
+        Row: {
+          applied_at: string | null
+          apply_result: Json | null
+          created_at: string
+          expires_at: string
+          id: string
+          kind: string
+          listing_id: number | null
+          notify_phone: string | null
+          payload: Json
+          requested_at: string
+          responded_at: string | null
+          short_code: string
+          status: string
+          summary: string
+        }
+        Insert: {
+          applied_at?: string | null
+          apply_result?: Json | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          kind: string
+          listing_id?: number | null
+          notify_phone?: string | null
+          payload?: Json
+          requested_at?: string
+          responded_at?: string | null
+          short_code: string
+          status?: string
+          summary: string
+        }
+        Update: {
+          applied_at?: string | null
+          apply_result?: Json | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          kind?: string
+          listing_id?: number | null
+          notify_phone?: string | null
+          payload?: Json
+          requested_at?: string
+          responded_at?: string | null
+          short_code?: string
+          status?: string
+          summary?: string
+        }
+        Relationships: []
+      }
       gng_audit_runs: {
         Row: {
           drift_dollars: number | null
@@ -10468,6 +10519,45 @@ export type Database = {
           notes?: string | null
           ran_at?: string
           totals?: Json
+        }
+        Relationships: []
+      }
+      gng_drift_snapshots: {
+        Row: {
+          cost_cents: number | null
+          detected_at: string
+          drift_cents: number | null
+          etsy_price_cents: number | null
+          id: string
+          listing_id: number
+          printify_price_cents: number | null
+          printify_product_id: string | null
+          resolution: string | null
+          resolved_at: string | null
+        }
+        Insert: {
+          cost_cents?: number | null
+          detected_at?: string
+          drift_cents?: number | null
+          etsy_price_cents?: number | null
+          id?: string
+          listing_id: number
+          printify_price_cents?: number | null
+          printify_product_id?: string | null
+          resolution?: string | null
+          resolved_at?: string | null
+        }
+        Update: {
+          cost_cents?: number | null
+          detected_at?: string
+          drift_cents?: number | null
+          etsy_price_cents?: number | null
+          id?: string
+          listing_id?: number
+          printify_price_cents?: number | null
+          printify_product_id?: string | null
+          resolution?: string | null
+          resolved_at?: string | null
         }
         Relationships: []
       }
