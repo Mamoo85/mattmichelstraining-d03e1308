@@ -1121,6 +1121,11 @@ const App = () => {
                     <Route path="/bedtime-stories" element={<Navigate to="/" replace />} />
                     <Route path="/tech-alert" element={<Navigate to="/talent-radar" replace />} />
                     <Route path="/trade-radar" element={<Navigate to="/radars" replace />} />
+                    <Route path="/gng" element={<GuildsAndGrains />} />
+                    <Route path="/guild-and-grains" element={<GuildsAndGrains />} />
+                    <Route path="/guilds-and-grains" element={<GuildsAndGrains />} />
+                    <Route path="/gifts" element={<GiftFinder />} />
+                    <Route path="/gift/:listingId" element={<GiftShare />} />
                     <Route path="*" element={<NotFound />} />
                     </Routes>
                   </div>
