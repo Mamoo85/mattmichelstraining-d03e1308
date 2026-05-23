@@ -176,7 +176,7 @@ export async function validateAddress(
     }
     logSpend?.();
 
-    }
+
 
     const j = await res.json();
     const result = j?.result || {};
