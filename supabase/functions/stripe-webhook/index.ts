@@ -754,10 +754,13 @@ serve(async (req) => {
               updated_at: new Date().toISOString(),
             }).eq("id", 1);
             try {
-              const { notifyMatt } = await import("../_shared/twilio.ts");
               const amount = ((session.amount_total || 0) / 100).toFixed(2);
-              await notifyMatt(`💰 First DWA sale! $${amount} from ${meta.type} (${session.customer_email}). Weekly budget cap lifted from $5 → $500.`);
-            } catch { /* notifyMatt may not exist */ }
+              await notifyMatt(
+                `💰 First DWA sale: $${amount} ${meta.type}`,
+                `<p>First paying DWA customer! <strong>$${amount}</strong> from <strong>${meta.type}</strong> (${session.customer_email}).</p><p>Weekly budget cap auto-lifted from $5 → $500.</p>`,
+              );
+            } catch { /* best-effort */ }
+
           }
         } catch (e) {
           console.warn("[dwa-budget] auto-lift failed:", e);
