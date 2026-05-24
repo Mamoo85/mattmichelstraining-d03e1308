@@ -2536,3 +2536,6 @@ verify_jwt = false
 
 [functions.etsy-tag-refresh]
 verify_jwt = false
+
+[functions.etsy-listing-rewriter]
+verify_jwt = false
