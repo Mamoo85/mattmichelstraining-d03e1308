@@ -1210,6 +1210,63 @@ serve(async (req) => {
         }
       }
 
+      // ── GNG DIGITAL PRODUCT (one-time pattern/printable purchase) ──────────
+      if (meta.type === "gng_digital") {
+        const email = customerEmail || meta.email;
+        const productSlug = meta.product_slug;
+        try {
+          if (!email || !productSlug) throw new Error("missing email or product_slug");
+          const amount = (session as any).amount_total ?? 0;
+          const { data: purchase, error: pErr } = await (sb.from as any)("gng_digital_purchases").insert({
+            stripe_session_id: session.id,
+            customer_email: email,
+            product_slug: productSlug,
+            amount_paid_cents: amount,
+          }).select("download_token").single();
+          if (pErr) throw new Error(`gng_digital_purchases insert: ${pErr.message}`);
+
+          // Award loyalty points (1 pt per $1)
+          const points = Math.floor(amount / 100);
+          if (points > 0) {
+            const { data: last } = await (sb.from as any)("gng_loyalty_points")
+              .select("balance_after").eq("customer_email", email)
+              .order("created_at", { ascending: false }).limit(1).maybeSingle();
+            const newBalance = (last?.balance_after ?? 0) + points;
+            await (sb.from as any)("gng_loyalty_points").insert({
+              customer_email: email, delta: points, reason: "digital_purchase",
+              reference_id: session.id, balance_after: newBalance,
+            });
+          }
+
+          const origin = (session as any).success_url?.split("/gng/")[0] || "https://m2training.lovable.app";
+          const downloadUrl = `${origin}/gng/downloads?token=${purchase.download_token}`;
+          if (RESEND_API_KEY && email) {
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "Guilds & Grains <matt@mattmichelstraining.com>",
+                to: [email],
+                subject: "Your download is ready 📥",
+                html: `<div style="font-family:-apple-system,sans-serif;max-width:560px;margin:0 auto;padding:32px;background:#fdf6ec;border-radius:12px;">
+                  <h1 style="color:#7a3e1d;margin:0 0 12px;font-size:24px;">Thanks for your purchase!</h1>
+                  <p style="color:#5b4636;font-size:15px;line-height:1.6;">Tap below to download your file. Link is good for 90 days.</p>
+                  <p style="margin:24px 0;"><a href="${downloadUrl}" style="background:#7a3e1d;color:#fff;padding:14px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Download now</a></p>
+                  <p style="color:#8a6a4f;font-size:12px;margin-top:24px;">— Guilds & Grains</p>
+                </div>`,
+              }),
+            }).catch(e => console.error("[gng digital email]", e));
+          }
+          await notifyMatt(`📥 GNG digital sale: ${productSlug} — ${email} ($${(amount/100).toFixed(2)})`);
+        } catch (err: any) {
+          console.error("[WEBHOOK gng_digital]", err);
+          await notifyMatt(`⚠️ GNG digital purchase failed: ${err.message}`);
+          return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+        }
+      }
+
+
+
 
       if (meta.type === "hire_alert_subscription") {
         const email = meta.email || customerEmail;
