@@ -10693,6 +10693,108 @@ export type Database = {
         }
         Relationships: []
       }
+      gng_digital_products: {
+        Row: {
+          active: boolean
+          category: string | null
+          created_at: string
+          currency: string
+          description: string | null
+          file_url: string | null
+          id: string
+          name: string
+          preview_image_url: string | null
+          price_cents: number
+          slug: string
+          sort_order: number
+          tagline: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          category?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          file_url?: string | null
+          id?: string
+          name: string
+          preview_image_url?: string | null
+          price_cents: number
+          slug: string
+          sort_order?: number
+          tagline?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          category?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          file_url?: string | null
+          id?: string
+          name?: string
+          preview_image_url?: string | null
+          price_cents?: number
+          slug?: string
+          sort_order?: number
+          tagline?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      gng_digital_purchases: {
+        Row: {
+          amount_paid_cents: number
+          created_at: string
+          customer_email: string
+          download_count: number
+          download_token: string
+          expires_at: string
+          id: string
+          product_slug: string
+          stripe_session_id: string | null
+        }
+        Insert: {
+          amount_paid_cents: number
+          created_at?: string
+          customer_email: string
+          download_count?: number
+          download_token?: string
+          expires_at?: string
+          id?: string
+          product_slug: string
+          stripe_session_id?: string | null
+        }
+        Update: {
+          amount_paid_cents?: number
+          created_at?: string
+          customer_email?: string
+          download_count?: number
+          download_token?: string
+          expires_at?: string
+          id?: string
+          product_slug?: string
+          stripe_session_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gng_digital_purchases_product_slug_fkey"
+            columns: ["product_slug"]
+            isOneToOne: false
+            referencedRelation: "gng_digital_products"
+            referencedColumns: ["slug"]
+          },
+          {
+            foreignKeyName: "gng_digital_purchases_product_slug_fkey"
+            columns: ["product_slug"]
+            isOneToOne: false
+            referencedRelation: "gng_digital_products_public"
+            referencedColumns: ["slug"]
+          },
+        ]
+      }
       gng_drift_snapshots: {
         Row: {
           cost_cents: number | null
@@ -10801,6 +10903,36 @@ export type Database = {
         }
         Relationships: []
       }
+      gng_loyalty_points: {
+        Row: {
+          balance_after: number
+          created_at: string
+          customer_email: string
+          delta: number
+          id: string
+          reason: string
+          reference_id: string | null
+        }
+        Insert: {
+          balance_after: number
+          created_at?: string
+          customer_email: string
+          delta: number
+          id?: string
+          reason: string
+          reference_id?: string | null
+        }
+        Update: {
+          balance_after?: number
+          created_at?: string
+          customer_email?: string
+          delta?: number
+          id?: string
+          reason?: string
+          reference_id?: string | null
+        }
+        Relationships: []
+      }
       gng_price_auto_adjustments: {
         Row: {
           applied: boolean
@@ -10834,6 +10966,54 @@ export type Database = {
           new_price_cents?: number
           old_price_cents?: number
           reason?: string
+        }
+        Relationships: []
+      }
+      gng_seo_audiences: {
+        Row: {
+          active: boolean
+          created_at: string
+          headline: string
+          hero_emoji: string | null
+          id: string
+          intro: string | null
+          meta_description: string | null
+          meta_title: string | null
+          slug: string
+          sort_order: number
+          sub_headline: string | null
+          tag_filters: string[]
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          headline: string
+          hero_emoji?: string | null
+          id?: string
+          intro?: string | null
+          meta_description?: string | null
+          meta_title?: string | null
+          slug: string
+          sort_order?: number
+          sub_headline?: string | null
+          tag_filters?: string[]
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          headline?: string
+          hero_emoji?: string | null
+          id?: string
+          intro?: string | null
+          meta_description?: string | null
+          meta_title?: string | null
+          slug?: string
+          sort_order?: number
+          sub_headline?: string | null
+          tag_filters?: string[]
+          updated_at?: string
         }
         Relationships: []
       }
@@ -28355,6 +28535,45 @@ export type Database = {
           cohort_month: string | null
           listings_created: number | null
           still_active: number | null
+        }
+        Relationships: []
+      }
+      gng_digital_products_public: {
+        Row: {
+          category: string | null
+          currency: string | null
+          description: string | null
+          id: string | null
+          name: string | null
+          preview_image_url: string | null
+          price_cents: number | null
+          slug: string | null
+          sort_order: number | null
+          tagline: string | null
+        }
+        Insert: {
+          category?: string | null
+          currency?: string | null
+          description?: string | null
+          id?: string | null
+          name?: string | null
+          preview_image_url?: string | null
+          price_cents?: number | null
+          slug?: string | null
+          sort_order?: number | null
+          tagline?: string | null
+        }
+        Update: {
+          category?: string | null
+          currency?: string | null
+          description?: string | null
+          id?: string | null
+          name?: string | null
+          preview_image_url?: string | null
+          price_cents?: number | null
+          slug?: string | null
+          sort_order?: number | null
+          tagline?: string | null
         }
         Relationships: []
       }
