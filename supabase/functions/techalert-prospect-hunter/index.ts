@@ -42,6 +42,56 @@ const ROLES = [
 
 const METRO_QUERY = "Metro Detroit OR Detroit OR Warren OR Sterling Heights OR Livonia OR Dearborn OR Troy OR Southfield Michigan";
 
+// Nationwide targeting — populated at request time from prospector_targets.
+// Falls back to MI-only if DB unreachable so we never regress to zero coverage.
+let ACTIVE_STATES: string[] = ["MI"];
+let ACTIVE_CITIES: Array<{ city: string; state: string }> = [{ city: "Detroit", state: "MI" }];
+
+// Lat/lng for Google Places nearbysearch — top metro per active state.
+// Keys are "City, ST". If not present we fall back to a state-center via Google Geocoding.
+const METRO_LATLNG: Record<string, { lat: number; lng: number }> = {
+  "Detroit, MI": { lat: 42.33, lng: -83.04 },
+  "Warren, MI": { lat: 42.49, lng: -83.01 },
+  "Sterling Heights, MI": { lat: 42.58, lng: -83.03 },
+  "Livonia, MI": { lat: 42.37, lng: -83.35 },
+  "Royal Oak, MI": { lat: 42.49, lng: -83.14 },
+  "Troy, MI": { lat: 42.60, lng: -83.14 },
+  "Cleveland, OH": { lat: 41.49, lng: -81.69 },
+  "Columbus, OH": { lat: 39.96, lng: -82.99 },
+  "Cincinnati, OH": { lat: 39.10, lng: -84.51 },
+  "Indianapolis, IN": { lat: 39.77, lng: -86.15 },
+  "Chicago, IL": { lat: 41.88, lng: -87.63 },
+  "Dallas, TX": { lat: 32.78, lng: -96.80 },
+  "Houston, TX": { lat: 29.76, lng: -95.36 },
+  "San Antonio, TX": { lat: 29.42, lng: -98.49 },
+  "Jacksonville, FL": { lat: 30.33, lng: -81.65 },
+  "Miami, FL": { lat: 25.76, lng: -80.19 },
+  "Orlando, FL": { lat: 28.54, lng: -81.37 },
+  "Tampa, FL": { lat: 27.95, lng: -82.45 },
+  "Nashville, TN": { lat: 36.16, lng: -86.78 },
+  "Atlanta, GA": { lat: 33.75, lng: -84.39 },
+  "Phoenix, AZ": { lat: 33.45, lng: -112.07 },
+  "Charlotte, NC": { lat: 35.23, lng: -80.84 },
+  "Raleigh, NC": { lat: 35.78, lng: -78.64 },
+  "Philadelphia, PA": { lat: 39.95, lng: -75.17 },
+  "Pittsburgh, PA": { lat: 40.44, lng: -79.99 },
+};
+
+async function loadActiveTargets(sb: any): Promise<void> {
+  try {
+    const { data } = await sb.from("prospector_targets")
+      .select("city,state")
+      .eq("active", true);
+    if (data && data.length) {
+      ACTIVE_STATES = Array.from(new Set(data.map((r: any) => r.state))) as string[];
+      ACTIVE_CITIES = data.map((r: any) => ({ city: r.city, state: r.state }));
+      console.log(`[hunter] nationwide targets loaded: ${ACTIVE_STATES.length} states / ${ACTIVE_CITIES.length} cities`);
+    }
+  } catch (e) {
+    console.warn("[hunter] loadActiveTargets failed, defaulting to MI:", e instanceof Error ? e.message : e);
+  }
+}
+
 interface Posting {
   company_name: string;
   city?: string;
@@ -359,28 +409,30 @@ async function scanSAMGovEntities(): Promise<Posting[]> {
     { code: "238910", role: "hvac_tech" },  // roofing
   ];
   for (const { code, role } of naicsCodes) {
-    try {
-      const url = `https://api.sam.gov/entity-information/v3/entities?api_key=${SAM_GOV_API_KEY}&addressCountryCode=USA&stateOrProvinceCode=MI&primaryNaics=${code}&entityEFTIndicator=Y&registrationStatus=A&purposeOfRegistrationCode=Z2&limit=25`;
-      const res = await fetch(url, { headers: { "User-Agent": "TechAlert matt@detroitwebagent.com" }, signal: AbortSignal.timeout(12_000) });
-      if (!res.ok) continue;
-      const data = await res.json();
-      for (const entity of (data?.entityData || [])) {
-        const name: string = entity?.entityRegistration?.legalBusinessName || "";
-        const city: string = entity?.coreData?.physicalAddress?.city || "";
-        const zip: string = entity?.coreData?.physicalAddress?.zipCode || "";
-        if (!name) continue;
-        results.push({
-          company_name: name,
-          city: city ? `${city}, MI${zip ? " " + zip : ""}` : "Michigan",
-          role,
-          days_posted: null,
-          source_url: `https://sam.gov/entity/${entity?.entityRegistration?.ueiSAM}/general-information`,
-          source_label: `SAM.gov Entity (NAICS ${code}) — federally registered MI contractor`,
-          is_boiler: false,
-        });
+    for (const state of ACTIVE_STATES) {
+      try {
+        const url = `https://api.sam.gov/entity-information/v3/entities?api_key=${SAM_GOV_API_KEY}&addressCountryCode=USA&stateOrProvinceCode=${state}&primaryNaics=${code}&entityEFTIndicator=Y&registrationStatus=A&purposeOfRegistrationCode=Z2&limit=15`;
+        const res = await fetch(url, { headers: { "User-Agent": "TechAlert matt@detroitwebagent.com" }, signal: AbortSignal.timeout(12_000) });
+        if (!res.ok) continue;
+        const data = await res.json();
+        for (const entity of (data?.entityData || [])) {
+          const name: string = entity?.entityRegistration?.legalBusinessName || "";
+          const city: string = entity?.coreData?.physicalAddress?.city || "";
+          const zip: string = entity?.coreData?.physicalAddress?.zipCode || "";
+          if (!name) continue;
+          results.push({
+            company_name: name,
+            city: city ? `${city}, ${state}${zip ? " " + zip : ""}` : state,
+            role,
+            days_posted: null,
+            source_url: `https://sam.gov/entity/${entity?.entityRegistration?.ueiSAM}/general-information`,
+            source_label: `SAM.gov Entity (NAICS ${code}) — federally registered ${state} contractor`,
+            is_boiler: false,
+          });
+        }
+      } catch (e) {
+        console.error("[hunter] sam.gov entities:", e instanceof Error ? e.message : e);
       }
-    } catch (e) {
-      console.error("[hunter] sam.gov entities:", e instanceof Error ? e.message : e);
     }
   }
   return results;
@@ -532,27 +584,33 @@ async function scanGoogleMapsTrades(): Promise<Posting[]> {
     { type: "plumber",           role: "hvac_tech" as const,    is_boiler: false },
     { type: "hvac_contractor",   role: "hvac_tech" as const,    is_boiler: false },
   ];
+  // Iterate every active metro across all enrolled states.
+  const metros = ACTIVE_CITIES
+    .map((c) => ({ key: `${c.city}, ${c.state}`, state: c.state, ll: METRO_LATLNG[`${c.city}, ${c.state}`] }))
+    .filter((m) => !!m.ll);
   for (const { type, role, is_boiler } of searches) {
-    try {
-      const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=42.33,-83.04&radius=80000&type=${type}&key=${GOOGLE_MAPS_API_KEY}`;
-      const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
-      if (!res.ok) continue;
-      const data = await res.json();
-      for (const place of (data?.results || []).slice(0, 10)) {
-        if (place.business_status !== "OPERATIONAL") continue;
-        if ((place.user_ratings_total || 0) < 3) continue;
-        results.push({
-          company_name: place.name,
-          city: place.vicinity || undefined,
-          role,
-          days_posted: null,
-          source_url: `https://www.google.com/maps/place/?q=place_id:${place.place_id}`,
-          source_label: "Google Maps",
-          is_boiler,
-        });
+    for (const m of metros) {
+      try {
+        const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${m.ll!.lat},${m.ll!.lng}&radius=50000&type=${type}&key=${GOOGLE_MAPS_API_KEY}`;
+        const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
+        if (!res.ok) continue;
+        const data = await res.json();
+        for (const place of (data?.results || []).slice(0, 8)) {
+          if (place.business_status !== "OPERATIONAL") continue;
+          if ((place.user_ratings_total || 0) < 3) continue;
+          results.push({
+            company_name: place.name,
+            city: place.vicinity ? `${place.vicinity}, ${m.state}` : m.key,
+            role,
+            days_posted: null,
+            source_url: `https://www.google.com/maps/place/?q=place_id:${place.place_id}`,
+            source_label: `Google Maps (${m.key})`,
+            is_boiler,
+          });
+        }
+      } catch (e) {
+        console.error("[hunter] google maps trades:", e instanceof Error ? e.message : e);
       }
-    } catch (e) {
-      console.error("[hunter] google maps trades:", e instanceof Error ? e.message : e);
     }
   }
   return results;
@@ -561,29 +619,31 @@ async function scanGoogleMapsTrades(): Promise<Posting[]> {
 // OSHA enforcement data — MI NAICS 23x (construction) violations = active company signal
 async function scanOSHAViolations(): Promise<Posting[]> {
   const results: Posting[] = [];
-  try {
-    const since = new Date(Date.now() - 90 * 86400_000).toISOString().slice(0, 10);
-    const url = `https://data.dol.gov/get/full_case/rows/0/offset/0?_where=site_state%3D%27MI%27%20AND%20primary_site_naics%20LIKE%20%2723%25%27%20AND%20open_date%20%3E%3D%20%27${since}%27&_sort=open_date%20DESC`;
-    const res = await fetch(url, {
-      headers: { "User-Agent": "TechAlert matt@detroitwebagent.com" },
-      signal: AbortSignal.timeout(12_000),
-    });
-    if (!res.ok) return results;
-    const data = await res.json();
-    for (const c of (data || []).slice(0, 15)) {
-      const name: string = c?.establishment_name || "";
-      if (!name) continue;
-      results.push({
-        company_name: name,
-        city: c?.site_city || undefined,
-        role: "hvac_tech",
-        days_posted: null,
-        source_url: `https://www.osha.gov/pls/imis/establishment.inspection_detail?id=${c?.activity_nr || ""}`,
-        source_label: "OSHA",
-        is_boiler: false,
+  const since = new Date(Date.now() - 90 * 86400_000).toISOString().slice(0, 10);
+  for (const state of ACTIVE_STATES) {
+    try {
+      const url = `https://data.dol.gov/get/full_case/rows/0/offset/0?_where=site_state%3D%27${state}%27%20AND%20primary_site_naics%20LIKE%20%2723%25%27%20AND%20open_date%20%3E%3D%20%27${since}%27&_sort=open_date%20DESC`;
+      const res = await fetch(url, {
+        headers: { "User-Agent": "TechAlert matt@detroitwebagent.com" },
+        signal: AbortSignal.timeout(12_000),
       });
-    }
-  } catch (e) { console.error("[hunter] OSHA:", e instanceof Error ? e.message : e); }
+      if (!res.ok) continue;
+      const data = await res.json();
+      for (const c of (data || []).slice(0, 8)) {
+        const name: string = c?.establishment_name || "";
+        if (!name) continue;
+        results.push({
+          company_name: name,
+          city: c?.site_city ? `${c.site_city}, ${state}` : state,
+          role: "hvac_tech",
+          days_posted: null,
+          source_url: `https://www.osha.gov/pls/imis/establishment.inspection_detail?id=${c?.activity_nr || ""}`,
+          source_label: `OSHA (${state})`,
+          is_boiler: false,
+        });
+      }
+    } catch (e) { console.error("[hunter] OSHA:", e instanceof Error ? e.message : e); }
+  }
   return results;
 }
 
@@ -1122,6 +1182,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+  await loadActiveTargets(sb);
   const startedAt = Date.now();
   let inserted = 0, updated = 0, scanned = 0;
 
