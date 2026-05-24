@@ -10732,6 +10732,75 @@ export type Database = {
         }
         Relationships: []
       }
+      gng_duplicate_flags: {
+        Row: {
+          created_at: string
+          id: string
+          listing_id_a: number
+          listing_id_b: number
+          reason: string | null
+          resolved: boolean
+          similarity: number
+          title_a: string | null
+          title_b: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          listing_id_a: number
+          listing_id_b: number
+          reason?: string | null
+          resolved?: boolean
+          similarity: number
+          title_a?: string | null
+          title_b?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          listing_id_a?: number
+          listing_id_b?: number
+          reason?: string | null
+          resolved?: boolean
+          similarity?: number
+          title_a?: string | null
+          title_b?: string | null
+        }
+        Relationships: []
+      }
+      gng_inventory_alerts: {
+        Row: {
+          acknowledged: boolean
+          alert_type: string
+          created_at: string
+          favorers_delta_7d: number | null
+          id: string
+          listing_id: number
+          signal: string | null
+          views_7d: number | null
+        }
+        Insert: {
+          acknowledged?: boolean
+          alert_type: string
+          created_at?: string
+          favorers_delta_7d?: number | null
+          id?: string
+          listing_id: number
+          signal?: string | null
+          views_7d?: number | null
+        }
+        Update: {
+          acknowledged?: boolean
+          alert_type?: string
+          created_at?: string
+          favorers_delta_7d?: number | null
+          id?: string
+          listing_id?: number
+          signal?: string | null
+          views_7d?: number | null
+        }
+        Relationships: []
+      }
       gng_price_auto_adjustments: {
         Row: {
           applied: boolean
@@ -10765,6 +10834,72 @@ export type Database = {
           new_price_cents?: number
           old_price_cents?: number
           reason?: string
+        }
+        Relationships: []
+      }
+      gng_tag_overlap_report: {
+        Row: {
+          created_at: string
+          id: string
+          listing_count: number
+          report_date: string
+          saturation_pct: number
+          tag: string
+          total_active: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          listing_count: number
+          report_date?: string
+          saturation_pct: number
+          tag: string
+          total_active: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          listing_count?: number
+          report_date?: string
+          saturation_pct?: number
+          tag?: string
+          total_active?: number
+        }
+        Relationships: []
+      }
+      gng_title_lint_log: {
+        Row: {
+          applied: boolean
+          apply_error: string | null
+          created_at: string
+          id: string
+          listing_id: number
+          new_length: number
+          new_title: string
+          old_length: number
+          old_title: string
+        }
+        Insert: {
+          applied?: boolean
+          apply_error?: string | null
+          created_at?: string
+          id?: string
+          listing_id: number
+          new_length: number
+          new_title: string
+          old_length: number
+          old_title: string
+        }
+        Update: {
+          applied?: boolean
+          apply_error?: string | null
+          created_at?: string
+          id?: string
+          listing_id?: number
+          new_length?: number
+          new_title?: string
+          old_length?: number
+          old_title?: string
         }
         Relationships: []
       }
@@ -10825,6 +10960,39 @@ export type Database = {
           id?: string
           source?: string
           tag?: string
+        }
+        Relationships: []
+      }
+      gng_velocity_snapshots: {
+        Row: {
+          created_at: string
+          id: string
+          listing_id: number
+          num_favorers: number | null
+          price_cents: number | null
+          quantity: number | null
+          snapshot_date: string
+          views: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          listing_id: number
+          num_favorers?: number | null
+          price_cents?: number | null
+          quantity?: number | null
+          snapshot_date?: string
+          views?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          listing_id?: number
+          num_favorers?: number | null
+          price_cents?: number | null
+          quantity?: number | null
+          snapshot_date?: string
+          views?: number | null
         }
         Relationships: []
       }
