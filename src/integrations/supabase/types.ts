@@ -10654,6 +10654,45 @@ export type Database = {
         }
         Relationships: []
       }
+      gng_dead_sku_log: {
+        Row: {
+          archived: boolean
+          created_at: string
+          flagged_reason: string
+          id: string
+          last_updated_ts: number | null
+          listing_id: number
+          price_cents: number | null
+          reviewed_at: string | null
+          title: string | null
+          url: string | null
+        }
+        Insert: {
+          archived?: boolean
+          created_at?: string
+          flagged_reason: string
+          id?: string
+          last_updated_ts?: number | null
+          listing_id: number
+          price_cents?: number | null
+          reviewed_at?: string | null
+          title?: string | null
+          url?: string | null
+        }
+        Update: {
+          archived?: boolean
+          created_at?: string
+          flagged_reason?: string
+          id?: string
+          last_updated_ts?: number | null
+          listing_id?: number
+          price_cents?: number | null
+          reviewed_at?: string | null
+          title?: string | null
+          url?: string | null
+        }
+        Relationships: []
+      }
       gng_drift_snapshots: {
         Row: {
           cost_cents: number | null
@@ -10762,6 +10801,30 @@ export type Database = {
           status?: string
           tags_count?: number | null
           title?: string | null
+        }
+        Relationships: []
+      }
+      gng_trend_signals: {
+        Row: {
+          captured_at: string
+          frequency: number
+          id: string
+          source: string
+          tag: string
+        }
+        Insert: {
+          captured_at?: string
+          frequency?: number
+          id?: string
+          source?: string
+          tag: string
+        }
+        Update: {
+          captured_at?: string
+          frequency?: number
+          id?: string
+          source?: string
+          tag?: string
         }
         Relationships: []
       }
