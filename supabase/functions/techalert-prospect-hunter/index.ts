@@ -42,6 +42,56 @@ const ROLES = [
 
 const METRO_QUERY = "Metro Detroit OR Detroit OR Warren OR Sterling Heights OR Livonia OR Dearborn OR Troy OR Southfield Michigan";
 
+// Nationwide targeting — populated at request time from prospector_targets.
+// Falls back to MI-only if DB unreachable so we never regress to zero coverage.
+let ACTIVE_STATES: string[] = ["MI"];
+let ACTIVE_CITIES: Array<{ city: string; state: string }> = [{ city: "Detroit", state: "MI" }];
+
+// Lat/lng for Google Places nearbysearch — top metro per active state.
+// Keys are "City, ST". If not present we fall back to a state-center via Google Geocoding.
+const METRO_LATLNG: Record<string, { lat: number; lng: number }> = {
+  "Detroit, MI": { lat: 42.33, lng: -83.04 },
+  "Warren, MI": { lat: 42.49, lng: -83.01 },
+  "Sterling Heights, MI": { lat: 42.58, lng: -83.03 },
+  "Livonia, MI": { lat: 42.37, lng: -83.35 },
+  "Royal Oak, MI": { lat: 42.49, lng: -83.14 },
+  "Troy, MI": { lat: 42.60, lng: -83.14 },
+  "Cleveland, OH": { lat: 41.49, lng: -81.69 },
+  "Columbus, OH": { lat: 39.96, lng: -82.99 },
+  "Cincinnati, OH": { lat: 39.10, lng: -84.51 },
+  "Indianapolis, IN": { lat: 39.77, lng: -86.15 },
+  "Chicago, IL": { lat: 41.88, lng: -87.63 },
+  "Dallas, TX": { lat: 32.78, lng: -96.80 },
+  "Houston, TX": { lat: 29.76, lng: -95.36 },
+  "San Antonio, TX": { lat: 29.42, lng: -98.49 },
+  "Jacksonville, FL": { lat: 30.33, lng: -81.65 },
+  "Miami, FL": { lat: 25.76, lng: -80.19 },
+  "Orlando, FL": { lat: 28.54, lng: -81.37 },
+  "Tampa, FL": { lat: 27.95, lng: -82.45 },
+  "Nashville, TN": { lat: 36.16, lng: -86.78 },
+  "Atlanta, GA": { lat: 33.75, lng: -84.39 },
+  "Phoenix, AZ": { lat: 33.45, lng: -112.07 },
+  "Charlotte, NC": { lat: 35.23, lng: -80.84 },
+  "Raleigh, NC": { lat: 35.78, lng: -78.64 },
+  "Philadelphia, PA": { lat: 39.95, lng: -75.17 },
+  "Pittsburgh, PA": { lat: 40.44, lng: -79.99 },
+};
+
+async function loadActiveTargets(sb: any): Promise<void> {
+  try {
+    const { data } = await sb.from("prospector_targets")
+      .select("city,state")
+      .eq("active", true);
+    if (data && data.length) {
+      ACTIVE_STATES = Array.from(new Set(data.map((r: any) => r.state))) as string[];
+      ACTIVE_CITIES = data.map((r: any) => ({ city: r.city, state: r.state }));
+      console.log(`[hunter] nationwide targets loaded: ${ACTIVE_STATES.length} states / ${ACTIVE_CITIES.length} cities`);
+    }
+  } catch (e) {
+    console.warn("[hunter] loadActiveTargets failed, defaulting to MI:", e instanceof Error ? e.message : e);
+  }
+}
+
 interface Posting {
   company_name: string;
   city?: string;
