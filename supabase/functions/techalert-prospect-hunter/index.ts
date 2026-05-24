@@ -409,28 +409,30 @@ async function scanSAMGovEntities(): Promise<Posting[]> {
     { code: "238910", role: "hvac_tech" },  // roofing
   ];
   for (const { code, role } of naicsCodes) {
-    try {
-      const url = `https://api.sam.gov/entity-information/v3/entities?api_key=${SAM_GOV_API_KEY}&addressCountryCode=USA&stateOrProvinceCode=MI&primaryNaics=${code}&entityEFTIndicator=Y&registrationStatus=A&purposeOfRegistrationCode=Z2&limit=25`;
-      const res = await fetch(url, { headers: { "User-Agent": "TechAlert matt@detroitwebagent.com" }, signal: AbortSignal.timeout(12_000) });
-      if (!res.ok) continue;
-      const data = await res.json();
-      for (const entity of (data?.entityData || [])) {
-        const name: string = entity?.entityRegistration?.legalBusinessName || "";
-        const city: string = entity?.coreData?.physicalAddress?.city || "";
-        const zip: string = entity?.coreData?.physicalAddress?.zipCode || "";
-        if (!name) continue;
-        results.push({
-          company_name: name,
-          city: city ? `${city}, MI${zip ? " " + zip : ""}` : "Michigan",
-          role,
-          days_posted: null,
-          source_url: `https://sam.gov/entity/${entity?.entityRegistration?.ueiSAM}/general-information`,
-          source_label: `SAM.gov Entity (NAICS ${code}) — federally registered MI contractor`,
-          is_boiler: false,
-        });
+    for (const state of ACTIVE_STATES) {
+      try {
+        const url = `https://api.sam.gov/entity-information/v3/entities?api_key=${SAM_GOV_API_KEY}&addressCountryCode=USA&stateOrProvinceCode=${state}&primaryNaics=${code}&entityEFTIndicator=Y&registrationStatus=A&purposeOfRegistrationCode=Z2&limit=15`;
+        const res = await fetch(url, { headers: { "User-Agent": "TechAlert matt@detroitwebagent.com" }, signal: AbortSignal.timeout(12_000) });
+        if (!res.ok) continue;
+        const data = await res.json();
+        for (const entity of (data?.entityData || [])) {
+          const name: string = entity?.entityRegistration?.legalBusinessName || "";
+          const city: string = entity?.coreData?.physicalAddress?.city || "";
+          const zip: string = entity?.coreData?.physicalAddress?.zipCode || "";
+          if (!name) continue;
+          results.push({
+            company_name: name,
+            city: city ? `${city}, ${state}${zip ? " " + zip : ""}` : state,
+            role,
+            days_posted: null,
+            source_url: `https://sam.gov/entity/${entity?.entityRegistration?.ueiSAM}/general-information`,
+            source_label: `SAM.gov Entity (NAICS ${code}) — federally registered ${state} contractor`,
+            is_boiler: false,
+          });
+        }
+      } catch (e) {
+        console.error("[hunter] sam.gov entities:", e instanceof Error ? e.message : e);
       }
-    } catch (e) {
-      console.error("[hunter] sam.gov entities:", e instanceof Error ? e.message : e);
     }
   }
   return results;
