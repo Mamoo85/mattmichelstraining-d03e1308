@@ -10630,6 +10630,30 @@ export type Database = {
         }
         Relationships: []
       }
+      gng_auto_renew_log: {
+        Row: {
+          errors: Json | null
+          id: string
+          listings_scanned: number
+          listings_updated: number
+          run_at: string
+        }
+        Insert: {
+          errors?: Json | null
+          id?: string
+          listings_scanned?: number
+          listings_updated?: number
+          run_at?: string
+        }
+        Update: {
+          errors?: Json | null
+          id?: string
+          listings_scanned?: number
+          listings_updated?: number
+          run_at?: string
+        }
+        Relationships: []
+      }
       gng_drift_snapshots: {
         Row: {
           cost_cents: number | null
@@ -10666,6 +10690,78 @@ export type Database = {
           printify_product_id?: string | null
           resolution?: string | null
           resolved_at?: string | null
+        }
+        Relationships: []
+      }
+      gng_price_auto_adjustments: {
+        Row: {
+          applied: boolean
+          apply_error: string | null
+          cost_cents: number | null
+          created_at: string
+          id: string
+          listing_id: number
+          new_price_cents: number
+          old_price_cents: number
+          reason: string
+        }
+        Insert: {
+          applied?: boolean
+          apply_error?: string | null
+          cost_cents?: number | null
+          created_at?: string
+          id?: string
+          listing_id: number
+          new_price_cents: number
+          old_price_cents: number
+          reason: string
+        }
+        Update: {
+          applied?: boolean
+          apply_error?: string | null
+          cost_cents?: number | null
+          created_at?: string
+          id?: string
+          listing_id?: number
+          new_price_cents?: number
+          old_price_cents?: number
+          reason?: string
+        }
+        Relationships: []
+      }
+      gng_translation_log: {
+        Row: {
+          created_at: string
+          description_chars: number | null
+          error: string | null
+          id: string
+          language: string
+          listing_id: number
+          status: string
+          tags_count: number | null
+          title: string | null
+        }
+        Insert: {
+          created_at?: string
+          description_chars?: number | null
+          error?: string | null
+          id?: string
+          language: string
+          listing_id: number
+          status?: string
+          tags_count?: number | null
+          title?: string | null
+        }
+        Update: {
+          created_at?: string
+          description_chars?: number | null
+          error?: string | null
+          id?: string
+          language?: string
+          listing_id?: number
+          status?: string
+          tags_count?: number | null
+          title?: string | null
         }
         Relationships: []
       }
@@ -27819,6 +27915,16 @@ export type Database = {
           slug?: string | null
           template_key?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      gng_catalog_cohort_summary: {
+        Row: {
+          avg_price_usd: number | null
+          avg_tag_count: number | null
+          cohort_month: string | null
+          listings_created: number | null
+          still_active: number | null
         }
         Relationships: []
       }

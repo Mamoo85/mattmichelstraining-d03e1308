@@ -2512,3 +2512,18 @@ verify_jwt = false
 
 [functions.gng-price-floor-queue]
 verify_jwt = false
+
+[functions.etsy-translate-top-listings]
+verify_jwt = false
+
+[functions.etsy-enable-auto-renew]
+verify_jwt = false
+
+[functions.gng-price-floor-auto-apply]
+verify_jwt = false
+
+[functions.gng-sitemap-rebuild]
+verify_jwt = false
+
+[functions.gng-cohort-report]
+verify_jwt = false
