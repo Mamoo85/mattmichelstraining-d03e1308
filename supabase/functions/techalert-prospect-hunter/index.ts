@@ -584,27 +584,33 @@ async function scanGoogleMapsTrades(): Promise<Posting[]> {
     { type: "plumber",           role: "hvac_tech" as const,    is_boiler: false },
     { type: "hvac_contractor",   role: "hvac_tech" as const,    is_boiler: false },
   ];
+  // Iterate every active metro across all enrolled states.
+  const metros = ACTIVE_CITIES
+    .map((c) => ({ key: `${c.city}, ${c.state}`, state: c.state, ll: METRO_LATLNG[`${c.city}, ${c.state}`] }))
+    .filter((m) => !!m.ll);
   for (const { type, role, is_boiler } of searches) {
-    try {
-      const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=42.33,-83.04&radius=80000&type=${type}&key=${GOOGLE_MAPS_API_KEY}`;
-      const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
-      if (!res.ok) continue;
-      const data = await res.json();
-      for (const place of (data?.results || []).slice(0, 10)) {
-        if (place.business_status !== "OPERATIONAL") continue;
-        if ((place.user_ratings_total || 0) < 3) continue;
-        results.push({
-          company_name: place.name,
-          city: place.vicinity || undefined,
-          role,
-          days_posted: null,
-          source_url: `https://www.google.com/maps/place/?q=place_id:${place.place_id}`,
-          source_label: "Google Maps",
-          is_boiler,
-        });
+    for (const m of metros) {
+      try {
+        const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${m.ll!.lat},${m.ll!.lng}&radius=50000&type=${type}&key=${GOOGLE_MAPS_API_KEY}`;
+        const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
+        if (!res.ok) continue;
+        const data = await res.json();
+        for (const place of (data?.results || []).slice(0, 8)) {
+          if (place.business_status !== "OPERATIONAL") continue;
+          if ((place.user_ratings_total || 0) < 3) continue;
+          results.push({
+            company_name: place.name,
+            city: place.vicinity ? `${place.vicinity}, ${m.state}` : m.key,
+            role,
+            days_posted: null,
+            source_url: `https://www.google.com/maps/place/?q=place_id:${place.place_id}`,
+            source_label: `Google Maps (${m.key})`,
+            is_boiler,
+          });
+        }
+      } catch (e) {
+        console.error("[hunter] google maps trades:", e instanceof Error ? e.message : e);
       }
-    } catch (e) {
-      console.error("[hunter] google maps trades:", e instanceof Error ? e.message : e);
     }
   }
   return results;
