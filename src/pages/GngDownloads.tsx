@@ -71,8 +71,9 @@ export default function GngDownloads() {
     if (token || sessionId) return;
     (async () => {
       const { data } = await supabase
-        .from("gng_digital_products_public" as any)
+        .from("gng_digital_products")
         .select("slug,name,tagline,description,price_cents,preview_image_url,category")
+        .eq("active", true)
         .order("sort_order", { ascending: true });
       setProducts(((data ?? []) as unknown) as DigitalProduct[]);
       setLoadingList(false);
