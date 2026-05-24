@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import SEOHead from "@/components/layout/SEOHead";
+import { ExitIntentPopup } from "@/components/gng/ExitIntentPopup";
 
 interface EtsyProduct {
   listing_id: number;
