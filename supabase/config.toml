@@ -2527,3 +2527,12 @@ verify_jwt = false
 
 [functions.gng-cohort-report]
 verify_jwt = false
+
+[functions.gng-dead-sku-sweeper]
+verify_jwt = false
+
+[functions.gng-trend-scraper]
+verify_jwt = false
+
+[functions.etsy-tag-refresh]
+verify_jwt = false
