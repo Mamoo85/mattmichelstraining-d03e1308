@@ -41,6 +41,12 @@ verify_jwt = false
 [functions.cold-email-ramp-scheduler]
 verify_jwt = false
 
+[functions.cold-sender-master]
+verify_jwt = false
+
+[functions.cold-sender-health-check]
+verify_jwt = false
+
 [functions.trial-drip-runner]
 verify_jwt = false
 
