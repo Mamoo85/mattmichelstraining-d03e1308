@@ -1158,6 +1158,59 @@ serve(async (req) => {
         }
       }
 
+      // ── GNG SUBSCRIPTION BOX (Sock/Yarn/Pattern/Gift of the Month) ─────────
+      if (meta.type === "gng_subscription") {
+        const email = customerEmail || meta.email;
+        const planSlug = meta.plan_slug;
+        try {
+          if (!email || !planSlug) throw new Error("missing email or plan_slug");
+          const shipping = (session as any).shipping_details || (session as any).customer_details;
+          const addr = shipping?.address || {};
+          const nextShip = new Date();
+          nextShip.setDate(nextShip.getDate() + 3); // first ship goes out in 3 days
+          const { error: sErr } = await (sb.from as any)("gng_subscriptions").upsert({
+            stripe_subscription_id: session.subscription as string || null,
+            stripe_customer_id: session.customer as string || null,
+            customer_email: email,
+            customer_name: shipping?.name || null,
+            plan_slug: planSlug,
+            status: "active",
+            ship_address_line1: addr.line1 || null,
+            ship_address_line2: addr.line2 || null,
+            ship_city: addr.city || null,
+            ship_state: addr.state || null,
+            ship_postal_code: addr.postal_code || null,
+            ship_country: addr.country || "US",
+            next_ship_date: nextShip.toISOString().slice(0, 10),
+          }, { onConflict: "stripe_subscription_id" });
+          if (sErr) throw new Error(`gng_subscriptions upsert: ${sErr.message}`);
+
+          if (RESEND_API_KEY && email) {
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "Guilds & Grains <matt@mattmichelstraining.com>",
+                to: [email],
+                subject: "Welcome to your monthly box 🧶",
+                html: `<div style="font-family:-apple-system,sans-serif;max-width:560px;margin:0 auto;padding:32px;background:#fdf6ec;border-radius:12px;">
+                  <h1 style="color:#7a3e1d;margin:0 0 12px;font-size:24px;">You're in!</h1>
+                  <p style="color:#5b4636;font-size:15px;line-height:1.6;">Your <strong>${planSlug.replace(/-/g," ")}</strong> subscription is active. Your first box ships within 3 business days. You'll get tracking by email.</p>
+                  <p style="color:#5b4636;font-size:13px;margin-top:24px;">Manage or cancel any time — just reply to this email.</p>
+                  <p style="color:#8a6a4f;font-size:12px;margin-top:24px;">— Lisa & Matt · Guilds & Grains</p>
+                </div>`,
+              }),
+            }).catch(e => console.error("[gng sub welcome email]", e));
+          }
+          await notifyMatt(`🧶 New GNG subscriber: ${email} — ${planSlug}`);
+        } catch (err: any) {
+          console.error("[WEBHOOK gng_subscription]", err);
+          await notifyMatt(`⚠️ GNG sub signup failed: ${email} — ${err.message}`);
+          return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+        }
+      }
+
+
       if (meta.type === "hire_alert_subscription") {
         const email = meta.email || customerEmail;
         // Hoisted so it's accessible in the welcome-email block below
