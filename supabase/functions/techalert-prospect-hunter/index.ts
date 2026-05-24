@@ -1182,6 +1182,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+  await loadActiveTargets(sb);
   const startedAt = Date.now();
   let inserted = 0, updated = 0, scanned = 0;
 
