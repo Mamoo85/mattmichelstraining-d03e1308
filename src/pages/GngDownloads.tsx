@@ -74,7 +74,7 @@ export default function GngDownloads() {
         .from("gng_digital_products_public" as any)
         .select("slug,name,tagline,description,price_cents,preview_image_url,category")
         .order("sort_order", { ascending: true });
-      setProducts((data ?? []) as DigitalProduct[]);
+      setProducts(((data ?? []) as unknown) as DigitalProduct[]);
       setLoadingList(false);
     })();
   }, [token, sessionId]);
