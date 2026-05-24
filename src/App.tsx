@@ -85,6 +85,8 @@ const EtsyProductDetail = lazyRetry(() => import("./pages/EtsyProductDetail"));
 const GuildsAndGrains = lazyRetry(() => import("./pages/GuildsAndGrains"));
 const GngSubscriptions = lazyRetry(() => import("./pages/GngSubscriptions"));
 const GngSubscriptionSuccess = lazyRetry(() => import("./pages/GngSubscriptionSuccess"));
+const GngDownloads = lazyRetry(() => import("./pages/GngDownloads"));
+const GngAudienceLanding = lazyRetry(() => import("./pages/GngAudienceLanding"));
 const GiftFinder = lazyRetry(() => import("./pages/GiftFinder"));
 const GiftShare = lazyRetry(() => import("./pages/GiftShare"));
 const ForParents = lazyRetry(() => import("./pages/ForParents"));
