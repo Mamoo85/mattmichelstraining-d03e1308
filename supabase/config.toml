@@ -2551,3 +2551,9 @@ verify_jwt = false
 
 [functions.gng-tag-overlap-analyzer]
 verify_jwt = false
+
+[functions.create-gng-subscription-checkout]
+verify_jwt = false
+
+[functions.gng-subscription-fulfillment]
+verify_jwt = false
