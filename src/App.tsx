@@ -1130,6 +1130,8 @@ const App = () => {
                     <Route path="/guilds-and-grains" element={<GuildsAndGrains />} />
                     <Route path="/gng/subscriptions" element={<GngSubscriptions />} />
                     <Route path="/gng/subscriptions/success" element={<GngSubscriptionSuccess />} />
+                    <Route path="/gng/downloads" element={<GngDownloads />} />
+                    <Route path="/gifts/for/:audience" element={<GngAudienceLanding />} />
                     <Route path="/gifts" element={<GiftFinder />} />
                     <Route path="/gift/:listingId" element={<GiftShare />} />
                     <Route path="*" element={<NotFound />} />
