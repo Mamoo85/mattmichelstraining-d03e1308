@@ -10837,6 +10837,205 @@ export type Database = {
         }
         Relationships: []
       }
+      gng_subscription_plans: {
+        Row: {
+          active: boolean
+          cover_image_url: string | null
+          created_at: string
+          currency: string
+          description: string | null
+          id: string
+          included_items: Json
+          interval: string
+          is_digital: boolean
+          name: string
+          price_cents: number
+          slug: string
+          sort_order: number
+          stripe_price_id: string | null
+          tagline: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          cover_image_url?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          included_items?: Json
+          interval?: string
+          is_digital?: boolean
+          name: string
+          price_cents: number
+          slug: string
+          sort_order?: number
+          stripe_price_id?: string | null
+          tagline?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          cover_image_url?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          included_items?: Json
+          interval?: string
+          is_digital?: boolean
+          name?: string
+          price_cents?: number
+          slug?: string
+          sort_order?: number
+          stripe_price_id?: string | null
+          tagline?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      gng_subscription_shipments: {
+        Row: {
+          created_at: string
+          delivered_at: string | null
+          download_url: string | null
+          id: string
+          notes: string | null
+          period_label: string
+          plan_slug: string
+          selected_listing_id: number | null
+          selected_sku: string | null
+          shipped_at: string | null
+          status: string
+          subscription_id: string
+          tracking_carrier: string | null
+          tracking_number: string | null
+        }
+        Insert: {
+          created_at?: string
+          delivered_at?: string | null
+          download_url?: string | null
+          id?: string
+          notes?: string | null
+          period_label: string
+          plan_slug: string
+          selected_listing_id?: number | null
+          selected_sku?: string | null
+          shipped_at?: string | null
+          status?: string
+          subscription_id: string
+          tracking_carrier?: string | null
+          tracking_number?: string | null
+        }
+        Update: {
+          created_at?: string
+          delivered_at?: string | null
+          download_url?: string | null
+          id?: string
+          notes?: string | null
+          period_label?: string
+          plan_slug?: string
+          selected_listing_id?: number | null
+          selected_sku?: string | null
+          shipped_at?: string | null
+          status?: string
+          subscription_id?: string
+          tracking_carrier?: string | null
+          tracking_number?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gng_subscription_shipments_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "gng_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gng_subscriptions: {
+        Row: {
+          cancel_at_period_end: boolean
+          cancelled_at: string | null
+          created_at: string
+          current_period_end: string | null
+          current_period_start: string | null
+          customer_email: string
+          customer_name: string | null
+          id: string
+          meta: Json
+          next_ship_date: string | null
+          notes: string | null
+          plan_slug: string
+          ship_address_line1: string | null
+          ship_address_line2: string | null
+          ship_city: string | null
+          ship_country: string | null
+          ship_postal_code: string | null
+          ship_state: string | null
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          cancel_at_period_end?: boolean
+          cancelled_at?: string | null
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          customer_email: string
+          customer_name?: string | null
+          id?: string
+          meta?: Json
+          next_ship_date?: string | null
+          notes?: string | null
+          plan_slug: string
+          ship_address_line1?: string | null
+          ship_address_line2?: string | null
+          ship_city?: string | null
+          ship_country?: string | null
+          ship_postal_code?: string | null
+          ship_state?: string | null
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cancel_at_period_end?: boolean
+          cancelled_at?: string | null
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          customer_email?: string
+          customer_name?: string | null
+          id?: string
+          meta?: Json
+          next_ship_date?: string | null
+          notes?: string | null
+          plan_slug?: string
+          ship_address_line1?: string | null
+          ship_address_line2?: string | null
+          ship_city?: string | null
+          ship_country?: string | null
+          ship_postal_code?: string | null
+          ship_state?: string | null
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gng_subscriptions_plan_slug_fkey"
+            columns: ["plan_slug"]
+            isOneToOne: false
+            referencedRelation: "gng_subscription_plans"
+            referencedColumns: ["slug"]
+          },
+        ]
+      }
       gng_tag_overlap_report: {
         Row: {
           created_at: string
