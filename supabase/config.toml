@@ -2539,3 +2539,15 @@ verify_jwt = false
 
 [functions.etsy-listing-rewriter]
 verify_jwt = false
+
+[functions.gng-title-linter]
+verify_jwt = false
+
+[functions.gng-duplicate-detector]
+verify_jwt = false
+
+[functions.gng-velocity-tracker]
+verify_jwt = false
+
+[functions.gng-tag-overlap-analyzer]
+verify_jwt = false
