@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import SEOHead from "@/components/layout/SEOHead";
+import { ExitIntentPopup } from "@/components/gng/ExitIntentPopup";
 
 interface EtsyProduct {
   listing_id: number;
@@ -86,10 +87,12 @@ const GuildsAndGrains = () => {
           </p>
           <div className="mt-6 flex justify-center gap-3 text-xs uppercase tracking-widest">
             <Link to="/gifts" className="px-5 py-3 border" style={{ borderColor: "#2a241d" }}>Gift Finder →</Link>
+            <Link to="/gng/subscriptions" className="px-5 py-3 border" style={{ borderColor: "#2a241d" }}>Monthly Boxes →</Link>
             <a href="#shop" className="px-5 py-3" style={{ background: "#2a241d", color: "#faf7f1" }}>Shop the Collection</a>
           </div>
         </div>
       </header>
+      <ExitIntentPopup />
 
       {/* Controls */}
       <div id="shop" className="max-w-6xl mx-auto px-6 py-8">
