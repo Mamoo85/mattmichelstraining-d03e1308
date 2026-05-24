@@ -3944,6 +3944,45 @@ export type Database = {
         }
         Relationships: []
       }
+      cold_sender_ticks: {
+        Row: {
+          daily_cap: number
+          debug: Json | null
+          enqueued: number
+          id: string
+          notes: string | null
+          queued_today: number
+          ran_at: string
+          sent_today: number
+          skipped: number
+          tick_quota: number
+        }
+        Insert: {
+          daily_cap: number
+          debug?: Json | null
+          enqueued?: number
+          id?: string
+          notes?: string | null
+          queued_today?: number
+          ran_at?: string
+          sent_today?: number
+          skipped?: number
+          tick_quota?: number
+        }
+        Update: {
+          daily_cap?: number
+          debug?: Json | null
+          enqueued?: number
+          id?: string
+          notes?: string | null
+          queued_today?: number
+          ran_at?: string
+          sent_today?: number
+          skipped?: number
+          tick_quota?: number
+        }
+        Relationships: []
+      }
       collections_clients: {
         Row: {
           active: boolean | null
