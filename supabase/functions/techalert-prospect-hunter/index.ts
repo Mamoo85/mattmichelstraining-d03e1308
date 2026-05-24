@@ -619,29 +619,31 @@ async function scanGoogleMapsTrades(): Promise<Posting[]> {
 // OSHA enforcement data — MI NAICS 23x (construction) violations = active company signal
 async function scanOSHAViolations(): Promise<Posting[]> {
   const results: Posting[] = [];
-  try {
-    const since = new Date(Date.now() - 90 * 86400_000).toISOString().slice(0, 10);
-    const url = `https://data.dol.gov/get/full_case/rows/0/offset/0?_where=site_state%3D%27MI%27%20AND%20primary_site_naics%20LIKE%20%2723%25%27%20AND%20open_date%20%3E%3D%20%27${since}%27&_sort=open_date%20DESC`;
-    const res = await fetch(url, {
-      headers: { "User-Agent": "TechAlert matt@detroitwebagent.com" },
-      signal: AbortSignal.timeout(12_000),
-    });
-    if (!res.ok) return results;
-    const data = await res.json();
-    for (const c of (data || []).slice(0, 15)) {
-      const name: string = c?.establishment_name || "";
-      if (!name) continue;
-      results.push({
-        company_name: name,
-        city: c?.site_city || undefined,
-        role: "hvac_tech",
-        days_posted: null,
-        source_url: `https://www.osha.gov/pls/imis/establishment.inspection_detail?id=${c?.activity_nr || ""}`,
-        source_label: "OSHA",
-        is_boiler: false,
+  const since = new Date(Date.now() - 90 * 86400_000).toISOString().slice(0, 10);
+  for (const state of ACTIVE_STATES) {
+    try {
+      const url = `https://data.dol.gov/get/full_case/rows/0/offset/0?_where=site_state%3D%27${state}%27%20AND%20primary_site_naics%20LIKE%20%2723%25%27%20AND%20open_date%20%3E%3D%20%27${since}%27&_sort=open_date%20DESC`;
+      const res = await fetch(url, {
+        headers: { "User-Agent": "TechAlert matt@detroitwebagent.com" },
+        signal: AbortSignal.timeout(12_000),
       });
-    }
-  } catch (e) { console.error("[hunter] OSHA:", e instanceof Error ? e.message : e); }
+      if (!res.ok) continue;
+      const data = await res.json();
+      for (const c of (data || []).slice(0, 8)) {
+        const name: string = c?.establishment_name || "";
+        if (!name) continue;
+        results.push({
+          company_name: name,
+          city: c?.site_city ? `${c.site_city}, ${state}` : state,
+          role: "hvac_tech",
+          days_posted: null,
+          source_url: `https://www.osha.gov/pls/imis/establishment.inspection_detail?id=${c?.activity_nr || ""}`,
+          source_label: `OSHA (${state})`,
+          is_boiler: false,
+        });
+      }
+    } catch (e) { console.error("[hunter] OSHA:", e instanceof Error ? e.message : e); }
+  }
   return results;
 }
 
