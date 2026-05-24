@@ -2557,3 +2557,9 @@ verify_jwt = false
 
 [functions.gng-subscription-fulfillment]
 verify_jwt = false
+
+[functions.create-gng-digital-checkout]
+verify_jwt = false
+
+[functions.gng-download-resolve]
+verify_jwt = false
