@@ -1,4 +1,5 @@
 import { useState, lazy, Suspense } from "react";
+import { useNavigate } from "react-router-dom";
 import DWASidebar, { type SidebarGroup } from "@/components/dwa-admin/DWASidebar";
 import DWAClientRoster from "@/components/dwa-admin/DWAClientRoster";
 import DWACommandDeck from "@/components/dwa-admin/DWACommandDeck";
