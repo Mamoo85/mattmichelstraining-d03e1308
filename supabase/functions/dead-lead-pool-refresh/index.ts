@@ -326,6 +326,17 @@ serve(wrapServe("dead-lead-pool-refresh", async (req) => {
       }
     }
 
+    // Heartbeat — proves the scanner ran even when all 5 sources returned 0.
+    try {
+      await sb.from("scanner_heartbeats").insert({
+        scanner_name: "dead-lead-pool-refresh",
+        status: "ok",
+        rows_inserted: inserted,
+        duration_ms: ms,
+        meta: { candidates: candidates.length, target: gate.target, had: gate.fresh, inserted },
+      });
+    } catch (e) { console.warn("[pool-refresh] heartbeat insert failed:", e); }
+
     return new Response(
       JSON.stringify({ inserted, candidates: candidates.length, target: gate.target, had: gate.fresh, ms }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },

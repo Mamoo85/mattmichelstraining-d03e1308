@@ -820,6 +820,17 @@ serve(withRunLog("industry-pulse-scanner", async (req) => {
 
     console.log(`[industry-pulse] Complete: ${signals.length} signals, ${highConf.length} high-confidence`);
 
+    // Heartbeat — proves the scanner ran even when 0 signals surface,
+    // so the zero-output watchdog only screams on a real silent failure.
+    try {
+      await sb.from("scanner_heartbeats").insert({
+        scanner_name: "industry-pulse-scanner",
+        status: "ok",
+        rows_inserted: highConf.length,
+        meta: { signals_total: signals.length, high_confidence: highConf.length },
+      });
+    } catch (e) { console.warn("[industry-pulse] heartbeat insert failed:", e); }
+
     // Phase 20: waterfall drop-off snapshot
     try {
       await sb.from("raw_signals_dump").insert({
