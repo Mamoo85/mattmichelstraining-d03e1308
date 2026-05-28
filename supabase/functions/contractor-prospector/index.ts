@@ -1303,6 +1303,17 @@ BODY:
     // LLM-only "search Zillow" via Gemini Flash also can't actually browse.
     const fixerLeadsInserted = 0;
 
+    // Heartbeat — proves the scanner ran even when emailed=0 due to caps/skips.
+    try {
+      await sb.from("scanner_heartbeats").insert({
+        scanner_name: "contractor-prospector",
+        status: "ok",
+        rows_inserted: totalEmailed,
+        duration_ms: Date.now() - startedAt,
+        meta: { found: totalFound, emailed: totalEmailed, skipped: totalSkipped, scoutRejected: totalScoutRejected },
+      });
+    } catch (e) { console.warn("[contractor-prospector] heartbeat insert failed:", e); }
+
     return new Response(
       JSON.stringify({
         ok: true,

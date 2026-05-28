@@ -47,6 +47,12 @@ interface ZeroCheck {
   sourceFilterValue?: string;
 }
 
+// NOTE: the 3 "scanner_heartbeats" entries below check that the SCANNER RAN —
+// not that it produced sellable output. A scanner running cleanly with 0 new
+// signals is normal (slow news day, caps hit, sources empty); a scanner that
+// hasn't written a heartbeat in 30h is a real silent failure. This swap stops
+// the daily 3am SMS spam from "ran-ok-but-no-data" days while still alerting
+// on actual crashes / dead crons.
 const WATCHLIST: ZeroCheck[] = [
   {
     cron: "hire-alert-healthcare-1am-et",
@@ -69,22 +75,35 @@ const WATCHLIST: ZeroCheck[] = [
   {
     cron: "industry-pulse-commercial-3am-et",
     functionName: "industry-pulse-scanner",
-    outputTable: "demand_radar_runs",
-    outputColumn: "run_at",
+    outputTable: "scanner_heartbeats",
+    outputColumn: "ran_at",
     windowHours: 30,
-    description: "Demand Radar — commercial",
+    description: "Demand Radar — commercial (heartbeat)",
     critical: true,
-    sourceFilterColumn: "source",
+    sourceFilterColumn: "scanner_name",
     sourceFilterValue: "industry-pulse-scanner",
   },
   {
     cron: "contractor-prospector-daily",
     functionName: "contractor-prospector",
-    outputTable: "outreach_leads",
-    outputColumn: "created_at",
+    outputTable: "scanner_heartbeats",
+    outputColumn: "ran_at",
     windowHours: 30,
-    description: "Contractor prospecting",
+    description: "Contractor prospecting (heartbeat)",
     critical: true,
+    sourceFilterColumn: "scanner_name",
+    sourceFilterValue: "contractor-prospector",
+  },
+  {
+    cron: "dead-lead-pool-refresh-hourly",
+    functionName: "dead-lead-pool-refresh",
+    outputTable: "scanner_heartbeats",
+    outputColumn: "ran_at",
+    windowHours: 30,
+    description: "Dead lead pool refresh (heartbeat)",
+    critical: true,
+    sourceFilterColumn: "scanner_name",
+    sourceFilterValue: "dead-lead-pool-refresh",
   },
 ];
 
