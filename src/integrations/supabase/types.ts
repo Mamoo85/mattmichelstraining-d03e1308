@@ -22640,6 +22640,36 @@ export type Database = {
         }
         Relationships: []
       }
+      scanner_heartbeats: {
+        Row: {
+          duration_ms: number | null
+          id: number
+          meta: Json
+          ran_at: string
+          rows_inserted: number
+          scanner_name: string
+          status: string
+        }
+        Insert: {
+          duration_ms?: number | null
+          id?: number
+          meta?: Json
+          ran_at?: string
+          rows_inserted?: number
+          scanner_name: string
+          status?: string
+        }
+        Update: {
+          duration_ms?: number | null
+          id?: number
+          meta?: Json
+          ran_at?: string
+          rows_inserted?: number
+          scanner_name?: string
+          status?: string
+        }
+        Relationships: []
+      }
       scanner_source_mappings: {
         Row: {
           created_at: string
