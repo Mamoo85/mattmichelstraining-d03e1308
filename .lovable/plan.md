@@ -1,62 +1,176 @@
-## Plan: Trading inventory + SMS spam fixes
+# Kalshi Bot — 50 Strategy Plan
 
-### Step 1 — Store the secondary Supabase PAT safely
+A standalone Kalshi-only trading bot. One brain, 50 strategy modules, all paper-traded first, then promoted to live. Designed to A/B against your Robinhood bot via a shared scoreboard (PnL, Sharpe, win rate, max drawdown).
 
-Best option: save it as a project secret named `SECONDARY_SUPABASE_ACCESS_TOKEN` via the secure secret form (you paste once, I never see it in chat, and it's available to edge functions / scripts if we ever need it). 
+---
 
-- I'll trigger `add_secret(["SECONDARY_SUPABASE_ACCESS_TOKEN"])` — a secure form will pop up for you to paste it.
-- I will NOT log it, echo it, or store it in any file.
-- For this session I'll use it via `Authorization: Bearer $SECONDARY_SUPABASE_ACCESS_TOKEN` against the Supabase Management API (`https://api.supabase.com/v1/projects/zmyczlfuufhngzovkjdh/...`) to list functions, read DB schema, pull logs.
+## Architecture (shared by all 50 strategies)
 
-If you'd rather not store it long-term, say "session-only" and I'll just use it once and ask you to revoke it after.
+```
+strategies/<id>/             # one folder per strategy, pure function
+  signal.ts                  # produces { side: YES|NO, conviction: 0-1, edge_bps, ttl }
+  sources.ts                 # external data fetchers
+  test.ts                    # backtest harness
+core/
+  kalshi-client.ts           # auth, place_order, get_market, get_positions, ws feed
+  market-resolver.ts         # ticker → market_id, expiry, settlement rules
+  position-sizer.ts          # Kelly fraction × conviction × portfolio cap
+  risk-manager.ts            # per-strategy DD limit, daily loss kill switch
+  order-router.ts            # limit-first, marketable-limit fallback, anti-self-trade
+  scoreboard.ts              # writes to bot_runs/bot_trades/bot_pnl for A/B
+edge-fns/
+  kalshi-orchestrator        # cron every 1m, fans out to enabled strategies
+  kalshi-fill-watcher        # ws → DB
+  kalshi-eod-settle          # nightly, marks resolved, calcs realized PnL
+db/
+  strategies (id, name, enabled, paper_only, kelly_frac, max_position_usd)
+  signals (strategy_id, market_ticker, side, conviction, edge_bps, ts)
+  orders (signal_id, kalshi_order_id, status, fill_px, fill_qty)
+  positions (market_ticker, yes_qty, avg_px, strategy_id)
+  pnl_daily (strategy_id, date, realized, unrealized, sharpe_30d)
+```
 
-### Step 2 — Trading project inventory (track A, runs in background)
+Every strategy returns the same `Signal` shape. Orchestrator decides whether to act based on global risk + per-strategy budget. No strategy can blow the account.
 
-Against `zmyczlfuufhngzovkjdh` using the PAT, produce a single report covering:
+---
 
-1. **Edge functions list** — names, last deploy, verify_jwt, recent invocation count (Management API `/v1/projects/{ref}/functions`).
-2. **Database schema** — every table, row count, RLS status. Look specifically for: kalshi_*, robinhood_*, trades, positions, orders, market_*, signals, backtests.
-3. **Cron jobs** — `cron.job` + last 24h `cron.job_run_details` status.
-4. **Secrets present** — names only (Kalshi/Robinhood/Alpaca/Plaid keys).
-5. **Recent errors** — last 50 function errors + last 50 Postgres errors.
-6. **Auth users** — count + any admin role rows.
+## The 50 Strategies — grouped by *type of edge*, not topic
 
-Output: one markdown summary saved to `/mnt/documents/trading-inventory.md` so you can read/share it. No code changes to the trading project this turn — read-only.
+### EDGE A — External-model vs Kalshi-price arbitrage (10)
 
-### Step 3 — Fix the 3 SMS-spamming scanners on PRIMARY (track B, in parallel)
+Pull a free quantitative model, compare to Kalshi implied probability, trade the gap when > threshold.
 
-For each of:
-- `industry-pulse-scanner` (feeds `industry-pulse-commercial-3am-et` watchdog)
-- `contractor-prospector` (feeds `contractor-prospector-daily` watchdog)
-- `dead-lead-pool-refresh` (5 sources all returning 0)
+1. **CME FedWatch arb** — Fed rate decision markets vs Fed funds futures implied prob. Trade gap >5¢.
+2. **Cleveland Fed Nowcast** — monthly CPI markets vs Inflation Nowcast. Re-evaluate hourly the week of release.
+3. **Atlanta Fed GDPNow** — quarterly GDP markets vs GDPNow estimate.
+4. **NWS probabilistic forecast** — "High temp NYC > 75°F" markets vs official NWS PoP/temperature distribution.
+5. **NHC hurricane cone** — landfall-by-state markets vs National Hurricane Center 5-day cone probability.
+6. **USDA WASDE** — corn/soy/wheat price markets vs WASDE supply/demand surprise.
+7. **EIA inventory** — oil price weekly markets vs EIA Wednesday print delta from consensus.
+8. **Polymarket cross-venue arb** — same event priced differently on Polymarket; hedge both venues (where legal).
+9. **PredictIt cross-venue arb** — for politics markets still listed on both.
+10. **DraftKings/FanDuel implied** — Kalshi sports vs sportsbook no-vig probability.
 
-Workflow per function:
-1. Pull last 50 invocation logs (`edge_function_logs`) + last 7d run rows from its output table.
-2. Curl the function once to capture HTTP code + body.
-3. Read source, identify why it's writing 0 rows (typical suspects: expired API key, schema drift, source URL 404, silent try/catch).
-4. Apply minimum fix (real fix, not a kill switch). Examples of acceptable fixes: swap dead source, repair query, add missing await, fix vault-key name, add structured run row even on 0-output so the watchdog stops false-firing.
-5. Deploy via `supabase--deploy_edge_functions`.
-6. Re-curl and confirm output row written.
+### EDGE B — Microstructure / order-book (8)
 
-Per CLAUDE.md "no kill switch" rule — these are real silent failures, fixes will restore output, not suppress alerts.
+Pure price-action plays. No external data needed beyond Kalshi's own feed.
 
-### Step 4 — Report
+11. **Bid-ask scalper** — wide spread (>3¢) + low volatility → quote both sides, capture spread.
+12. **Sub-penny tick mean reversion** — 1-min Z-score >2 reverts within 5 min on illiquid markets.
+13. **Volume-imbalance momentum** — sustained one-side lifting → join the trend, exit on first opposite tape.
+14. **Open auction fade** — extreme opening prints in low-volume markets revert in first 30 min.
+15. **Close-into-resolution drift** — markets within 60 min of settlement trend toward 0 or 100; ride drift.
+16. **Pin risk avoidance** — flatten any position trading 48-52¢ in last 5 min (forced random outcome).
+17. **Iceberg detector** — repeated replenishment at same px → trade with the iceberg side.
+18. **Cross-market correlation** — when "Fed cuts 25bp" rises, "Fed holds" must fall; arbitrage the sum >$1 or <$1.
 
-Single message with:
-- Trading inventory summary (link to `/mnt/documents/trading-inventory.md`)
-- 3 SMS fixes: before → after row counts, commits made
-- Anything in trading project that needs your input (missing keys, dead crons, etc.)
-- Recommended next session (e.g. "give me GitHub access to trading repo so I can read the code that wrote these tables")
+### EDGE C — News / event reaction (8)
 
-### Technical notes
+Sub-second NLP on news feeds → trade Kalshi before retail.
 
-- The PAT only reaches secondary project + trading project (same Supabase account). Primary (`eauvubfpanpeuxsrqesu`) is Lovable-managed and unaffected — I'll use existing tooling there.
-- All Management API calls go through `https://api.supabase.com/v1/...` with `Authorization: Bearer <PAT>`.
-- Secret name `SECONDARY_SUPABASE_ACCESS_TOKEN` chosen to be obvious in the secret list and not collide with primary tooling.
-- Trading inventory is read-only; no migrations, no deploys to trading this turn.
+19. **Fed FOMC statement diff** — diff today's statement vs prior; "hawkish"/"dovish" word shift → rate markets.
+20. **Powell press conference live** — real-time transcript (AssemblyAI/Deepgram stream) → rate cut markets.
+21. **CPI/PPI release sniper** — at 8:30:00.000 ET, parse BLS release, fire orders within 200ms.
+22. **NFP release sniper** — same pattern, jobs markets.
+23. **SCOTUS opinion day** — scrape supremecourt.gov live, NLP holding → relevant political markets.
+24. **Major news wire (Reuters/AP RSS)** — trigger-word match → relevant market re-pricing.
+25. **Truth Social / X presidential posts** — webhook + LLM classifier → political/economic markets.
+26. **FDA approval calendar** — PDUFA date → drug/biotech-linked Kalshi markets (if listed).
 
-### What I need from you to start
+### EDGE D — Sports models (6)
 
-Just approve. After approval I'll:
-1. Trigger the secure secret form for `SECONDARY_SUPABASE_ACCESS_TOKEN`
-2. Once you paste, immediately start both tracks in parallel.
+Quantitative sports vs Kalshi sports lines.
+
+27. **NFL ELO (538 archive style)** — game-winner markets vs custom ELO + home-field + weather.
+28. **MLB batter-vs-pitcher** — moneyline markets using BvP splits + park factor.
+29. **NBA RAPM/EPM aggregator** — game spread → moneyline conversion.
+30. **NCAA tournament Kenpom** — round-of-X advancement markets.
+31. **Tennis Elo (TennisAbstract)** — match winner markets, in-play if Kalshi adds it.
+32. **Golf DataGolf** — winner / top-10 / top-20 markets, course-fit adjusted.
+
+### EDGE E — Weather / climate (5)
+
+Highly liquid Kalshi vertical, lots of mispricing.
+
+33. **City temperature daily** — NWS hourly forecast vs Kalshi "high/low temp" markets, multi-city portfolio.
+34. **Rainfall threshold** — GFS/ECMWF ensemble PoP vs "rain > X inches" markets.
+35. **Snowfall threshold** — NOAA WPC winter storm probabilities.
+36. **Hurricane season totals** — Colorado State + NOAA seasonal forecasts vs "X named storms" markets.
+37. **El Niño / La Niña** — NOAA ENSO probabilities vs Kalshi climate markets.
+
+### EDGE F — Calendar / seasonality / mean-reversion (6)
+
+Patterns that don't need real-time data.
+
+38. **Resolution-week vol crush** — sell extreme probability (<10¢ or >90¢) markets resolving in 7 days IF historical hit-rate confirms.
+39. **Multi-leg portfolio basis** — sum-to-1 arb across all candidates in an N-way market.
+40. **Recurring monthly markets** — find markets that repeat (CPI, jobs, Fed); train per-market bias model.
+41. **Weekend liquidity premium** — quote Friday close, harvest premium when desks are out.
+42. **Pre-event vol expansion** — bid both sides 24h pre-event; sell vol on the spike.
+43. **Stale-quote sniper** — illiquid markets whose last print is >6h old; refresh fair value, take stale offers.
+
+### EDGE G — Alt-data / structural (7)
+
+Niche but high-edge sources.
+
+44. **Google Trends spike** — search volume for ticker entity → entertainment/celeb/election markets.
+45. **GitHub release velocity / SEC filings** — corporate event markets (mergers, IPO dates).
+46. **OpenSecrets campaign-finance flow** — Senate/House race markets re-rated weekly.
+47. **Real-time election returns scraper** — county-level vote-share extrapolation → election-night markets.
+48. **Box-office tracking (Deadline + social)** — "movie grosses > $X opening weekend" markets.
+49. **Spotify Charts velocity** — "#1 song next week" markets.
+50. **Crypto price-anchor markets** — "BTC > $X by date" vs Deribit options-implied distribution.
+
+---
+
+## Strategy lifecycle (every one of the 50)
+
+```text
+draft → paper-trade 30 days → if Sharpe > 1.0 & DD < 10% → live with $50 size →
+scale up only after 100 live fills & Sharpe holds → max position cap per strategy
+```
+
+A kill-switch table (`strategy_health`) auto-disables any strategy that hits:
+
+- 3-day rolling loss > 2× expected
+- 10 consecutive losing trades
+- Sharpe drops below 0.3 over 14 days
+
+---
+
+## Build Phases
+
+
+| Phase | Scope                                                              | Duration  |
+| ----- | ------------------------------------------------------------------ | --------- |
+| 0     | Get Kalshi API key, scaffold project, paper-trade endpoint working | day 1     |
+| 1     | Core architecture: client, sizer, risk, scoreboard, orchestrator   | days 2-3  |
+| 2     | Strategies 1-10 (Edge A — easiest, all REST APIs)                  | week 1    |
+| 3     | Strategies 11-18 (Edge B — needs Kalshi ws feed wired)             | week 2    |
+| 4     | Strategies 19-26 (Edge C — news/NLP infra)                         | week 3    |
+| 5     | Strategies 27-50 in parallel waves of 5                            | weeks 4-6 |
+| 6     | A/B scoreboard UI vs Robinhood bot                                 | week 6    |
+
+
+---
+
+## Technical Details
+
+- **Hosting:** new repo `mamoo85/kalshi-bot` OR sub-folder in trading repo. Deno edge functions for cron + REST, a small Node process on a $5 Fly.io machine for websocket persistence (Supabase edge functions can't hold long ws connections).
+- **Database:** can reuse Supabase secondary project (`zmyczlfuufhngzovkjdh`) — has plenty of headroom. Add 6 tables listed in Architecture.
+- **Secrets needed (when ready):** `KALSHI_API_KEY_ID`, `KALSHI_PRIVATE_KEY` (RSA), `KALSHI_ENV` (demo|prod). Plus optional: `POLYMARKET_API_KEY`, `DATAGOLF_KEY`, `DEEPGRAM_KEY` for specific strategies.
+- **Risk defaults:** 1% portfolio per trade, 5% per strategy, 25% per market, daily loss limit 3%.
+- **Compliance:** Kalshi is CFTC-regulated — bot must respect their API rate limits (10 req/sec) and self-trade prevention rules. No wash trading.
+- **A/B vs Robinhood:** shared `bot_scoreboard` table with columns `bot_name`, `date`, `pnl`, `sharpe_30d`, `win_rate`, `trades`. Daily SMS to you with leaderboard.
+
+---
+
+## Open questions for you
+
+1. **Repo location** — new dedicated `kalshi-bot` repo, or fold into the existing trading repo you mentioned? What do you recommend?
+2. **Starting capital on Kalshi** — sets the position sizing math. $100
+3. **Which strategies to ship first?** Default order: Edge A first (highest edge, easiest to backtest). Confirm or override. Highest chance of success
+4. **Paper-only duration before going live?** Default 30 days. Want shorter (14) or longer (60)? 14 days
+5. **Where do I store the Kalshi API key?** Supabase secrets of the secondary project, primary project, or this Lovable project? All? 
+
+Answer those when you're ready and on "Implement plan" I'll start Phase 0–1.
