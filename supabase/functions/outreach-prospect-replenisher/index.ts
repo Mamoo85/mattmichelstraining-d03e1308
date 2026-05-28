@@ -95,6 +95,6 @@ serve(wrapServe("outreach-prospect-replenisher",async(_req)=>{
   }
   const sources={bseed:bseedRows.length,sam:samRows.length,maps:mapsCount,maps_allowed:mapsOk.allowed,maps_key_set:!!GOOGLE_MAPS_API_KEY};
   await sb.from("agent_heartbeats").upsert({agent_name:"outreach-prospect-replenisher",last_beat:new Date().toISOString(),status:"ok",metadata:{inserted,skipped,total_scanned:allProspects.length,duration_ms:Date.now()-startedAt,sources}},{onConflict:"agent_name"});
-  return new Response(JSON.stringify({ok:true,version:"2026-05-28-sources-v2",inserted,skipped,total_scanned:allProspects.length,duration_ms:Date.now()-startedAt,sources}),{headers:{...corsHeaders,"Content-Type":"application/json"}});
+  return new Response(JSON.stringify({ok:true,version:"2026-05-28-sam-env-v3",inserted,skipped,total_scanned:allProspects.length,duration_ms:Date.now()-startedAt,sources,sam_key_set:!!(Deno.env.get("SAM_GOV_API_KEY")||Deno.env.get("SAM_API_KEY"))}),{headers:{...corsHeaders,"Content-Type":"application/json"}});
 
 }));
