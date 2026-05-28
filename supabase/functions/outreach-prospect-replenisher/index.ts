@@ -60,8 +60,10 @@ async function scanBSEEDContractors():Promise<ProspectRow[]> {
 async function scanSAMEntities():Promise<ProspectRow[]> {
   const results:ProspectRow[]=[];
   try {
-    const res=await fetch("https://api.sam.gov/entity-information/v3/entities?registrationStatus=A&stateOrProvinceOfIncorporation=MI&purposeOfRegistrationCode=Z2&entityStructureCode=2L&samExtractCode=E&size=100&api_key=DEMO_KEY",{headers:{"User-Agent":"DWA-ProspectReplenisher/1.0 matt@detroitwebagent.com"},signal:AbortSignal.timeout(12_000)});
-    if(!res.ok)return [];
+    const samKey=Deno.env.get("SAM_GOV_API_KEY")||Deno.env.get("SAM_API_KEY")||"DEMO_KEY";
+    if(samKey==="DEMO_KEY")console.warn("[replenisher] sam.gov: SAM_GOV_API_KEY not set, falling back to DEMO_KEY");
+    const res=await fetch(`https://api.sam.gov/entity-information/v3/entities?registrationStatus=A&stateOrProvinceOfIncorporation=MI&purposeOfRegistrationCode=Z2&entityStructureCode=2L&samExtractCode=E&size=100&api_key=${encodeURIComponent(samKey)}`,{headers:{"User-Agent":"DWA-ProspectReplenisher/1.0 matt@detroitwebagent.com"},signal:AbortSignal.timeout(12_000)});
+    if(!res.ok){console.warn("[replenisher] sam.gov status:",res.status);return [];}
     const data=await res.json();
     for(const entity of (data.entityData||[])){const legal=entity.entityRegistration?.legalBusinessName||"";if(!legal)continue;const naics=(entity.assertions?.goodsAndServices?.primaryNaics||"").toString();let industry="general contractor";if(naics.startsWith("238"))industry=naics.startsWith("2382")?"hvac":naics.startsWith("2383")?"electrical":naics.startsWith("2381")?"roofing":"general contractor";else if(naics.startsWith("2389"))industry="plumbing";const addr=entity.coreData?.physicalAddress;const row:ProspectRow={business_name:legal,city:addr?.city||null,industry,phone:null,website:entity.coreData?.electronicBusinessPOC?.electronicBusinessPOCList?.[0]?.website||null,email:entity.coreData?.electronicBusinessPOC?.electronicBusinessPOCList?.[0]?.email?.toLowerCase()||null,source:"sam_gov",score:0,drip_campaign_status:{current_stage:"0_New_Extracted_Lead"}};row.score=scoreRow(row);results.push(row);}
   }catch(e){console.warn("[replenisher] sam.gov:",e instanceof Error?e.message:e);}
@@ -93,6 +95,6 @@ serve(wrapServe("outreach-prospect-replenisher",async(_req)=>{
   }
   const sources={bseed:bseedRows.length,sam:samRows.length,maps:mapsCount,maps_allowed:mapsOk.allowed,maps_key_set:!!GOOGLE_MAPS_API_KEY};
   await sb.from("agent_heartbeats").upsert({agent_name:"outreach-prospect-replenisher",last_beat:new Date().toISOString(),status:"ok",metadata:{inserted,skipped,total_scanned:allProspects.length,duration_ms:Date.now()-startedAt,sources}},{onConflict:"agent_name"});
-  return new Response(JSON.stringify({ok:true,version:"2026-05-28-sources-v2",inserted,skipped,total_scanned:allProspects.length,duration_ms:Date.now()-startedAt,sources}),{headers:{...corsHeaders,"Content-Type":"application/json"}});
+  return new Response(JSON.stringify({ok:true,version:"2026-05-28-sam-env-v3",inserted,skipped,total_scanned:allProspects.length,duration_ms:Date.now()-startedAt,sources,sam_key_set:!!(Deno.env.get("SAM_GOV_API_KEY")||Deno.env.get("SAM_API_KEY"))}),{headers:{...corsHeaders,"Content-Type":"application/json"}});
 
 }));
