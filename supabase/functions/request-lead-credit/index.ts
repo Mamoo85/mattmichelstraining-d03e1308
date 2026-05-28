@@ -86,7 +86,7 @@ serve(async (req) => {
       .from("lead_credit_requests")
       .select("id, status, stripe_credit_id")
       .eq("lead_id", lead_id)
-      .eq("email", email)
+      .eq("requester_email", email)
       .maybeSingle();
 
     if (existing) {
@@ -122,13 +122,13 @@ serve(async (req) => {
       status = "credited";
     }
 
-    // Audit log
+    // Audit log — uses existing column names: requester_email, reason_code, reason_detail
     await sb.from("lead_credit_requests").insert({
-      email,
+      requester_email: email,
       lead_id,
       product,
-      reason,
-      details: details || null,
+      reason_code: reason,
+      reason_detail: details || null,
       amount_cents: amountCents,
       status,
       stripe_customer_id: customer?.id || null,
@@ -149,6 +149,7 @@ serve(async (req) => {
         ? `$${(amountCents / 100).toFixed(2)} credit applied to your next invoice.`
         : "Credit logged — Matt will review within 24h.",
     }), { headers: { ...cors, "Content-Type": "application/json" } });
+
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
     return new Response(JSON.stringify({ error: msg }), { status: 500, headers: { ...cors, "Content-Type": "application/json" } });
