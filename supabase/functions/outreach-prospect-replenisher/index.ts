@@ -77,12 +77,13 @@ serve(wrapServe("outreach-prospect-replenisher",async(_req)=>{
   const existingKeys=new Set<string>();
   for(const row of (existing||[])){if(row.email)existingKeys.add(row.email.toLowerCase());if(row.business_name&&row.city)existingKeys.add(`${row.business_name.toLowerCase()}|${(row.city||"").toLowerCase()}`);}
   const allProspects:ProspectRow[]=[];
-  allProspects.push(...await scanBSEEDContractors());
-  allProspects.push(...await scanSAMEntities());
+  const bseedRows=await scanBSEEDContractors();allProspects.push(...bseedRows);
+  const samRows=await scanSAMEntities();allProspects.push(...samRows);
   const dayOfYear=Math.floor((Date.now()-new Date(new Date().getFullYear(),0,0).getTime())/86400000);
   const queriesThisRun=[...QUERIES.slice(dayOfYear%QUERIES.length),...QUERIES.slice(0,dayOfYear%QUERIES.length)].slice(0,5);
   const citiesThisRun=[...CITIES.slice(dayOfYear%CITIES.length),...CITIES.slice(0,dayOfYear%CITIES.length)].slice(0,5);
-  for(const {q,industry} of (mapsOk.allowed?queriesThisRun:[])){if(allProspects.length>=DAILY_TARGET*2)break;allProspects.push(...await scanGoogleMaps(q,citiesThisRun[Math.floor(Math.random()*citiesThisRun.length)],industry));await new Promise(r=>setTimeout(r,300));}
+  let mapsCount=0;
+  for(const {q,industry} of (mapsOk.allowed?queriesThisRun:[])){if(allProspects.length>=DAILY_TARGET*2)break;const r=await scanGoogleMaps(q,citiesThisRun[Math.floor(Math.random()*citiesThisRun.length)],industry);mapsCount+=r.length;allProspects.push(...r);await new Promise(r=>setTimeout(r,300));}
   for(const prospect of allProspects){
     if(inserted>=DAILY_TARGET)break;
     const emailKey=prospect.email?.toLowerCase();const bizKey=`${prospect.business_name.toLowerCase()}|${(prospect.city||"").toLowerCase()}`;
@@ -90,6 +91,8 @@ serve(wrapServe("outreach-prospect-replenisher",async(_req)=>{
     const {error}=await sb.from("outreach_leads").insert({business_name:prospect.business_name,city:prospect.city,industry:prospect.industry,phone:prospect.phone,website:prospect.website,email:prospect.email,source:prospect.source,score:prospect.score,drip_campaign_status:prospect.drip_campaign_status});
     if(!error){inserted++;if(emailKey)existingKeys.add(emailKey);existingKeys.add(bizKey);}
   }
-  await sb.from("agent_heartbeats").upsert({agent_name:"outreach-prospect-replenisher",last_beat:new Date().toISOString(),status:"ok",metadata:{inserted,skipped,total_scanned:allProspects.length,duration_ms:Date.now()-startedAt}},{onConflict:"agent_name"});
-  return new Response(JSON.stringify({ok:true,inserted,skipped,total_scanned:allProspects.length,duration_ms:Date.now()-startedAt}),{headers:{...corsHeaders,"Content-Type":"application/json"}});
+  const sources={bseed:bseedRows.length,sam:samRows.length,maps:mapsCount,maps_allowed:mapsOk.allowed,maps_key_set:!!GOOGLE_MAPS_API_KEY};
+  await sb.from("agent_heartbeats").upsert({agent_name:"outreach-prospect-replenisher",last_beat:new Date().toISOString(),status:"ok",metadata:{inserted,skipped,total_scanned:allProspects.length,duration_ms:Date.now()-startedAt,sources}},{onConflict:"agent_name"});
+  return new Response(JSON.stringify({ok:true,version:"2026-05-28-sources-v2",inserted,skipped,total_scanned:allProspects.length,duration_ms:Date.now()-startedAt,sources}),{headers:{...corsHeaders,"Content-Type":"application/json"}});
+
 }));
