@@ -13834,6 +13834,7 @@ export type Database = {
       }
       lead_credit_requests: {
         Row: {
+          amount_cents: number | null
           created_at: string
           id: string
           lead_id: string
@@ -13847,8 +13848,11 @@ export type Database = {
           resolved_at: string | null
           resolved_by: string | null
           status: string
+          stripe_credit_id: string | null
+          stripe_customer_id: string | null
         }
         Insert: {
+          amount_cents?: number | null
           created_at?: string
           id?: string
           lead_id: string
@@ -13862,8 +13866,11 @@ export type Database = {
           resolved_at?: string | null
           resolved_by?: string | null
           status?: string
+          stripe_credit_id?: string | null
+          stripe_customer_id?: string | null
         }
         Update: {
+          amount_cents?: number | null
           created_at?: string
           id?: string
           lead_id?: string
@@ -13877,6 +13884,8 @@ export type Database = {
           resolved_at?: string | null
           resolved_by?: string | null
           status?: string
+          stripe_credit_id?: string | null
+          stripe_customer_id?: string | null
         }
         Relationships: []
       }
