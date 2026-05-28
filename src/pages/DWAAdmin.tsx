@@ -194,13 +194,17 @@ const lazyFallback = (label: string) => <div className="text-white/40 text-sm p-
 export default function DWAAdmin() {
   const [activeTab, setActiveTab] = useState<Tab>("my-command-center");
   const [collapsed, setCollapsed] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-[#0a1628] text-white flex w-full">
       <DWASidebar
         groups={GROUPS}
         active={activeTab}
-        onSelect={(id) => setActiveTab(id as Tab)}
+        onSelect={(id) => {
+          if (id === "trading") { navigate("/dwa-admin/trading"); return; }
+          setActiveTab(id as Tab);
+        }}
         collapsed={collapsed}
         onToggleCollapsed={() => setCollapsed((c) => !c)}
       />
