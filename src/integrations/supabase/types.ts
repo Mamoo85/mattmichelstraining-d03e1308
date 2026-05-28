@@ -1813,6 +1813,48 @@ export type Database = {
         }
         Relationships: []
       }
+      bot_scoreboard: {
+        Row: {
+          bot_name: string
+          capital_usd: number | null
+          date: string
+          losses: number
+          max_drawdown_pct: number | null
+          pnl_usd: number
+          sharpe_30d: number | null
+          trades: number
+          updated_at: string
+          win_rate: number | null
+          wins: number
+        }
+        Insert: {
+          bot_name: string
+          capital_usd?: number | null
+          date: string
+          losses?: number
+          max_drawdown_pct?: number | null
+          pnl_usd?: number
+          sharpe_30d?: number | null
+          trades?: number
+          updated_at?: string
+          win_rate?: number | null
+          wins?: number
+        }
+        Update: {
+          bot_name?: string
+          capital_usd?: number | null
+          date?: string
+          losses?: number
+          max_drawdown_pct?: number | null
+          pnl_usd?: number
+          sharpe_30d?: number | null
+          trades?: number
+          updated_at?: string
+          win_rate?: number | null
+          wins?: number
+        }
+        Relationships: []
+      }
       brother_claimed_domains: {
         Row: {
           active: boolean
@@ -13559,6 +13601,318 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      kalshi_market_snapshots: {
+        Row: {
+          close_time: string | null
+          last_price_cents: number | null
+          market_ticker: string
+          meta: Json | null
+          open_interest: number | null
+          snapshot_at: string
+          status: string | null
+          volume_24h: number | null
+          yes_ask_cents: number | null
+          yes_bid_cents: number | null
+        }
+        Insert: {
+          close_time?: string | null
+          last_price_cents?: number | null
+          market_ticker: string
+          meta?: Json | null
+          open_interest?: number | null
+          snapshot_at?: string
+          status?: string | null
+          volume_24h?: number | null
+          yes_ask_cents?: number | null
+          yes_bid_cents?: number | null
+        }
+        Update: {
+          close_time?: string | null
+          last_price_cents?: number | null
+          market_ticker?: string
+          meta?: Json | null
+          open_interest?: number | null
+          snapshot_at?: string
+          status?: string | null
+          volume_24h?: number | null
+          yes_ask_cents?: number | null
+          yes_bid_cents?: number | null
+        }
+        Relationships: []
+      }
+      kalshi_orders: {
+        Row: {
+          action: string
+          avg_fill_price_cents: number | null
+          created_at: string
+          error: string | null
+          filled_qty: number
+          id: string
+          is_paper: boolean
+          kalshi_order_id: string | null
+          limit_price_cents: number
+          market_ticker: string
+          qty: number
+          side: string
+          signal_id: string | null
+          status: string
+          strategy_id: string
+          updated_at: string
+        }
+        Insert: {
+          action: string
+          avg_fill_price_cents?: number | null
+          created_at?: string
+          error?: string | null
+          filled_qty?: number
+          id?: string
+          is_paper?: boolean
+          kalshi_order_id?: string | null
+          limit_price_cents: number
+          market_ticker: string
+          qty: number
+          side: string
+          signal_id?: string | null
+          status?: string
+          strategy_id: string
+          updated_at?: string
+        }
+        Update: {
+          action?: string
+          avg_fill_price_cents?: number | null
+          created_at?: string
+          error?: string | null
+          filled_qty?: number
+          id?: string
+          is_paper?: boolean
+          kalshi_order_id?: string | null
+          limit_price_cents?: number
+          market_ticker?: string
+          qty?: number
+          side?: string
+          signal_id?: string | null
+          status?: string
+          strategy_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kalshi_orders_signal_id_fkey"
+            columns: ["signal_id"]
+            isOneToOne: false
+            referencedRelation: "kalshi_signals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kalshi_orders_strategy_id_fkey"
+            columns: ["strategy_id"]
+            isOneToOne: false
+            referencedRelation: "kalshi_strategies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kalshi_pnl_daily: {
+        Row: {
+          created_at: string
+          date: string
+          is_paper: boolean
+          losses: number
+          max_drawdown_pct: number | null
+          realized_cents: number
+          sharpe_30d: number | null
+          strategy_id: string
+          trades_count: number
+          unrealized_cents: number
+          wins: number
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          is_paper?: boolean
+          losses?: number
+          max_drawdown_pct?: number | null
+          realized_cents?: number
+          sharpe_30d?: number | null
+          strategy_id: string
+          trades_count?: number
+          unrealized_cents?: number
+          wins?: number
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          is_paper?: boolean
+          losses?: number
+          max_drawdown_pct?: number | null
+          realized_cents?: number
+          sharpe_30d?: number | null
+          strategy_id?: string
+          trades_count?: number
+          unrealized_cents?: number
+          wins?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kalshi_pnl_daily_strategy_id_fkey"
+            columns: ["strategy_id"]
+            isOneToOne: false
+            referencedRelation: "kalshi_strategies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kalshi_positions: {
+        Row: {
+          avg_price_cents: number
+          closed_at: string | null
+          id: string
+          is_paper: boolean
+          market_ticker: string
+          opened_at: string
+          qty: number
+          realized_pnl_cents: number | null
+          side: string
+          strategy_id: string
+        }
+        Insert: {
+          avg_price_cents: number
+          closed_at?: string | null
+          id?: string
+          is_paper?: boolean
+          market_ticker: string
+          opened_at?: string
+          qty: number
+          realized_pnl_cents?: number | null
+          side: string
+          strategy_id: string
+        }
+        Update: {
+          avg_price_cents?: number
+          closed_at?: string | null
+          id?: string
+          is_paper?: boolean
+          market_ticker?: string
+          opened_at?: string
+          qty?: number
+          realized_pnl_cents?: number | null
+          side?: string
+          strategy_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kalshi_positions_strategy_id_fkey"
+            columns: ["strategy_id"]
+            isOneToOne: false
+            referencedRelation: "kalshi_strategies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kalshi_signals: {
+        Row: {
+          acted_on: boolean
+          conviction: number
+          created_at: string
+          edge_bps: number
+          fair_price_cents: number | null
+          id: string
+          market_price_cents: number | null
+          market_ticker: string
+          meta: Json
+          side: string
+          strategy_id: string
+          ttl_seconds: number
+        }
+        Insert: {
+          acted_on?: boolean
+          conviction: number
+          created_at?: string
+          edge_bps: number
+          fair_price_cents?: number | null
+          id?: string
+          market_price_cents?: number | null
+          market_ticker: string
+          meta?: Json
+          side: string
+          strategy_id: string
+          ttl_seconds?: number
+        }
+        Update: {
+          acted_on?: boolean
+          conviction?: number
+          created_at?: string
+          edge_bps?: number
+          fair_price_cents?: number | null
+          id?: string
+          market_price_cents?: number | null
+          market_ticker?: string
+          meta?: Json
+          side?: string
+          strategy_id?: string
+          ttl_seconds?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kalshi_signals_strategy_id_fkey"
+            columns: ["strategy_id"]
+            isOneToOne: false
+            referencedRelation: "kalshi_strategies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kalshi_strategies: {
+        Row: {
+          created_at: string
+          description: string | null
+          edge_group: string
+          enabled: boolean
+          go_live_at: string | null
+          id: string
+          kelly_frac: number
+          kill_reason: string | null
+          killed_at: string | null
+          max_position_usd: number
+          min_edge_bps: number
+          name: string
+          paper_only: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          edge_group: string
+          enabled?: boolean
+          go_live_at?: string | null
+          id: string
+          kelly_frac?: number
+          kill_reason?: string | null
+          killed_at?: string | null
+          max_position_usd?: number
+          min_edge_bps?: number
+          name: string
+          paper_only?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          edge_group?: string
+          enabled?: boolean
+          go_live_at?: string | null
+          id?: string
+          kelly_frac?: number
+          kill_reason?: string | null
+          killed_at?: string | null
+          max_position_usd?: number
+          min_edge_bps?: number
+          name?: string
+          paper_only?: boolean
+          updated_at?: string
+        }
+        Relationships: []
       }
       kpi_email_clients: {
         Row: {
