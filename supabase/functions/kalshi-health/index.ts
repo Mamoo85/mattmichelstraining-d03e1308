@@ -18,10 +18,12 @@ Deno.serve(async (req) => {
         configured: false,
         base: KALSHI_BASE,
         message: "KALSHI_API_KEY_ID and KALSHI_PRIVATE_KEY_PEM not set",
+        debug: { key_id_len: _DEBUG_KEY_ID_LEN, pem_len: _DEBUG_PEM_LEN },
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
+
 
   try {
     const [bal, mkts] = await Promise.all([
