@@ -509,5 +509,4 @@ function Table({ cols, rows }: { cols: string[]; rows: (string | number | React.
   );
 }
 
-const fmtUSD = (n: number | null | undefined) =>
-  typeof n === "number" ? n.toLocaleString("en-US", { style: "currency", currency: "USD" }) : "—";
+
