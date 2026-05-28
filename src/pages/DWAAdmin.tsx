@@ -98,6 +98,7 @@ const GROUPS: SidebarGroup[] = [
     items: [
       { id: "today",             label: "Today" },
       { id: "ai-command",        label: "AI Command" },
+      { id: "trading",           label: "📊 Trading Bots" },
     ],
   },
   {
