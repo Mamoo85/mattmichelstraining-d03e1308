@@ -27,7 +27,7 @@ interface SEOHeadProps {
 
 const M2_SITE_URL = "https://www.mattmichelstraining.com";
 const DWA_SITE_URL = "https://www.detroitwebagent.com";
-const DEFAULT_OG = "https://www.mattmichelstraining.com/pwa-512x512.png";
+const DEFAULT_OG = "https://www.mattmichelstraining.com/m2-og-v20260529.png";
 
 // Routes that belong to the DWA brand regardless of domain
 const DWA_ROUTES = [
