@@ -1,0 +1,8 @@
+{
+  "name": "m2training-lovable-preview",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "npm --prefix frontend run dev -- --host 0.0.0.0 --port 8080"
+  }
+}
