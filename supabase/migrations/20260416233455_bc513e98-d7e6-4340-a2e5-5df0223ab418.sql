@@ -22,4 +22,4 @@ END $$;
 
 -- Index for fast collision lookups
 CREATE INDEX IF NOT EXISTS idx_agency_assignments_candidate_status ON public.agency_candidate_assignments(candidate_id, status);
-CREATE INDEX IF NOT EXISTS idx_hire_alert_candidates_dnc ON public.hire_alert_candidates(do_not_contact) WHERE do_not_contact = true;
+CREATE INDEX IF NOT EXISTS idx_hire_REDACTED ON public.hire_alert_candidates(do_not_contact) WHERE do_not_contact = true;

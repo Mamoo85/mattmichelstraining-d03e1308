@@ -1,0 +1,5 @@
+UPDATE site_content SET content_value = 'Monthly ''Real Deal'' newsletter|85+ exercise library with sport-specific filters|Filter by YOUR sport — find the best exercises for Golf, Volleyball, Football & more|Monthly Focus Plan access|Member challenges', updated_at = now() WHERE id = 'd1806661-4361-458c-9981-e4a65916c5ab';
+
+UPDATE site_content SET content_value = 'Everything in Basic|Custom program from intake form|🖐️ Flag Coach Matt — raise your hand and get personal coaching feedback on any exercise|Optional postural video assessment|Monthly program updates|Full ''Fix It'' rehab library', updated_at = now() WHERE id = '1ad7c094-1af5-4f95-a1ab-ce783305d4fe';
+
+UPDATE site_content SET content_value = 'Everything in Pro|1-on-1 monthly check-ins with Matt|Priority postural assessments|Direct messaging support|Priority Flag Coach Matt responses', updated_at = now() WHERE id = '55b7b7c6-898b-4772-b7ba-c5d49bc49651';

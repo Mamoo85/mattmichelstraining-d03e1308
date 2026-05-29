@@ -15,7 +15,7 @@ ALTER FUNCTION public.compute_freshness_score(timestamp with time zone, double p
   SET search_path = public;
 ALTER FUNCTION public.dedup_candidates_fuzzy(text, text, double precision)
   SET search_path = public;
-ALTER FUNCTION public.hire_alert_candidates_search_trigger()
+ALTER FUNCTION public.hire_REDACTED()
   SET search_path = public;
 ALTER FUNCTION public.industry_pulse_signals_search_trigger()
   SET search_path = public;

@@ -12,9 +12,9 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") || "";
 const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 
-const MATT_EMAILS = ["matt@mattmichelstraining.com", "matthewmichels@gmail.com", "matthewmichels4@gmail.com"];
+const MATT_EMAILS = ["matt@detroitwebagent.com", "matthewmichels@gmail.com", "matthewmichels4@gmail.com"];
 
-const MATT = "matt@mattmichelstraining.com";
+const MATT = "matt@detroitwebagent.com";
 const SITE = "https://www.mattmichelstraining.com";
 
 interface ProductConfig {
@@ -547,12 +547,12 @@ const TEST_PRODUCTS: Record<string, ProductConfig> = {
     },
     success_url: `${SITE}/competitor-pricing?test=true`,
   },
-  re_newsletter_subscription: {
+  re_REDACTED: {
     name: "TEST — Real Estate Newsletter ($79/mo)",
     description: "Weekly branded market report emailed to agent's contact list. $0 test.",
     mode: "subscription",
     metadata: {
-      type: "re_newsletter_subscription",
+      type: "re_REDACTED",
       email: MATT,
       name: "Matt Michels",
       agent_name: "Matt Michels",
@@ -850,7 +850,7 @@ serve(async (req) => {
         .insert({
           customer_email: MATT,
           company_name: "M2 Development",
-          employee_emails: ["matt@mattmichelstraining.com", "test@example.com"],
+          employee_emails: ["matt@detroitwebagent.com", "test@example.com"],
           status: "pending",
           is_test: true,
         })

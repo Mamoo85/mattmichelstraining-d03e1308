@@ -17,7 +17,7 @@ async function sendScoutEmail(subject: string, html: string) {
     method: "POST",
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: "Agent Scout <matt@mattmichelstraining.com>",
+      from: "Agent Scout <matt@detroitwebagent.com>",
       to: ["matthewmichels4@gmail.com"],
       subject,
       html: `<div style="font-family:sans-serif;max-width:640px;margin:auto;padding:20px;background:#1a0a2e;color:#e2e8f0;border-radius:12px;">

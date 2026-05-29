@@ -19,8 +19,8 @@ async function notifyMatt(subject: string, html: string) {
     method: "POST",
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: "M² System <matt@mattmichelstraining.com>",
-      to: ["matt@mattmichelstraining.com"],
+      from: "M² System <matt@detroitwebagent.com>",
+      to: ["matt@detroitwebagent.com"],
       subject,
       html,
     }),
@@ -243,7 +243,7 @@ Return ONLY the JSON object, no other text.`;
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "M² Franchise Analyzer <matt@mattmichelstraining.com>",
+          from: "M² Franchise Analyzer <matt@detroitwebagent.com>",
           to: [client.email],
           subject: `FDD Analysis Complete — ${fddName} (Risk Score: ${riskScore}/100)`,
           html: reportHtml,

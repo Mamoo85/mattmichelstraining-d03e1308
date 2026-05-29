@@ -172,3 +172,21 @@ Reusable playbooks for every repeatable situation. When something happens, find 
 | Real Estate / LO | Mortgage Radar | Missed-Call Catch |
 | Restaurant | Missed-Call Catch | SiteRadar |
 | Manufacturing | TechAlert | SiteRadar |
+
+---
+
+## SOP — Shared Code Sync (run after any _shared/ change)
+
+**Trigger:** Any change to `supabase/functions/_shared/ai.ts` or `supabase/functions/_shared/twilio.ts`
+
+**Steps:**
+1. Run `./scripts/sync-shared.sh` (dry-run — shows what differs)
+2. If differences found, run `./scripts/sync-shared.sh --apply`
+3. Commit both the main change AND the synced frontend file in the same commit
+4. If adding a new shared file that frontend also needs, add its filename to `SYNCED_FILES` in `scripts/sync-shared.sh`
+
+**Synced files (must stay identical between main and frontend):**
+- `supabase/functions/_shared/ai.ts` ↔ `frontend/supabase/functions/_shared/ai.ts`
+- `supabase/functions/_shared/twilio.ts` ↔ `frontend/supabase/functions/_shared/twilio.ts`
+
+**POD protocol:** Before any Printify/Etsy product action, read `PRODUCT_CREATION_PROTOCOL.md`. It is the single source of truth.

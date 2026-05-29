@@ -128,10 +128,10 @@ serve(async (req) => {
 
     const fromEmail = isDwaProduct(receipt.product_type)
       ? "Detroit Web Agency <matt@detroitwebagent.com>"
-      : "Matt Michels <matt@mattmichelstraining.com>";
+      : "Matt Michels <matt@detroitwebagent.com>";
     const replyTo = isDwaProduct(receipt.product_type)
       ? "matt@detroitwebagent.com"
-      : "matt@mattmichelstraining.com";
+      : "matt@detroitwebagent.com";
 
     const productLabel = receipt.product_type
       ? receipt.product_type.replace(/_/g, " ")

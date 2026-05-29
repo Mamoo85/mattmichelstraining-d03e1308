@@ -15,7 +15,7 @@ const PRODUCT_JOBS: Record<string, () => Job[]> = {
   trade_radar: () => [
     { source: "usda_drought_counties", run: () => ex.fetchDroughtMonitorCounties("MI") },
     { source: "usgs_water_alerts", run: () => ex.fetchUSGSWaterAlerts("MI") },
-    { source: "nws_severe_thunderstorm_watches", run: () => ex.fetchNWSSevereThunderWatches("MI") },
+    { source: "nws_severe_REDACTED", run: () => ex.fetchNWSSevereThunderWatches("MI") },
     { source: "detroit_new_business_licenses", run: () => ex.fetchDetroitNewBusinessLicenses() },
     // Phase B
     { source: "noaa_storm_events_recent", run: () => exb.fetchNOAAStormEventsRecent("MICHIGAN") },

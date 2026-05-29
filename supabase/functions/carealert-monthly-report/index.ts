@@ -46,7 +46,7 @@ Deno.serve(async (req) => {
         .eq("state", c.state || "MI");
 
       const { count: delivered } = await sb
-        .from("hire_alert_client_candidates")
+        .from("hire_REDACTED")
         .select("id", { count: "exact", head: true })
         .eq("client_id", c.id)
         .gte("created_at", monthStart.toISOString())

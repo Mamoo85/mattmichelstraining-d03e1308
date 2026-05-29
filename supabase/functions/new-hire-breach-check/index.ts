@@ -232,7 +232,7 @@ serve(async (req) => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            from: "Matt Michels <matt@mattmichelstraining.com>",
+            from: "Matt Michels <matt@detroitwebagent.com>",
             to: [requester_email],
             bcc: ["matthewmichels4@gmail.com"],
             subject: `Credential Check \u2014 ${candidate_name}: ${subjectSuffix}`,

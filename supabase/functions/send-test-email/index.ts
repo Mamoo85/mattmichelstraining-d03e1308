@@ -12,9 +12,8 @@ serve(async () => {
     method: "POST",
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: "Matt Michels <matt@mattmichelstraining.com>",
-      to: ["matt@mattmichelstraining.com"],
-      bcc: ["matthewmichels@gmail.com"],
+      from: "Matt Michels <matt@detroitwebagent.com>",
+      to: ["matt@detroitwebagent.com"],
       subject: "\u2705 BCC Test \u2014 M\u00b2 Agent Email System",
       html: `
         <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px;background:#1e293b;color:#e2e8f0;border-radius:12px;">
@@ -23,7 +22,7 @@ serve(async () => {
           <p>If you're seeing this at <strong>matthewmichels@gmail.com</strong>, BCC is confirmed working on all 51 sender functions.</p>
           <p>Every email your AI agents send to leads and clients will now silently copy you.</p>
           <hr style="border-color:#334155;margin:24px 0;">
-          <p style="color:#94a3b8;font-size:13px;">&mdash; M&sup2; Automated System<br>matt@mattmichelstraining.com &middot; (313) 992-1219</p>
+          <p style="color:#94a3b8;font-size:13px;">&mdash; M&sup2; Automated System<br>matt@detroitwebagent.com &middot; (313) 992-1219</p>
         </div>
       `,
     }),

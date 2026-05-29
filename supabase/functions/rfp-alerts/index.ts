@@ -17,8 +17,8 @@ async function notifyMatt(subject: string, html: string) {
     method: "POST",
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: "M² System <matt@mattmichelstraining.com>",
-      to: ["matt@mattmichelstraining.com"],
+      from: "M² System <matt@detroitwebagent.com>",
+      to: ["matt@detroitwebagent.com"],
       subject,
       html,
     }),
@@ -184,7 +184,7 @@ Return ONLY the JSON array, no other text.`;
           method: "POST",
           headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            from: "M² RFP Alerts <matt@mattmichelstraining.com>",
+            from: "M² RFP Alerts <matt@detroitwebagent.com>",
             to: [client.email],
             subject: `${qualified.length} RFP ${qualified.length === 1 ? "Opportunity" : "Opportunities"} Found — ${todayStr}`,
             html: `<!DOCTYPE html>

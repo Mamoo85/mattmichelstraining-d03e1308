@@ -66,7 +66,7 @@ async function sendReminderToTrainers(sb: any): Promise<string> {
 <p style="margin-top:16px;color:#64748b;font-size:14px;">Your clients love seeing their progress documented — it's one of the best retention tools you have.</p>
 <div class="footer">
   <img src="https://mattmichelstraining.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;vertical-align:middle;margin-right:8px;" alt="Matt">
-  <span>Matt Michels | M2 Development | matt@mattmichelstraining.com | (313) 992-1219</span>
+  <span>Matt Michels | M2 Development | matt@detroitwebagent.com | (313) 992-1219</span>
 </div>
 </body>
 </html>`;
@@ -75,7 +75,7 @@ async function sendReminderToTrainers(sb: any): Promise<string> {
       method: "POST",
       headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        from: "Matt Michels <matt@mattmichelstraining.com>",
+        from: "Matt Michels <matt@detroitwebagent.com>",
         to: [trainer.email],
         subject: `📊 Time to Submit ${month} Client Progress Reports`,
         html,
@@ -260,7 +260,7 @@ FORMAT AS JSON:
 ${parsed.reportHtml || `<p>Hi ${clientName},</p><pre>${parsed.reportText || rawText}</pre>`}
 <div class="footer">
   <strong>${trainerName}</strong><br>
-  Powered by M2 Development | matt@mattmichelstraining.com
+  Powered by M2 Development | matt@detroitwebagent.com
 </div>
 </body>
 </html>`;
@@ -270,7 +270,7 @@ ${parsed.reportHtml || `<p>Hi ${clientName},</p><pre>${parsed.reportText || rawT
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: `${trainerName} <matt@mattmichelstraining.com>`,
+          from: `${trainerName} <matt@detroitwebagent.com>`,
           to: [clientEmail],
           subject: parsed.subjectLine || `Your ${month} Progress Report is Here, ${clientName}! 💪`,
           html: emailHtml,

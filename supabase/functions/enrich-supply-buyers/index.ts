@@ -11,6 +11,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { cleanWebsite } from "../_shared/enrichment-pipeline.ts";
+import { checkAndConsume } from "../_shared/api-budget.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -100,6 +101,13 @@ serve(async (req) => {
     }
 
     const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+
+    const mapsOk = await checkAndConsume(sb, "google_maps", MAX_BATCH * 2, "google_maps_details");
+    if (!mapsOk.allowed) {
+      return new Response(JSON.stringify({ processed: 0, enriched: 0, partial: 0, failed: 0, note: "Daily Maps budget exceeded — try tomorrow" }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     let q = sb.from("industrial_supply_buyers").select("id, company, city, state, enrichment_status").eq("active", true).limit(MAX_BATCH);
     if (Array.isArray(buyer_ids) && buyer_ids.length > 0) {

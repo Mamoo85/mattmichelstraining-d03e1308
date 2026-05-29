@@ -87,7 +87,7 @@ $$;
 GRANT EXECUTE ON FUNCTION public.bulk_candidate_export_check(uuid[]) TO authenticated, anon;
 
 -- Performance: speed up the Nursys batch picker.
-CREATE INDEX IF NOT EXISTS idx_hire_candidates_nursys_pending
+CREATE INDEX IF NOT EXISTS idx_hire_REDACTED
   ON public.hire_alert_candidates (license_state, license_number)
   WHERE license_number IS NOT NULL
     AND license_state IS NOT NULL

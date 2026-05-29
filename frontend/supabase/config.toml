@@ -1,0 +1,2396 @@
+project_id = "zmyczlfuufhngzovkjdh"
+
+[functions.scanner-monitor-alert]
+verify_jwt = false
+
+[functions.scanner-sources-run-batch-1]
+verify_jwt = false
+
+[functions.scanner-sources-run-batch-2]
+verify_jwt = false
+
+[functions.scanner-sources-preflight]
+verify_jwt = false
+
+[functions.claim-trade-radar-lead]
+verify_jwt = false
+
+[functions.e2e-link-auditor]
+verify_jwt = false
+
+[functions.cold-email-ramp-scheduler]
+verify_jwt = false
+
+[functions.trial-drip-runner]
+verify_jwt = false
+
+[functions.dwa-v4-retention-sweep]
+verify_jwt = false
+
+[functions.dwa-v4-compliance-audit]
+verify_jwt = false
+
+[functions.dwa-v4-qbr-generator]
+verify_jwt = false
+
+[functions.create-addon-checkout]
+verify_jwt = false
+
+[functions.referral-tier-update]
+verify_jwt = false
+
+[functions.new-business-radar]
+verify_jwt = false
+
+[functions.fielddesk-import-eway]
+verify_jwt = false
+
+[functions.buyer-radar-sneak-peek]
+verify_jwt = false
+
+[functions.industry-pulse-sneak-peek]
+verify_jwt = false
+
+[functions.apify-results-handler]
+verify_jwt = false
+
+[functions.contractor-onboarding-status]
+verify_jwt = false
+
+[functions.contractor-welcome-status-callback]
+verify_jwt = false
+
+[functions.draft-sms-reply]
+verify_jwt = false
+
+[functions.auto-draft-on-inbound]
+verify_jwt = false
+
+[functions.enrichment-cost-rollup]
+verify_jwt = false
+
+[functions.flight-risk-rescorer]
+verify_jwt = false
+
+[functions.urgency-score-refresh]
+verify_jwt = false
+
+[functions.client-roi-digest]
+verify_jwt = false
+
+[functions.cross-product-signal-router]
+verify_jwt = false
+
+[functions.create-wire-checkout]
+verify_jwt = false
+
+[functions.wire-morning-digest]
+verify_jwt = false
+
+[functions.boiler-sector-intel]
+verify_jwt = false
+
+[functions.abandoned-cart-sender]
+verify_jwt = false
+
+[functions.adapt-workout-vision]
+verify_jwt = false
+
+[functions.add-competitor-url]
+verify_jwt = false
+
+[functions.admin-migrate]
+verify_jwt = false
+
+[functions.admin-notification-digest]
+verify_jwt = false
+
+[functions.admin-user-manage]
+verify_jwt = false
+
+[functions.ads-copy-monthly-sender]
+verify_jwt = false
+
+[functions.afterjob-drip-runner]
+verify_jwt = false
+
+[functions.ag-price-alerts]
+verify_jwt = false
+
+[functions.agent-smith-report]
+verify_jwt = false
+
+[functions.ai-admin-assist]
+verify_jwt = false
+
+[functions.ai-athlete-assist]
+verify_jwt = false
+
+[functions.ai-athlete-stream]
+verify_jwt = false
+
+[functions.ai-automated-bots]
+verify_jwt = false
+
+[functions.ai-business-intelligence]
+verify_jwt = false
+
+[functions.ai-churn-preventer]
+verify_jwt = false
+
+[functions.ai-competitor-watch]
+verify_jwt = false
+
+[functions.ai-direct-mail-writer]
+verify_jwt = false
+
+[functions.ai-estimate-generator]
+verify_jwt = false
+
+[functions.ai-google-qa-manager]
+verify_jwt = false
+
+[functions.ai-hiring-assistant]
+verify_jwt = false
+
+[functions.ai-injury-risk]
+verify_jwt = false
+
+[functions.ai-lawyer-jess]
+verify_jwt = false
+
+[functions.ai-local-seo-writer]
+verify_jwt = false
+
+[functions.ai-marketing-tools]
+verify_jwt = false
+
+[functions.ai-meal-prep]
+verify_jwt = false
+
+[functions.ai-media-studio]
+verify_jwt = false
+
+[functions.ai-parent-report]
+verify_jwt = false
+
+[functions.ai-phone-answering]
+verify_jwt = false
+
+[functions.ai-posture-analysis]
+verify_jwt = false
+
+[functions.ai-reply-detector]
+verify_jwt = false
+
+[functions.cancel-reply-draft]
+verify_jwt = false
+
+[functions.dossier-cold-outreach-bulk]
+verify_jwt = false
+
+[functions.enrich-supply-buyers]
+verify_jwt = false
+
+[functions.signal-channel-blast]
+verify_jwt = false
+
+[functions.signal-outreach-cancel-bulk]
+verify_jwt = false
+
+[functions.release-pending-sms]
+verify_jwt = false
+
+[functions.create-hire-alert-trial]
+verify_jwt = false
+
+[functions.handle-inbound-email]
+verify_jwt = false
+
+[functions.hire-alert-phantom-alert]
+verify_jwt = false
+
+[functions.hire-alert-trial-convert]
+verify_jwt = false
+
+[functions.miosha-license-scraper]
+verify_jwt = false
+
+[functions.license-vision-intake]
+verify_jwt = false
+
+[functions.test-license-vision]
+verify_jwt = false
+
+[functions.generate-digital-audit]
+verify_jwt = false
+
+[functions.contractor-aged-lead-downsell]
+verify_jwt = false
+
+[functions.create-aged-lead-checkout]
+verify_jwt = false
+
+[functions.create-buyer-radar-checkout]
+verify_jwt = false
+
+[functions.rfq-bid-scanner]
+verify_jwt = false
+
+[functions.contractor-fomo-mailer]
+verify_jwt = false
+
+[functions.release-pending-replies]
+verify_jwt = false
+
+[functions.ai-sales-script-writer]
+verify_jwt = false
+
+[functions.ai-social-captions-generator]
+verify_jwt = false
+
+[functions.ai-support-triage]
+verify_jwt = false
+
+[functions.ai-timer-generator]
+verify_jwt = false
+
+[functions.ai-training-history]
+verify_jwt = false
+
+[functions.ai-video-form-review]
+verify_jwt = false
+
+[functions.ai-video-script-writer]
+verify_jwt = false
+
+[functions.ai-website-copy-refresher]
+verify_jwt = false
+
+[functions.ai-weekly-digest-sender]
+verify_jwt = false
+
+[functions.ai-workout-analysis]
+verify_jwt = false
+
+[functions.ai-workout-suggest]
+verify_jwt = false
+
+[functions.analyze-biomechanics]
+verify_jwt = false
+
+[functions.analyze-food]
+verify_jwt = false
+
+[functions.annual-review-sender]
+verify_jwt = false
+
+[functions.appointment-reminder-sender]
+verify_jwt = false
+
+[functions.ask-coach]
+verify_jwt = false
+
+[functions.auth-email-hook]
+verify_jwt = false
+
+[functions.auto-gbp-posts]
+verify_jwt = false
+
+[functions.auto-generate-products]
+verify_jwt = false
+
+[functions.auto-invoice]
+verify_jwt = false
+
+[functions.auto-onboard]
+verify_jwt = false
+
+[functions.auto-proposal-agreement]
+verify_jwt = false
+
+[functions.b2b-dental-scraper]
+verify_jwt = false
+
+[functions.b2b-industrial-scraper]
+verify_jwt = false
+
+[functions.batch-generate-programs]
+verify_jwt = false
+
+[functions.battlecard-sender]
+verify_jwt = false
+
+[functions.bedtime-story-sender]
+verify_jwt = false
+
+[functions.bid-intel-approve]
+verify_jwt = false
+
+[functions.bid-intel-scan]
+verify_jwt = false
+
+[functions.birthday-campaign-sender]
+verify_jwt = false
+
+[functions.blog-post-monthly-sender]
+verify_jwt = false
+
+[functions.calculate-affiliate-commissions]
+verify_jwt = false
+
+[functions.cancel-session]
+verify_jwt = false
+
+[functions.cancel-user-subscription]
+verify_jwt = false
+
+[functions.cashier-revenue-guard]
+verify_jwt = false
+
+[functions.chatbot-widget]
+verify_jwt = false
+
+[functions.check-subscription]
+verify_jwt = false
+
+[functions.church-newsletter-sender]
+verify_jwt = false
+
+[functions.churn-radar]
+verify_jwt = false
+
+[functions.citation-monitor]
+verify_jwt = false
+
+[functions.cleanup-form-checks]
+verify_jwt = false
+
+[functions.client-report-sender]
+verify_jwt = false
+
+[functions.collections-sender]
+verify_jwt = false
+
+[functions.competitor-pricing-scan]
+verify_jwt = false
+
+[functions.competitor-report]
+verify_jwt = false
+
+[functions.competitor-watch-weekly-sender]
+verify_jwt = false
+
+[functions.contractor-drip]
+verify_jwt = false
+
+[functions.contractor-lead-capture]
+verify_jwt = false
+
+[functions.contractor-lead-notify]
+verify_jwt = false
+
+[functions.contractor-lead-health-monitor]
+verify_jwt = false
+
+[functions.channel-prospector]
+verify_jwt = false
+
+[functions.contractor-prospector]
+verify_jwt = false
+
+[functions.contractor-lead-prospector]
+verify_jwt = false
+
+[functions.contractor-sms-follow]
+verify_jwt = false
+
+[functions.create-abandoned-cart-checkout]
+verify_jwt = false
+
+[functions.create-ads-copy-checkout]
+verify_jwt = false
+
+[functions.create-afterjob-drip-checkout]
+verify_jwt = false
+
+[functions.create-ag-price-alerts-checkout]
+verify_jwt = false
+
+[functions.create-annual-review-checkout]
+verify_jwt = false
+
+[functions.create-appointment-reminder-checkout]
+verify_jwt = false
+
+[functions.create-audit-checkout]
+verify_jwt = false
+
+[functions.create-b2b-checkout]
+verify_jwt = false
+
+[functions.create-battlecard-checkout]
+verify_jwt = false
+
+[functions.create-bid-intel-checkout]
+verify_jwt = false
+
+[functions.create-birthday-campaign-checkout]
+verify_jwt = false
+
+[functions.create-camp-listing-checkout]
+verify_jwt = false
+
+[functions.create-checkout]
+verify_jwt = false
+
+[functions.create-child-account]
+verify_jwt = false
+
+[functions.create-church-newsletter-checkout]
+verify_jwt = false
+
+[functions.create-citation-monitor-checkout]
+verify_jwt = false
+
+[functions.create-client-report-checkout]
+verify_jwt = false
+
+[functions.create-collections-checkout]
+verify_jwt = false
+
+[functions.create-competitor-pricing-checkout]
+verify_jwt = false
+
+[functions.create-competitor-watch-checkout]
+verify_jwt = false
+
+[functions.create-contractor-checkout]
+verify_jwt = false
+
+[functions.create-contractor-ppl-checkout]
+verify_jwt = false
+
+[functions.get-lead-by-session]
+verify_jwt = false
+
+[functions.create-crime-digest-checkout]
+verify_jwt = false
+
+[functions.create-dark-web-monitor-checkout]
+verify_jwt = false
+
+[functions.create-revenue-preventer-checkout]
+verify_jwt = false
+
+[functions.create-direct-mail-checkout]
+verify_jwt = false
+
+[functions.create-directory-submitter-checkout]
+verify_jwt = false
+
+[functions.create-ecommerce-listings-checkout]
+verify_jwt = false
+
+[functions.create-employee-audit-checkout]
+verify_jwt = false
+
+[functions.create-estimate-drip-checkout]
+verify_jwt = false
+
+[functions.create-estimate-generator-checkout]
+verify_jwt = false
+
+[functions.create-field-rep-checkout]
+verify_jwt = false
+
+[functions.create-financial-advisor-checkout]
+verify_jwt = false
+
+[functions.create-fitness-reports-checkout]
+verify_jwt = false
+
+[functions.create-foundation-checkout]
+verify_jwt = false
+
+[functions.create-franchise-analyzer-checkout]
+verify_jwt = false
+
+[functions.create-franchise-ops-checkout]
+verify_jwt = false
+
+[functions.create-gbp-checkout]
+verify_jwt = false
+
+[functions.create-gbp-subscription]
+verify_jwt = false
+
+[functions.create-google-qa-checkout]
+verify_jwt = false
+
+[functions.create-gov-contract-checkout]
+verify_jwt = false
+
+[functions.create-gov-meeting-tracker-checkout]
+verify_jwt = false
+
+[functions.create-grant-discovery-checkout]
+verify_jwt = false
+
+[functions.create-grant-finder-checkout]
+verify_jwt = false
+
+[functions.create-guide-payment]
+verify_jwt = false
+
+[functions.create-handbook-checkout]
+verify_jwt = false
+
+[functions.create-hiring-assistant-checkout]
+verify_jwt = false
+
+[functions.create-hoa-secretary-checkout]
+verify_jwt = false
+
+[functions.create-hoa-violation-checkout]
+verify_jwt = false
+
+[functions.create-holiday-sms-checkout]
+verify_jwt = false
+
+[functions.create-homeowner-campaign-checkout]
+verify_jwt = false
+
+[functions.create-industrial-newsletter-checkout]
+verify_jwt = false
+
+[functions.create-insurance-drip-checkout]
+verify_jwt = false
+
+[functions.create-inventory-alert-checkout]
+verify_jwt = false
+
+[functions.create-invoice-chaser-checkout]
+verify_jwt = false
+
+[functions.create-invoicing-checkout]
+verify_jwt = false
+
+[functions.create-job-posting-checkout]
+verify_jwt = false
+
+[functions.create-kpi-email-checkout]
+verify_jwt = false
+
+[functions.create-landlord-letters-checkout]
+verify_jwt = false
+
+[functions.create-license-monitor-checkout]
+verify_jwt = false
+
+[functions.create-linkedin-ghostwriting-checkout]
+verify_jwt = false
+
+[functions.create-linkedin-outreach-checkout]
+verify_jwt = false
+
+[functions.create-local-seo-checkout]
+verify_jwt = false
+
+[functions.create-market-intel-checkout]
+verify_jwt = false
+
+[functions.create-med-spa-checkout]
+verify_jwt = false
+
+[functions.create-meeting-prep-checkout]
+verify_jwt = false
+
+[functions.create-menu-engineering-checkout]
+verify_jwt = false
+
+[functions.create-missed-call-subscription]
+verify_jwt = false
+
+[functions.create-new-hire-check-checkout]
+verify_jwt = false
+
+[functions.create-new-mover-checkout]
+verify_jwt = false
+
+[functions.create-newsletter-service-checkout]
+verify_jwt = false
+
+[functions.create-noshow-checkout]
+verify_jwt = false
+
+[functions.create-nutrition-plan-checkout]
+verify_jwt = false
+
+[functions.create-onboarding-agent-checkout]
+verify_jwt = false
+
+[functions.create-osha-compliance-checkout]
+verify_jwt = false
+
+[functions.create-payment-chaser-checkout]
+verify_jwt = false
+
+[functions.create-permit-monitor-checkout]
+verify_jwt = false
+
+[functions.create-permit-watch-checkout]
+verify_jwt = false
+
+[functions.create-pet-memorial-checkout]
+verify_jwt = false
+
+[functions.create-phone-answering-checkout]
+verify_jwt = false
+
+[functions.create-podcast-checkout]
+verify_jwt = false
+
+[functions.create-podcast-pitch-checkout]
+verify_jwt = false
+
+[functions.create-podcast-show-notes-checkout]
+verify_jwt = false
+
+[functions.create-price-intelligence-checkout]
+verify_jwt = false
+
+[functions.create-price-monitor-checkout]
+verify_jwt = false
+
+[functions.create-program-checkout]
+verify_jwt = false
+
+[functions.create-promo-blaster-checkout]
+verify_jwt = false
+
+[functions.create-promo-planner-checkout]
+verify_jwt = false
+
+[functions.create-quote-followup-checkout]
+verify_jwt = false
+
+[functions.create-re-newsletter-checkout]
+verify_jwt = false
+
+[functions.create-reactivation-email-checkout]
+verify_jwt = false
+
+[functions.create-real-estate-drip-checkout]
+verify_jwt = false
+
+[functions.create-recall-alert-checkout]
+verify_jwt = false
+
+[functions.create-referral-program-checkout]
+verify_jwt = false
+
+[functions.create-reg-filing-checkout]
+verify_jwt = false
+
+[functions.create-regulatory-monitor-checkout]
+verify_jwt = false
+
+[functions.create-report-checkout]
+verify_jwt = false
+
+[functions.create-reputation-checkout]
+verify_jwt = false
+
+[functions.create-restaurant-menu-checkout]
+verify_jwt = false
+
+[functions.create-review-alert-checkout]
+verify_jwt = false
+
+[functions.create-review-monitor-checkout]
+verify_jwt = false
+
+[functions.create-review-request-checkout]
+verify_jwt = false
+
+[functions.create-rfp-alerts-checkout]
+verify_jwt = false
+
+[functions.create-seo-audit-checkout]
+verify_jwt = false
+
+[functions.create-seo-package-checkout]
+verify_jwt = false
+
+[functions.create-seo-report-checkout]
+verify_jwt = false
+
+[functions.create-session-checkout]
+verify_jwt = false
+
+[functions.create-slow-day-checkout]
+verify_jwt = false
+
+[functions.create-sms-blast-checkout]
+verify_jwt = false
+
+[functions.create-social-media-checkout]
+verify_jwt = false
+
+[functions.create-social-proof-checkout]
+verify_jwt = false
+
+[functions.create-speed-audit-checkout]
+verify_jwt = false
+
+[functions.create-speed-lead-checkout]
+verify_jwt = false
+
+[functions.create-staff-newsletter-checkout]
+verify_jwt = false
+
+[functions.create-storm-lead-checkout]
+verify_jwt = false
+
+[functions.create-str-reputation-checkout]
+verify_jwt = false
+
+[functions.create-stripe-promo]
+verify_jwt = false
+
+[functions.create-tech-support-checkout]
+verify_jwt = false
+
+[functions.create-test-checkout]
+verify_jwt = false
+
+[functions.create-testimonial-harvester-checkout]
+verify_jwt = false
+
+[functions.create-thank-you-sms-checkout]
+verify_jwt = false
+
+[functions.create-trade-show-automation-checkout]
+verify_jwt = false
+
+[functions.create-trade-show-followup-checkout]
+verify_jwt = false
+
+[functions.create-trademark-watch-checkout]
+verify_jwt = false
+
+[functions.create-trucking-docs-checkout]
+verify_jwt = false
+
+[functions.create-vet-marketing-checkout]
+verify_jwt = false
+
+[functions.create-video-script-checkout]
+verify_jwt = false
+
+[functions.create-warranty-reminder-checkout]
+verify_jwt = false
+
+[functions.create-web-design-checkout]
+verify_jwt = false
+
+[functions.create-website-copy-checkout]
+verify_jwt = false
+
+[functions.create-weekly-digest-checkout]
+verify_jwt = false
+
+[functions.create-welcome-drip-checkout]
+verify_jwt = false
+
+[functions.create-winback-sms-checkout]
+verify_jwt = false
+
+[functions.crime-digest-sender]
+verify_jwt = false
+
+[functions.customer-portal]
+verify_jwt = false
+
+[functions.dark-web-domain-scan]
+verify_jwt = false
+
+[functions.deliver-audit-report]
+verify_jwt = false
+
+[functions.deliver-sample-report]
+verify_jwt = false
+
+[functions.deliver-seo-package]
+verify_jwt = false
+
+[functions.drill-content-engine]
+verify_jwt = false
+
+[functions.ecommerce-listings-sender]
+verify_jwt = false
+
+[functions.employee-credential-scan]
+verify_jwt = false
+
+[functions.estimate-drip-runner]
+verify_jwt = false
+
+[functions.facebook-lead-webhook]
+verify_jwt = false
+
+[functions.faq-refresh-sender]
+verify_jwt = false
+
+[functions.fetch-search-console]
+verify_jwt = false
+
+[functions.field-rep-ai-tool]
+verify_jwt = false
+
+[functions.financial-advisor-content-sender]
+verify_jwt = false
+
+[functions.firecrawl-scrape]
+verify_jwt = false
+
+[functions.firecrawl-search]
+verify_jwt = false
+
+[functions.fitness-report-generator]
+verify_jwt = false
+
+[functions.force-stripe-sync]
+verify_jwt = false
+
+[functions.franchise-analyzer]
+verify_jwt = false
+
+[functions.franchise-ops-sender]
+verify_jwt = false
+
+[functions.free-report-drip]
+verify_jwt = false
+
+[functions.free-workout-generator]
+verify_jwt = false
+
+[functions.gbp-post-pack]
+verify_jwt = false
+
+[functions.gbp-review-requester]
+verify_jwt = false
+
+[functions.gbp-saas-poster]
+verify_jwt = false
+
+[functions.generate-ad-campaign]
+verify_jwt = false
+
+[functions.generate-affiliate-swipe]
+verify_jwt = false
+
+[functions.generate-audit-pitch]
+verify_jwt = false
+
+[functions.generate-client-site]
+verify_jwt = false
+
+[functions.generate-daily-workouts]
+verify_jwt = false
+
+[functions.generate-exercises]
+verify_jwt = false
+
+[functions.generate-gbp-posts]
+verify_jwt = false
+
+[functions.generate-instagram-content]
+verify_jwt = false
+
+[functions.generate-monthly-challenge]
+verify_jwt = false
+
+[functions.generate-monthly-focus]
+verify_jwt = false
+
+[functions.generate-newsletter]
+verify_jwt = false
+
+[functions.generate-nutrition-plan]
+verify_jwt = false
+
+[functions.generate-pet-memorial]
+verify_jwt = false
+
+[functions.generate-program]
+verify_jwt = false
+
+[functions.generate-seo-page]
+verify_jwt = false
+
+[functions.generate-seo-page-config]
+verify_jwt = false
+
+[functions.generate-seo-pages]
+verify_jwt = false
+
+[functions.generate-session-gift-card]
+verify_jwt = false
+
+[functions.generate-sitemap]
+verify_jwt = false
+
+[functions.generate-sport-guide]
+verify_jwt = false
+
+[functions.generate-web-proposal]
+verify_jwt = false
+
+[functions.get-partner-stats]
+verify_jwt = false
+
+[functions.google-calendar-sync]
+verify_jwt = false
+
+[functions.gov-contract-monitor]
+verify_jwt = false
+
+[functions.gov-meeting-tracker]
+verify_jwt = false
+
+[functions.grant-discovery]
+verify_jwt = false
+
+[functions.grant-finder-sender]
+verify_jwt = false
+
+[functions.han-upsell]
+verify_jwt = false
+
+[functions.handbook-sender]
+verify_jwt = false
+
+[functions.handle-email-suppression]
+verify_jwt = false
+
+[functions.handle-email-unsubscribe]
+verify_jwt = false
+
+[functions.hoa-cold-outreach]
+verify_jwt = false
+
+[functions.hoa-lead-magnet-capture]
+verify_jwt = false
+
+[functions.hoa-secretary]
+verify_jwt = false
+
+[functions.hoa-violation-letters]
+verify_jwt = false
+
+[functions.holiday-sms-sender]
+verify_jwt = false
+
+[functions.hype-social-proof]
+verify_jwt = false
+
+[functions.industrial-newsletter-send]
+verify_jwt = false
+
+[functions.instant-audit]
+verify_jwt = false
+
+[functions.insurance-drip-runner]
+verify_jwt = false
+
+[functions.insurance-drip-sender]
+verify_jwt = false
+
+[functions.inventory-alert-sender]
+verify_jwt = false
+
+[functions.invoice-chaser-runner]
+verify_jwt = false
+
+[functions.issue-refund]
+verify_jwt = false
+
+[functions.kpi-email-sender]
+verify_jwt = false
+
+[functions.landlord-letter-generator]
+verify_jwt = false
+
+[functions.legal-review-reminder]
+verify_jwt = false
+
+[functions.leia-onboard]
+verify_jwt = false
+
+[functions.license-expiry-checker]
+verify_jwt = false
+
+[functions.linkedin-auth-callback]
+verify_jwt = false
+
+[functions.linkedin-ghostwriter]
+verify_jwt = false
+
+[functions.linkedin-outreach-sender]
+verify_jwt = false
+
+[functions.local-seo-monthly-sender]
+verify_jwt = false
+
+[functions.log-activity-chat]
+verify_jwt = false
+
+[functions.luke-recovery]
+verify_jwt = false
+
+[functions.market-intel-sender]
+verify_jwt = false
+
+[functions.med-spa-content-sender]
+verify_jwt = false
+
+[functions.menu-engineering]
+verify_jwt = false
+
+[functions.meta-ads-copy-generator]
+verify_jwt = false
+
+[functions.missed-call-handler]
+verify_jwt = false
+
+[functions.missed-call-status]
+verify_jwt = false
+
+[functions.process-pending-sms]
+verify_jwt = false
+
+[functions.monthly-client-report]
+verify_jwt = false
+
+[functions.morning-digest]
+verify_jwt = false
+
+[functions.morpheus-demand]
+verify_jwt = false
+
+[functions.multi-service-drip]
+verify_jwt = false
+
+[functions.mute-compliance-monitor]
+verify_jwt = false
+
+[functions.neo-outreach]
+verify_jwt = false
+
+[functions.new-hire-breach-check]
+verify_jwt = false
+
+[functions.new-mover-sender]
+verify_jwt = false
+
+[functions.newsletter-send]
+verify_jwt = false
+
+[functions.newsletter-service-sender]
+verify_jwt = false
+
+[functions.noshow-followup]
+verify_jwt = false
+
+[functions.noshow-trigger]
+verify_jwt = false
+
+[functions.notify-coach-question]
+verify_jwt = false
+
+[functions.obi-wan-integrity]
+verify_jwt = false
+
+[functions.obituary-service]
+verify_jwt = false
+
+[functions.ops-autonomous]
+verify_jwt = false
+
+[functions.oracle-monitor]
+verify_jwt = false
+
+[functions.osha-compliance-sender]
+verify_jwt = false
+
+[functions.oz-autonomous]
+verify_jwt = false
+
+[functions.oz-heartbeat]
+verify_jwt = false
+
+[functions.parent-inbox-webhook]
+verify_jwt = false
+
+[functions.parse-workout-text]
+verify_jwt = false
+
+[functions.partner-onboarding]
+verify_jwt = false
+
+[functions.payment-chaser-sender]
+verify_jwt = false
+
+[functions.permit-monitor-sender]
+verify_jwt = false
+
+[functions.permit-watch-scanner]
+verify_jwt = false
+
+[functions.podcast-content-generator]
+verify_jwt = false
+
+[functions.podcast-pitch-sender]
+verify_jwt = false
+
+[functions.podcast-show-notes-generator]
+verify_jwt = false
+
+[functions.post-to-linkedin]
+verify_jwt = false
+
+[functions.preview-transactional-email]
+verify_jwt = false
+
+[functions.price-intelligence-scanner]
+verify_jwt = false
+
+[functions.process-email-queue]
+verify_jwt = true
+
+[functions.promo-planner-generator]
+verify_jwt = false
+
+[functions.property-mgmt-doc-sender]
+verify_jwt = false
+
+[functions.prospect-local-businesses]
+verify_jwt = false
+
+[functions.pulse-sms-monitor]
+verify_jwt = false
+
+[functions.purchase-gift-card]
+verify_jwt = false
+
+[functions.quote-followup-sender]
+verify_jwt = false
+
+[functions.r2-watchdog]
+verify_jwt = false
+
+[functions.re-newsletter-add-contacts]
+verify_jwt = false
+
+[functions.re-newsletter-send]
+verify_jwt = false
+
+[functions.reactivation-email-sender]
+verify_jwt = false
+
+[functions.real-estate-drip-sender]
+verify_jwt = false
+
+[functions.recall-alert-checker]
+verify_jwt = false
+
+[functions.redeem-gift-card]
+verify_jwt = false
+
+[functions.redeem-parent-invite]
+verify_jwt = false
+
+[functions.redeem-session-credit]
+verify_jwt = false
+
+[functions.ref-referral-optimizer]
+verify_jwt = false
+
+[functions.referral-ask-sender]
+verify_jwt = false
+
+[functions.referral-payout-report]
+verify_jwt = false
+
+[functions.reg-filing-approve]
+verify_jwt = false
+
+[functions.reg-filing-scan]
+verify_jwt = false
+
+[functions.register-referral-partner]
+verify_jwt = false
+
+[functions.regulatory-monitor]
+verify_jwt = false
+
+[functions.regulatory-monitor-scan]
+verify_jwt = false
+
+[functions.reputation-report-sender]
+verify_jwt = false
+
+[functions.request-guide]
+verify_jwt = false
+
+[functions.restaurant-menu-sender]
+verify_jwt = false
+
+[functions.review-alert-checker]
+verify_jwt = false
+
+[functions.review-monitor]
+verify_jwt = false
+
+[functions.review-responder]
+verify_jwt = false
+
+[functions.review-response-sender]
+verify_jwt = false
+
+[functions.rfp-alerts]
+verify_jwt = false
+
+[functions.satisfaction-survey-sender]
+verify_jwt = false
+
+[functions.scan-workout]
+verify_jwt = false
+
+[functions.scarlett-autonomous]
+verify_jwt = false
+
+[functions.score-business-presence]
+verify_jwt = false
+
+[functions.scout-competitor-watch]
+verify_jwt = false
+
+[functions.seasonal-promo-blaster]
+verify_jwt = false
+
+[functions.selma-autonomous]
+verify_jwt = false
+
+[functions.send-affiliate-payout-report]
+verify_jwt = false
+
+[functions.send-approved-pitch]
+verify_jwt = false
+
+[functions.send-free-program]
+verify_jwt = false
+
+[functions.send-newsletter]
+verify_jwt = false
+
+[functions.send-referral]
+verify_jwt = false
+
+[functions.send-review-request]
+verify_jwt = false
+
+[functions.send-review-request-sms]
+verify_jwt = false
+
+[functions.send-test-email]
+verify_jwt = false
+
+[functions.send-transactional-email]
+verify_jwt = false
+
+[functions.send-web-design-referral]
+verify_jwt = false
+
+[functions.send-workout-email]
+verify_jwt = false
+
+[functions.seo-audit-report]
+verify_jwt = false
+
+[functions.seo-blog-publisher]
+verify_jwt = false
+
+[functions.sermon-prep]
+verify_jwt = false
+
+[functions.shield-churn-guard]
+verify_jwt = false
+
+[functions.slow-day-trigger]
+verify_jwt = false
+
+[functions.sms-performance-report]
+verify_jwt = false
+
+[functions.sms-product-monitor]
+verify_jwt = false
+
+[functions.social-connect-intake]
+verify_jwt = false
+
+[functions.social-media-poster]
+verify_jwt = false
+
+[functions.social-oauth-callback]
+verify_jwt = false
+
+[functions.social-oauth-start]
+verify_jwt = false
+
+[functions.speed-lead-responder]
+verify_jwt = false
+
+[functions.sports-newsletter-weekly]
+verify_jwt = false
+
+[functions.staff-newsletter-sender]
+verify_jwt = false
+
+[functions.storm-lead-blaster]
+verify_jwt = false
+
+[functions.str-reputation-monitor]
+verify_jwt = false
+
+[functions.stripe-webhook]
+verify_jwt = false
+
+[functions.submit-intake]
+verify_jwt = false
+
+[functions.submit-sponsor-inquiry]
+verify_jwt = false
+
+[functions.sync-stripe-products]
+verify_jwt = false
+
+[functions.test-sms]
+verify_jwt = false
+
+[functions.test-social-post]
+verify_jwt = false
+
+[functions.testimonial-harvester-sender]
+verify_jwt = false
+
+[functions.text-marketing-sender]
+verify_jwt = false
+
+[functions.thank-you-sms-sender]
+verify_jwt = false
+
+[functions.tom-autonomous]
+verify_jwt = false
+
+[functions.trade-show-automation]
+verify_jwt = false
+
+[functions.trade-show-followup-sender]
+verify_jwt = false
+
+[functions.trademark-watch-scan]
+verify_jwt = false
+
+[functions.training-newsletter-send]
+verify_jwt = false
+
+[functions.trial-72h-warning]
+verify_jwt = false
+
+[functions.trial-day6-email]
+verify_jwt = false
+
+[functions.trucking-docs-sender]
+verify_jwt = false
+
+[functions.update-family-tier]
+verify_jwt = false
+
+[functions.update-stripe-product]
+verify_jwt = false
+
+[functions.verify-program-purchase]
+verify_jwt = false
+
+[functions.verify-session-booking]
+verify_jwt = false
+
+[functions.verify-subscriber-access]
+verify_jwt = false
+
+[functions.vet-marketing-sender]
+verify_jwt = false
+
+[functions.visibility-score]
+verify_jwt = false
+
+[functions.warranty-reminder-sender]
+verify_jwt = false
+
+[functions.web-design-drip]
+verify_jwt = false
+
+[functions.web-design-winback]
+verify_jwt = false
+
+[functions.web-project-fulfillment]
+verify_jwt = false
+
+[functions.website-speed-audit]
+verify_jwt = false
+
+[functions.weekly-checkin-nudge]
+verify_jwt = false
+
+[functions.weekly-cmo-report]
+verify_jwt = false
+
+[functions.weekly-sms-sender]
+verify_jwt = false
+
+[functions.weekly-streak-check]
+verify_jwt = false
+
+[functions.welcome-drip-sender]
+verify_jwt = false
+
+[functions.winback-sms-sender]
+verify_jwt = false
+
+[functions.yoda-retain]
+verify_jwt = false
+
+[functions.create-seo-guard-checkout]
+verify_jwt = false
+
+[functions.seo-guard-runner]
+verify_jwt = false
+
+[functions.create-commercial-lease-checkout]
+verify_jwt = false
+
+[functions.create-patent-watch-checkout]
+verify_jwt = false
+
+[functions.create-pe-intelligence-checkout]
+verify_jwt = false
+
+[functions.create-rd-intelligence-checkout]
+verify_jwt = false
+
+[functions.create-credit-dispute-checkout]
+verify_jwt = false
+
+[functions.create-medical-bill-checkout]
+verify_jwt = false
+
+[functions.create-supplement-analyzer-checkout]
+verify_jwt = false
+
+[functions.create-trade-association-checkout]
+verify_jwt = false
+
+[functions.create-luxury-re-checkout]
+verify_jwt = false
+
+[functions.comply-monitor]
+verify_jwt = false
+
+[functions.cashier-dunning]
+verify_jwt = false
+
+[functions.shield-winback]
+verify_jwt = false
+
+[functions.nova-onboarding]
+verify_jwt = false
+
+[functions.drill-content-monitor]
+verify_jwt = false
+
+[functions.remote-control]
+verify_jwt = false
+
+[functions.create-field-service-checkout]
+verify_jwt = false
+
+[functions.field-service-sms]
+verify_jwt = false
+
+[functions.field-service-contract-scheduler]
+verify_jwt = false
+
+[functions.create-hire-alert-checkout]
+verify_jwt = false
+
+[functions.hire-alert-scanner]
+verify_jwt = false
+
+[functions.dead-lead-drip]
+verify_jwt = false
+
+[functions.handle-dead-lead-reply]
+verify_jwt = false
+
+[functions.inbound-sms-relay]
+verify_jwt = false
+
+[functions.code-fixer-watchdog]
+verify_jwt = false
+
+[functions.claim-session]
+verify_jwt = false
+
+[functions.create-site-radar-checkout]
+verify_jwt = false
+
+[functions.voicemail-transcription-handler]
+verify_jwt = false
+
+[functions.callback-reminder-sender]
+verify_jwt = false
+
+[functions.site-radar-repeat-alert]
+verify_jwt = false
+
+[functions.site-radar-weekly-digest]
+verify_jwt = false
+
+[functions.site-radar-health-check]
+verify_jwt = false
+
+[functions.nps-survey-sender]
+verify_jwt = false
+
+[functions.create-customer-portal-session]
+verify_jwt = false
+
+[functions.missed-call-escalation]
+verify_jwt = false
+
+[functions.contractor-roi-sms]
+verify_jwt = false
+
+[functions.contractor-roi-report]
+verify_jwt = false
+
+[functions.dead-lead-outreach-drip]
+verify_jwt = false
+
+[functions.dead-lead-daily-notifier]
+verify_jwt = false
+
+[functions.dead-lead-intake]
+verify_jwt = false
+
+[functions.dead-lead-billing-setup]
+verify_jwt = false
+
+[functions.dead-lead-stats]
+verify_jwt = false
+
+[functions.hire-alert-public-stats]
+verify_jwt = false
+
+[functions.hire-alert-founder-report]
+verify_jwt = false
+
+[functions.hire-alert-client-drip]
+verify_jwt = false
+
+[functions.dwa-operator]
+verify_jwt = false
+
+[functions.dwa-closer]
+verify_jwt = false
+
+[functions.get-techalert-signals]
+verify_jwt = false
+
+[functions.client-revenue-recovered]
+verify_jwt = false
+
+[functions.get-contractor-signals]
+verify_jwt = false
+
+[functions.generate-demo-report]
+verify_jwt = false
+
+[functions.create-domain-breach-checkout]
+verify_jwt = false
+
+[functions.deliver-domain-breach-report]
+verify_jwt = false
+
+[functions.create-keyword-gap-checkout]
+verify_jwt = false
+
+[functions.deliver-keyword-gap-report]
+verify_jwt = false
+
+[functions.agency-distribute-candidates]
+verify_jwt = false
+
+[functions.agency-fast-track-interview]
+verify_jwt = false
+
+[functions.create-agency-checkout]
+verify_jwt = false
+
+[functions.agency-outreach-draft]
+verify_jwt = false
+
+[functions.agency-monthly-flip]
+verify_jwt = false
+
+[functions.agency-proof-drop-followup]
+verify_jwt = false
+
+[functions.agency-mark-ghosted]
+verify_jwt = false
+
+[functions.agency-payment-reconcile]
+verify_jwt = false
+
+[functions.industrial-growth-intel]
+verify_jwt = false
+
+[functions.demand-radar-digest]
+verify_jwt = false
+
+[functions.demand-radar-portal-data]
+verify_jwt = false
+
+[functions.supplier-outreach-draft]
+verify_jwt = false
+
+[functions.msp-inquiry-submit]
+verify_jwt = false
+
+[functions.cron-sentinel]
+verify_jwt = false
+
+[functions.cron-zero-output-watchdog]
+verify_jwt = false
+
+[functions.verify-candidate-phones]
+verify_jwt = false
+
+[functions.enrich-candidates]
+verify_jwt = false
+
+[functions.send-mock-trial-emails]
+verify_jwt = false
+
+[functions.test-pdl-premium]
+verify_jwt = false
+
+[functions.log-industry-pulse-action]
+verify_jwt = false
+
+[functions.industry-pulse-client-drip]
+verify_jwt = false
+
+[functions.get-job-status]
+verify_jwt = false
+
+[functions.get-fielddesk-onboarding]
+verify_jwt = false
+
+[functions.contractor-leads-dashboard]
+verify_jwt = false
+
+[functions.endpoint-drift-detector]
+verify_jwt = false
+
+[functions.service-health-monitor]
+verify_jwt = false
+
+[functions.lead-enrichment-waterfall]
+verify_jwt = false
+
+[functions.lob-webhook]
+verify_jwt = false
+
+[functions.postcard-tracking-digest]
+verify_jwt = false
+
+[functions.prospect-nudge-status-callback]
+verify_jwt = false
+
+[functions.prospect-nudge-retry]
+verify_jwt = false
+
+[functions.prospect-nudge-request-approval]
+verify_jwt = false
+
+[functions.industrial-pulse-unlock-preview]
+verify_jwt = false
+
+[functions.verify-industrial-pulse-session]
+verify_jwt = false
+
+[functions.generate-signal-dossier]
+verify_jwt = false
+
+[functions.prospect-email-backfill]
+verify_jwt = false
+
+[functions.activate-idle-prospects]
+verify_jwt = false
+
+[functions.enrich-prospect-pool]
+verify_jwt = false
+
+[functions.verify-dashboard-token]
+verify_jwt = false
+
+[functions.get-my-missed-call]
+verify_jwt = false
+
+[functions.create-marketplace-lead-checkout]
+verify_jwt = false
+
+[functions.marketplace-generate-dossier-pdf]
+verify_jwt = false
+
+[functions.marketplace-share-token]
+verify_jwt = false
+
+[functions.marketplace-saved-search-notifier]
+verify_jwt = false
+
+[functions.marketplace-lead-free-enrich]
+verify_jwt = false
+
+[functions.marketplace-lead-free-enrich-batch]
+verify_jwt = false
+
+[functions.marketplace-buyer-receipts]
+verify_jwt = false
+
+[functions.create-marketplace-first-look-checkout]
+verify_jwt = false
+
+[functions.marketplace-lead-gov-enrich]
+verify_jwt = false
+
+[functions.marketplace-hot-zone-notifier]
+verify_jwt = false
+
+[functions.marketplace-score-bump-alert]
+verify_jwt = false
+
+[functions.marketplace-weekly-scorecard]
+verify_jwt = false
+
+[functions.marketplace-buyer-welcome]
+verify_jwt = false
+
+[functions.marketplace-watch-price-drop]
+verify_jwt = false
+
+[functions.marketplace-reengagement]
+verify_jwt = false
+
+[functions.marketplace-watched-leads]
+verify_jwt = false
+
+[functions.marketplace-watch-add]
+verify_jwt = false
+
+[functions.marketplace-lead-summarize]
+verify_jwt = false
+
+[functions.anniversary-notice-sender]
+verify_jwt = false
+
+[functions.create-mortgage-radar-checkout]
+verify_jwt = false
+
+[functions.check-mortgage-radar-zips]
+verify_jwt = false
+
+[functions.trial-attribution-log]
+verify_jwt = false
+
+[functions.create-field-crm-checkout]
+verify_jwt = false
+
+[functions.create-bundle-revenue-suite-checkout]
+verify_jwt = false
+
+[functions.create-bundle-90day-checkout]
+verify_jwt = false
+
+[functions.demo-reminder-dispatcher]
+verify_jwt = false
+
+[functions.marketplace-outreach-blast]
+verify_jwt = false
+
+[functions.mortgage-radar-scanner]
+verify_jwt = false
+
+[functions.mortgage-radar-enrich-drain]
+verify_jwt = false
+
+[functions.mortgage-radar-am-digest]
+verify_jwt = false
+
+[functions.mortgage-radar-weekly-digest]
+verify_jwt = false
+
+[functions.mortgage-radar-health-check]
+verify_jwt = false
+
+[functions.mortgage-radar-digest]
+verify_jwt = false
+
+[functions.mortgage-radar-enrich]
+verify_jwt = false
+
+[functions.mortgage-radar-outreach]
+verify_jwt = false
+
+[functions.mortgage-radar-send-preview]
+verify_jwt = false
+
+[functions.visitor-identify]
+verify_jwt = false
+
+[functions.techalert-prospect-hunter]
+verify_jwt = false
+
+[functions.techalert-enrich]
+verify_jwt = false
+
+[functions.techalert-outreach]
+verify_jwt = false
+
+[functions.techalert-healthcare-scanner]
+verify_jwt = false
+
+[functions.techalert-reply-handler]
+verify_jwt = false
+
+[functions.seed-nursing-home-prospects]
+verify_jwt = false
+
+[functions.techalert-followup-drip]
+verify_jwt = false
+
+[functions.channel-prospector-followup]
+verify_jwt = false
+
+[functions.outreach-leads-enrich]
+verify_jwt = false
+
+[functions.outreach-followup-drip]
+verify_jwt = false
+
+[functions.outreach-dead-lead-seed]
+verify_jwt = false
+
+[functions.weekly-admin-digest]
+verify_jwt = false
+
+[functions.health-check-supabase]
+verify_jwt = false
+
+[functions.agency-contact-enrich]
+verify_jwt = false
+
+[functions.gmail-send-outreach]
+verify_jwt = false
+
+[functions.contractor-outreach-scrape]
+verify_jwt = false
+
+[functions.contractor-outreach-enrich]
+verify_jwt = false
+
+[functions.contractor-outreach-email-blast]
+verify_jwt = false
+
+[functions.contractor-outreach-unsubscribe]
+verify_jwt = false
+
+[functions.contractor-outreach-auto-blast]
+verify_jwt = false
+
+[functions.contractor-outreach-statewide-sweep]
+verify_jwt = false
+
+[functions.contractor-outreach-statewide-enrich]
+verify_jwt = false
+
+[functions.outreach-one-press]
+verify_jwt = false
+
+[functions.agency-prospect-pool]
+verify_jwt = false
+
+[functions.outreach-lead-enrich-email]
+verify_jwt = true
+
+[functions.outreach-gmail-send]
+verify_jwt = true
+
+[functions.cold-email-rank-buyers]
+verify_jwt = true
+
+[functions.buyer-contact-enrich]
+verify_jwt = true
+
+[functions.cold-email-bandit-pick]
+verify_jwt = true
+
+[functions.cold-email-quality-gate]
+verify_jwt = true
+
+[functions.cold-email-generate-row]
+verify_jwt = true
+
+[functions.cold-email-bulk-queue]
+verify_jwt = true
+
+[functions.dossier-share-page]
+verify_jwt = false
+
+[functions.m2-brief-apology-send]
+verify_jwt = false
+
+[functions.nursys-enroll-batch]
+verify_jwt = false
+
+[functions.intent-score-recompute]
+verify_jwt = false
+
+[functions.compute-intent-score]
+verify_jwt = true
+
+[functions.geocode-signals-batch]
+verify_jwt = false
+
+[functions.generate-account-narrative]
+verify_jwt = true
+
+[functions.intent-spike-notifier]
+verify_jwt = false
+
+[functions.intent-weekly-digest]
+verify_jwt = false
+
+[functions.techalert-auto-pitch]
+verify_jwt = false
+
+[functions.competitor-displacement-detector]
+verify_jwt = false
+
+[functions.outreach-queue-action]
+verify_jwt = false
+
+[functions.hiring-velocity-tracker]
+verify_jwt = false
+
+[functions.rfp-keyword-bounty]
+verify_jwt = false
+
+[functions.signal-triggered-sms-draft]
+verify_jwt = false
+
+[functions.cohort-campaign-builder]
+verify_jwt = false
+
+[functions.outreach-queue-worker]
+verify_jwt = false
+
+[functions.resend-bounce-webhook]
+verify_jwt = false
+
+[functions.missed-call-prospect-scanner]
+verify_jwt = false
+
+[functions.outreach-prospect-replenisher]
+verify_jwt = false
+
+[functions.outreach-reply-handler]
+verify_jwt = false
+
+[functions.outreach-backlog-watchdog]
+verify_jwt = false
+
+[functions.contractor-outreach-enrich-backfill]
+verify_jwt = false
+
+[functions.enrichment-e2e-verify]
+verify_jwt = false
+
+[functions.enrichment-matrix-walker]
+verify_jwt = false
+
+[functions.outreach-alert-evaluator]
+verify_jwt = false
+
+[functions.cron-health-monitor]
+verify_jwt = false
+
+[functions.alert-rule-tester]
+verify_jwt = false
+
+[functions.enrichment-rerun-batch]
+verify_jwt = false
+
+[functions.contractor-outreach-sms-send]
+verify_jwt = false
+
+[functions.mortgage-radar-founder-invite]
+verify_jwt = false
+
+[functions.healthcare-sources-rerun]
+verify_jwt = false
+
+[functions.nursys-enroll]
+verify_jwt = false
+
+[functions.quarantine-daily-report]
+verify_jwt = false
+
+[functions.edge-function-health-check]
+verify_jwt = false
+
+[functions.env-validator]
+verify_jwt = false
+
+[functions.intent-score-decay]
+verify_jwt = false
+
+[functions.orphan-scan]
+verify_jwt = false
+
+[functions.validate-osint-secrets]
+verify_jwt = false
+
+[functions.techalert-hot-candidate-notify]
+verify_jwt = false
+
+[functions.agency-prospect-list-blast]
+verify_jwt = false
+
+[functions.generate-dead-lead-campaign]
+verify_jwt = false
+
+[functions.siteredar-self-pitch]
+verify_jwt = false
+
+[functions.haro-monitor]
+verify_jwt = false
+
+[functions.sitemap-hire]
+verify_jwt = false
+
+[functions.dwa-contractor-referral]
+verify_jwt = false
+
+[functions.dwa-autopilot-sweep]
+verify_jwt = false
+
+[functions.dwa-v4-roofing-enrich]
+verify_jwt = false
+
+[functions.dwa-v4-stripe-reconcile-diff]
+verify_jwt = false
+
+[functions.send-djconley-pitch-v2]
+verify_jwt = false
+
+[functions.send-djconley-proposal-v3]
+verify_jwt = false
+
+[functions.send-djconley-followup-sms]
+verify_jwt = false
+
+[functions.send-stewart-dental-proposal]
+verify_jwt = false
+
+[functions.send-youngblood-proposal]
+verify_jwt = false
+
+[functions.notify-matt-trial-fail]
+verify_jwt = false
+
+[functions.trial-daily-digest]
+verify_jwt = false
+
+[functions.run-migration-once]
+verify_jwt = false
+
+[functions.start-radar-trial]
+verify_jwt = false
+
+[functions.outreach-email-blast]
+verify_jwt = true
+
+[functions.outreach-fax-blast]
+verify_jwt = true
+
+[functions.outreach-postcard-blast]
+verify_jwt = true
+
+[functions.outreach-target-discover]
+verify_jwt = false
+
+[functions.data-source-fetch]
+verify_jwt = false
+
+[functions.outreach-target-enrich-backfill]
+verify_jwt = false
+
+[functions.trade-radar-scanner]
+verify_jwt = false
+
+[functions.trade-radar-health-check]
+verify_jwt = false
+
+[functions.trade-radar-dashboard]
+verify_jwt = false
+
+[functions.trade-radar-am-digest]
+verify_jwt = false
+
+[functions.trade-radar-weekly-digest]
+verify_jwt = false
+
+[functions.cold-email-volume-sentinel]
+verify_jwt = false
+
+[functions.cold-email-rebalancer]
+verify_jwt = false
+
+[functions.enrichment-kpi-monitor]
+verify_jwt = false
+
+[functions.cold-email-daily-economics]
+verify_jwt = false
+
+[functions.scanner-health-matrix]
+verify_jwt = false
+
+[functions.hubspot-form-webhook]
+verify_jwt = false
+
+[functions.hubspot-bootstrap-properties]
+verify_jwt = false
+
+[functions.trial-sla-watchdog]
+verify_jwt = false
+
+[functions.resend-email-by-message]
+verify_jwt = false
+
+[functions.dwa-product-blast]
+verify_jwt = false
+
+[functions.fielddesk-cold-blast]
+verify_jwt = false
+
+[functions.siteradar-cold-blast]
+verify_jwt = false
+
+[functions.trade-radar-outreach]
+verify_jwt = false
+
+[functions.trade-radar-urgency-alert]
+verify_jwt = false
+
+[functions.data-retention-cleanup]
+verify_jwt = false
+
+[functions.email-deliverability-check]
+verify_jwt = false
+
+[functions.field-crm-monthly-proof]
+verify_jwt = false
+
+[functions.site-radar-monthly-proof]
+verify_jwt = false
+
+[functions.siteradar-ai-opener]
+verify_jwt = false
+
+[functions.siteradar-webhook-alert]
+verify_jwt = false
+
+[functions.siteradar-install-concierge]
+verify_jwt = false
+
+[functions.missed-call-monthly-proof]
+verify_jwt = false
+
+[functions.dwa-abandoned-cart]
+verify_jwt = false
+
+[functions.trade-radar-referral]
+verify_jwt = false
+
+[functions.trade-radar-api]
+verify_jwt = false
+
+[functions.create-dead-lead-campaign-checkout]
+verify_jwt = false
+
+[functions.admin-daily-clicks-digest]
+verify_jwt = false
+
+[functions.trial-abandonment-sweeper]
+verify_jwt = false
+
+[functions.list-my-trials]
+verify_jwt = false
+
+[functions.trial-reactivation-send]
+verify_jwt = false
+
+[functions.resend-trial-invites]
+verify_jwt = false
+
+[functions.seed-mortgage-radar-trial-queue]
+verify_jwt = false
+
+[functions.talent-radar-nurse-scanner]
+verify_jwt = false
+
+[functions.talent-radar-cdl-scanner]
+verify_jwt = false
+
+[functions.talent-radar-phone-validate]
+verify_jwt = false
+
+[functions.apollo-health]
+verify_jwt = false
+
+[functions.test-apollo]
+verify_jwt = false
+
+[functions.demand-radar-magic-link]
+verify_jwt = false
+
+[functions.hub-summary]
+verify_jwt = false
+
+[functions.tenant-intel-search]
+verify_jwt = false
+
+[functions.talent-ingest]
+verify_jwt = false
+
+[functions.talent-seed-bulk]
+verify_jwt = false
+
+[functions.talent-state-prospect-hunter]
+verify_jwt = false
+
+[functions.talent-outreach-threshold-check]
+verify_jwt = false
+
+[functions.talent-ingest-digest]
+verify_jwt = false
+
+[functions.send-teaser-email]
+verify_jwt = false
+
+[functions.build-talent-prospect-list]
+verify_jwt = false
+
+[functions.agency-blast-scheduler]
+verify_jwt = false
+
+[functions.notify-source-promoted]
+verify_jwt = false
+
+[functions.counsel-search]
+verify_jwt = false
+
+[functions.create-counsel-search-checkout]
+verify_jwt = false
+
+[functions.create-counsel-beta-invite]
+verify_jwt = false
+
+[functions.counsel-prospect-hunter]
+verify_jwt = false
+
+[functions.counsel-prospect-enrich]
+verify_jwt = false
+
+[functions.counsel-cold-outreach]
+verify_jwt = false
+
+[functions.counsel-followup-drip]
+verify_jwt = false
+
+[functions.counsel-dashboard-load]
+verify_jwt = false
+
+[functions.scanner-extras-verify]
+verify_jwt = false
+
+[functions.scanner-source-admin]
+verify_jwt = false
+
+[functions.checkout-dispatcher]
+verify_jwt = false
+
+[functions.ai-writer-dispatcher]
+verify_jwt = false
+
+[functions.resend-webhook]
+verify_jwt = false
+
+[functions.carealert-monthly-report]
+verify_jwt = false
+
+[functions.radar-crm-push]
+verify_jwt = false
+
+[functions.mortgage-radar-lo-blast]
+verify_jwt = false
+
+[functions.find-lo-prospects]
+verify_jwt = false
+
+[functions.enrich-lo-prospect]
+verify_jwt = false
+
+[functions.onboarding-send]
+verify_jwt = false
+
+[functions.onboarding-followup]
+verify_jwt = false
+
+[functions.hoa-lead-magnet-capture]
+verify_jwt = false
+
+[functions.hoa-cold-outreach]
+verify_jwt = false
+
+
+[functions.kalshi-trader]
+verify_jwt = false
+
+[functions.trading-monitor]
+verify_jwt = false

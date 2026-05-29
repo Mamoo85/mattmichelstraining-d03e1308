@@ -1,0 +1,130 @@
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import Stripe from "npm:stripe@18.5.0";
+import { createClient } from "npm:@supabase/supabase-js@2";
+
+const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { apiVersion: "2025-08-27.basil" });
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
+const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+const BASE_URL = "https://www.mattmichelstraining.com";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+const PRODUCTS = {
+  website_audit: {
+    name: "AI Website Audit Report",
+    description: "Instant AI-generated audit of your website: SEO, mobile, trust signals, local ranking, and actionable recommendations with how-to-fix steps. Delivered to your inbox within 60 seconds.",
+    amount: 900,
+    success_path: "/ai-website-audit?success=1",
+    cancel_path: "/ai-website-audit",
+  },
+  gbp_post_pack: {
+    name: "AI Google Business Profile Post Pack (30 Posts)",
+    description: "30 ready-to-schedule GBP posts generated specifically for your business. 3 months of content with seasonal calendar, image prompts, and posting tips. Delivered instantly.",
+    amount: 1900,
+    success_path: "/ai-gbp-post-pack?success=1",
+    cancel_path: "/ai-gbp-post-pack",
+  },
+  competitor_report: {
+    name: "AI Local Competitor Analysis Report",
+    description: "AI-generated competitive landscape for your local market: nearby competitors, win rates, SWOT analysis, review gaps, and a 30-day action sprint. Delivered to your inbox.",
+    amount: 900,
+    success_path: "/ai-competitor-report?success=1",
+    cancel_path: "/ai-competitor-report",
+  },
+} as const;
+
+type ProductKey = keyof typeof PRODUCTS;
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+  try {
+    const body = await req.json();
+    const { product_type, email, business_name, business_url, city, industry, business_info } = body;
+
+    if (!product_type || !email) {
+      return new Response(JSON.stringify({ error: "product_type and email are required" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const product = PRODUCTS[product_type as ProductKey];
+    if (!product) {
+      return new Response(JSON.stringify({ error: "Invalid product type" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+    let orderId: string | null = null;
+
+    // Pre-insert a pending order so we have context when the webhook fires
+    if (product_type === "website_audit") {
+      const { data } = await sb.from("audit_orders").insert({
+        email,
+        business_name: business_name || null,
+        business_url: business_url || null,
+        status: "pending",
+      }).select("id").single();
+      orderId = data?.id ?? null;
+    } else if (product_type === "gbp_post_pack") {
+      const { data } = await sb.from("gbp_post_packs").insert({
+        email,
+        business_name: business_name || null,
+        business_info: JSON.stringify({ city, industry, business_info }),
+        status: "pending",
+      }).select("id").single();
+      orderId = data?.id ?? null;
+    } else if (product_type === "competitor_report") {
+      const { data } = await sb.from("competitor_reports").insert({
+        email,
+        business_name: business_name || null,
+        city: city || null,
+        industry: industry || null,
+        status: "pending",
+      }).select("id").single();
+      orderId = data?.id ?? null;
+    }
+
+    const session = await stripe.checkout.sessions.create({
+      mode: "payment",
+      payment_method_types: ["card"],
+      customer_email: email,
+      line_items: [{
+        price_data: {
+          currency: "usd",
+          unit_amount: product.amount,
+          product_data: {
+            name: product.name,
+            description: product.description,
+          },
+        },
+        quantity: 1,
+      }],
+      metadata: {
+        type: product_type,
+        email,
+        business_name: business_name || "",
+        business_url: business_url || "",
+        city: city || "",
+        industry: industry || "",
+        business_info: business_info || "",
+        order_id: orderId || "",
+      },
+      success_url: `${BASE_URL}${product.success_path}&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${BASE_URL}${product.cancel_path}`,
+    });
+
+    return new Response(JSON.stringify({ url: session.url }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (err: any) {
+    console.error("[create-report-checkout]", err);
+    return new Response(JSON.stringify({ error: err.message }), {
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+});

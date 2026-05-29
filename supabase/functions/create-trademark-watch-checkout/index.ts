@@ -73,8 +73,8 @@ serve(async (req) => {
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "M² System <matt@mattmichelstraining.com>",
-          to: ["matt@mattmichelstraining.com"],
+          from: "M² System <matt@detroitwebagent.com>",
+          to: ["matt@detroitwebagent.com"],
           bcc: ["matthewmichels4@gmail.com"],
           subject: `New Trademark Watch checkout — ${mark_text} (${company_name || customer_email})`,
           html: `<p>Trademark Watch checkout started:<br><strong>${company_name || customer_name || customer_email}</strong><br>${customer_email}<br>Mark: <strong>${mark_text}</strong><br>Classes: ${nice_classes || "n/a"}<br>G&amp;S: ${goods_services || "n/a"}<br>Price: $49/mo</p>`,

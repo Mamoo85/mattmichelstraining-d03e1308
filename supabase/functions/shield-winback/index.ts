@@ -8,7 +8,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
-const MATT_EMAIL = "matt@mattmichelstraining.com";
+const MATT_EMAIL = "matt@detroitwebagent.com";
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
@@ -84,7 +84,7 @@ async function processSequences() {
       method: "POST",
       headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        from: "Matt at M² <matt@mattmichelstraining.com>",
+        from: "Matt at M² <matt@detroitwebagent.com>",
         to: [seq.customer_email],
         subject,
         html: `
@@ -92,7 +92,7 @@ async function processSequences() {
             <img src="https://mattmichelstraining.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;margin-bottom:16px" />
             ${body}
             <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0" />
-            <p style="color:#94a3b8;font-size:12px">M² Development · matt@mattmichelstraining.com · (313) 992-1219<br>
+            <p style="color:#94a3b8;font-size:12px">M² Development · matt@detroitwebagent.com · (313) 992-1219<br>
             <a href="https://mattmichelstraining.com/unsubscribe?email=${encodeURIComponent(seq.customer_email)}" style="color:#94a3b8">Unsubscribe</a></p>
           </div>`,
       }),

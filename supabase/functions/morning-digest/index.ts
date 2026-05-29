@@ -268,8 +268,8 @@ serve(async () => {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: "matt@mattmichelstraining.com",
-      to: "matt@mattmichelstraining.com",
+      from: "matt@detroitwebagent.com",
+      to: "matt@detroitwebagent.com",
       subject,
       html,
     }),

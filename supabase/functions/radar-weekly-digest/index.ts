@@ -81,7 +81,7 @@ Deno.serve(async (req) => {
       if (!(client as any).owner_email || !(client as any).notify_email) continue;
 
       const { data: rows } = await sb
-        .from("hire_alert_client_candidates")
+        .from("hire_REDACTED")
         .select("candidate_id, alerted_at, hire_alert_candidates(full_name, name, license_type, trade, city, score, availability_score)")
         .eq("client_id", client.id)
         .gte("alerted_at", sevenDaysAgo)

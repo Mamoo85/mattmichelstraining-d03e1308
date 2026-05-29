@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Trade Radar v2</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background:#050e08;
+    display:flex; justify-content:center; align-items:center;
+    min-height:100vh;
+    font-family:-apple-system,'SF Pro Display','Helvetica Neue',sans-serif;
+  }
+
+  .scene { width:390px; height:844px; background:#050e08; position:relative; overflow:hidden; }
+
+  /* Hook overlay */
+  .hook-overlay {
+    position:absolute; inset:0; z-index:80;
+    background:#050e08;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    gap:14px; padding:40px;
+    opacity:0; transition:opacity .4s ease;
+  }
+  .hook-overlay.visible { opacity:1; }
+  .hook-line {
+    font-size:50px; font-weight:900; color:#fff;
+    text-align:center; line-height:1.05; letter-spacing:-1px;
+    opacity:0; transform:translateY(20px);
+    transition:all .5s cubic-bezier(.34,1.2,.64,1);
+  }
+  .hook-line.in { opacity:1; transform:translateY(0); }
+  .hook-line.accent { color:#2ecc71; }
+  .hook-line.small { font-size:20px; font-weight:600; color:rgba(255,255,255,.45); margin-top:6px; }
+
+  /* Phone wrap */
+  .phone-wrap {
+    position:absolute; top:50%; left:50%;
+    transform:translate(-50%,-50%);
+    width:330px; height:714px;
+    opacity:0; transition:opacity .5s ease; z-index:10;
+  }
+  .phone-wrap.visible { opacity:1; }
+
+  .phone {
+    width:100%; height:100%; background:#000;
+    border-radius:44px; overflow:hidden; position:relative;
+    box-shadow:0 0 0 10px #111, 0 0 0 12px #222, 0 30px 60px rgba(0,0,0,.9);
+  }
+
+  .sb {
+    position:absolute; top:0; left:0; right:0; z-index:100;
+    display:flex; justify-content:space-between; align-items:center;
+    padding:14px 24px 0; color:#fff; font-size:16px; font-weight:700;
+  }
+
+  .di {
+    position:absolute; top:10px; left:50%;
+    transform:translateX(-50%);
+    width:120px; height:34px; background:#000; border-radius:18px; z-index:200;
+  }
+
+  /* Lock screen */
+  .scr-lock {
+    position:absolute; inset:0;
+    background:linear-gradient(170deg,#061410 0%,#020a06 100%);
+    opacity:0; transition:opacity .5s ease; z-index:20;
+    display:flex; flex-direction:column; align-items:center;
+  }
+  .scr-lock.visible { opacity:1; }
+
+  .lock-time { font-size:80px; font-weight:200; color:#fff; margin-top:90px; letter-spacing:-3px; }
+  .lock-date { font-size:18px; color:rgba(255,255,255,.55); margin-top:2px; }
+
+  .push-card {
+    position:absolute; top:230px; left:12px; right:12px;
+    background:rgba(20,36,24,.92); backdrop-filter:blur(20px);
+    border-radius:18px; overflow:hidden;
+    border:.5px solid rgba(255,255,255,.1);
+    opacity:0; transform:translateY(-18px) scale(.96);
+    transition:all .55s cubic-bezier(.34,1.2,.64,1);
+  }
+  .push-card.in { opacity:1; transform:translateY(0) scale(1); }
+
+  .push-hdr {
+    display:flex; align-items:center; gap:8px;
+    padding:12px 16px 6px;
+  }
+  .push-icon {
+    width:28px; height:28px; border-radius:7px;
+    background:linear-gradient(135deg,#1a7a3c,#2ecc71);
+    display:flex; align-items:center; justify-content:center; font-size:15px;
+  }
+  .push-app { color:rgba(255,255,255,.5); font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:.5px; }
+  .push-time { margin-left:auto; color:rgba(255,255,255,.4); font-size:12px; }
+  .push-title { padding:0 16px 6px; color:#fff; font-size:20px; font-weight:800; }
+  .push-body  { padding:0 16px; color:rgba(255,255,255,.6); font-size:16px; }
+
+  .push-lead-row {
+    margin:10px 12px 12px;
+    background:rgba(46,204,113,.1); border:1px solid rgba(46,204,113,.25);
+    border-radius:12px; padding:12px 14px;
+    display:flex; align-items:center; gap:10px;
+  }
+  .lead-dot { width:12px; height:12px; border-radius:6px; background:#2ecc71; box-shadow:0 0 10px rgba(46,204,113,.7); flex-shrink:0; }
+  .lead-name { color:#fff; font-size:18px; font-weight:700; }
+  .lead-detail { color:rgba(255,255,255,.5); font-size:14px; }
+  .lead-dist { color:#2ecc71; font-size:18px; font-weight:800; margin-left:auto; }
+
+  /* App screen */
+  .scr-app {
+    position:absolute; inset:0; background:#f2f2f7;
+    opacity:0; transition:opacity .4s ease; z-index:22;
+  }
+  .scr-app.visible { opacity:1; }
+
+  .app-hdr {
+    background:linear-gradient(135deg,#147a32,#0f5c25);
+    padding:52px 20px 18px; color:#fff;
+  }
+  .app-hdr-row { display:flex; align-items:center; justify-content:space-between; }
+  .app-name { font-size:26px; font-weight:900; }
+  .app-sub  { font-size:14px; opacity:.7; margin-top:2px; }
+  .live-pill {
+    background:rgba(255,255,255,.2); border:1px solid rgba(255,255,255,.3);
+    border-radius:20px; padding:5px 12px;
+    font-size:13px; font-weight:800; display:flex; align-items:center; gap:6px;
+  }
+  .live-dot { width:8px; height:8px; border-radius:4px; background:#2ecc71; animation:lp 1.2s ease infinite; }
+  @keyframes lp { 0%,100%{opacity:1} 50%{opacity:.2} }
+
+  .leads-list { padding:14px 14px; display:flex; flex-direction:column; gap:12px; }
+  .sec-lbl { font-size:13px; font-weight:700; color:#8e8e93; text-transform:uppercase; letter-spacing:.6px; padding:2px 0; }
+
+  .lead-card {
+    background:#fff; border-radius:16px;
+    padding:16px 14px;
+    box-shadow:0 2px 8px rgba(0,0,0,.08);
+    display:flex; align-items:center; gap:12px;
+    opacity:0; transform:translateX(24px);
+    transition:all .45s cubic-bezier(.34,1.1,.64,1);
+    position:relative; overflow:hidden;
+  }
+  .lead-card.in { opacity:1; transform:translateX(0); }
+  .lead-card.new { border-left:4px solid #2ecc71; }
+  .lead-card.new::after {
+    content:'NEW'; position:absolute; top:8px; right:10px;
+    background:#2ecc71; color:#fff; font-size:10px; font-weight:900;
+    letter-spacing:.5px; padding:3px 8px; border-radius:6px;
+  }
+
+  .lead-av {
+    width:48px; height:48px; border-radius:24px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:24px; flex-shrink:0;
+  }
+  .av-hvac { background:#e8f5e9; }
+  .av-pl   { background:#e3f2fd; }
+
+  .lead-nm   { font-size:19px; font-weight:800; color:#1c1c1e; }
+  .lead-need { font-size:15px; color:#555; margin-top:2px; }
+  .lead-tags { display:flex; gap:6px; margin-top:6px; flex-wrap:wrap; }
+  .tag {
+    font-size:13px; font-weight:700; border-radius:7px; padding:3px 9px;
+  }
+  .tag-u { background:#fff0f0; color:#ff3b30; }
+  .tag-d { background:#f0f4ff; color:#007aff; }
+  .tag-e { background:#f0fff4; color:#2ecc71; }
+
+  .acc-btn {
+    background:#2ecc71; border:none; border-radius:12px;
+    padding:10px 16px; color:#fff; font-size:16px; font-weight:800;
+    cursor:pointer; flex-shrink:0;
+    transition:transform .15s ease;
+  }
+  .acc-btn:active, .acc-btn.tap { transform:scale(.9); }
+
+  /* Confirm screen */
+  .scr-confirm {
+    position:absolute; inset:0; background:#000;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    padding:36px; gap:16px; text-align:center;
+    opacity:0; transition:opacity .4s ease; z-index:26;
+  }
+  .scr-confirm.visible { opacity:1; }
+  .check-ring {
+    width:90px; height:90px; border-radius:45px;
+    background:#2ecc71; display:flex; align-items:center; justify-content:center;
+    font-size:44px; box-shadow:0 0 40px rgba(46,204,113,.45);
+    transform:scale(0); transition:transform .5s cubic-bezier(.34,1.56,.64,1);
+  }
+  .check-ring.pop { transform:scale(1); }
+  .conf-title { font-size:30px; font-weight:900; color:#fff; }
+  .conf-sub   { font-size:17px; color:rgba(255,255,255,.5); line-height:1.5; }
+  .conf-text-box {
+    background:rgba(46,204,113,.08); border:1.5px solid rgba(46,204,113,.25);
+    border-radius:14px; padding:14px 16px; width:100%;
+    opacity:0; transform:translateY(10px);
+    transition:all .45s ease;
+  }
+  .conf-text-box.in { opacity:1; transform:translateY(0); }
+  .conf-text-lbl { font-size:12px; font-weight:800; color:#2ecc71; text-transform:uppercase; letter-spacing:.5px; margin-bottom:6px; }
+  .conf-text-msg { font-size:17px; color:rgba(255,255,255,.75); line-height:1.5; }
+
+  /* Final */
+  .scr-final {
+    position:absolute; inset:0;
+    background:linear-gradient(170deg,#071a0f 0%,#020a05 100%);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:36px; gap:16px; text-align:center;
+    opacity:0; transition:opacity .6s ease; z-index:30;
+  }
+  .scr-final.visible { opacity:1; }
+  .final-ico  { font-size:60px; }
+  .final-logo { font-size:12px; font-weight:800; color:#2ecc71; letter-spacing:2px; text-transform:uppercase; }
+  .final-title{ font-size:44px; font-weight:900; color:#fff; letter-spacing:-1px; line-height:1.0; }
+  .final-sub  { font-size:17px; color:rgba(255,255,255,.5); line-height:1.5; }
+  .final-stat {
+    background:rgba(46,204,113,.1); border:1.5px solid rgba(46,204,113,.3);
+    border-radius:14px; padding:14px 20px; width:100%;
+  }
+  .final-stat-txt { color:#2ecc71; font-size:22px; font-weight:900; line-height:1.3; }
+  .final-cta {
+    background:#2ecc71; color:#fff; border:none;
+    border-radius:16px; padding:18px; font-size:20px;
+    font-weight:900; width:100%; cursor:pointer;
+  }
+  .final-price { color:rgba(255,255,255,.3); font-size:14px; }
+
+  /* Caption */
+  .caption {
+    position:absolute; left:0; right:0; z-index:50;
+    top:48%; transform:translateY(-50%);
+    padding:0 18px; pointer-events:none;
+  }
+  .cap-inner {
+    background:rgba(0,0,0,.8); border-radius:14px;
+    padding:14px 18px; text-align:center;
+    opacity:0; transform:scale(.92);
+    transition:all .4s cubic-bezier(.34,1.2,.64,1);
+  }
+  .cap-inner.in { opacity:1; transform:scale(1); }
+  .cap-txt { color:#fff; font-size:26px; font-weight:800; line-height:1.25; letter-spacing:-.3px; }
+  .cap-txt em { color:#2ecc71; font-style:normal; }
+</style>
+</head>
+<body>
+<div class="scene">
+
+  <div class="hook-overlay" id="hook">
+    <div class="hook-line" id="h1">Stop buying<br>shared leads.</div>
+    <div class="hook-line accent" id="h2">Get yours.<br>Only yours.</div>
+    <div class="hook-line small" id="h3">Trade Radar — Metro Detroit</div>
+  </div>
+
+  <div class="phone-wrap" id="phone">
+    <div class="phone">
+      <div class="di"></div>
+      <div class="sb"><span>9:41</span><div>▪▪▪▪ 📶 🔋</div></div>
+
+      <!-- Lock -->
+      <div class="scr-lock" id="scr-lock">
+        <div class="lock-time">9:41</div>
+        <div class="lock-date">Thursday, May 29</div>
+        <div class="push-card" id="push-card">
+          <div class="push-hdr">
+            <div class="push-icon">📡</div>
+            <span class="push-app">Trade Radar</span>
+            <span class="push-time">now</span>
+          </div>
+          <div class="push-title">🔥 New Lead — 2.1 miles away</div>
+          <div class="push-body">HVAC needed · Livonia, MI</div>
+          <div class="push-lead-row">
+            <div class="lead-dot"></div>
+            <div>
+              <div class="lead-name">Sarah M. — Livonia</div>
+              <div class="lead-detail">AC not cooling · Urgent</div>
+            </div>
+            <div class="lead-dist">2.1 mi</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- App -->
+      <div class="scr-app" id="scr-app">
+        <div class="app-hdr">
+          <div class="app-hdr-row">
+            <div><div class="app-name">Trade Radar</div><div class="app-sub">Metro Detroit · HVAC</div></div>
+            <div class="live-pill"><div class="live-dot"></div>LIVE</div>
+          </div>
+        </div>
+        <div class="leads-list">
+          <div class="sec-lbl">New Leads — Today</div>
+          <div class="lead-card new" id="lc1">
+            <div class="lead-av av-hvac">❄️</div>
+            <div class="lead-info">
+              <div class="lead-nm">Sarah M.</div>
+              <div class="lead-need">AC not cooling · Livonia</div>
+              <div class="lead-tags">
+                <span class="tag tag-u">Urgent</span>
+                <span class="tag tag-d">2.1 mi</span>
+                <span class="tag tag-e">Exclusive</span>
+              </div>
+            </div>
+            <button class="acc-btn" id="acc-btn">Accept</button>
+          </div>
+          <div class="lead-card" id="lc2">
+            <div class="lead-av av-hvac">🌡️</div>
+            <div class="lead-info">
+              <div class="lead-nm">Mike T.</div>
+              <div class="lead-need">AC tune-up · Dearborn</div>
+              <div class="lead-tags">
+                <span class="tag tag-d">4.7 mi</span>
+                <span class="tag tag-e">Exclusive</span>
+              </div>
+            </div>
+            <button class="acc-btn">Accept</button>
+          </div>
+          <div class="lead-card" id="lc3">
+            <div class="lead-av av-pl">🔧</div>
+            <div class="lead-info">
+              <div class="lead-nm">Jennifer K.</div>
+              <div class="lead-need">New install · Westland</div>
+              <div class="lead-tags">
+                <span class="tag tag-d">6.3 mi</span>
+                <span class="tag tag-e">Exclusive</span>
+              </div>
+            </div>
+            <button class="acc-btn">Accept</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Confirm -->
+      <div class="scr-confirm" id="scr-confirm">
+        <div class="check-ring" id="checkmark">✓</div>
+        <div class="conf-title">Lead Accepted!</div>
+        <div class="conf-sub">Auto-text sent to Sarah instantly.</div>
+        <div class="conf-text-box" id="conf-box">
+          <div class="conf-text-lbl">📱 Sent automatically</div>
+          <div class="conf-text-msg">"Hi Sarah! Detroit HVAC here — we're on it. Can we come out today at 2pm?"</div>
+        </div>
+      </div>
+
+      <!-- Final -->
+      <div class="scr-final" id="scr-final">
+        <div class="final-ico">📡</div>
+        <div class="final-logo">Detroit Web Agency</div>
+        <div class="final-title">Trade<br>Radar</div>
+        <div class="final-sub">Exclusive HVAC &amp; plumbing leads in Metro Detroit. Only yours.</div>
+        <div class="final-stat"><div class="final-stat-txt">47 new leads<br>this week near you</div></div>
+        <button class="final-cta">Start Free Trial →</button>
+        <div class="final-price">$149/month · No contracts</div>
+      </div>
+
+      <!-- Caption -->
+      <div class="caption" id="caption">
+        <div class="cap-inner" id="cap-inner">
+          <div class="cap-txt" id="cap-txt"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const show = id => $(id).classList.add('visible');
+  const hide = id => $(id).classList.remove('visible');
+  const fi   = id => $(id).classList.add('in');
+  const fo   = id => $(id).classList.remove('in');
+
+  function cap(text, on=true) {
+    $('cap-txt').innerHTML = text;
+    on ? fi('cap-inner') : fo('cap-inner');
+  }
+
+  function seq() {
+    show('hook');
+    setTimeout(()=>fi('h1'), 300);
+    setTimeout(()=>fi('h2'), 1200);
+    setTimeout(()=>fi('h3'), 2100);
+
+    // Lock screen + push
+    setTimeout(()=>{ hide('hook'); show('phone'); show('scr-lock'); }, 3200);
+    setTimeout(()=>fi('push-card'), 3900);
+    cap('<em>New lead.</em> 2 miles away.', true);
+
+    // App opens
+    setTimeout(()=>{ hide('scr-lock'); show('scr-app'); cap(''); }, 6000);
+    setTimeout(()=>{ fi('lc1'); cap('<em>Exclusive.</em> Only you get this.'); }, 6500);
+    setTimeout(()=>fi('lc2'), 7100);
+    setTimeout(()=>fi('lc3'), 7600);
+
+    // Accept tap
+    setTimeout(()=>{ $('acc-btn').classList.add('tap'); cap('You accept it.'); }, 9500);
+    setTimeout(()=>$('acc-btn').classList.remove('tap'), 9700);
+
+    // Confirm
+    setTimeout(()=>{ hide('scr-app'); show('scr-confirm'); cap(''); }, 10200);
+    setTimeout(()=>$('checkmark').classList.add('pop'), 10500);
+    setTimeout(()=>{ fi('conf-box'); cap('Auto-text sent. <em>Instantly.</em>'); }, 11500);
+
+    // Final
+    setTimeout(()=>{ hide('scr-confirm'); cap(''); show('scr-final'); }, 15000);
+
+    // Loop
+    setTimeout(()=>{
+      ['hook','phone','scr-lock','scr-app','scr-confirm','scr-final'].forEach(hide);
+      ['h1','h2','h3','lc1','lc2','lc3','push-card','conf-box'].forEach(fo);
+      fo('cap-inner'); $('checkmark').classList.remove('pop');
+      setTimeout(seq, 800);
+    }, 20000);
+  }
+  seq();
+</script>
+</body>
+</html>

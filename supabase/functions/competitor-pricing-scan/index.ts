@@ -312,7 +312,7 @@ Give exactly 3 numbered, actionable pricing strategy recommendations our client 
             method: "POST",
             headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({
-              from: "Matt Michels <matt@mattmichelstraining.com>",
+              from: "Matt Michels <matt@detroitwebagent.com>",
               to: [client.customer_email],
               bcc: ["matthewmichels4@gmail.com"],
               subject: `📊 Weekly Competitive Pricing Report — ${reportDate}`,

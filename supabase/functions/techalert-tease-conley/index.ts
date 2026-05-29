@@ -155,7 +155,7 @@ serve(async (req) => {
 
   try {
     const { to_email, preview } = await req.json();
-    const recipientEmail = to_email || "matt@mattmichelstraining.com";
+    const recipientEmail = to_email || "matt@detroitwebagent.com";
 
     const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 

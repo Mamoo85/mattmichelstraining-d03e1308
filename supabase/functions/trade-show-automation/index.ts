@@ -146,7 +146,7 @@ serve(async (req) => {
     const senderName = client.contact_name || client.name || "The Team";
     const senderCompany = client.company_name || "Our Company";
     const senderProduct = client.product_description || "our solution";
-    const senderEmail = client.reply_to_email || "matt@mattmichelstraining.com";
+    const senderEmail = client.reply_to_email || "matt@detroitwebagent.com";
 
     // Create campaign record
     const { data: campaign, error: campaignErr } = await sb
@@ -196,8 +196,8 @@ serve(async (req) => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            from: `${senderName} <matt@mattmichelstraining.com>`,
-            reply_to: senderEmail !== "matt@mattmichelstraining.com" ? senderEmail : undefined,
+            from: `${senderName} <matt@detroitwebagent.com>`,
+            reply_to: senderEmail !== "matt@detroitwebagent.com" ? senderEmail : undefined,
             to: [contact.email],
             subject: email1.subject || `Great meeting you at ${showName}!`,
             html: email1.body || `<p>Great meeting you at ${showName}!</p>`,

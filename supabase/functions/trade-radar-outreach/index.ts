@@ -1,12 +1,10 @@
 // trade-radar-outreach — Daily cron at 11am ET.
 // For each active Trade Radar client, emails today's enriched leads on their behalf.
-// Cap: 10 emails/day/vertical to avoid spam flags.
-// Only sends to leads with owner_email set and outreach_sent_at null.
+// Cap: 40 emails/day/vertical. Only sends to leads with owner_email set and outreach_sent_at null.
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { generateWithHaiku } from "../_shared/opus.ts";
-import { isRecentlyContacted, frequencyCapExceeded } from "../_shared/outreach-blocklist.ts";
+import { isRecentlyContacted } from "../_shared/outreach-blocklist.ts";
 import { dwaEmail, listUnsubHeaders } from "../_shared/dwa-email.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
@@ -31,6 +29,125 @@ const VERTICAL_LABELS: Record<string, string> = {
   demo_junk: "demolition & junk removal",
   foundation: "foundation repair",
 };
+
+function buildTradeEmail(
+  lead: { signal_type?: string; address?: string; city?: string; owner_name?: string; estimated_job_value?: number | string },
+  client: { owner_name?: string; company_name?: string; city?: string; phone?: string; email?: string },
+  verticalLabel: string,
+): { subject: string; body: string } {
+  const firstName = lead.owner_name?.split(" ")[0] || "there";
+  const city = lead.city || client.city || "your area";
+  const co = client.company_name || client.owner_name || "a local contractor";
+  const phone = client.phone || "(313) 992-1219";
+  const sig = `— ${client.owner_name || "Matt"}\n${co}\n${phone}`;
+  const jobVal = lead.estimated_job_value
+    ? ` — estimated $${Number(lead.estimated_job_value).toLocaleString()} job`
+    : "";
+
+  const signal = lead.signal_type || "";
+
+  // Storm / hail / wind damage signals
+  if (/storm|hail|wind|damage/.test(signal)) {
+    return {
+      subject: `${city} storm damage — ${verticalLabel} estimate needed`,
+      body: `Hi ${firstName},\n\nWe monitor storm activity across ${city} and flagged your property for recent weather damage${jobVal}. Waiting too long on storm damage can turn a repair into a full replacement.\n\n${co} serves homeowners in ${city} — if you'd like a free estimate this week, just reply or call ${phone}.\n\n${sig}`,
+    };
+  }
+
+  // Permit signals — roof
+  if (/roof_permit|cofc_roof/.test(signal)) {
+    return {
+      subject: `Roof activity flagged at your address — ${city}`,
+      body: `Hi ${firstName},\n\nOur system picked up roofing permit activity near your property${jobVal}. We work with homeowners in ${city} who are planning or recently completed roof work.\n\nIf you need a second quote, an inspection, or a repair alongside the main job, ${co} can typically get out within 2–3 days. Reply or call ${phone}.\n\n${sig}`,
+    };
+  }
+
+  // HVAC / system age signals
+  if (/hvac|aging_system|extreme_weather/.test(signal)) {
+    return {
+      subject: `HVAC heads-up for your ${city} home`,
+      body: `Hi ${firstName},\n\nWe flagged your address based on a heating/cooling signal in your area${jobVal}. Older systems tend to fail at the worst times — usually mid-winter or peak summer.\n\n${co} handles HVAC service, tune-ups, and replacements in ${city} with same-week scheduling. Reply or call ${phone} if you'd like a free assessment.\n\n${sig}`,
+    };
+  }
+
+  // Plumbing / water signals
+  if (/plumbing|water_damage|lead_line|sewer/.test(signal)) {
+    return {
+      subject: `Plumbing signal at your ${city} address`,
+      body: `Hi ${firstName},\n\nWe monitor local permit and utility data and flagged a plumbing-related signal at your address${jobVal}.\n\n${co} does fast-turnaround plumbing in ${city} — leak repair, water heater replacement, drain work, and full pipe jobs. Reply or call ${phone} for a free quote.\n\n${sig}`,
+    };
+  }
+
+  // Electrical / panel signals
+  if (/electrical|panel_upgrade|aging_panel/.test(signal)) {
+    return {
+      subject: `Electrical panel flag — ${city} homeowner`,
+      body: `Hi ${firstName},\n\nOur monitoring picked up an electrical signal at your property${jobVal}. Outdated panels and overloaded circuits are a leading cause of house fires in older Michigan homes.\n\n${co} does panel upgrades, circuit additions, and full rewires in ${city}. Reply or call ${phone} for a no-obligation look.\n\n${sig}`,
+    };
+  }
+
+  // Pest / vacancy signals
+  if (/pest|rodent|foreclosure_vacant|overgrown/.test(signal)) {
+    return {
+      subject: `${city} property — pest control check`,
+      body: `Hi ${firstName},\n\nWe flagged your address for a pest control signal in ${city}${jobVal}. Vacant or transitioning properties are common entry points for rodents and insects, especially going into warmer months.\n\n${co} offers free inspections and same-week treatment in ${city}. Reply or call ${phone}.\n\n${sig}`,
+    };
+  }
+
+  // Fire / smoke / restoration signals
+  if (/fire|smoke|mold|restoration|water_damage_permit/.test(signal)) {
+    return {
+      subject: `Restoration crew available — ${city}`,
+      body: `Hi ${firstName},\n\nWe spotted a restoration-related signal at your address${jobVal}. Whether it's fire, smoke, mold, or water damage, the faster remediation starts, the lower the total cost.\n\n${co} handles emergency restoration and full rebuilds in ${city}. Available this week — reply or call ${phone}.\n\n${sig}`,
+    };
+  }
+
+  // Demo / junk / demolition signals
+  if (/demo|junk|debris|blight|demolition/.test(signal)) {
+    return {
+      subject: `Demo or cleanout needed — ${city} property`,
+      body: `Hi ${firstName},\n\nWe monitor demolition and junk removal permits in ${city} and flagged your address${jobVal}.\n\n${co} handles full demolition, interior teardowns, estate cleanouts, and debris hauling — usually same week. Reply or call ${phone} for a fast quote.\n\n${sig}`,
+    };
+  }
+
+  // Foundation / flood / drainage signals
+  if (/foundation|flood|sinkhole|drainage|basement|nfip/.test(signal)) {
+    return {
+      subject: `Foundation or drainage issue flagged — ${city}`,
+      body: `Hi ${firstName},\n\nOur system flagged a foundation or drainage signal at your property in ${city}${jobVal}. Left unaddressed, water intrusion and settlement issues get significantly more expensive.\n\n${co} does free foundation assessments in ${city} — reply or call ${phone} to schedule.\n\n${sig}`,
+    };
+  }
+
+  // Tree / storm debris signals
+  if (/tree|wind|storm_wind|drought_tree/.test(signal)) {
+    return {
+      subject: `Tree work flagged at your ${city} address`,
+      body: `Hi ${firstName},\n\nWe flagged your property for a tree service signal in ${city}${jobVal}. Storm damage, dead limbs, and overgrown trees are best addressed before the next round of weather hits.\n\n${co} handles removal, trimming, and stump grinding in ${city}. Reply or call ${phone} for a free quote.\n\n${sig}`,
+    };
+  }
+
+  // Gutter signals
+  if (/gutter|cofc_gutter/.test(signal)) {
+    return {
+      subject: `Gutter check for your ${city} home`,
+      body: `Hi ${firstName},\n\nWe flagged your property based on gutter-related activity in ${city}${jobVal}. Clogged or damaged gutters are the #1 cause of foundation and siding damage in Michigan homes going into fall.\n\n${co} does full gutter cleaning, repair, and guard installation in ${city}. Reply or call ${phone}.\n\n${sig}`,
+    };
+  }
+
+  // Exterior / siding signals
+  if (/exterior|siding|window|painting|cofc_exterior/.test(signal)) {
+    return {
+      subject: `Exterior work coming up — ${city} homeowner`,
+      body: `Hi ${firstName},\n\nWe picked up an exterior renovation signal at your property in ${city}${jobVal}. Whether it's siding, windows, painting, or trim, the right timing saves thousands on energy and future repairs.\n\n${co} handles exterior renovations in ${city} — reply or call ${phone} for a free estimate.\n\n${sig}`,
+    };
+  }
+
+  // Generic fallback per vertical
+  return {
+    subject: `${verticalLabel} work near your ${city} address`,
+    body: `Hi ${firstName},\n\nWe monitor local permit and property data in ${city} and flagged your address for ${verticalLabel} activity${jobVal}.\n\n${co} serves homeowners in ${city} and can usually schedule within the week. Reply or call ${phone} if you'd like a free quote.\n\n${sig}`,
+  };
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -79,42 +196,13 @@ serve(async (req) => {
           continue;
         }
 
-        // Cross-template frequency cap (max 2 cold sends per 7d to same recipient)
-        const capChk = await frequencyCapExceeded(sb, lead.owner_email, { currentTemplate: `trade_radar_outreach_${client.vertical}` });
-        if (capChk.exceeded) { totalSkipped++; continue; }
-
         try {
-          const signalDisplay = (lead.signal_type || "recent activity").replace(/_/g, " ");
-          const jobValue = lead.estimated_job_value
-            ? `$${Number(lead.estimated_job_value).toLocaleString()}`
-            : null;
+          const { subject, body } = buildTradeEmail(lead, client, verticalLabel);
 
-          const prompt = `Write a 3-sentence cold email from a local ${verticalLabel} contractor to a homeowner.
-Signal at their property: ${signalDisplay}${jobValue ? ` (estimated $${jobValue} job)` : ""}
-Contractor: ${client.company_name || client.owner_name || "a local contractor"} based in ${client.city || "Detroit, MI"}
-
-Rules:
-- First sentence: reference the specific situation at their address without being creepy
-- Second sentence: briefly state what you offer and why now is the right time
-- Third sentence: soft CTA (reply or quick call — nothing pushy)
-- No greeting or sign-off. Under 75 words total.`;
-
-          const emailBody = await generateWithHaiku(prompt, "You write concise, friendly contractor outreach emails.", 200);
-
-          const firstName = lead.owner_name?.split(" ")[0] || "there";
-          const locationHint = lead.address || lead.city || client.city || "your area";
-          const subject = `Quick note about ${locationHint}`;
-
-          const html = `<div style="font-family:sans-serif;max-width:600px;color:#1a1a1a;line-height:1.7;font-size:15px">
-<p>Hi ${firstName},</p>
-<p>${emailBody.trim().replace(/\n\n/g, "</p><p>").replace(/\n/g, " ")}</p>
-<p style="margin-top:20px">Best,<br>
-<strong>${client.owner_name || client.company_name || "Matt"}</strong><br>
-${client.company_name ? `<span style="color:#555">${client.company_name}</span>` : ""}
-</p>
-<p style="font-size:11px;color:#aaa;border-top:1px solid #f0f0f0;padding-top:12px;margin-top:20px">
-You received this because your property matched a local service opportunity in your area.<br>
-Reply STOP to unsubscribe from future messages.
+          const html = `<div style="font-family:-apple-system,Segoe UI,Arial,sans-serif;max-width:560px;color:#111;line-height:1.6;font-size:15px;">
+${body.replace(/\n\n/g, "</p><p style='margin:14px 0'>").replace(/\n/g, "<br>").replace(/^/, "<p style='margin:0 0 14px'>").replace(/$/, "</p>")}
+<p style="margin:20px 0 4px;font-size:11px;color:#aaa;border-top:1px solid #f0f0f0;padding-top:14px;">
+Reply STOP to unsubscribe.
 </p>
 </div>`;
 

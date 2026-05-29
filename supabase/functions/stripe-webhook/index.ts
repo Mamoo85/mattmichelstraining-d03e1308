@@ -70,7 +70,7 @@ function m2Email(opts: { greeting: string; headline: string; body: string; cta?:
   </div>
   <div style="padding:12px 28px;background:#f8fafc;border-top:1px solid #e2e8f0;text-align:center">
     <p style="margin:0;color:#94a3b8;font-size:11px">M² Development · Grosse Pointe, MI 48230</p>
-    <p style="margin:4px 0 0;color:#94a3b8;font-size:10px"><a href="https://mattmichelstraining.com" style="color:#94a3b8">mattmichelstraining.com</a> · <a href="mailto:matt@mattmichelstraining.com?subject=Unsubscribe" style="color:#94a3b8">Unsubscribe</a></p>
+    <p style="margin:4px 0 0;color:#94a3b8;font-size:10px"><a href="https://mattmichelstraining.com" style="color:#94a3b8">mattmichelstraining.com</a> · <a href="mailto:matt@detroitwebagent.com?subject=Unsubscribe" style="color:#94a3b8">Unsubscribe</a></p>
   </div>
 </div></body></html>`;
 }
@@ -108,7 +108,7 @@ async function sendM2Email(to: string, subject: string, html: string, bcc?: stri
     method: "POST",
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: "Matt Michels <matt@mattmichelstraining.com>",
+      from: "Matt Michels <matt@detroitwebagent.com>",
       to: Array.isArray(to) ? to : [to],
       bcc: [bcc || "matthewmichels4@gmail.com"],
       subject,
@@ -138,8 +138,8 @@ async function notifyMatt(subject: string, html: string): Promise<void> {
     method: "POST",
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: "M² System <matt@mattmichelstraining.com>",
-      to: ["matt@mattmichelstraining.com"],
+      from: "M² System <matt@detroitwebagent.com>",
+      to: ["matt@detroitwebagent.com"],
       bcc: ["matthewmichels4@gmail.com"],
       subject,
       html,
@@ -586,6 +586,7 @@ serve(async (req) => {
           sb.from("social_media_clients").update({ active: false }).eq("stripe_subscription_id", subscription.id),
           sb.from("gbp_saas_clients").update({ active: false }).eq("stripe_subscription_id", subscription.id),
           sb.from("contractor_clients").update({ active: false, stripe_subscription_id: null }).eq("stripe_subscription_id", subscription.id),
+          sb.from("outreach_clients").update({ status: "cancelled" }).eq("stripe_subscription_id", subscription.id),
         ]);
 
         // Clear territory assignment so another contractor can buy it
@@ -730,44 +731,6 @@ serve(async (req) => {
           .eq("event_id", event.id)
           .then(() => {}, () => {});
       }
-
-      // ── DWA BUDGET AUTO-LIFT ──
-      // First paying DWA customer → lift weekly spend cap from $5 → $500.
-      const DWA_TYPES = new Set([
-        "field_service_subscription", "field_crm_subscription",
-        "hire_alert_subscription", "site_radar_subscription",
-        "contractor_lead_subscription", "dead_lead_billing_setup",
-        "missed_call_subscription", "mortgage_radar_subscription",
-        "marketplace_lead_purchase", "bundle_revenue_suite_subscription",
-        "ai_phone_subscription", "ai_reputation_subscription",
-        "trade_radar_subscription", "ads_copy_subscription",
-      ]);
-      if (meta.type && DWA_TYPES.has(meta.type)) {
-        try {
-          const { data: bs } = await sb.from("dwa_budget_state")
-            .select("auto_lift_on_first_sale, lifted_at, weekly_cap_usd").eq("id", 1).maybeSingle();
-          if (bs?.auto_lift_on_first_sale && !bs.lifted_at) {
-            await sb.from("dwa_budget_state").update({
-              weekly_cap_usd: 500,
-              lifted_at: new Date().toISOString(),
-              lifted_reason: `first_sale:${meta.type}:${session.customer_email || ""}`,
-              updated_at: new Date().toISOString(),
-            }).eq("id", 1);
-            try {
-              const amount = ((session.amount_total || 0) / 100).toFixed(2);
-              await notifyMatt(
-                `💰 First DWA sale: $${amount} ${meta.type}`,
-                `<p>First paying DWA customer! <strong>$${amount}</strong> from <strong>${meta.type}</strong> (${session.customer_email}).</p><p>Weekly budget cap auto-lifted from $5 → $500.</p>`,
-              );
-            } catch { /* best-effort */ }
-
-          }
-        } catch (e) {
-          console.warn("[dwa-budget] auto-lift failed:", e);
-        }
-      }
-
-
 
       // ── RECEIPT TRACKING (checkout hardening) ──
       // Upsert a receipt row so the success page can poll fulfillment status.
@@ -1081,7 +1044,7 @@ serve(async (req) => {
               method: "POST",
               headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
               body: JSON.stringify({
-                from: "Matt Michels <matt@mattmichelstraining.com>",
+                from: "Matt Michels <matt@detroitwebagent.com>",
                 to: [customerEmail], bcc: ["matthewmichels4@gmail.com"],
                 subject: `Add-On Activated: ${meta.service_name || meta.service_key}`,
                 html: `<p>Your add-on service <strong>${meta.service_name}</strong> is now active. I'll be in touch within 24 hours to get everything set up.</p><p>— Matt, M² Development<br>(313) 992-1219</p>`,
@@ -1091,8 +1054,8 @@ serve(async (req) => {
               method: "POST",
               headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
               body: JSON.stringify({
-                from: "M² Notifications <matt@mattmichelstraining.com>",
-                to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"],
+                from: "M² Notifications <matt@detroitwebagent.com>",
+                to: ["matt@detroitwebagent.com"], bcc: ["matthewmichels4@gmail.com"],
                 subject: `💰 New Add-On: ${meta.service_name} — ${customerEmail}`,
                 html: `<p><strong>${meta.service_name}</strong> activated by ${customerEmail}.<br>Lead ID: ${meta.lead_id || "none"}</p>`,
               }),
@@ -1157,116 +1120,6 @@ serve(async (req) => {
           return new Response(JSON.stringify({ error: err.message }), { status: 500 });
         }
       }
-
-      // ── GNG SUBSCRIPTION BOX (Sock/Yarn/Pattern/Gift of the Month) ─────────
-      if (meta.type === "gng_subscription") {
-        const email = customerEmail || meta.email;
-        const planSlug = meta.plan_slug;
-        try {
-          if (!email || !planSlug) throw new Error("missing email or plan_slug");
-          const shipping = (session as any).shipping_details || (session as any).customer_details;
-          const addr = shipping?.address || {};
-          const nextShip = new Date();
-          nextShip.setDate(nextShip.getDate() + 3); // first ship goes out in 3 days
-          const { error: sErr } = await (sb.from as any)("gng_subscriptions").upsert({
-            stripe_subscription_id: session.subscription as string || null,
-            stripe_customer_id: session.customer as string || null,
-            customer_email: email,
-            customer_name: shipping?.name || null,
-            plan_slug: planSlug,
-            status: "active",
-            ship_address_line1: addr.line1 || null,
-            ship_address_line2: addr.line2 || null,
-            ship_city: addr.city || null,
-            ship_state: addr.state || null,
-            ship_postal_code: addr.postal_code || null,
-            ship_country: addr.country || "US",
-            next_ship_date: nextShip.toISOString().slice(0, 10),
-          }, { onConflict: "stripe_subscription_id" });
-          if (sErr) throw new Error(`gng_subscriptions upsert: ${sErr.message}`);
-
-          if (RESEND_API_KEY && email) {
-            await fetch("https://api.resend.com/emails", {
-              method: "POST",
-              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-              body: JSON.stringify({
-                from: "Guilds & Grains <matt@mattmichelstraining.com>",
-                to: [email],
-                subject: "Welcome to your monthly box 🧶",
-                html: `<div style="font-family:-apple-system,sans-serif;max-width:560px;margin:0 auto;padding:32px;background:#fdf6ec;border-radius:12px;">
-                  <h1 style="color:#7a3e1d;margin:0 0 12px;font-size:24px;">You're in!</h1>
-                  <p style="color:#5b4636;font-size:15px;line-height:1.6;">Your <strong>${planSlug.replace(/-/g," ")}</strong> subscription is active. Your first box ships within 3 business days. You'll get tracking by email.</p>
-                  <p style="color:#5b4636;font-size:13px;margin-top:24px;">Manage or cancel any time — just reply to this email.</p>
-                  <p style="color:#8a6a4f;font-size:12px;margin-top:24px;">— Lisa & Matt · Guilds & Grains</p>
-                </div>`,
-              }),
-            }).catch(e => console.error("[gng sub welcome email]", e));
-          }
-          await notifyMatt(`🧶 New GNG subscriber: ${email} — ${planSlug}`);
-        } catch (err: any) {
-          console.error("[WEBHOOK gng_subscription]", err);
-          await notifyMatt(`⚠️ GNG sub signup failed: ${email} — ${err.message}`);
-          return new Response(JSON.stringify({ error: err.message }), { status: 500 });
-        }
-      }
-
-      // ── GNG DIGITAL PRODUCT (one-time pattern/printable purchase) ──────────
-      if (meta.type === "gng_digital") {
-        const email = customerEmail || meta.email;
-        const productSlug = meta.product_slug;
-        try {
-          if (!email || !productSlug) throw new Error("missing email or product_slug");
-          const amount = (session as any).amount_total ?? 0;
-          const { data: purchase, error: pErr } = await (sb.from as any)("gng_digital_purchases").insert({
-            stripe_session_id: session.id,
-            customer_email: email,
-            product_slug: productSlug,
-            amount_paid_cents: amount,
-          }).select("download_token").single();
-          if (pErr) throw new Error(`gng_digital_purchases insert: ${pErr.message}`);
-
-          // Award loyalty points (1 pt per $1)
-          const points = Math.floor(amount / 100);
-          if (points > 0) {
-            const { data: last } = await (sb.from as any)("gng_loyalty_points")
-              .select("balance_after").eq("customer_email", email)
-              .order("created_at", { ascending: false }).limit(1).maybeSingle();
-            const newBalance = (last?.balance_after ?? 0) + points;
-            await (sb.from as any)("gng_loyalty_points").insert({
-              customer_email: email, delta: points, reason: "digital_purchase",
-              reference_id: session.id, balance_after: newBalance,
-            });
-          }
-
-          const origin = (session as any).success_url?.split("/gng/")[0] || "https://m2training.lovable.app";
-          const downloadUrl = `${origin}/gng/downloads?token=${purchase.download_token}`;
-          if (RESEND_API_KEY && email) {
-            await fetch("https://api.resend.com/emails", {
-              method: "POST",
-              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-              body: JSON.stringify({
-                from: "Guilds & Grains <matt@mattmichelstraining.com>",
-                to: [email],
-                subject: "Your download is ready 📥",
-                html: `<div style="font-family:-apple-system,sans-serif;max-width:560px;margin:0 auto;padding:32px;background:#fdf6ec;border-radius:12px;">
-                  <h1 style="color:#7a3e1d;margin:0 0 12px;font-size:24px;">Thanks for your purchase!</h1>
-                  <p style="color:#5b4636;font-size:15px;line-height:1.6;">Tap below to download your file. Link is good for 90 days.</p>
-                  <p style="margin:24px 0;"><a href="${downloadUrl}" style="background:#7a3e1d;color:#fff;padding:14px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Download now</a></p>
-                  <p style="color:#8a6a4f;font-size:12px;margin-top:24px;">— Guilds & Grains</p>
-                </div>`,
-              }),
-            }).catch(e => console.error("[gng digital email]", e));
-          }
-          await notifyMatt(`📥 GNG digital sale: ${productSlug} — ${email} ($${(amount/100).toFixed(2)})`);
-        } catch (err: any) {
-          console.error("[WEBHOOK gng_digital]", err);
-          await notifyMatt(`⚠️ GNG digital purchase failed: ${err.message}`);
-          return new Response(JSON.stringify({ error: err.message }), { status: 500 });
-        }
-      }
-
-
-
 
       if (meta.type === "hire_alert_subscription") {
         const email = meta.email || customerEmail;
@@ -1443,7 +1296,7 @@ serve(async (req) => {
       }
 
       // ── TechAlert SMS-only tier ($49/mo) ────────────────────────────────────
-      if (meta.type === "hire_alert_sms_subscription") {
+      if (meta.type === "hire_REDACTED") {
         const email = meta.email || customerEmail;
         try {
           if (email) {
@@ -1474,7 +1327,7 @@ serve(async (req) => {
             `<p>New $49/mo SMS-only TechAlert subscriber. They get text alerts only — no portal access.</p><p>Phone: ${meta.phone || "—"}</p><p>Email: ${email}</p>`
           ).catch(() => {});
         } catch (e) {
-          console.error("[WEBHOOK] hire_alert_sms_subscription error:", e);
+          console.error("[WEBHOOK] hire_REDACTED error:", e);
         }
         await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
@@ -2408,7 +2261,7 @@ serve(async (req) => {
                   method: "POST",
                   headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
                   body: JSON.stringify({
-                    from: "Matt Michels <matt@mattmichelstraining.com>",
+                    from: "Matt Michels <matt@detroitwebagent.com>",
                     to: [referrerProfile.email],
                     bcc: ["matthewmichels4@gmail.com"],
                     subject: "🎉 You earned a free training session!",
@@ -2469,6 +2322,41 @@ serve(async (req) => {
           return new Response(JSON.stringify({ error: "dark_web_monitor failed" }), { status: 500 });
         }
         await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── SEO AUDIT — $49 one-time local SEO audit delivery ─────────────────
+      if (meta.type === "seo_audit") {
+        const email = session.customer_details?.email || session.customer_email || meta.email || customerEmail || "";
+        const { business_name: auditBizName = "", city: auditCity = "Michigan", website_url: auditWebsiteUrl = "" } = meta;
+        try {
+          if (email && auditBizName) {
+            await fetch(`${SUPABASE_URL}/functions/v1/deliver-audit-report`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+              },
+              body: JSON.stringify({
+                stripe_session_id: session.id,
+                customer_email: email,
+                business_name: auditBizName,
+                city: auditCity,
+                website_url: auditWebsiteUrl,
+              }),
+            }).catch(e => console.error("[webhook] deliver-audit-report failed:", e));
+            console.log("[WEBHOOK] seo_audit delivery triggered for", email);
+          } else {
+            console.warn("[WEBHOOK] seo_audit missing email or business_name — delivery skipped", { email, auditBizName });
+          }
+          await notifyMatt(
+            `💰 SEO Audit Sold — ${auditBizName || email} ($49)`,
+            `<p><strong>${auditBizName || email}</strong><br>Email: ${email}<br>City: ${auditCity}<br>URL: ${auditWebsiteUrl || "n/a"}<br>Report delivery triggered.</p>`
+          ).catch(() => {});
+        } catch (e) {
+          console.error("[WEBHOOK] seo_audit error:", e);
+          // Don't return 500 — Stripe would retry. Log and move on; deliver-audit-report has its own retry-safe dedup.
+        }
+        await markFulfilled(true, "seo_audit"); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // ── SEO GUARD — $29/mo with 7-day trial ──────────────────────────────
@@ -3595,6 +3483,29 @@ serve(async (req) => {
           console.error("[WEBHOOK] blueprint_purchase delivery error:", e);
         }
         await markFulfilled(true, undefined, "blueprint_purchase");
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── AUTONOMOUS SDR / OUTREACH SUBSCRIPTION ───────────────────────────────
+      if (meta.type === "outreach_subscription") {
+        try {
+          const clientId = meta.client_id || null;
+          const subId = (session.subscription as string) || null;
+          if (clientId) {
+            await sb.from("outreach_clients").update({
+              status: "active",
+              stripe_subscription_id: subId || undefined,
+              stripe_customer_id: (session.customer as string) || undefined,
+            }).eq("id", clientId);
+          } else if (subId) {
+            await sb.from("outreach_clients").update({ status: "active" })
+              .eq("stripe_subscription_id", subId);
+          }
+          console.log(`[WEBHOOK] outreach_subscription activated — client=${clientId} sub=${subId}`);
+        } catch (e) {
+          console.error("[WEBHOOK] outreach_subscription activation error:", e);
+        }
+        await markFulfilled(true, undefined, "outreach_subscription");
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 

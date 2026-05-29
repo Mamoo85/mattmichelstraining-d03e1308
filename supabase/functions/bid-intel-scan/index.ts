@@ -166,7 +166,7 @@ async function processClient(client: any): Promise<{ opportunities: number; prop
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${RESEND_API_KEY}` },
       body: JSON.stringify({
-        from: "M² System <matt@mattmichelstraining.com>",
+        from: "M² System <matt@detroitwebagent.com>",
         to: [client.email],
         subject: `Bid Intelligence — ${digestItems.length} opportunit${digestItems.length > 1 ? "ies" : "y"} found`,
         html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto"><h2 style="color:#1e293b">Daily Bid Report</h2><p>Hi ${client.company_name},</p><p>We found <strong>${digestItems.length}</strong> bid opportunities matching your trade (${client.trade}).${proposalCount > 0 ? ` <strong>${proposalCount}</strong> auto-generated proposal draft${proposalCount > 1 ? "s" : ""} ready for your review.` : ""}</p><table style="width:100%;border-collapse:collapse"><thead><tr style="background:#f8fafc"><th style="padding:8px;text-align:left">Opportunity</th><th style="padding:8px;text-align:center">Fit</th><th style="padding:8px;text-align:left">Due</th><th style="padding:8px;text-align:left">Source</th></tr></thead><tbody>${rowsHtml}</tbody></table><p style="margin-top:16px;color:#64748b;font-size:13px">M² Performance Training — Bid Intelligence</p></div>`,

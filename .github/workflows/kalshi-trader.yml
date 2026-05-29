@@ -1,0 +1,57 @@
+name: Kalshi Trader
+
+on:
+  # Run at the top of every hour during active hours (7am–11pm UTC, Mon–Sat)
+  schedule:
+    - cron: '0 7-23 * * 1-6'
+  # Manual trigger with optional dry-run flag
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run — research only, no real orders'
+        type: boolean
+        default: false
+
+concurrency:
+  group: kalshi-trader
+  cancel-in-progress: false   # never cancel a running trade
+
+jobs:
+  trade:
+    name: Run Trading Cycle
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install cryptography requests
+
+      - name: Execute trading cycle
+        env:
+          # Store KALSHI_PRIVATE_KEY as a repo secret (Settings → Secrets → Actions)
+          # Paste the full PEM including BEGIN/END lines.
+          # If not set, the script falls back to the embedded key.
+          KALSHI_PRIVATE_KEY: ${{ secrets.KALSHI_PRIVATE_KEY }}
+          # Supabase secondary project (POD/trading DB)
+          SUPABASE_URL:  https://zmyczlfuufhngzovkjdh.supabase.co
+          SUPABASE_KEY:  ${{ secrets.SUPABASE_POD_ANON_KEY }}
+          DRY_RUN:       ${{ inputs.dry_run || 'false' }}
+        run: python scripts/kalshi_trader.py
+
+      - name: Upload run log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kalshi-trader-failure-${{ github.run_number }}
+          path: |
+            scripts/kalshi_trader.py
+          retention-days: 7

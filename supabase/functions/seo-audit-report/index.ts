@@ -125,7 +125,7 @@ function buildEmailHtml(client: any, reportText: string, rankings: KeywordResult
         <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;" />
         <div>
           <p style="font-size:13px;font-weight:700;margin:0;">Matt Michels</p>
-          <p style="font-size:12px;color:#64748b;margin:0;">M2 Development — (313) 992-1219 — matt@mattmichelstraining.com</p>
+          <p style="font-size:12px;color:#64748b;margin:0;">M2 Development — (313) 992-1219 — matt@detroitwebagent.com</p>
         </div>
         <img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" />
       </div>
@@ -165,7 +165,7 @@ serve(async (req) => {
           method: "POST",
           headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            from: "M² SEO Reports <matt@mattmichelstraining.com>",
+            from: "M² SEO Reports <matt@detroitwebagent.com>",
             to: [client.email], bcc: ["matthewmichels4@gmail.com"],
             subject: `Your ${month} SEO Report — ${client.business_name}`,
             html: buildEmailHtml(client, reportText, rankings, month) }) });

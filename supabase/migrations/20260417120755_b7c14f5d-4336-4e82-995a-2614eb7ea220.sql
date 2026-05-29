@@ -10,10 +10,10 @@ ALTER TABLE public.hire_alert_candidates
   ADD COLUMN IF NOT EXISTS freshness_score smallint DEFAULT 0,
   ADD COLUMN IF NOT EXISTS source_count smallint DEFAULT 1;
 
-ALTER TABLE public.hire_alert_client_candidates
+ALTER TABLE public.hire_REDACTED
   ADD COLUMN IF NOT EXISTS contacted_at timestamptz;
 
-CREATE INDEX IF NOT EXISTS idx_hire_alert_candidates_freshness
+CREATE INDEX IF NOT EXISTS idx_hire_REDACTED
   ON public.hire_alert_candidates(freshness_score DESC, created_at DESC);
 
 -- Demand Radar (Industry Pulse)

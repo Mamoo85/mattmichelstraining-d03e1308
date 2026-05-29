@@ -19,8 +19,8 @@ async function notifyMatt(subject: string, html: string) {
     method: "POST",
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: "M² System <matt@mattmichelstraining.com>",
-      to: ["matt@mattmichelstraining.com"],
+      from: "M² System <matt@detroitwebagent.com>",
+      to: ["matt@detroitwebagent.com"],
       subject,
       html,
     }),
@@ -224,7 +224,7 @@ Be thorough, professional, and accurate to the raw notes. If information is miss
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "M² HOA Secretary <matt@mattmichelstraining.com>",
+          from: "M² HOA Secretary <matt@detroitwebagent.com>",
           to: uniqueRecipients,
           subject: `Meeting Minutes — ${hoaName} · ${formattedDate}`,
           html: emailHtml,

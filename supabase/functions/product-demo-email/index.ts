@@ -19,7 +19,7 @@ serve(async (req) => {
 
   try {
     const { to_email, company_name, contact_name } = await req.json();
-    const email = to_email || "matt@mattmichelstraining.com";
+    const email = to_email || "matt@detroitwebagent.com";
     const company = company_name || "Your Company";
     const contact = contact_name || "there";
 

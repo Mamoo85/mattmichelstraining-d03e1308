@@ -11,7 +11,7 @@ const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-const ADMIN_EMAIL = "matt@mattmichelstraining.com";
+const ADMIN_EMAIL = "matt@detroitwebagent.com";
 
 const log = (msg: string, data?: any) => {
   const d = data ? ` — ${JSON.stringify(data)}` : "";
@@ -124,7 +124,7 @@ serve(async (req) => {
       method: "POST",
       headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        from: "M² Training <matt@mattmichelstraining.com>",
+        from: "M² Training <matt@detroitwebagent.com>",
         to: [ADMIN_EMAIL], bcc: ["matthewmichels4@gmail.com"],
         subject: `Affiliate Payout Report — ${monthStr} — $${(totalCents / 100).toFixed(2)} owed`,
         html: adminHtml,
@@ -160,7 +160,7 @@ serve(async (req) => {
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "Matt Michels <matt@mattmichelstraining.com>",
+          from: "Matt Michels <matt@detroitwebagent.com>",
           to: [profile.email], bcc: ["matthewmichels4@gmail.com"],
           subject: `You earned $${(total / 100).toFixed(2)} in M² referrals — ${monthStr}`,
           html: affiliateHtml,

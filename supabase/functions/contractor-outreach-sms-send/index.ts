@@ -2,6 +2,7 @@
 // Hard-rejects without consent, suppression check, quiet hours (8am-9pm ET),
 // daily cap, always appends STOP, writes audit row.
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { sendSMS } from "../_shared/twilio.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,8 +11,6 @@ const corsHeaders = {
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID")!;
-const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN")!;
 const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219";
 
 const DAILY_SMS_CAP = 50;
@@ -152,36 +151,19 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Build body — guarantee STOP suffix
-    const body = /reply\s+stop/i.test(message)
-      ? message
-      : `${message.trim()} Reply STOP to opt out.`;
+    // Build body — sendSMS adds STOP suffix automatically; strip manual suffix to avoid doubling
+    const msgBody = /reply\s+stop/i.test(message.trim())
+      ? message.trim().replace(/\s*reply\s+stop\s+to\s+opt\s+out\.?/i, "").trim()
+      : message.trim();
 
-    // Send via Twilio REST API directly (we have account creds)
-    const auth = btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`);
-    const twRes = await fetch(
-      `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Basic ${auth}`,
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: new URLSearchParams({
-          To: p.phone,
-          From: TWILIO_PHONE_NUMBER,
-          Body: body,
-        }),
-      }
-    );
-    const twData = await twRes.json();
-    if (!twRes.ok) {
+    // Send via shared twilio module — checks sms_opt_outs table (TCPA)
+    const twSid = await sendSMS(p.phone, TWILIO_PHONE_NUMBER, msgBody, "contractor_sms");
+    if (!twSid) {
       await logAudit(supabase, {
         prospect_id, lead_id, channel: "sms", event: "bounce",
-        reason: twData?.message || `Twilio ${twRes.status}`,
-        metadata: twData,
+        reason: "sendSMS returned null (opt-out or Twilio error)",
       });
-      return new Response(JSON.stringify({ ok: false, error: twData?.message || "Twilio error" }), {
+      return new Response(JSON.stringify({ ok: false, error: "Send failed — prospect may be opted out" }), {
         status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -193,11 +175,11 @@ Deno.serve(async (req) => {
 
     await logAudit(supabase, {
       prospect_id, lead_id, channel: "sms", event: "sent",
-      reason: body.slice(0, 200),
-      metadata: { twilio_sid: twData?.sid },
+      reason: msgBody.slice(0, 200),
+      metadata: { twilio_sid: twSid },
     });
 
-    return new Response(JSON.stringify({ ok: true, sid: twData?.sid }), {
+    return new Response(JSON.stringify({ ok: true, sid: twSid }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e: any) {

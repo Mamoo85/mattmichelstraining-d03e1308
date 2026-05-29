@@ -18,14 +18,14 @@ const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 
 const ADMIN_EMAILS = new Set([
   "matt@detroitwebagent.com",
-  "matt@mattmichelstraining.com",
+  "matt@detroitwebagent.com",
   "matthewmichels4@gmail.com",
 ]);
 
 const WHITELIST_TABLES = new Set([
   "contractor_leads", "contractor_clients", "contractor_lead_sites",
   "industry_pulse_signals",
-  "hire_alert_candidates", "hire_alert_clients", "hire_alert_client_candidates",
+  "hire_alert_candidates", "hire_alert_clients", "hire_REDACTED",
   "medicare_intel_facilities",
   "prospect_contacts", "field_crm_clients", "business_listings_public",
   "system_comms_log", "dead_lead_contacts", "dead_lead_campaigns",

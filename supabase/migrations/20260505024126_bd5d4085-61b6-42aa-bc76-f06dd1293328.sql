@@ -34,10 +34,10 @@ CREATE POLICY "Admins can read industry_pulse_signals"
   ON public.industry_pulse_signals FOR SELECT TO authenticated
   USING (public.has_role(auth.uid(), 'admin'::app_role));
 
--- 7. hire_alert_client_candidates
-DROP POLICY IF EXISTS "Service role full access on hire_alert_client_candidates" ON public.hire_alert_client_candidates;
-CREATE POLICY "Service role full access on hire_alert_client_candidates"
-  ON public.hire_alert_client_candidates FOR ALL TO service_role USING (true) WITH CHECK (true);
+-- 7. hire_REDACTED
+DROP POLICY IF EXISTS "Service role full access on hire_REDACTED" ON public.hire_REDACTED;
+CREATE POLICY "Service role full access on hire_REDACTED"
+  ON public.hire_REDACTED FOR ALL TO service_role USING (true) WITH CHECK (true);
 
 -- 8. marketplace_buyer_visits — drop all 3 public policies; visit tracking moves to edge function
 DROP POLICY IF EXISTS "Anyone can insert marketplace_buyer_visits" ON public.marketplace_buyer_visits;

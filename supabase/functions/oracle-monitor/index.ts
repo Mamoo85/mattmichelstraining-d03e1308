@@ -19,12 +19,12 @@ const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 
 const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
-const MATT = "matt@mattmichelstraining.com";
+const MATT = "matt@detroitwebagent.com";
 const MATT_CC = ["matthewmichels@gmail.com", "matthewmichels4@gmail.com"];
 
 // Emails that are Matt's own test accounts — exclude from revenue/subscriber counts
 const TEST_EMAILS = [
-  "matt@mattmichelstraining.com",
+  "matt@detroitwebagent.com",
   "matthewmichels@gmail.com",
   "matthewmichels4@gmail.com",
 ];
@@ -317,7 +317,7 @@ serve(async (req) => {
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "Oracle <matt@mattmichelstraining.com>",
+          from: "Oracle <matt@detroitwebagent.com>",
           to: [MATT],
           bcc: MATT_CC,
           subject,

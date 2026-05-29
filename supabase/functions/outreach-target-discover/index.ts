@@ -8,6 +8,7 @@
 //   5. Score & insert into outreach_targets
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { runEmailWaterfall } from "../_shared/email-waterfall.ts";
+import { checkAndConsume } from "../_shared/api-budget.ts";
 import { extractFaxNumber } from "../_shared/firecrawl.ts";
 import { isFounder } from "../_shared/founder-seats.ts";
 import { runComplianceScrub } from "../_shared/compliance-waterfall.ts";
@@ -19,7 +20,7 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const FOUNDER_EMAILS = ["matt@detroitwebagent.com", "matt@mattmichelstraining.com", "pmichels@djconley.com"];
+const FOUNDER_EMAILS = ["matt@detroitwebagent.com", "matt@detroitwebagent.com", "pmichels@djconley.com"];
 
 interface DiscoveryInput {
   verticals: string[];
@@ -61,6 +62,11 @@ const STATE_CITIES: Record<string, string[]> = {
 async function googlePlaces(vertical: string, city: string, state: string): Promise<DiscoveredBiz[]> {
   const key = Deno.env.get("GOOGLE_MAPS_API_KEY");
   if (!key) return [];
+  try {
+    const _sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const mapsOk = await checkAndConsume(_sb, "google_maps", 1, "google_maps_text_search");
+    if (!mapsOk.allowed) return [];
+  } catch { /* fail open */ }
   const q = `${vertical} contractor in ${city}, ${state}`;
   try {
     const res = await fetch(

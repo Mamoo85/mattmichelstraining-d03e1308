@@ -59,16 +59,19 @@ serve(async (req) => {
   // Default 5/run; can be overridden per-invocation.
   const reqBody = await req.json().catch(() => ({} as any));
   const batchLimit = Math.min(Math.max(Number(reqBody?.limit ?? 50), 1), 200);
+  const clientId: string | null = reqBody?.client_id ?? null;
 
   try {
     // Fetch up to N unenriched new prospects per run (small batches)
-    const { data: targets, error } = await sb
+    let targetsQuery = sb
       .from("techalert_prospect_targets")
       .select("id, company_name, city, state, role, source_url")
       .is("enriched_at", null)
       .eq("status", "new")
       .order("score", { ascending: false })
       .limit(batchLimit);
+    if (clientId) targetsQuery = targetsQuery.eq("outreach_client_id", clientId);
+    const { data: targets, error } = await targetsQuery;
 
     if (error) throw error;
     if (!targets?.length) {
@@ -215,6 +218,10 @@ serve(async (req) => {
         }
 
         enriched++;
+        // Track per-client stat
+        if (clientId) {
+          sb.rpc("increment_stat", { p_client_id: clientId, p_col: "enriched" }).catch(() => {});
+        }
         await new Promise((r) => setTimeout(r, 300));
       } catch (e) {
         console.error(`[enrich] ${target.company_name}:`, e instanceof Error ? e.message : e);

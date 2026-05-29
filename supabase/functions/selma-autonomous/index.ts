@@ -1,4 +1,4 @@
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -411,8 +411,8 @@ Respond in this EXACT JSON format (no markdown, ONLY valid JSON):
           Authorization: `Bearer ${RESEND_API_KEY}`,
         },
         body: JSON.stringify({
-          from: "Selma — M² Marketing <matt@mattmichelstraining.com>",
-          to: ["matt@mattmichelstraining.com"],
+          from: "Selma — M² Marketing <matt@detroitwebagent.com>",
+          to: ["matt@detroitwebagent.com"],
           bcc: ["matthewmichels4@gmail.com"],
           subject: `📊 Campaign Proposal: ${campaign.service} on ${campaign.platform}`,
           html: `<div style="font-family:sans-serif;max-width:600px">

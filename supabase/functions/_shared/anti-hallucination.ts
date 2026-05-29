@@ -12,9 +12,6 @@
 
 const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY") || "";
 
-import { freeGeocode } from "./free-geocode.ts";
-import { canCallGoogle, logGoogleCall } from "./google-budget-gate.ts";
-
 // -----------------------------------------------------------------------------
 // 1. PLACEHOLDER PATTERNS — the real LLM tells.
 // -----------------------------------------------------------------------------
@@ -107,50 +104,14 @@ export async function validateAddress(
     }
   } catch (_) { /* cache lookup is best-effort */ }
 
-  // FREE WATERFALL — try Census + Nominatim before any paid Google call.
-  // Returns instantly when a free source matches (US Census handles ~95% of US addresses).
-  const free = await freeGeocode({ address, city: input.city, state: input.state, zip: input.zip });
-  if (free.pass) {
-    try {
-      await sb.from("address_validation_cache").upsert({
-        cache_key: key,
-        pass: true,
-        formatted_address: free.formatted || address,
-        lat: free.lat,
-        lon: free.lon,
-        granularity: `FREE_${(free.source || "free").toUpperCase()}`,
-        missing_components: [],
-        unconfirmed_components: [],
-        raw_response: { source: free.source, confidence: free.confidence },
-        cached_at: new Date().toISOString(),
-      }, { onConflict: "cache_key" });
-    } catch (_) { /* best effort */ }
-    return { pass: true, formatted: free.formatted, lat: free.lat, lon: free.lon, granularity: `FREE_${free.source}` };
-  }
-
-  // Budget gate — refuse to call Google when daily/monthly cap hit.
-  const allowed = await canCallGoogle(sb, "address_validation");
-  if (!allowed) {
-    // Fail-OPEN for trusted sources (BSEED/scrapers) — accept address as-is rather than block real leads.
-    return { pass: true, formatted: address };
-  }
-
   if (!GOOGLE_MAPS_API_KEY) {
+    // Fail-OPEN for trusted government/scraper sources — ArcGIS permit data, BSEED, FEMA etc.
+    // are highly reliable and should not be blocked by a missing key.
+    // Fail-CLOSED is still enforced at the validateLead level for llm_search sources.
     return { pass: true, formatted: address, reject_code: undefined, reject_reason: undefined };
   }
 
-  // DWA weekly spend cap gate
-  let logSpend: ((c?: number) => void) | null = null;
   try {
-    const { assertDwaBudget, BudgetExceeded } = await import("./dwa-budget-gate.ts");
-    try { logSpend = await assertDwaBudget("google_address_validation", undefined, "validateAddress"); }
-    catch (e) { if (e instanceof BudgetExceeded) return { pass: true, formatted: address }; throw e; }
-  } catch { /* gate import failure: fail open */ }
-
-  await logGoogleCall(sb, "validateAddress", "address_validation", { zip: input.zip });
-
-  try {
-
     const res = await fetch(
       `https://addressvalidation.googleapis.com/v1:validateAddress?key=${GOOGLE_MAPS_API_KEY}`,
       {
@@ -174,9 +135,6 @@ export async function validateAddress(
       // API-level failure — fail closed.
       return { pass: false, reject_code: "validation_api_error", reject_reason: `Google API ${res.status}` };
     }
-    logSpend?.();
-
-
 
     const j = await res.json();
     const result = j?.result || {};

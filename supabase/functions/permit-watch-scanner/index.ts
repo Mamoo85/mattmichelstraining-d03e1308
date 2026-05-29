@@ -158,7 +158,7 @@ serve(async (req) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          from: "M² Permits <matt@mattmichelstraining.com>",
+          from: "M² Permits <matt@detroitwebagent.com>",
           to: client.email,
           subject: `🏗️ ${matchedPermits.length} New Permit${matchedPermits.length !== 1 ? "s" : ""} in ${city}, ${state}`,
           html,

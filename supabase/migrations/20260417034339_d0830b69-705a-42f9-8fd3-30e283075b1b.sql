@@ -40,7 +40,7 @@ CREATE TABLE public.wire_digest_log (
   UNIQUE(subscriber_id, lead_id)
 );
 
-CREATE INDEX idx_wire_digest_log_subscriber ON public.wire_digest_log(subscriber_id, sent_at DESC);
+CREATE INDEX idx_wire_REDACTED ON public.wire_digest_log(subscriber_id, sent_at DESC);
 
 ALTER TABLE public.wire_digest_log ENABLE ROW LEVEL SECURITY;
 

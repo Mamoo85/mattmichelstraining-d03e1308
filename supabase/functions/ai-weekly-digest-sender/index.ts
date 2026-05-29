@@ -13,8 +13,8 @@ const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 
-const MATT_EMAIL = "matt@mattmichelstraining.com";
-const FROM_EMAIL = "Matt Michels <matt@mattmichelstraining.com>";
+const MATT_EMAIL = "matt@detroitwebagent.com";
+const FROM_EMAIL = "Matt Michels <matt@detroitwebagent.com>";
 
 interface DigestClient {
   id: string;
@@ -102,7 +102,7 @@ function buildDigestEmail(client: DigestClient, digestHtml: string, dateStr: str
             alt="Matt Michels" width="48" height="48"
             style="border-radius:50%;vertical-align:middle;margin-right:12px;">
           <span style="font-size:13px;color:#475569;vertical-align:middle;">
-            Matt Michels · matt@mattmichelstraining.com · (313) 992-1219
+            Matt Michels · matt@detroitwebagent.com · (313) 992-1219
           </span>
         </td>
       </tr>

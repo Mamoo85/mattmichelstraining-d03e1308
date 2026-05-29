@@ -24,7 +24,7 @@ const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers
 const DAILY_SEND_LIMIT = 20;
 
 // Matt's own test emails — never run outreach to these
-const TEST_EMAILS = ["matt@mattmichelstraining.com", "matt@detroitwebagent.com", "matthewmichels@gmail.com", "matthewmichels4@gmail.com"];
+const TEST_EMAILS = ["matt@detroitwebagent.com", "matt@detroitwebagent.com", "matthewmichels@gmail.com", "matthewmichels4@gmail.com"];
 
 // ── INDUSTRY → DEMO LINK MAPPING ──
 const BASE = "https://www.detroitwebagent.com";
@@ -107,7 +107,11 @@ function selectPitch(business: { industry?: string; has_website?: boolean; ratin
     return { product: "web_design", cta: "a modern website redesign that ranks on Google and converts visitors into calls", price: "$499" };
   }
 
-  return { product: "gbp_saas", cta: "automated Google posts 3x/week to stay visible", price: "$49/mo" };
+  // Rotate through higher-value upsell pitches for established businesses
+  const dayHash = new Date().getDate() % 3;
+  if (dayHash === 0) return { product: "seo_retainer", cta: "a monthly SEO package — we handle content, citations, and ranking so you rank above competitors on Google Maps", price: "$299/mo" };
+  if (dayHash === 1) return { product: "ai_social", cta: "30 done-for-you social media posts per month — we write them, you approve, we post. Fully automated via AI", price: "$99/mo" };
+  return { product: "gbp_saas", cta: "automated Google posts 3x/week to stay visible and drive more calls from Maps", price: "$49/mo" };
 }
 
 // ── SUPPRESSION CHECK ──
@@ -150,7 +154,7 @@ async function writePersonalizedEmail(business: {
     body: JSON.stringify({
       model: "google/gemini-2.5-flash-lite",
       max_tokens: 400,
-      system: `You write cold outreach emails for Matt Michels — Grosse Pointe, MI. B2B background, no-BS, Michigan local.
+      system: `You write cold outreach emails for Matt Michels — web agency owner, Midwest-based. B2B background, no-BS, straight-talking.
 
 VOICE:
 - Direct. No warmup. Say what you want.
@@ -162,7 +166,7 @@ VOICE:
 GOAL: Get a reply. Not sell them anything. Just get them curious enough to respond.`,
       messages: [{
         role: "user",
-        content: `Write a cold email from Matt to ${business.business_name} (${business.industry || "local business"} in ${business.city || "Metro Detroit"}).
+        content: `Write a cold email from Matt to ${business.business_name} (${business.industry || "local business"} in ${business.city || "the area"}).
 
 The pitch: ${business.pitch.cta} (${business.pitch.price}).
 
@@ -172,6 +176,7 @@ Rules:
 - Pitches the product in one sentence, makes it sound easy${demoInstruction}
 - Ends with "— Matt" and his phone number: (313) 992-1219
 - Total: 4-6 sentences max
+- Do NOT mention Michigan or Detroit if the business is outside Michigan
 
 Return JSON: { "subject": "...", "body": "..." }
 Subject should be under 45 chars, conversational, not salesy.`,
@@ -187,7 +192,7 @@ Subject should be under 45 chars, conversational, not salesy.`,
   } catch {
     return {
       subject: `Quick question about ${business.business_name}`,
-      body: `Hey, my name's Matt Michels — based in Grosse Pointe, I work with ${business.industry || "local"} businesses across the Detroit metro.\n\nSaw your listing and wanted to reach out — I can do ${business.pitch.cta} for ${business.pitch.price}.${demoLine}\n\n— Matt\n(313) 992-1219`,
+      body: `Hey, my name's Matt Michels — I work with ${business.industry || "local"} businesses across the Midwest.\n\nSaw your listing and wanted to reach out — I can do ${business.pitch.cta} for ${business.pitch.price}.${demoLine}\n\n— Matt\n(313) 992-1219`,
     };
   }
 }
@@ -271,7 +276,7 @@ serve(async (req) => {
         ${emailBody.split("\n").map(line => line ? `<p style="margin:0 0 12px;">${line}</p>` : "<br>").join("")}
         <div style="margin-top:24px;padding-top:16px;border-top:1px solid #e2e8f0;">
           <img src="https://www.detroitwebagent.com/images/matt-boat.jpg" style="width:40px;height:40px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:10px;">
-          <span style="font-size:13px;color:#64748b;">Matt Michels · Detroit Web Agency · Grosse Pointe, MI · (313) 992-1219</span>
+          <span style="font-size:13px;color:#64748b;">Matt Michels · Detroit Web Agency · (313) 992-1219</span>
         </div>
       </div>`;
 

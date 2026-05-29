@@ -83,7 +83,7 @@ serve(async () => {
             method: "POST",
             headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({
-              from: "M² Review Monitor <matt@mattmichelstraining.com>",
+              from: "M² Review Monitor <matt@detroitwebagent.com>",
               to: [client.email], bcc: ["matthewmichels4@gmail.com"],
               subject: `${review.rating >= 4 ? "⭐" : "⚠️"} New Google Review — ${client.business_name}`,
               html: `<div style="font-family:sans-serif;max-width:500px;padding:24px">

@@ -24,7 +24,7 @@ import { sendSMS, ADMIN_PHONE } from "../_shared/twilio.ts";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
-const ADMIN_EMAIL = "matt@mattmichelstraining.com";
+const ADMIN_EMAIL = "matt@detroitwebagent.com";
 const FROM_PHONE = Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219";
 
 const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
@@ -46,7 +46,7 @@ async function sendEmail(subject: string, html: string): Promise<void> {
       Authorization: `Bearer ${RESEND_API_KEY}`,
     },
     body: JSON.stringify({
-      from: "Mute Compliance <matt@mattmichelstraining.com>",
+      from: "Mute Compliance <matt@detroitwebagent.com>",
       to: [ADMIN_EMAIL],
       subject,
       html,

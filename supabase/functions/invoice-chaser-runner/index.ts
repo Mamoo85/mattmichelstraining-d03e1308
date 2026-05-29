@@ -85,7 +85,7 @@ serve(async (req) => {
         await fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ from: `${client?.business_name || "M²"} <matt@mattmichelstraining.com>`, to: [inv.customer_email], subject: `Invoice Reminder — ${daysLate} days past due`, html: `<p>${message}</p>` }),
+          body: JSON.stringify({ from: `${client?.business_name || "M²"} <matt@detroitwebagent.com>`, to: [inv.customer_email], subject: `Invoice Reminder — ${daysLate} days past due`, html: `<p>${message}</p>` }),
         });
       }
     } catch (e) {

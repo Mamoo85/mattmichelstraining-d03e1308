@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "anon_insert_b2b_partners" ON public.b2b_referral_partners;

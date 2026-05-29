@@ -172,7 +172,7 @@ serve(async (req) => {
   <tr><td style="padding:16px 28px;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 10px 10px;background:#fff;">
     <div style="display:flex;align-items:center;gap:12px;">
       <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" alt="Matt Michels">
-      <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>M2 Development · (313) 992-1219<br><a href="mailto:matt@mattmichelstraining.com" style="color:#e8621a;text-decoration:none;">matt@mattmichelstraining.com</a></div>
+      <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>M2 Development · (313) 992-1219<br><a href="mailto:matt@detroitwebagent.com" style="color:#e8621a;text-decoration:none;">matt@detroitwebagent.com</a></div>
     </div>
   </td></tr>
 
@@ -187,7 +187,7 @@ serve(async (req) => {
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "Matt Michels <matt@mattmichelstraining.com>",
+          from: "Matt Michels <matt@detroitwebagent.com>",
           to: [email],
           subject: "Your HOA Meeting Minutes Template (+ bonus tips)",
           html: emailHtml,

@@ -85,7 +85,7 @@ serve(async (req) => {
             Authorization: `Bearer ${Deno.env.get("RESEND_API_KEY")}`,
             "Content-Type": "application/json" },
           body: JSON.stringify({
-            from: "Matt Michels <matt@mattmichelstraining.com>",
+            from: "Matt Michels <matt@detroitwebagent.com>",
             to: [contact.contact_email],
             bcc: ["matthewmichels4@gmail.com", "matthewmichels@gmail.com"],
             subject: stepSubjects[currentStep],

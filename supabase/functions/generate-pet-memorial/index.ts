@@ -188,7 +188,7 @@ Respond with ONLY valid JSON. No markdown, no commentary, no extra text.`;
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "Matt Michels <matt@mattmichelstraining.com>",
+          from: "Matt Michels <matt@detroitwebagent.com>",
           to: [customer_email],
           bcc: ["matthewmichels4@gmail.com"],
           subject: `Your memorial for ${pet_name} is ready`,
@@ -206,8 +206,8 @@ Respond with ONLY valid JSON. No markdown, no commentary, no extra text.`;
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "M² System <matt@mattmichelstraining.com>",
-          to: ["matt@mattmichelstraining.com"],
+          from: "M² System <matt@detroitwebagent.com>",
+          to: ["matt@detroitwebagent.com"],
           subject: `Pet memorial delivered — ${pet_name} for ${customer_email}`,
           html: `<p>Memorial generated and sent.<br><strong>Pet:</strong> ${pet_name}<br><strong>Customer:</strong> ${customer_name || customer_email}<br><strong>Email:</strong> ${customer_email}<br><strong>Slug:</strong> ${slug}</p>`,
         }),

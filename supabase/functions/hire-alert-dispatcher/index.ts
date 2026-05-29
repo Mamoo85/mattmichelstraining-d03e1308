@@ -33,7 +33,7 @@ serve(async (req) => {
 
   // Read existing checkpoints
   const { data: cps } = await sb
-    .from("hire_alert_scanner_checkpoints")
+    .from("hire_REDACTED")
     .select("source,status,last_dispatched_at");
   const cpMap = new Map((cps || []).map((c: any) => [c.source, c]));
 
@@ -62,7 +62,7 @@ serve(async (req) => {
 
     // Mark checkpoint queued
     await sb
-      .from("hire_alert_scanner_checkpoints")
+      .from("hire_REDACTED")
       .upsert(
         { source, status: "queued", last_dispatched_at: new Date().toISOString(), updated_at: new Date().toISOString() },
         { onConflict: "source" }

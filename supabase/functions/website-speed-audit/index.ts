@@ -106,7 +106,7 @@ serve(async (req) => {
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "M² Reports <matt@mattmichelstraining.com>",
+          from: "M² Reports <matt@detroitwebagent.com>",
           to: [client.email],
           subject: `Your Monthly Speed Report — Mobile ${mobile.score}/100 · Desktop ${desktop.score}/100`,
           html,

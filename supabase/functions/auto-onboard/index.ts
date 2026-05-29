@@ -28,7 +28,7 @@ const TEMPLATES: Record<string, OnboardTemplate> = {
       <ol>
         <li>Go to <a href="https://business.google.com">business.google.com</a></li>
         <li>Click your business → Users → Add user</li>
-        <li>Enter: <strong>matt@mattmichelstraining.com</strong></li>
+        <li>Enter: <strong>matt@detroitwebagent.com</strong></li>
         <li>Set role to <strong>Manager</strong></li>
       </ol>
       <p>Once you add me, I'll start creating and scheduling AI-powered posts 3x per week. You'll see the first post within 48 hours of being added.</p>
@@ -573,7 +573,7 @@ function m2Email(bodyHtml: string): string {
   </div>
   <div style="padding:12px 28px;background:#f8fafc;border-top:1px solid #e2e8f0;text-align:center">
     <p style="margin:0;color:#94a3b8;font-size:11px">M² Development · Grosse Pointe, MI 48230</p>
-    <p style="margin:4px 0 0;color:#94a3b8;font-size:10px"><a href="https://mattmichelstraining.com" style="color:#94a3b8">mattmichelstraining.com</a> · <a href="mailto:matt@mattmichelstraining.com?subject=Unsubscribe" style="color:#94a3b8">Unsubscribe</a></p>
+    <p style="margin:4px 0 0;color:#94a3b8;font-size:10px"><a href="https://mattmichelstraining.com" style="color:#94a3b8">mattmichelstraining.com</a> · <a href="mailto:matt@detroitwebagent.com?subject=Unsubscribe" style="color:#94a3b8">Unsubscribe</a></p>
   </div>
 </div></body></html>`;
 }
@@ -737,7 +737,7 @@ serve(async (req) => {
       body: JSON.stringify({
         from: isDWA
           ? "Matt Michels — Detroit Web Agency <matt@detroitwebagent.com>"
-          : "Matt Michels <matt@mattmichelstraining.com>",
+          : "Matt Michels <matt@detroitwebagent.com>",
         to: [client_email],
         bcc: ["matthewmichels4@gmail.com"],
         subject: template.subject,

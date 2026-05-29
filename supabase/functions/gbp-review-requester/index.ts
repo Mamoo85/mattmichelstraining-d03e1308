@@ -39,7 +39,7 @@ serve(async (req) => {
           method: "POST",
           headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            from: `${client.business_name} <matt@mattmichelstraining.com>`,
+            from: `${client.business_name} <matt@detroitwebagent.com>`,
             to: [customerEmail], bcc: ["matthewmichels4@gmail.com"],
             reply_to: client.email,
             subject: `How was your experience with ${client.business_name}?`,

@@ -81,7 +81,7 @@ function buildAgreementEmail(lead: any): string {
 
       <p style="color:#1a1a2e;font-size:13px;margin-top:24px;">Looking forward to working with you,</p>
       <p style="color:#f97316;font-size:14px;font-weight:bold;margin-top:4px;">— Matt Michels</p>
-      <p style="color:#888;font-size:12px;">(313) 992-1219 · matt@mattmichelstraining.com · mattmichelstraining.com</p>
+      <p style="color:#888;font-size:12px;">(313) 992-1219 · matt@detroitwebagent.com · mattmichelstraining.com</p>
     </td></tr>
   </table>
 </td></tr>
@@ -142,7 +142,7 @@ serve(async (req) => {
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "Matt Michels <matt@mattmichelstraining.com>",
+          from: "Matt Michels <matt@detroitwebagent.com>",
           to: [lead.email], bcc: ["matthewmichels4@gmail.com"],
           subject: `Service Agreement — ${lead.business || lead.name} Website Project`,
           html,

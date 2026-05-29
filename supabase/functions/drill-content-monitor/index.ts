@@ -8,7 +8,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
-const MATT_EMAIL = "matt@mattmichelstraining.com";
+const MATT_EMAIL = "matt@detroitwebagent.com";
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
@@ -117,7 +117,7 @@ async function sendDrillAlert(issues: ContentIssue[]): Promise<void> {
     method: "POST",
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: "M² Drill <matt@mattmichelstraining.com>",
+      from: "M² Drill <matt@detroitwebagent.com>",
       to: [MATT_EMAIL],
       subject: `🚨 DRILL ALERT: ${critical.length} content pipeline issue${critical.length > 1 ? "s" : ""} detected`,
       html: `

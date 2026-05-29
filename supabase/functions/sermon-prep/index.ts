@@ -14,8 +14,8 @@ async function notifyMatt(subject: string, html: string) {
     method: "POST",
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: "M² System <matt@mattmichelstraining.com>",
-      to: ["matt@mattmichelstraining.com"],
+      from: "M² System <matt@detroitwebagent.com>",
+      to: ["matt@detroitwebagent.com"],
       subject,
       html,
     }),
@@ -134,7 +134,7 @@ Write for a ${denomination} context. Be theologically sound, practically helpful
           method: "POST",
           headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            from: "M² Sermon Prep <matt@mattmichelstraining.com>",
+            from: "M² Sermon Prep <matt@detroitwebagent.com>",
             to: [client.email],
             subject: `Your Sermon Prep Package — ${sundayDate}`,
             html: `<!DOCTYPE html>

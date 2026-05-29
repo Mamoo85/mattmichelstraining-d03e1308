@@ -249,7 +249,7 @@ async function sendAuditEmail(email: string, businessName: string, reportText: s
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: "Matt Michels <matt@mattmichelstraining.com>",
+      from: "Matt Michels <matt@detroitwebagent.com>",
       to: [email],
       bcc: ["matthewmichels4@gmail.com"],
       subject: `Your Website Audit — ${businessName || "M² Development"}`,
@@ -322,8 +322,8 @@ serve(async (req) => {
           method: "POST",
           headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            from: "M² Alerts <matt@mattmichelstraining.com>",
-            to: ["matt@mattmichelstraining.com"],
+            from: "M² Alerts <matt@detroitwebagent.com>",
+            to: ["matt@detroitwebagent.com"],
             subject: `🚨 DELIVERY FAILED — instant-audit — ${body.email || "unknown"}`,
             html: `<p><strong>Function:</strong> instant-audit</p><p><strong>Customer:</strong> ${body.email || "unknown"}</p><p><strong>Error:</strong> ${err.message}</p><p><strong>Time:</strong> ${new Date().toISOString()}</p>`,
           }),

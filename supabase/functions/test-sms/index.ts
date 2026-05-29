@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { sendSMS } from "../_shared/twilio.ts";
 
 const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
-const MATT_EMAIL = "matt@mattmichelstraining.com";
+const MATT_EMAIL = "matt@detroitwebagent.com";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {

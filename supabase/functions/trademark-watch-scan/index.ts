@@ -340,7 +340,7 @@ serve(async (req) => {
             method: "POST",
             headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({
-              from: "Matt Michels <matt@mattmichelstraining.com>",
+              from: "Matt Michels <matt@detroitwebagent.com>",
               to: [client.customer_email],
               bcc: ["matthewmichels4@gmail.com"],
               subject: `Trademark Watch Report for "${mark.mark_text}" — ${dateStr}`,
@@ -371,8 +371,8 @@ serve(async (req) => {
               method: "POST",
               headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
               body: JSON.stringify({
-                from: "M² System <matt@mattmichelstraining.com>",
-                to: ["matt@mattmichelstraining.com"],
+                from: "M² System <matt@detroitwebagent.com>",
+                to: ["matt@detroitwebagent.com"],
                 bcc: ["matthewmichels4@gmail.com"],
                 subject: `⚠️ Trademark Opposition Alert — "${mark.mark_text}" for ${client.company_name || client.customer_email}`,
                 html: `<p><strong>${opposeCount} mark(s) flagged for opposition</strong> for client ${client.company_name || client.customer_email} (${client.customer_email}).<br>Watched mark: <strong>${mark.mark_text}</strong><br>Report sent to client.</p>`,

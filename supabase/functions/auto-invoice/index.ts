@@ -79,7 +79,7 @@ function buildInvoiceEmail(lead: any, month: string, invoiceNumber: string): str
         <p style="margin:0 0 8px;font-size:13px;font-weight:bold;color:#1a1a2e;">Payment Options</p>
         <p style="margin:0;font-size:13px;color:#555;line-height:1.7;">
           Venmo: <strong>@MattMichels-Training</strong><br>
-          PayPal: matt@mattmichelstraining.com<br>
+          PayPal: matt@detroitwebagent.com<br>
           Zelle: (313) 992-1219<br>
           Check payable to: Matt Michels
         </p>
@@ -89,7 +89,7 @@ function buildInvoiceEmail(lead: any, month: string, invoiceNumber: string): str
       <p style="color:#1a1a2e;font-size:14px;font-weight:bold;margin-top:16px;">— Matt Michels</p>
     </td></tr>
     <tr><td style="background:#f8f8f8;padding:14px;text-align:center;border-top:1px solid #eee;">
-      <p style="color:#aaa;font-size:11px;margin:0;">Matt Michels Web Design · Grosse Pointe, MI · (313) 992-1219 · matt@mattmichelstraining.com</p>
+      <p style="color:#aaa;font-size:11px;margin:0;">Matt Michels Web Design · Grosse Pointe, MI · (313) 992-1219 · matt@detroitwebagent.com</p>
     </td></tr>
   </table>
 </td></tr>
@@ -154,7 +154,7 @@ serve(async (req) => {
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "Matt Michels <matt@mattmichelstraining.com>",
+          from: "Matt Michels <matt@detroitwebagent.com>",
           to: [client.email], bcc: ["matthewmichels4@gmail.com"],
           subject: `Invoice #${invoiceNum} — ${month} Website Maintenance — $49`,
           html,

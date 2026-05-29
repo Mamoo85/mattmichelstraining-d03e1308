@@ -1,0 +1,1 @@
+ALTER TABLE public.user_privacy_settings ALTER COLUMN show_name SET DEFAULT true, ALTER COLUMN show_points SET DEFAULT true, ALTER COLUMN show_level SET DEFAULT true, ALTER COLUMN show_streaks SET DEFAULT true;

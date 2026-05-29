@@ -12,7 +12,6 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { frequencyCapExceeded } from "../_shared/outreach-blocklist.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -139,7 +138,7 @@ async function sendEmail(to: string, subject: string, bodyText: string): Promise
     <hr style="border:none;border-top:1px solid #e2e8f0;margin:0 0 16px;">
     <div style="display:flex;align-items:center;gap:12px;">
       <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" alt="Matt Michels">
-      <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>M2 Development · (313) 992-1219<br><a href="mailto:matt@mattmichelstraining.com" style="color:#e8621a;text-decoration:none;">matt@mattmichelstraining.com</a></div>
+      <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>M2 Development · (313) 992-1219<br><a href="mailto:matt@detroitwebagent.com" style="color:#e8621a;text-decoration:none;">matt@detroitwebagent.com</a></div>
     </div>
   </td></tr>
 </table>
@@ -151,7 +150,7 @@ async function sendEmail(to: string, subject: string, bodyText: string): Promise
     method: "POST",
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: "Matt Michels <matt@mattmichelstraining.com>",
+      from: "Matt Michels <matt@detroitwebagent.com>",
       to: [to],
       subject,
       html,
@@ -220,8 +219,6 @@ serve(async () => {
 
   for (const prospect of pendingProspects || []) {
     try {
-      const capChk = await frequencyCapExceeded(sb, prospect.email, { currentTemplate: "hoa_cold_outreach_t1" });
-      if (capChk.exceeded) continue;
       const emailBody = await generateColdEmail(prospect.company_name, 1);
       if (!emailBody) continue;
 
@@ -253,8 +250,6 @@ serve(async () => {
 
   for (const prospect of touch2Prospects || []) {
     try {
-      const capChk = await frequencyCapExceeded(sb, prospect.email, { currentTemplate: "hoa_cold_outreach_t2" });
-      if (capChk.exceeded) continue;
       const emailBody = await generateColdEmail(prospect.company_name, 2);
       if (!emailBody) continue;
 
@@ -286,8 +281,6 @@ serve(async () => {
 
   for (const prospect of touch3Prospects || []) {
     try {
-      const capChk = await frequencyCapExceeded(sb, prospect.email, { currentTemplate: "hoa_cold_outreach_t3" });
-      if (capChk.exceeded) continue;
       const emailBody = await generateColdEmail(prospect.company_name, 3);
       if (!emailBody) continue;
 

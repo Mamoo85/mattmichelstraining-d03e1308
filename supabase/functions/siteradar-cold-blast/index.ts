@@ -2,9 +2,9 @@
 // Plain HTML body (no dark template, no card image) — deliverability-safe.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { dwaColdEmail } from "../_shared/dwa-email.ts";
-import { isBlocked, frequencyCapExceeded } from "../_shared/outreach-blocklist.ts";
+import { isBlocked } from "../_shared/outreach-blocklist.ts";
 import { isMarketingBlocked } from "../_shared/marketing-kill-switch.ts";
-import { wasContactedRecently } from "../_shared/cold-email-dedup.ts";
+import { wasRecentlyEmailed } from "../_shared/cold-email-dedup.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -18,11 +18,13 @@ const SITE = "https://detroitwebagent.com";
 function plainBody(lead: any): string {
   const fn = lead.first_name || lead.owner_name?.split(" ")[0] || "there";
   const biz = lead.business_name || "your business";
+  const city = lead.city || "Michigan";
   const ctaUrl = `${SITE}/start-trial?product=site_radar&email=${encodeURIComponent(lead.email || "")}&utm_source=cold_email&utm_medium=email&utm_campaign=siteradar_blast`;
   return `<div style="font:15px/1.55 -apple-system,Segoe UI,Arial,sans-serif;color:#111;max-width:560px;">
 <p style="margin:0 0 14px;">Hey ${fn},</p>
-<p style="margin:0 0 14px;">Quick one about ${biz}'s website — if it gets traffic but only a small percent of visitors ever fill out the form, you're losing the rest without knowing who they were.</p>
-<p style="margin:0 0 14px;">SiteRadar shows you the company name, industry, and size of every visitor (not just an IP), so you can follow up directly. $49/mo with a free 7-day trial:</p>
+<p style="margin:0 0 14px;">Quick one — someone from a ${city} business is on ${biz}'s site right now and you have no idea who they are.</p>
+<p style="margin:0 0 14px;">SiteRadar identifies the company behind each visitor — name, industry, how many pages they hit, when they were there. You see it in real time and can follow up before they call a competitor.</p>
+<p style="margin:0 0 14px;">$49/mo. Free 7-day trial — takes about 5 minutes to install:</p>
 <p style="margin:0 0 14px;"><a href="${ctaUrl}" style="color:#0a58ca;">${ctaUrl}</a></p>
 <p style="margin:18px 0 4px;">— Matt Michels</p>
 <p style="margin:0 0 4px;color:#555;">Detroit Web Agency · (313) 992-1219</p>
@@ -55,16 +57,14 @@ Deno.serve(async (req) => {
     if ((lead.drip_campaign_status as any)?.last_product_pitched === "site_radar") { skipped++; continue; }
 
     try {
-      const cap = await frequencyCapExceeded(sb, lead.email, { currentTemplate: "siteradar_cold_blast" });
-      if (cap.exceeded) { blockedCount++; continue; }
       const b = await isBlocked(sb, { email: lead.email, business_name: lead.business_name });
       if (b.blocked) { blockedCount++; continue; }
     } catch (_) {}
 
-    // Cross-product dedup: skip if this address got ANY cold email in last 5 days.
-    if (await wasContactedRecently(sb, lead.email, 5)) { skipped++; continue; }
+    // Cross-product 5-day dedup — skip if any DWA product already emailed this address recently
+    if (await wasRecentlyEmailed(sb, lead.email)) { skipped++; continue; }
 
-    const subject = `${lead.business_name || "your site"} — see who's actually visiting`;
+    const subject = `${lead.business_name || "your site"} — who's browsing your website right now?`;
     const r = await dwaColdEmail({
       to: lead.email,
       subject,

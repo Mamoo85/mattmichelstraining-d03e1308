@@ -347,7 +347,7 @@ Be direct, professional, and actionable. Format with clear sections.`;
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          from: "Matt Michels <matt@mattmichelstraining.com>",
+          from: "Matt Michels <matt@detroitwebagent.com>",
           to: [customerEmail],
           bcc: ["matthewmichels4@gmail.com"],
           subject: `Employee Credential Audit — ${companyName}`,

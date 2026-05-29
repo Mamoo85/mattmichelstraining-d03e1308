@@ -79,8 +79,8 @@ serve(async (req) => {
           method: "POST",
           headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            from: "M² Site <matt@mattmichelstraining.com>",
-            to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"],
+            from: "M² Site <matt@detroitwebagent.com>",
+            to: ["matt@detroitwebagent.com"], bcc: ["matthewmichels4@gmail.com"],
             subject: `GBP Post Ready — ${client.business_name} (${week})`,
             html: `
               <p><strong>Business:</strong> ${client.business_name}</p>
@@ -99,7 +99,7 @@ serve(async (req) => {
         if (res.ok) {
           await sb.from("email_send_log").insert({
             template_name: templateName,
-            recipient_email: "matt@mattmichelstraining.com",
+            recipient_email: "matt@detroitwebagent.com",
           });
           generated++;
           log("GBP post generated", { business: client.business_name, week });

@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Guilds and Grains × TikTok Integration Demo</title>
+<style>
+  :root {
+    --tt-black: #010101;
+    --tt-red:   #FE2C55;
+    --tt-cyan:  #25F4EE;
+    --tt-white: #FFFFFF;
+    --tt-gray:  #1A1A1A;
+    --tt-mid:   #2B2B2B;
+    --tt-light: #8A8A8A;
+    --green:    #00D46A;
+    --amber:    #FFB800;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--tt-black);
+    color: var(--tt-white);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    width: 1280px;
+    min-height: 720px;
+    overflow-x: hidden;
+  }
+
+  /* ── Top nav ── */
+  .nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 40px;
+    background: var(--tt-gray);
+    border-bottom: 1px solid #333;
+  }
+  .nav-brand { display: flex; align-items: center; gap: 10px; }
+  .nav-logo {
+    width: 32px; height: 32px;
+    background: var(--tt-red);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .nav-name { font-size: 18px; font-weight: 700; letter-spacing: -.3px; }
+  .nav-sub { font-size: 12px; color: var(--tt-light); margin-top: 1px; }
+  .nav-badge {
+    background: linear-gradient(135deg, var(--tt-red), var(--tt-cyan));
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+    letter-spacing: .5px;
+  }
+
+  /* ── Slides ── */
+  .slide {
+    display: none;
+    width: 100%;
+    min-height: 660px;
+  }
+  .slide.active { display: flex; }
+
+  /* ── Slide 1: Intro ── */
+  #s1 {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 60px 40px;
+    background: radial-gradient(ellipse at 50% 60%, #1a0810 0%, var(--tt-black) 70%);
+  }
+  #s1 .big-logo {
+    width: 90px; height: 90px;
+    background: linear-gradient(135deg, var(--tt-red) 0%, #ff6b35 100%);
+    border-radius: 22px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 46px;
+    margin-bottom: 24px;
+    box-shadow: 0 0 60px rgba(254,44,85,.4);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{box-shadow:0 0 60px rgba(254,44,85,.4)} 50%{box-shadow:0 0 100px rgba(254,44,85,.7)} }
+  #s1 h1 { font-size: 38px; font-weight: 800; line-height: 1.1; }
+  #s1 h1 span { background: linear-gradient(135deg, var(--tt-red), var(--tt-cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  #s1 p.sub { font-size: 16px; color: var(--tt-light); margin-top: 12px; max-width: 560px; line-height: 1.6; }
+  .scope-pills { display: flex; gap: 10px; margin-top: 28px; flex-wrap: wrap; justify-content: center; }
+  .pill {
+    border: 1px solid var(--tt-mid);
+    padding: 8px 18px;
+    border-radius: 20px;
+    font-size: 13px;
+    color: var(--tt-cyan);
+    font-family: monospace;
+    background: rgba(37,244,238,.07);
+  }
+  .steps-row { display: flex; gap: 28px; margin-top: 32px; }
+  .step-box {
+    background: var(--tt-mid);
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 16px 22px;
+    text-align: center;
+    min-width: 140px;
+  }
+  .step-box .num { font-size: 24px; font-weight: 800; color: var(--tt-red); }
+  .step-box .lbl { font-size: 12px; color: var(--tt-light); margin-top: 4px; }
+
+  /* ── Slide 2: OAuth Start ── */
+  #s2 { flex-direction: row; }
+  .s2-left {
+    width: 50%;
+    background: var(--tt-gray);
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .s2-right {
+    width: 50%;
+    background: #0d0d0d;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .slide-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(254,44,85,.15);
+    color: var(--tt-red);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    border-radius: 6px;
+    margin-bottom: 16px;
+  }
+  .slide-tag.cyan { background: rgba(37,244,238,.1); color: var(--tt-cyan); }
+  .slide-tag.green { background: rgba(0,212,106,.1); color: var(--green); }
+  h2 { font-size: 26px; font-weight: 700; line-height: 1.2; }
+  h2 .light { color: var(--tt-light); font-weight: 400; }
+  .desc { font-size: 14px; color: var(--tt-light); margin-top: 10px; line-height: 1.6; }
+  .code-block {
+    background: #0a0a0a;
+    border: 1px solid #2a2a2a;
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-top: 16px;
+    font-family: "SF Mono", "Fira Code", monospace;
+    font-size: 12px;
+    line-height: 1.7;
+    overflow-x: auto;
+  }
+  .code-block .kw  { color: var(--tt-cyan); }
+  .code-block .str { color: #a8ff78; }
+  .code-block .cmt { color: #555; font-style: italic; }
+  .code-block .key { color: #f7d774; }
+  .code-block .url { color: var(--tt-red); text-decoration: none; }
+  .scope-list { margin-top: 14px; }
+  .scope-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--tt-mid);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    font-size: 13px;
+  }
+  .scope-item .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--tt-cyan); flex-shrink: 0; }
+  .scope-item .name { font-family: monospace; color: var(--tt-cyan); }
+  .scope-item .why { color: var(--tt-light); font-size: 12px; margin-left: auto; }
+
+  /* ── Browser mockup ── */
+  .browser {
+    background: #1c1c1c;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid #333;
+    box-shadow: 0 4px 24px rgba(0,0,0,.6);
+  }
+  .browser-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: #252525;
+    border-bottom: 1px solid #333;
+  }
+  .browser-dot { width: 12px; height: 12px; border-radius: 50%; }
+  .browser-dot.r { background: #FF5F57; }
+  .browser-dot.y { background: #FEBC2E; }
+  .browser-dot.g { background: #28C840; }
+  .browser-url {
+    flex: 1;
+    background: #1a1a1a;
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-family: monospace;
+    font-size: 11px;
+    color: #888;
+    margin: 0 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .browser-url .tts { color: var(--tt-cyan); }
+  .browser-body { padding: 20px; min-height: 200px; }
+
+  /* ── TikTok Auth page (inside browser) ── */
+  .tt-auth {
+    background: #fff;
+    color: #111;
+    border-radius: 8px;
+    padding: 24px 28px;
+    text-align: center;
+  }
+  .tt-auth-logo { font-size: 28px; font-weight: 900; color: #111; letter-spacing: -1px; }
+  .tt-auth-logo span { color: var(--tt-red); }
+  .tt-auth h3 { font-size: 17px; font-weight: 600; margin-top: 14px; color: #111; }
+  .tt-auth p { font-size: 13px; color: #666; margin-top: 6px; }
+  .tt-perms { text-align: left; margin: 16px 0; border-top: 1px solid #eee; padding-top: 14px; }
+  .tt-perm-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #333; margin-bottom: 8px; }
+  .tt-perm-item::before { content: "✓"; color: #00C853; font-weight: 700; }
+  .tt-btn-allow {
+    width: 100%;
+    padding: 12px;
+    background: var(--tt-red);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 6px;
+    animation: btnpulse 1.5s ease-in-out infinite;
+  }
+  @keyframes btnpulse { 0%,100%{opacity:1} 50%{opacity:.85} }
+  .tt-btn-deny { background: none; border: 1px solid #ddd; color: #666; width: 100%; padding: 10px; border-radius: 6px; font-size: 14px; cursor: pointer; margin-top: 8px; }
+
+  /* ── Slide 3: OAuth Callback ── */
+  #s3 { flex-direction: row; }
+  .s3-left { width: 50%; background: var(--tt-gray); padding: 40px; display: flex; flex-direction: column; justify-content: center; }
+  .s3-right { width: 50%; background: #0a0a0a; padding: 40px; display: flex; flex-direction: column; justify-content: center; }
+  .token-card {
+    background: var(--tt-mid);
+    border-radius: 10px;
+    border: 1px solid #333;
+    padding: 18px;
+    margin-top: 16px;
+  }
+  .token-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 13px; }
+  .token-key { color: var(--tt-light); }
+  .token-val { font-family: monospace; color: var(--tt-cyan); font-size: 12px; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .token-val.green { color: var(--green); }
+  .success-badge {
+    display: flex; align-items: center; gap: 10px;
+    background: rgba(0,212,106,.1);
+    border: 1px solid rgba(0,212,106,.3);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-top: 14px;
+    font-size: 14px;
+  }
+  .success-badge .icon { font-size: 24px; }
+  .success-badge strong { color: var(--green); }
+  .db-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #111;
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-top: 10px;
+    font-size: 12px;
+    font-family: monospace;
+  }
+  .db-icon { font-size: 18px; }
+  .db-text { color: var(--tt-light); line-height: 1.5; }
+  .db-text .hl { color: var(--tt-cyan); }
+
+  /* ── Slide 4: Video Upload ── */
+  #s4 { flex-direction: row; }
+  .s4-left { width: 55%; background: var(--tt-gray); padding: 40px; display: flex; flex-direction: column; justify-content: center; }
+  .s4-right { width: 45%; background: #0a0a0a; padding: 40px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+
+  .api-call {
+    background: #0a0a0a;
+    border: 1px solid #2a2a2a;
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-top: 12px;
+  }
+  .api-call .method { display: inline-block; background: var(--tt-red); color: white; font-family: monospace; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; margin-right: 6px; }
+  .api-call .method.get { background: #0057D8; }
+  .api-call .endpoint { font-family: monospace; font-size: 12px; color: var(--tt-cyan); }
+  .api-call pre { font-family: monospace; font-size: 11px; color: #aaa; margin-top: 10px; line-height: 1.6; }
+  .api-call pre .key { color: #f7d774; }
+  .api-call pre .val { color: #a8ff78; }
+  .api-call pre .num { color: #f97316; }
+
+  .video-thumb {
+    width: 180px; height: 320px;
+    background: linear-gradient(160deg, #1a0a1a 0%, #0d1a0d 100%);
+    border-radius: 14px;
+    border: 2px solid #333;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .video-thumb .play { font-size: 36px; }
+  .video-thumb .vt { font-size: 11px; color: var(--tt-light); margin-top: 8px; text-align: center; padding: 0 10px; line-height: 1.4; }
+  .upload-bar {
+    width: 100%;
+    height: 4px;
+    background: #333;
+    border-radius: 2px;
+    margin-top: 14px;
+    overflow: hidden;
+  }
+  .upload-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--tt-red), var(--tt-cyan));
+    border-radius: 2px;
+    width: 0%;
+    transition: width 2s linear;
+  }
+  .upload-fill.done { width: 100%; }
+  .upload-status { font-size: 12px; color: var(--tt-light); margin-top: 6px; text-align: center; }
+
+  /* ── Slide 5: Video Publish ── */
+  #s5 { flex-direction: row; }
+  .s5-left { width: 50%; background: var(--tt-gray); padding: 40px; display: flex; flex-direction: column; justify-content: center; }
+  .s5-right { width: 50%; background: #0a0a0a; padding: 40px; display: flex; flex-direction: column; justify-content: center; }
+
+  .publish-status {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 18px;
+    border-radius: 10px;
+    margin-top: 12px;
+    font-size: 14px;
+    border: 1px solid;
+  }
+  .publish-status.processing { background: rgba(255,184,0,.08); border-color: rgba(255,184,0,.3); color: var(--amber); }
+  .publish-status.success    { background: rgba(0,212,106,.08); border-color: rgba(0,212,106,.3); color: var(--green); }
+
+  .tiktok-post-card {
+    background: var(--tt-mid);
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #333;
+    margin-top: 16px;
+  }
+  .tp-header { display: flex; align-items: center; gap: 10px; padding: 14px; }
+  .tp-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--tt-red), var(--tt-cyan)); display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .tp-name { font-size: 14px; font-weight: 600; }
+  .tp-handle { font-size: 12px; color: var(--tt-light); }
+  .tp-thumb { height: 200px; background: linear-gradient(160deg, #1a0a1a 0%, #0d1a0d 100%); display: flex; align-items: center; justify-content: center; font-size: 60px; }
+  .tp-caption { padding: 12px 14px; font-size: 13px; color: #ddd; line-height: 1.5; }
+  .tp-hashtags { color: var(--tt-cyan); }
+  .tp-stats { display: flex; gap: 20px; padding: 10px 14px; border-top: 1px solid #333; font-size: 12px; color: var(--tt-light); }
+
+  /* ── Slide 6: User Info ── */
+  #s6 { flex-direction: row; }
+  .s6-left { width: 50%; background: var(--tt-gray); padding: 40px; display: flex; flex-direction: column; justify-content: center; }
+  .s6-right { width: 50%; background: #0a0a0a; padding: 40px; display: flex; flex-direction: column; justify-content: center; }
+  .user-card {
+    background: var(--tt-mid);
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 14px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .user-card .avatar { width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, var(--tt-red), var(--tt-cyan)); display: flex; align-items: center; justify-content: center; font-size: 28px; flex-shrink: 0; }
+  .user-card .info .name { font-size: 18px; font-weight: 700; }
+  .user-card .info .uid { font-size: 11px; font-family: monospace; color: var(--tt-light); margin-top: 3px; }
+  .user-card .info .scope { display: inline-flex; align-items: center; gap: 4px; background: rgba(37,244,238,.1); color: var(--tt-cyan); font-size: 11px; font-family: monospace; padding: 3px 8px; border-radius: 4px; margin-top: 6px; }
+
+  /* ── Slide 7: Done ── */
+  #s7 {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 60px 40px;
+    background: radial-gradient(ellipse at 50% 50%, #0d1a10 0%, var(--tt-black) 70%);
+  }
+  #s7 .done-icon { font-size: 72px; margin-bottom: 20px; animation: bounce .8s ease-in-out infinite alternate; }
+  @keyframes bounce { from{transform:translateY(0)} to{transform:translateY(-8px)} }
+  #s7 h2 { font-size: 32px; font-weight: 800; }
+  #s7 h2 span { color: var(--green); }
+  #s7 .sum { font-size: 15px; color: var(--tt-light); margin-top: 10px; max-width: 560px; line-height: 1.7; }
+  .sum-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-top: 32px; max-width: 680px; }
+  .sum-card {
+    background: var(--tt-mid);
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 18px 14px;
+    text-align: center;
+  }
+  .sum-card .icon { font-size: 28px; margin-bottom: 8px; }
+  .sum-card .label { font-size: 13px; font-weight: 600; }
+  .sum-card .sub { font-size: 11px; color: var(--tt-light); margin-top: 4px; }
+
+  /* ── Progress bar ── */
+  .progress-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: #1a1a1a;
+    z-index: 99;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--tt-red), var(--tt-cyan));
+    transition: width .5s ease;
+  }
+
+  /* ── Slide counter ── */
+  .counter {
+    position: fixed;
+    bottom: 14px;
+    right: 20px;
+    font-size: 12px;
+    color: var(--tt-light);
+    z-index: 99;
+  }
+
+  /* ── Section header with step number ── */
+  .step-indicator {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+  .step-num {
+    width: 26px; height: 26px;
+    background: var(--tt-red);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .step-of { font-size: 12px; color: var(--tt-light); }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<div class="nav">
+  <div class="nav-brand">
+    <div class="nav-logo">🌾</div>
+    <div>
+      <div class="nav-name">Guilds and Grains</div>
+      <div class="nav-sub">Content Automation Platform</div>
+    </div>
+  </div>
+  <div class="nav-badge">TikTok Developer Integration Demo</div>
+</div>
+
+<!-- ══ SLIDE 1: Intro ══════════════════════════════════════════════════════ -->
+<div class="slide active" id="s1">
+  <div class="big-logo">🌾</div>
+  <h1>Guilds and Grains<br/><span>× TikTok API Integration</span></h1>
+  <p class="sub">
+    Guilds and Grains is a content automation platform that generates and publishes short-form
+    lifestyle videos to TikTok using the Content Posting API.
+    This demo shows the complete end-to-end integration flow in sandbox mode.
+  </p>
+  <div class="scope-pills">
+    <div class="pill">user.info.basic</div>
+    <div class="pill">video.upload</div>
+    <div class="pill">video.publish</div>
+  </div>
+  <div class="steps-row">
+    <div class="step-box"><div class="num">1</div><div class="lbl">OAuth Login</div></div>
+    <div class="step-box"><div class="num">2</div><div class="lbl">Read User Info</div></div>
+    <div class="step-box"><div class="num">3</div><div class="lbl">Upload Video</div></div>
+    <div class="step-box"><div class="num">4</div><div class="lbl">Publish Post</div></div>
+  </div>
+</div>
+
+<!-- ══ SLIDE 2: OAuth Start ══════════════════════════════════════════════ -->
+<div class="slide" id="s2">
+  <div class="s2-left">
+    <div class="step-indicator">
+      <div class="step-num">1</div>
+      <span class="step-of">Step 1 of 4 — OAuth Authorization</span>
+    </div>
+    <div class="slide-tag">🔐 Login Kit</div>
+    <h2>User Authorizes<br/><span class="light">the App via TikTok OAuth</span></h2>
+    <p class="desc">
+      The user clicks "Connect TikTok" on the Guilds and Grains dashboard.
+      Our edge function builds the OAuth 2.0 authorization URL and redirects
+      the user to TikTok's consent screen.
+    </p>
+    <div class="code-block">
+      <span class="cmt">// tiktok-oauth-start edge function</span><br/>
+      <span class="kw">GET</span> <span class="url">https://www.tiktok.com/v2/auth/authorize/</span><br/>
+      &nbsp;&nbsp;<span class="key">?client_key</span>=<span class="str">sbawxxx…</span><br/>
+      &nbsp;&nbsp;<span class="key">&amp;scope</span>=<span class="str">user.info.basic,video.upload,video.publish</span><br/>
+      &nbsp;&nbsp;<span class="key">&amp;response_type</span>=<span class="str">code</span><br/>
+      &nbsp;&nbsp;<span class="key">&amp;redirect_uri</span>=<span class="str">…/tiktok-oauth-callback</span>
+    </div>
+    <div class="scope-list">
+      <div class="scope-item"><div class="dot"></div><span class="name">user.info.basic</span><span class="why">Read display name &amp; open_id</span></div>
+      <div class="scope-item"><div class="dot"></div><span class="name">video.upload</span><span class="why">Upload video bytes via FILE_UPLOAD</span></div>
+      <div class="scope-item"><div class="dot"></div><span class="name">video.publish</span><span class="why">Publish post to TikTok feed</span></div>
+    </div>
+  </div>
+  <div class="s2-right">
+    <div class="browser">
+      <div class="browser-bar">
+        <div class="browser-dot r"></div>
+        <div class="browser-dot y"></div>
+        <div class="browser-dot g"></div>
+        <div class="browser-url"><span class="tts">tiktok.com</span>/v2/auth/authorize/?client_key=sbawxxx&amp;scope=…</div>
+      </div>
+      <div class="browser-body">
+        <div class="tt-auth">
+          <div class="tt-auth-logo">Tik<span>Tok</span></div>
+          <h3>Guilds and Grains would like to access your TikTok account</h3>
+          <p>Sandbox mode — review &amp; approve permissions below</p>
+          <div class="tt-perms">
+            <div class="tt-perm-item">View your basic profile info (display name, avatar)</div>
+            <div class="tt-perm-item">Upload video files to your account</div>
+            <div class="tt-perm-item">Publish posts to your TikTok feed</div>
+          </div>
+          <button class="tt-btn-allow">Allow</button>
+          <button class="tt-btn-deny">Deny</button>
+        </div>
+      </div>
+    </div>
+    <p style="font-size:11px;color:#555;margin-top:10px;text-align:center">Sandbox mode — test account authorization</p>
+  </div>
+</div>
+
+<!-- ══ SLIDE 3: OAuth Callback + User Info ═══════════════════════════════ -->
+<div class="slide" id="s3">
+  <div class="s3-left">
+    <div class="step-indicator">
+      <div class="step-num">2</div>
+      <span class="step-of">Step 2 of 4 — user.info.basic</span>
+    </div>
+    <div class="slide-tag cyan">👤 user.info.basic</div>
+    <h2>Tokens Stored &<br/><span class="light">User Profile Fetched</span></h2>
+    <p class="desc">
+      TikTok redirects back with an authorization <code style="color:var(--tt-cyan);font-family:monospace">code</code>.
+      Our callback function exchanges it for tokens, then calls
+      <code style="color:var(--tt-cyan);font-family:monospace">/v2/user/info/</code>
+      to read the account's display name using the <strong>user.info.basic</strong> scope.
+    </p>
+    <div class="api-call">
+      <span class="method get">GET</span>
+      <span class="endpoint">open.tiktokapis.com/v2/user/info/?fields=display_name</span>
+      <pre>
+<span class="key">Authorization</span>: Bearer <span class="val">act.sandbox_xxx…</span>
+      </pre>
+    </div>
+    <div class="user-card">
+      <div class="avatar">🌾</div>
+      <div class="info">
+        <div class="name">guildsandgrains</div>
+        <div class="uid">open_id: sandbox_UID_4f2a9c…</div>
+        <div class="scope">✓ user.info.basic</div>
+      </div>
+    </div>
+  </div>
+  <div class="s3-right">
+    <p style="font-size:12px;color:var(--tt-light);margin-bottom:10px">Token exchange response:</p>
+    <div class="code-block">
+      <span class="cmt">// POST /v2/oauth/token/ → 200 OK</span><br/>
+      {<br/>
+      &nbsp;&nbsp;<span class="key">"access_token"</span>: <span class="str">"act.sandbox_7Kp…"</span>,<br/>
+      &nbsp;&nbsp;<span class="key">"refresh_token"</span>: <span class="str">"rft.sandbox_mQn…"</span>,<br/>
+      &nbsp;&nbsp;<span class="key">"expires_in"</span>: <span class="str">86400</span>,<br/>
+      &nbsp;&nbsp;<span class="key">"open_id"</span>: <span class="str">"sandbox_UID_4f2a9c"</span>,<br/>
+      &nbsp;&nbsp;<span class="key">"scope"</span>: <span class="str">"user.info.basic,video.upload,video.publish"</span><br/>
+      }
+    </div>
+    <div class="success-badge">
+      <span class="icon">✅</span>
+      <div><strong>Connected successfully</strong><br/><span style="font-size:12px;color:var(--tt-light)">Tokens persisted to Supabase DB</span></div>
+    </div>
+    <div class="db-row">
+      <span class="db-icon">🗄️</span>
+      <div class="db-text">
+        Table: <span class="hl">tiktok_oauth_tokens</span><br/>
+        UPSERT on <span class="hl">open_id</span> — auto-refreshes before expiry
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SLIDE 4: Video Upload ═════════════════════════════════════════════ -->
+<div class="slide" id="s4">
+  <div class="s4-left">
+    <div class="step-indicator">
+      <div class="step-num">3</div>
+      <span class="step-of">Step 3 of 4 — video.upload</span>
+    </div>
+    <div class="slide-tag">🎬 video.upload</div>
+    <h2>AI-Generated Video<br/><span class="light">Uploaded via FILE_UPLOAD</span></h2>
+    <p class="desc">
+      Our system generates a lifestyle video (AI images → AVI/MJPEG, 8s), then uploads it to TikTok
+      using the Content Posting API <strong>FILE_UPLOAD</strong> method.
+      The upload initializes with <code style="color:var(--tt-cyan);font-family:monospace">/v2/post/publish/video/init/</code>,
+      then sends the byte stream in a single chunk PUT request.
+    </p>
+    <div class="api-call">
+      <span class="method">POST</span>
+      <span class="endpoint">open.tiktokapis.com/v2/post/publish/video/init/</span>
+      <pre>
+{
+  <span class="key">"post_info"</span>: {
+    <span class="key">"title"</span>: <span class="val">"My AI posted 5 products… #sidehustle"</span>,
+    <span class="key">"privacy_level"</span>: <span class="val">"PUBLIC_TO_EVERYONE"</span>
+  },
+  <span class="key">"source_info"</span>: {
+    <span class="key">"source"</span>: <span class="val">"FILE_UPLOAD"</span>,
+    <span class="key">"video_size"</span>: <span class="num">2097152</span>,
+    <span class="key">"chunk_size"</span>:  <span class="num">2097152</span>,
+    <span class="key">"total_chunk_count"</span>: <span class="num">1</span>
+  }
+}</pre>
+    </div>
+    <div class="api-call" style="margin-top:8px">
+      <span class="method">PUT</span>
+      <span class="endpoint">&lt;upload_url&gt; — byte stream, Content-Range: bytes 0-…</span>
+    </div>
+  </div>
+  <div class="s4-right">
+    <div class="video-thumb">
+      <div class="play">🎬</div>
+      <div class="vt">My AI posted 5 products on Etsy while I was at the gym</div>
+    </div>
+    <div class="upload-bar" style="margin-top:18px;width:180px">
+      <div class="upload-fill" id="uploadFill"></div>
+    </div>
+    <div class="upload-status" id="uploadStatus">Uploading… 0%</div>
+    <div class="code-block" style="margin-top:18px;width:100%;max-width:260px">
+      <span class="cmt">// Init response</span><br/>
+      {<br/>
+      &nbsp;&nbsp;<span class="key">"publish_id"</span>: <span class="str">"v_sandbox_pub_88f2…"</span>,<br/>
+      &nbsp;&nbsp;<span class="key">"upload_url"</span>: <span class="str">"https://upload.tiktokapis…"</span><br/>
+      }
+    </div>
+  </div>
+</div>
+
+<!-- ══ SLIDE 5: Video Publish ════════════════════════════════════════════ -->
+<div class="slide" id="s5">
+  <div class="s5-left">
+    <div class="step-indicator">
+      <div class="step-num">4</div>
+      <span class="step-of">Step 4 of 4 — video.publish</span>
+    </div>
+    <div class="slide-tag green">📤 video.publish</div>
+    <h2>Video Published<br/><span class="light">to TikTok Feed</span></h2>
+    <p class="desc">
+      After the chunk upload succeeds, TikTok processes the video asynchronously
+      and publishes it. We poll <code style="color:var(--tt-cyan);font-family:monospace">/v2/post/publish/status/fetch/</code>
+      using the <strong>publish_id</strong> and log the final status to our database
+      with the <strong>video.publish</strong> scope confirming public posting.
+    </p>
+    <div class="api-call">
+      <span class="method">POST</span>
+      <span class="endpoint">open.tiktokapis.com/v2/post/publish/status/fetch/</span>
+      <pre>
+{
+  <span class="key">"publish_id"</span>: <span class="val">"v_sandbox_pub_88f2…"</span>
+}
+
+<span class="cmt">// Response:</span>
+{
+  <span class="key">"status"</span>: <span class="val">"PUBLISH_COMPLETE"</span>,
+  <span class="key">"publicaly_available_post_id"</span>: [<span class="val">"7380123456789012"</span>]
+}</pre>
+    </div>
+    <div class="publish-status success">
+      <span>✅</span>
+      <div><strong>PUBLISH_COMPLETE</strong> — video live on TikTok feed</div>
+    </div>
+  </div>
+  <div class="s5-right">
+    <p style="font-size:12px;color:var(--tt-light);margin-bottom:4px">TikTok post preview:</p>
+    <div class="tiktok-post-card">
+      <div class="tp-header">
+        <div class="tp-avatar">🌾</div>
+        <div>
+          <div class="tp-name">guildsandgrains</div>
+          <div class="tp-handle">@guildsandgrains · just now</div>
+        </div>
+      </div>
+      <div class="tp-thumb">🎬</div>
+      <div class="tp-caption">
+        My AI posted 5 products on Etsy while I was at the gym<br/>
+        <span class="tp-hashtags">#sidehustle #passiveincome #etsy #etsyseller #aitools #makemoneyonline #printondemand #automation #workfromhome #tiktokfinance</span>
+      </div>
+      <div class="tp-stats">
+        <span>❤️ —</span>
+        <span>💬 —</span>
+        <span>↗️ —</span>
+        <span style="margin-left:auto;color:var(--green)">✓ Public</span>
+      </div>
+    </div>
+    <div class="db-row" style="margin-top:12px">
+      <span class="db-icon">🗄️</span>
+      <div class="db-text">
+        Table: <span class="hl">tiktok_posts</span><br/>
+        publish_id + status logged for attribution tracking
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SLIDE 6: Summary ════════════════════════════════════════════════════ -->
+<div class="slide" id="s7">
+  <div class="done-icon">✅</div>
+  <h2>Integration <span>Complete</span></h2>
+  <p class="sum">
+    Guilds and Grains uses TikTok's OAuth 2.0 + Content Posting API to
+    automatically generate and publish lifestyle videos. All three requested scopes
+    are demonstrated above in sandbox mode.
+  </p>
+  <div class="sum-grid">
+    <div class="sum-card">
+      <div class="icon">🔑</div>
+      <div class="label">user.info.basic</div>
+      <div class="sub">Read display_name &amp; open_id after OAuth</div>
+    </div>
+    <div class="sum-card">
+      <div class="icon">⬆️</div>
+      <div class="label">video.upload</div>
+      <div class="sub">FILE_UPLOAD chunk method via /post/publish/video/init/</div>
+    </div>
+    <div class="sum-card">
+      <div class="icon">📡</div>
+      <div class="label">video.publish</div>
+      <div class="sub">PUBLIC_TO_EVERYONE — status polled to PUBLISH_COMPLETE</div>
+    </div>
+  </div>
+  <p style="margin-top:28px;font-size:12px;color:#444">
+    Sandbox environment · Callback URL: zmyczlfuufhngzovkjdh.supabase.co/functions/v1/tiktok-oauth-callback
+  </p>
+</div>
+
+<!-- Progress bar + counter -->
+<div class="progress-bar"><div class="progress-fill" id="pFill" style="width:16.6%"></div></div>
+<div class="counter" id="counter">1 / 6</div>
+
+<script>
+  const slides = ['s1','s2','s3','s4','s5','s7'];
+  const durations = [5000, 9000, 8000, 9000, 9000, 7000]; // ms per slide
+  let current = 0;
+
+  function showSlide(idx) {
+    slides.forEach((id, i) => {
+      const el = document.getElementById(id);
+      el.classList.toggle('active', i === idx);
+    });
+    document.getElementById('counter').textContent = `${idx + 1} / ${slides.length}`;
+    document.getElementById('pFill').style.width = `${((idx + 1) / slides.length) * 100}%`;
+
+    // Upload bar animation on slide 4 (index 3)
+    if (idx === 3) {
+      const fill = document.getElementById('uploadFill');
+      const status = document.getElementById('uploadStatus');
+      fill.style.width = '0%';
+      fill.style.transition = 'none';
+      status.textContent = 'Uploading… 0%';
+      setTimeout(() => {
+        fill.style.transition = 'width 3s linear';
+        fill.style.width = '100%';
+        let pct = 0;
+        const iv = setInterval(() => {
+          pct = Math.min(pct + 5, 100);
+          status.textContent = pct < 100 ? `Uploading… ${pct}%` : '✅ Upload complete';
+          if (pct >= 100) clearInterval(iv);
+        }, 150);
+      }, 200);
+    }
+  }
+
+  function advance() {
+    current = (current + 1) % slides.length;
+    showSlide(current);
+    setTimeout(advance, durations[current]);
+  }
+
+  showSlide(0);
+  setTimeout(advance, durations[0]);
+
+  // Click/key to advance manually
+  document.addEventListener('click', () => {
+    current = (current + 1) % slides.length;
+    showSlide(current);
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ') {
+      current = (current + 1) % slides.length;
+      showSlide(current);
+    }
+    if (e.key === 'ArrowLeft') {
+      current = (current - 1 + slides.length) % slides.length;
+      showSlide(current);
+    }
+  });
+</script>
+</body>
+</html>

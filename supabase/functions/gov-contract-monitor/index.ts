@@ -356,7 +356,7 @@ async function sendEmail(to: string, subject: string, html: string): Promise<voi
     method: "POST",
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: "M² Contract Monitor <matt@mattmichelstraining.com>",
+      from: "M² Contract Monitor <matt@detroitwebagent.com>",
       to: [to],
       bcc: ["matthewmichels4@gmail.com"],
       subject,

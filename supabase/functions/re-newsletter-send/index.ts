@@ -381,7 +381,7 @@ serve(async (req) => {
                     "Content-Type": "application/json",
                   },
                   body: JSON.stringify({
-                    from: `${client.agent_name || "Your Agent"} <matt@mattmichelstraining.com>`,
+                    from: `${client.agent_name || "Your Agent"} <matt@detroitwebagent.com>`,
                     to: [contact.contact_email],
                     subject: content.subject,
                     html,

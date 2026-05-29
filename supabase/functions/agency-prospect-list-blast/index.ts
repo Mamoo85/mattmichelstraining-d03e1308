@@ -5,7 +5,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { generateWithOpus } from "../_shared/opus.ts";
-import { frequencyCapExceeded } from "../_shared/outreach-blocklist.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -203,14 +202,6 @@ Output ONLY the 3-sentence intro paragraph. No subject line, no greeting, no sig
       ? `${sender_name} <${sender_email}>`
       : "Matt Michels — Detroit Web Agency <matt@detroitwebagent.com>";
     const toAddress = isWhitelabel ? (recipient_email || agency_email) : agency_email;
-
-    // Cross-template frequency cap (max 2 cold sends per 7d to same recipient)
-    const capChk = await frequencyCapExceeded(sb, toAddress, { currentTemplate: "agency_prospect_blast" });
-    if (capChk.exceeded) {
-      return new Response(JSON.stringify({ ok: false, skipped: true, reason: `freq_cap: ${capChk.recentCount} cold sends in 7d`, templates: capChk.recentTemplates }), {
-        status: 200, headers: { ...cors, "Content-Type": "application/json" },
-      });
-    }
 
     const sendRes = await fetch("https://api.resend.com/emails", {
       method: "POST",

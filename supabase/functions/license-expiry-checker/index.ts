@@ -123,7 +123,7 @@ serve(async (req) => {
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "M² License Monitor <matt@mattmichelstraining.com>",
+          from: "M² License Monitor <matt@detroitwebagent.com>",
           to: [client.email],
           subject: `[${label}] ${item.license_name} expires in ${daysUntil} days`,
           html,

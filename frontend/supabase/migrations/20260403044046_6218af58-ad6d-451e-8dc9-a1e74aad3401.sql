@@ -1,0 +1,1 @@
+ALTER TABLE public.sport_guides ADD COLUMN prompt_template TEXT;

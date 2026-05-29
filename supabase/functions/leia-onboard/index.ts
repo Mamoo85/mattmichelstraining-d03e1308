@@ -25,10 +25,10 @@ const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 
 const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
-const MATT = "matt@mattmichelstraining.com";
+const MATT = "matt@detroitwebagent.com";
 
 // Matt's own test emails — skip onboarding sequences for these
-const TEST_EMAILS = ["matt@mattmichelstraining.com", "matthewmichels@gmail.com", "matthewmichels4@gmail.com"];
+const TEST_EMAILS = ["matt@detroitwebagent.com", "matthewmichels@gmail.com", "matthewmichels4@gmail.com"];
 
 interface StepContent { subject: string; body: string; cta_text?: string; cta_url?: string }
 

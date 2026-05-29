@@ -10,6 +10,7 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { checkAndConsume } from "../_shared/api-budget.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -82,6 +83,11 @@ async function fetchCMSMichigan(): Promise<Prospect[]> {
 // ---- Source 2: Google Maps Places fallback ----
 async function fetchGooglePlaces(): Promise<Prospect[]> {
   if (!GOOGLE_MAPS_API_KEY) return [];
+  try {
+    const _sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const mapsOk = await checkAndConsume(_sb, "google_maps", 18, "google_maps_text_search");
+    if (!mapsOk.allowed) return [];
+  } catch { /* fail open */ }
   const seen = new Set<string>();
   const out: Prospect[] = [];
 

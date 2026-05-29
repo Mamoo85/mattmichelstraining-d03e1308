@@ -86,7 +86,7 @@ begin
       '0 9 * * *',  -- 9am UTC = 4am ET, low-traffic window
       $cron$
         vacuum analyze public.hire_alert_candidates;
-        vacuum analyze public.hire_alert_client_candidates;
+        vacuum analyze public.hire_REDACTED;
         vacuum analyze public.industry_pulse_signals;
         vacuum analyze public.demand_radar_signals;
         vacuum analyze public.ai_call_log;

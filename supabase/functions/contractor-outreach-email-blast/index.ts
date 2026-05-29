@@ -2,7 +2,6 @@
 // CAN-SPAM compliant + suppression check + audit log + daily cap.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { teaserCardHtml } from "../_shared/teaser-card.ts";
-import { frequencyCapExceeded } from "../_shared/outreach-blocklist.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -176,16 +175,6 @@ Deno.serve(async (req) => {
         await logAudit(supabase, {
           prospect_id: p.id, lead_id, channel: "email", event: "suppressed",
           reason: "Email on global suppression list",
-        });
-        continue;
-      }
-      // Cross-template frequency cap
-      const capChk = await frequencyCapExceeded(supabase, p.email || "", { currentTemplate: "contractor_outreach_blast" });
-      if (capChk.exceeded) {
-        skippedSuppressed++;
-        await logAudit(supabase, {
-          prospect_id: p.id, lead_id, channel: "email", event: "suppressed",
-          reason: `freq_cap: ${capChk.recentCount} cold sends in 7d`,
         });
         continue;
       }
