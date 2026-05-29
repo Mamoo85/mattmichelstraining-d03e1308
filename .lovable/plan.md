@@ -1,34 +1,25 @@
-I’ll fix this at the asset-source level instead of trying another overwrite of the same filenames.
+I found the issue: this Lovable session is attached to project `0b29f43e-9e42-4097-9d97-f85f419ccc8e`, whose current git remote is Lovable’s private repo, and its latest visible commit is `7c1fe6ae5 Updated PWA asset versions`. The PR #448 edge functions you named (`dwa-ad-factory`, `dwa-ad-renderer`) are not present here, so I am likely looking at the Lovable mirror/project repo, not the GitHub repo/branch where Claude Code just merged that work.
 
-Plan:
+Recommended recovery plan:
 
-1. Create a new canonical M2 logo source
-- Add a hand-authored orange-on-black SVG under `public/` with no external image dependency.
-- Use simple vector/CSS shapes/text so the splash cannot render as a broken white raster box.
-- Use the M2 orange on solid black, matching the current dark theme.
+1. Protect the Claude Code work first
+   - In Claude Code, confirm the GitHub repo URL, current branch, and latest commit for PR #448.
+   - Do not overwrite or reconnect anything until you know where that code lives.
 
-2. Generate a fully versioned icon set from that source
-- Create new cache-busted filenames, e.g. `m2-icon-v20260529-192.png`, `m2-icon-v20260529-512.png`, `m2-apple-touch-v20260529.png`, `m2-favicon-v20260529.png`, `m2-og-v20260529.png`.
-- Include Android adaptive/maskable-safe versions with a real black background and safe-area padding so Android launchers do not put it on a white plate.
-- Regenerate `favicon.ico` from the new black/orange favicon so `/favicon.ico` cannot override the PNG.
+2. Identify the “new git” you noticed
+   - Check whether Lovable created/attached a new private git remote or whether Claude Code is using `mamoo85/m2training` directly.
+   - Compare commit history: the repo I can see ends at the M2 logo/PWA work, not the AI voiceover work.
 
-3. Update all M2 logo entry points to versioned URLs
-- Replace the splash image in `index.html` with the SVG or new versioned SVG URL plus query/version if needed.
-- Update default favicon, Apple touch icon, manifest icons, and maskable icon references.
-- Update M2 `og:image` and `twitter:image` to the new versioned social preview image.
-- Update `SEOHead` default image so routed M2 pages also use the new asset.
+3. Bring the missing code into this Lovable project
+   - Best option: paste the GitHub PR/commit URL or the branch name here.
+   - I can then locate/copy the exact files or you can upload/paste the two function files if this Lovable project cannot access that GitHub repo.
 
-4. Fix the manifest/cache behavior
-- Make the M2 manifest use the new versioned files instead of stable overwritten filenames.
-- Keep the existing DWA/DJ Conley manifests/icons untouched.
-- Add version query params only where browsers respect them; use hashed/versioned filenames for install icons because home-screen caches are stubborn.
+4. Verify before deploying
+   - Once the files exist in this project, I’ll verify `supabase/functions/dwa-ad-factory/index.ts` and `supabase/functions/dwa-ad-renderer/index.ts` are actually present and contain the voiceover changes.
 
-5. Verify the output
-- Inspect the generated PNG/ICO pixels to confirm black corners and orange center.
-- Search the codebase again for stale M2 references like `/m2-logo.jpg`, `/pwa-512x512.png`, `/apple-touch-icon.png`, and old OG image references.
-- Confirm the splash uses the new vector file and no longer depends on the old raster logo path.
+5. Deploy/test only after repo alignment
+   - Deploy the two backend functions.
+   - Run the dry run `{ "dryRun": true, "productIndex": 3 }` and confirm `voiceoverScript`.
+   - Run the full `{ "force": true, "productIndex": 3 }`, confirm `audioUrl` and `mp4Url`, download the MP4, and inspect for an audio track.
 
-Technical notes:
-- I’ll avoid changing backend/business logic.
-- I’ll edit `index.html` because this is specifically head tags, manifest, splash, favicon, and social preview metadata.
-- Existing installed PWAs may still require reinstalling because Android/iOS pin manifest icon metadata at install time, but using brand-new filenames prevents the browser from reusing the old cached image during reinstall.
+What you should do now: send me the GitHub repo/PR link or latest Claude Code commit SHA for PR #448. If you can, also paste the output from Claude Code of `git remote -v`, `git branch --show-current`, and `git log --oneline -5`.
