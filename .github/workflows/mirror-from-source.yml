@@ -32,7 +32,7 @@ jobs:
       MIRROR_REPO: lovable-mirror/m2training        # <-- adjust to the Lovable mirror repo
       MIRROR_BRANCH: main
       MIRROR_PR_BRANCH: mirror/from-source
-      GH_TOKEN: ${{ secrets.MIRROR_PUSH_TOKEN }}    # PAT with repo + workflow scope on the mirror repo
+      GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}    # PAT with repo + workflow scope on the mirror repo
     steps:
       - name: Checkout source repo
         uses: actions/checkout@v4
