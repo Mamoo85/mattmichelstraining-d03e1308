@@ -53,13 +53,44 @@ jobs:
           AHEAD=$(git rev-list --count HEAD..source/main || echo 0)
           echo "ahead=$AHEAD" >> $GITHUB_OUTPUT
           echo "Source is $AHEAD commits ahead of Lovable main."
-
       - name: Create mirror branch
         if: steps.diff.outputs.ahead != '0'
         id: branch
         run: |
           BRANCH="mirror/source-$(date -u +%Y%m%d-%H%M%S)"
           git checkout -b "$BRANCH" source/main
+
+          # Scrub secrets that GitHub Push Protection blocks.
+          # The source repo's frontend/CLAUDE.md contains example tokens/keys
+          # that trip secret scanning. Redact them before pushing the mirror.
+          SCRUBBED=0
+          for f in frontend/CLAUDE.md CLAUDE.md .claude/settings.json .claude/settings.local.json; do
+            if [ -f "$f" ]; then
+              # Redact common secret patterns: GitHub PATs, OpenAI/Anthropic keys, JWTs, Stripe, generic long base64
+              perl -i -pe '
+                s/ghp_[A-Za-z0-9]{20,}/ghp_REDACTED/g;
+                s/github_pat_[A-Za-z0-9_]{20,}/github_pat_REDACTED/g;
+                s/sk-ant-[A-Za-z0-9_\-]{20,}/sk-ant-REDACTED/g;
+                s/sk-proj-[A-Za-z0-9_\-]{20,}/sk-proj-REDACTED/g;
+                s/sk-[A-Za-z0-9]{32,}/sk-REDACTED/g;
+                s/sk_live_[A-Za-z0-9]{20,}/sk_live_REDACTED/g;
+                s/sk_test_[A-Za-z0-9]{20,}/sk_test_REDACTED/g;
+                s/rk_live_[A-Za-z0-9]{20,}/rk_live_REDACTED/g;
+                s/AIza[0-9A-Za-z_\-]{30,}/AIza_REDACTED/g;
+                s/xox[baprs]-[A-Za-z0-9\-]{20,}/xoxb-REDACTED/g;
+                s/eyJ[A-Za-z0-9_\-]{20,}\.[A-Za-z0-9_\-]{20,}\.[A-Za-z0-9_\-]{20,}/eyJ.REDACTED.JWT/g;
+              ' "$f" && SCRUBBED=1 || true
+            fi
+          done
+
+          if [ "$SCRUBBED" = "1" ] && ! git diff --quiet; then
+            git add -A
+            git commit -m "mirror: redact secrets blocked by push protection"
+          fi
+
+          git push origin "$BRANCH"
+          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+
           git push origin "$BRANCH"
           echo "branch=$BRANCH" >> $GITHUB_OUTPUT
 
