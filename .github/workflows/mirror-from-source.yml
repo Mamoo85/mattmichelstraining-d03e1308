@@ -1,0 +1,84 @@
+name: Mirror from mamoo85/m2training
+
+# Pulls changes from the source-of-truth repo (mamoo85/m2training) into the
+# Lovable-managed repo and opens an automatic PR. Reports merge status back.
+#
+# Required secrets:
+#   SOURCE_REPO_TOKEN  - PAT with `repo` scope on mamoo85/m2training (read)
+#                        and on this repo (write + pull-requests).
+#
+# Runs every 15 minutes and on manual dispatch.
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: mirror-from-source
+  cancel-in-progress: false
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout Lovable repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.SOURCE_REPO_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Configure git
+        run: |
+          git config user.name  "lovable-mirror-bot"
+          git config user.email "mirror-bot@users.noreply.github.com"
+
+      - name: Add source remote and fetch
+        env:
+          TOKEN: ${{ secrets.SOURCE_REPO_TOKEN }}
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "::error::SOURCE_REPO_TOKEN secret is not set. Add a PAT with read access to mamoo85/m2training."
+            exit 1
+          fi
+          git remote add source "https://x-access-token:${TOKEN}@github.com/mamoo85/m2training.git"
+          git fetch source main
+
+      - name: Detect changes
+        id: diff
+        run: |
+          AHEAD=$(git rev-list --count HEAD..source/main || echo 0)
+          echo "ahead=$AHEAD" >> $GITHUB_OUTPUT
+          echo "Source is $AHEAD commits ahead of Lovable main."
+
+      - name: Create mirror branch
+        if: steps.diff.outputs.ahead != '0'
+        id: branch
+        run: |
+          BRANCH="mirror/source-$(date -u +%Y%m%d-%H%M%S)"
+          git checkout -b "$BRANCH" source/main
+          git push origin "$BRANCH"
+          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+
+      - name: Open or update mirror PR
+        if: steps.diff.outputs.ahead != '0'
+        env:
+          GH_TOKEN: ${{ secrets.SOURCE_REPO_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH="${{ steps.branch.outputs.branch }}"
+          AHEAD="${{ steps.diff.outputs.ahead }}"
+          gh pr create \
+            --base main \
+            --head "$BRANCH" \
+            --title "Mirror: $AHEAD new commit(s) from mamoo85/m2training" \
+            --body "Auto-mirrored from \`mamoo85/m2training@main\`. CI will run lint, type-check, and tests. Merge to publish via Lovable." \
+            || echo "PR may already exist for this branch."
+
+      - name: Report status
+        if: always()
+        run: |
+          echo "Ahead: ${{ steps.diff.outputs.ahead }}"
+          echo "Branch: ${{ steps.branch.outputs.branch || 'none' }}"
