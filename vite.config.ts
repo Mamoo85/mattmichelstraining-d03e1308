@@ -82,8 +82,11 @@ export default defineConfig(({ mode }) => {
         },
         includeAssets: [
           "favicon.ico",
-          "favicon.png",
-          "apple-touch-icon.png",
+          "m2-favicon-v20260529.png",
+          "m2-apple-touch-v20260529.png",
+          "m2-logo-v2.svg",
+          "m2-icon-v20260529-192.png",
+          "m2-icon-v20260529-512.png",
           "robots.txt",
           "manifest-dwa-admin.webmanifest",
           "manifest-fielddesk.webmanifest",
@@ -121,17 +124,19 @@ export default defineConfig(({ mode }) => {
           scope: "/",
           icons: [
             {
-              src: "/app-icon-192.png",
+              src: "/m2-icon-v20260529-192.png",
               sizes: "192x192",
               type: "image/png",
+              purpose: "any",
             },
             {
-              src: "/app-icon-512.png",
+              src: "/m2-icon-v20260529-512.png",
               sizes: "512x512",
               type: "image/png",
+              purpose: "any",
             },
             {
-              src: "/app-icon-512.png",
+              src: "/m2-icon-v20260529-512.png",
               sizes: "512x512",
               type: "image/png",
               purpose: "maskable",
