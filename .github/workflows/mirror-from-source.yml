@@ -58,7 +58,9 @@ jobs:
         id: branch
         run: |
           BRANCH="mirror/source-$(date -u +%Y%m%d-%H%M%S)"
-          git checkout -b "$BRANCH" source/main
+          git reset --hard HEAD
+          git clean -fd
+          git checkout -B "$BRANCH" source/main --force
 
           # Scrub secrets that GitHub Push Protection blocks across ALL tracked
           # text files in the source tree (not just a hardcoded allowlist).
