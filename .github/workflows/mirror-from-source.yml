@@ -1,0 +1,140 @@
+name: Mirror from source
+
+# IMPORTANT: This workflow belongs in the SOURCE repo (mamoo85/m2training).
+# It is kept here for version-control reference. Copy it to the source repo's
+# .github/workflows/ directory to activate it.
+#
+# What it does:
+#   1. Runs hourly on a schedule (and on-demand via workflow_dispatch).
+#   2. Sanitizes the source tree (strips secrets / non-mirrorable paths).
+#   3. Diffs the sanitized tree against the Lovable mirror.
+#   4. Opens (or updates) a PR on the Lovable mirror ONLY if the sanitized
+#      tree actually changed. No diff → no PR, no noise.
+
+on:
+  schedule:
+    - cron: '0 * * * *'   # top of every hour, UTC
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Open PR even if sanitized tree is unchanged'
+        required: false
+        default: 'false'
+
+concurrency:
+  group: mirror-from-source
+  cancel-in-progress: false
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    env:
+      MIRROR_REPO: lovable-mirror/m2training        # <-- adjust to the Lovable mirror repo
+      MIRROR_BRANCH: main
+      MIRROR_PR_BRANCH: mirror/from-source
+      GH_TOKEN: ${{ secrets.MIRROR_PUSH_TOKEN }}    # PAT with repo + workflow scope on the mirror repo
+    steps:
+      - name: Checkout source repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout Lovable mirror
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.MIRROR_REPO }}
+          token: ${{ env.GH_TOKEN }}
+          path: _mirror
+          ref: ${{ env.MIRROR_BRANCH }}
+          fetch-depth: 0
+
+      - name: Build sanitized tree
+        run: |
+          mkdir -p _sanitized
+          # rsync source → sanitized, excluding secrets and non-mirrorable paths
+          rsync -a \
+            --exclude='.git' \
+            --exclude='_mirror' \
+            --exclude='_sanitized' \
+            --exclude='.env' \
+            --exclude='.env.*' \
+            --exclude='**/.env' \
+            --exclude='**/.env.*' \
+            --exclude='node_modules' \
+            --exclude='**/node_modules' \
+            --exclude='.DS_Store' \
+            --exclude='*.log' \
+            --exclude='.claude/' \
+            --exclude='.agents/' \
+            ./ _sanitized/
+
+      - name: Diff sanitized tree against mirror
+        id: diff
+        run: |
+          # Compare ignoring the mirror's own .git and .github workflows that
+          # only exist on the mirror side (deploy-supabase.yml, etc).
+          if diff -rq \
+              --exclude='.git' \
+              --exclude='deploy-supabase.yml' \
+              --exclude='kalshi-trader.yml' \
+              _sanitized _mirror > /tmp/mirror-diff.txt 2>&1; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "✅ Sanitized tree matches mirror — nothing to do."
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "📦 Sanitized tree differs from mirror:"
+            head -50 /tmp/mirror-diff.txt
+          fi
+
+      - name: Skip PR (no changes)
+        if: steps.diff.outputs.changed == 'false' && inputs.force != 'true'
+        run: echo "No changes to mirror. Exiting cleanly."
+
+      - name: Sync sanitized tree into mirror branch
+        if: steps.diff.outputs.changed == 'true' || inputs.force == 'true'
+        working-directory: _mirror
+        run: |
+          git config user.name  "mirror-bot"
+          git config user.email "mirror-bot@users.noreply.github.com"
+          git checkout -B "$MIRROR_PR_BRANCH" "origin/$MIRROR_BRANCH"
+
+          # Wipe and replace tracked files with sanitized snapshot,
+          # but preserve the mirror's own .github/workflows/ (deploy pipeline).
+          rsync -a --delete \
+            --exclude='.git' \
+            --exclude='.github/workflows/deploy-supabase.yml' \
+            --exclude='.github/workflows/kalshi-trader.yml' \
+            ../_sanitized/ ./
+
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No staged changes after sync — exiting."
+            exit 0
+          fi
+
+          SHORT_SHA=$(git -C .. rev-parse --short HEAD)
+          COMMIT_COUNT=$(git -C .. rev-list --count HEAD ^$(git -C .. rev-parse HEAD~1 2>/dev/null || git -C .. rev-list --max-parents=0 HEAD) 2>/dev/null || echo "1")
+          git commit -m "Mirror: sync from source @ $SHORT_SHA"
+          git push -f origin "$MIRROR_PR_BRANCH"
+
+      - name: Open or update mirror PR
+        if: steps.diff.outputs.changed == 'true' || inputs.force == 'true'
+        working-directory: _mirror
+        run: |
+          SHORT_SHA=$(git -C .. rev-parse --short HEAD)
+          TITLE="Mirror: sync from source @ $SHORT_SHA"
+          BODY="Automated mirror sync from \`mamoo85/m2training\` @ \`$SHORT_SHA\`.
+
+          - Sanitized: secrets, env files, node_modules, drafts excluded.
+          - Only opens when sanitized tree differs from mirror.
+          - Merge to \`main\` to trigger the staging→production deploy pipeline."
+
+          # Reuse existing PR for this branch if open; otherwise create new.
+          EXISTING=$(gh pr list --head "$MIRROR_PR_BRANCH" --state open --json number --jq '.[0].number' || echo "")
+          if [ -n "$EXISTING" ]; then
+            gh pr edit "$EXISTING" --title "$TITLE" --body "$BODY"
+            echo "Updated existing PR #$EXISTING"
+          else
+            gh pr create --title "$TITLE" --body "$BODY" \
+              --base "$MIRROR_BRANCH" --head "$MIRROR_PR_BRANCH"
+          fi

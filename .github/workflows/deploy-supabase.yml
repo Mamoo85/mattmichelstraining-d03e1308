@@ -5,6 +5,15 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      skip_staging:
+        description: 'Skip staging and deploy directly to production (emergency only)'
+        required: false
+        default: 'false'
+
+concurrency:
+  group: deploy-supabase-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   test:
@@ -42,13 +51,87 @@ jobs:
         working-directory: frontend
         run: npx tsx ../scripts/orphan-scan.ts || true
 
-  deploy-primary:
+  # ─────────────────────────────────────────────────────────────
+  # STAGING: deploys to the primary project's staging surface.
+  # Uses a separate STAGING_SUPABASE_PROJECT_REF if available;
+  # falls back to the primary ref so this is a no-op safety net
+  # until a real staging project is provisioned.
+  # ─────────────────────────────────────────────────────────────
+  deploy-staging:
     needs: test
     runs-on: ubuntu-latest
-    # Always runs after tests pass — secret check happens inside steps, not here.
-    # Putting secrets in job-level `if:` causes GitHub to report "No jobs were run"
-    # even when other jobs ran. Check the secret at step level instead.
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && inputs.skip_staging != 'true'
+    environment:
+      name: staging
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.STAGING_SUPABASE_ACCESS_TOKEN || secrets.PRIMARY_SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_PROJECT_REF: ${{ secrets.STAGING_SUPABASE_PROJECT_REF }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check staging config
+        id: check
+        run: |
+          if [ -z "$SUPABASE_ACCESS_TOKEN" ] || [ -z "$SUPABASE_PROJECT_REF" ]; then
+            echo "has_config=false" >> $GITHUB_OUTPUT
+            echo "⚠️  Staging not configured — skipping (set STAGING_SUPABASE_ACCESS_TOKEN + STAGING_SUPABASE_PROJECT_REF to enable)."
+          else
+            echo "has_config=true" >> $GITHUB_OUTPUT
+            echo "✅ Deploying to staging project: $SUPABASE_PROJECT_REF"
+          fi
+
+      - uses: supabase/setup-cli@v1
+        if: steps.check.outputs.has_config == 'true'
+        with:
+          version: latest
+
+      - name: Deploy all edge functions to staging
+        if: steps.check.outputs.has_config == 'true'
+        run: |
+          for dir in supabase/functions/*/; do
+            fn=$(basename "$dir")
+            [ "$fn" = "_shared" ] && continue
+            [ ! -f "$dir/index.ts" ] && continue
+            NO_JWT=""
+            if grep -q "\[functions\.$fn\]" supabase/config.toml 2>/dev/null; then
+              NO_JWT=$(awk "/\[functions\.$fn\]/{f=1} f && /verify_jwt *= *false/{print \"true\"; f=0}" supabase/config.toml)
+            fi
+            if [ "$NO_JWT" = "true" ]; then
+              supabase functions deploy "$fn" --project-ref "$SUPABASE_PROJECT_REF" --no-verify-jwt || true
+            else
+              supabase functions deploy "$fn" --project-ref "$SUPABASE_PROJECT_REF" || true
+            fi
+          done
+
+      - name: Apply pending DB migrations to staging
+        if: steps.check.outputs.has_config == 'true'
+        run: supabase db push --project-ref "$SUPABASE_PROJECT_REF" || true
+
+      - name: Staging smoke test
+        if: steps.check.outputs.has_config == 'true'
+        run: |
+          # Hit a lightweight health endpoint to confirm functions respond.
+          # Replace with a real smoke target as the staging surface matures.
+          curl -fsS -m 15 \
+            "https://$SUPABASE_PROJECT_REF.supabase.co/functions/v1/health" \
+            -H "Authorization: Bearer ${{ secrets.STAGING_SUPABASE_ANON_KEY }}" \
+            > /dev/null || echo "⚠️  Staging smoke probe non-200 (advisory)."
+
+  # ─────────────────────────────────────────────────────────────
+  # PRODUCTION (primary). Gated behind the GitHub `production`
+  # environment so you can require manual approval there if you want.
+  # Runs after staging succeeds; if skip_staging=true it runs alone.
+  # ─────────────────────────────────────────────────────────────
+  deploy-primary:
+    needs: [test, deploy-staging]
+    if: |
+      always() &&
+      github.ref == 'refs/heads/main' &&
+      needs.test.result == 'success' &&
+      (needs.deploy-staging.result == 'success' || needs.deploy-staging.result == 'skipped' || inputs.skip_staging == 'true')
+    runs-on: ubuntu-latest
+    environment:
+      name: production
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.PRIMARY_SUPABASE_ACCESS_TOKEN }}
       SUPABASE_PROJECT_REF: eauvubfpanpeuxsrqesu
@@ -99,9 +182,15 @@ jobs:
         run: supabase db push --project-ref "$SUPABASE_PROJECT_REF" || true
 
   deploy-secondary:
-    needs: test
+    needs: [test, deploy-staging]
+    if: |
+      always() &&
+      github.ref == 'refs/heads/main' &&
+      needs.test.result == 'success' &&
+      (needs.deploy-staging.result == 'success' || needs.deploy-staging.result == 'skipped' || inputs.skip_staging == 'true')
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    environment:
+      name: production
     env:
       # Falls back to PRIMARY token — both projects share the same Supabase account,
       # so a single personal access token works for all projects under that account.
