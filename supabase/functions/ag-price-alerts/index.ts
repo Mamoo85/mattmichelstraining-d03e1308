@@ -53,7 +53,7 @@ async function sendEmail(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: "Matt Michels <matt@mattmichelstraining.com>",
+      from: "Matt Michels <matt@detroitwebagent.com>",
       to: [to],
       subject,
       html,
@@ -207,7 +207,7 @@ ${alertHtml}
 ${parsed.briefHtml || "<p>Market data unavailable. Please check back later.</p>"}
 <div class="footer">
   <img src="https://mattmichelstraining.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;vertical-align:middle;margin-right:8px;" alt="Matt">
-  <span>Matt Michels | M2 Development | matt@mattmichelstraining.com | (313) 992-1219</span>
+  <span>Matt Michels | M2 Development | matt@detroitwebagent.com | (313) 992-1219</span>
 </div>
 </body>
 </html>`;

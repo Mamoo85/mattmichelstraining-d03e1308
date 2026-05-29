@@ -162,7 +162,7 @@ serve(async (req) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          from: "M² Alerts <matt@mattmichelstraining.com>",
+          from: "M² Alerts <matt@detroitwebagent.com>",
           to: client.email,
           subject: `⚠️ ${matched.length} Product Recall${matched.length !== 1 ? "s" : ""} Affecting Your Business`,
           html,

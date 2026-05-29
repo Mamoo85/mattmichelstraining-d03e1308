@@ -55,7 +55,7 @@ serve(async (_req) => {
             method: "POST",
             headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({
-              from: "Matt Michels <matt@mattmichelstraining.com>",
+              from: "Matt Michels <matt@detroitwebagent.com>",
               to: [client.email], bcc: ["matthewmichels4@gmail.com"],
               subject: `Checking in — ${client.business}`,
               html: `<div style="font-family:sans-serif;max-width:500px;padding:20px;">${body.replace(/\n/g, "<br>")}<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;">
@@ -79,8 +79,8 @@ serve(async (_req) => {
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "M² Churn Alert <matt@mattmichelstraining.com>",
-          to: ["matt@mattmichelstraining.com"],
+          from: "M² Churn Alert <matt@detroitwebagent.com>",
+          to: ["matt@detroitwebagent.com"],
           subject: `⚠️ ${atRisk.length} clients at churn risk`,
           html: `<div style="font-family:sans-serif;padding:20px;background:#1e293b;color:#e2e8f0;border-radius:12px;"><h2 style="color:#eab308;">⚠️ Churn Risk Alert</h2><p>${list}</p><p style="color:#94a3b8;">Check-in emails have been sent automatically.</p><div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;">
         <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" />

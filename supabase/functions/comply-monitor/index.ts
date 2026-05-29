@@ -22,7 +22,7 @@ import { sendSMS, ADMIN_PHONE } from "../_shared/twilio.ts";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
-const ADMIN_EMAIL = "matt@mattmichelstraining.com";
+const ADMIN_EMAIL = "matt@detroitwebagent.com";
 const FROM_PHONE = Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219";
 
 // Keep legacy alias for unchanged functions below
@@ -82,7 +82,7 @@ async function sendAlert(violations: Violation[]) {
     method: "POST",
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: "M² Comply <matt@mattmichelstraining.com>",
+      from: "M² Comply <matt@detroitwebagent.com>",
       to: [MATT_EMAIL],
       subject: `🚨 COMPLY ALERT: ${critical.length} critical violation${critical.length > 1 ? "s" : ""} detected`,
       html: `
@@ -314,7 +314,7 @@ async function weeklyReport(): Promise<void> {
     method: "POST",
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: "M² Comply <matt@mattmichelstraining.com>",
+      from: "M² Comply <matt@detroitwebagent.com>",
       to: [ADMIN_EMAIL],
       subject: `⚖️ Comply: Weekly Legal Compliance Report — ${status}`,
       html: `<div style="font-family:sans-serif;max-width:640px;margin:0 auto">

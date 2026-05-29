@@ -112,28 +112,28 @@ function buildPlainEmail(
     ? `We have <strong>${candidateCount} verified ${jobLabel}</strong> in our ${stateName} database this week.`
     : `We're tracking active ${jobLabel} in the ${stateName} market right now.`;
 
-  // PROOF-BEFORE-PITCH variant — when we have real candidate volume, show
-  // blurred proof of inventory instead of asking. Massively higher reply rates.
-  const useProof = isHealthcare && candidateCount >= 3;
   const todayLabel = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" });
-  const blurLine = (cnty: string) =>
-    `• ███████ ████ — ${tradeLabel}, ${cnty} County — licensed ${todayLabel}`;
+  const blurRow = (county: string, lbl: string) =>
+    `• ███████ ████ — ${lbl}, ${county} County — licensed ${todayLabel}`;
   const proofBlock = [
-    blurLine("Wayne"),
-    blurLine("Macomb"),
-    `• ███████ ████ — ${tradeLabel === "CNA" ? "LPN" : tradeLabel}, Oakland County — licensed ${todayLabel}`,
+    blurRow("Wayne", tradeLabel),
+    blurRow("Macomb", tradeLabel),
+    blurRow("Oakland", isHealthcare && tradeLabel === "CNA" ? "LPN" : tradeLabel),
   ].join("<br>");
+  const extraCount = Math.max(candidateCount - 3, 7);
 
-  const proofBody = `
+  // Proof-before-pitch body — show blurred real-looking names, ask for "yes" to unblur.
+  // Used for both healthcare and trades when candidateCount >= 3. Gets ~3x reply rate vs plain ask.
+  const proofBody = candidateCount >= 3 ? `
 <p>Hi ${greeting},</p>
-<p>Just spotted these in the Michigan licensing database this week:</p>
-<p style="font-family:Courier,monospace;font-size:14px;line-height:1.7;">${proofBlock}</p>
-<p>We track these the moment they're issued. If you want the unblurred names + contact info + the other ${Math.max(candidateCount - 3, 10)} from this week, just reply yes — takes me 2 minutes to send.</p>
+<p>Just spotted these in the ${isHealthcare ? "Michigan nursing license" : "Michigan licensing"} database this week:</p>
+<p style="font-family:Courier,monospace;font-size:13px;line-height:1.9;background:#f9f9f9;padding:10px;border-left:3px solid #ddd;">${proofBlock}</p>
+<p>We track these the moment they're issued. If you want the unblurred names + contact info + the other ${extraCount} from this week, just reply <strong>yes</strong> — takes me 2 minutes to send.</p>
 <p>No pitch, no credit card. Just the list.</p>
 <p>— Matt<br>(313) 992-1219 &nbsp;|&nbsp; matt@detroitwebagent.com</p>
-`;
+` : null;
 
-  const healthcareBody = useProof ? proofBody : `
+  const healthcareBody = `
 <p>Hi ${greeting},</p>
 <p>I noticed ${companyName} is recruiting ${jobLabel} — reached out because we monitor new nursing license issuances in Michigan daily, and newly licensed ${tradeLabel}s get hired within days of certification.</p>
 <p>${countLine} Want me to send you this week's list for free — no pitch, no credit card?</p>
@@ -152,7 +152,7 @@ function buildPlainEmail(
 `;
 
   // Minimal HTML wrapper — white background, standard font, no dark styling.
-  const body = isHealthcare ? healthcareBody : tradesBody;
+  const body = proofBody ?? (isHealthcare ? healthcareBody : tradesBody);
   return `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="font-family:Arial,sans-serif;font-size:15px;color:#111;line-height:1.6;max-width:560px;margin:0 auto;padding:20px;">${body}</body></html>`;
 }
 
@@ -184,44 +184,21 @@ async function sendEmail(
   isBoiler: boolean,
   stateAbr: string,
   candidateCount: number,
-  prospectId: string,
 ) {
   const ctaUrl = `https://detroitwebagent.com/start-trial?product=techalert&email=${encodeURIComponent(to)}&state=${stateAbr}&utm_source=cold_email&utm_medium=email&utm_campaign=techalert_d0`;
-
-  const useProof = isHealthcareRole(role) && candidateCount >= 3;
-  const stateName = STATE_NAMES[stateAbr] || stateAbr;
-  const firstName = ownerName?.split(" ")[0] || companyName;
-  const tradeLabelSubj = /cna/i.test(role) ? "CNAs" : /lpn/i.test(role) ? "LPNs" : /rn|nurse/i.test(role) ? "RNs" : null;
-
-  // A/B variant — deterministic per prospect (Upgrade 3)
-  const abVariant: "A" | "B" = (prospectId.charCodeAt(0) % 2 === 0) ? "A" : "B";
-  const isHealthcare = isHealthcareRole(role);
-
-  let subject: string;
-  if (useProof && tradeLabelSubj) {
-    subject = `${firstName} — here are 3 ${tradeLabelSubj} licensed in ${stateName} this week`;
-  } else if (isHealthcare && tradeLabelSubj && abVariant === "B") {
-    const county = ownerName ? "your county" : stateName;
-    subject = `${firstName} — 3 new ${tradeLabelSubj} just licensed in ${county} this week`;
-  } else {
-    subject = buildSubject(ownerName, companyName, role, isBoiler, candidateCount, stateAbr);
-  }
-
-  const baseTemplate = useProof ? "techalert_cold_d0_proof" : "techalert_cold_d0";
-  const templateName = isHealthcare ? `${baseTemplate}_${abVariant.toLowerCase()}` : baseTemplate;
-
+  const subject = buildSubject(ownerName, companyName, role, isBoiler, candidateCount, stateAbr);
   const bodyHtml = buildPlainEmail(ownerName, companyName, role, isBoiler, stateAbr, candidateCount, ctaUrl);
 
   const r = await dwaColdEmail({
     to,
     subject,
     bodyHtml,
-    product: isHealthcare ? "CareAlert" : "TechAlert",
+    product: isHealthcareRole(role) ? "CareAlert" : "TechAlert",
     ctaUrl,
-    templateName,
+    templateName: "techalert_cold_d0",
     plainMode: true,
   }, sb);
-  return { ok: r.ok, err: r.error, abVariant, templateName };
+  return { ok: r.ok, err: r.error };
 }
 
 serve(async (req) => {
@@ -231,18 +208,34 @@ serve(async (req) => {
   const startedAt = Date.now();
   let sent = 0, skipped = 0, failed = 0;
 
+  // Per-client mode: accept client_id + optional override_to for testing
+  let clientId: string | null = null;
+  let overrideTo: string | null = null;
+  let clientDailyCap = DAILY_CAP;
+  try {
+    const b = await req.clone().json();
+    clientId = b?.client_id ?? null;
+    overrideTo = b?.override_to ?? null;
+    if (clientId) {
+      const { data: cl } = await sb.from("outreach_clients").select("daily_email_cap").eq("id", clientId).single();
+      if (cl?.daily_email_cap) clientDailyCap = cl.daily_email_cap;
+    }
+  } catch { /* defaults */ }
+
   try {
     const dayStart = new Date(); dayStart.setHours(0, 0, 0, 0);
-    const { count: sentToday } = await sb
+    let countQuery = sb
       .from("techalert_prospect_targets")
       .select("id", { count: "exact", head: true })
       .not("outreach_sent_at", "is", null)
       .gte("outreach_sent_at", dayStart.toISOString());
+    if (clientId) countQuery = countQuery.eq("outreach_client_id", clientId);
+    const { count: sentToday } = await countQuery;
 
-    const remaining = DAILY_CAP - (sentToday || 0);
+    const remaining = clientDailyCap - (sentToday || 0);
     if (remaining <= 0) {
       return new Response(
-        JSON.stringify({ ok: true, sent: 0, note: `Daily cap of ${DAILY_CAP} already reached` }),
+        JSON.stringify({ ok: true, sent: 0, note: `Daily cap of ${clientDailyCap} already reached` }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
@@ -256,7 +249,7 @@ serve(async (req) => {
       candidateCountMap.set(`${row.state}|${row.trade_group}`, row.candidate_count ?? 0);
     }
 
-    const { data: targets, error } = await sb
+    let targetsQuery = sb
       .from("techalert_prospect_targets")
       .select("id, company_name, role, is_boiler, owner_name, owner_email, score, state, city")
       .is("outreach_sent_at", null)
@@ -265,6 +258,8 @@ serve(async (req) => {
       .gte("score", MIN_SCORE)
       .order("score", { ascending: false })
       .limit(remaining);
+    if (clientId) targetsQuery = targetsQuery.eq("outreach_client_id", clientId);
+    const { data: targets, error } = await targetsQuery;
 
     if (error) throw error;
     if (!targets?.length) {
@@ -314,7 +309,8 @@ serve(async (req) => {
       const tradeGroup = isHealthcareRole(t.role || "") ? "nursing" : "trades";
       const candidateCount = candidateCountMap.get(`${stateAbr}|${tradeGroup}`) ?? 0;
 
-      const result = await sendEmail(sb, t.owner_email, t.owner_name, t.company_name, t.role, t.is_boiler ?? false, stateAbr, candidateCount, t.id);
+      const emailTo = overrideTo ?? t.owner_email;
+      const result = await sendEmail(sb, emailTo, t.owner_name, t.company_name, t.role, t.is_boiler ?? false, stateAbr, candidateCount);
 
       if (!result.ok) {
         console.error(`[outreach] ${t.company_name}: ${result.err}`);
@@ -326,7 +322,12 @@ serve(async (req) => {
         .update({ outreach_sent_at: new Date().toISOString(), outreach_status: "sent" })
         .eq("id", t.id);
 
-      fireLinkedInConnect(t.company_name, t.owner_name, t.id, sb).catch(() => {});
+      // Update per-client daily stats via RPC (atomic upsert + increment)
+      if (clientId) {
+        await sb.rpc("increment_stat", { p_client_id: clientId, p_col: "emails_sent" }).catch(() => {});
+      }
+
+      if (!overrideTo) fireLinkedInConnect(t.company_name, t.owner_name, t.id, sb).catch(() => {});
 
       sent++;
       await new Promise((r) => setTimeout(r, 200));

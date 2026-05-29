@@ -45,7 +45,7 @@ const DAY3_TIPS: Record<string, string> = {
 };
 
 function getDay3Email(product: string, businessName: string): { subject: string; html: string } {
-  const tip = DAY3_TIPS[product] ?? `Here's a tip to get the most out of your ${product} service: check in with your dashboard regularly and reach out to matt@mattmichelstraining.com if you have questions.`;
+  const tip = DAY3_TIPS[product] ?? `Here's a tip to get the most out of your ${product} service: check in with your dashboard regularly and reach out to matt@detroitwebagent.com if you have questions.`;
   return {
     subject: `Quick tip for your ${product} — day 3`,
     html: `
@@ -57,7 +57,7 @@ function getDay3Email(product: string, businessName: string): { subject: string;
         <p>Any questions at all — just reply to this email. I read every one.</p>
         <p>— Matt</p>
         <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0" />
-        <p style="color:#94a3b8;font-size:12px">M² Development · matt@mattmichelstraining.com · (313) 992-1219<br>
+        <p style="color:#94a3b8;font-size:12px">M² Development · matt@detroitwebagent.com · (313) 992-1219<br>
         <a href="https://mattmichelstraining.com/unsubscribe" style="color:#94a3b8">Unsubscribe</a></p>
       </div>`,
   };
@@ -81,7 +81,7 @@ function getDay7Email(product: string, businessName: string): { subject: string;
         <p>Here's to a strong second week. 🤝</p>
         <p>— Matt</p>
         <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0" />
-        <p style="color:#94a3b8;font-size:12px">M² Development · matt@mattmichelstraining.com · (313) 992-1219<br>
+        <p style="color:#94a3b8;font-size:12px">M² Development · matt@detroitwebagent.com · (313) 992-1219<br>
         <a href="https://mattmichelstraining.com/unsubscribe" style="color:#94a3b8">Unsubscribe</a></p>
       </div>`,
   };
@@ -103,7 +103,7 @@ async function sendEmail(to: string, subject: string, html: string): Promise<voi
     method: "POST",
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: "Matt at M² <matt@mattmichelstraining.com>",
+      from: "Matt at M² <matt@detroitwebagent.com>",
       to: [to],
       subject,
       html,

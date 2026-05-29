@@ -19,7 +19,7 @@ async function sendOzEmail(subject: string, html: string) {
     method: "POST",
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: "Agent Oz <matt@mattmichelstraining.com>",
+      from: "Agent Oz <matt@detroitwebagent.com>",
       to: ["matthewmichels4@gmail.com"],
       subject,
       html: `<div style="font-family:sans-serif;max-width:640px;margin:auto;padding:20px;background:#0f172a;color:#e2e8f0;border-radius:12px;">

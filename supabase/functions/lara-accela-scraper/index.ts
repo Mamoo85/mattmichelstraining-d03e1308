@@ -81,7 +81,6 @@ Skip any entry without a street address. Skip duplicates. Maximum 30 entries. Re
 DATA:
 ${markdown.slice(0, 12000)}`;
 
-  if (!OPENROUTER_API_KEY) return [];
   try {
     const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
@@ -137,7 +136,6 @@ Return ONLY a JSON array. Maximum 15 entries. Each object:
 
 If you cannot find at least 5 businesses with verified addresses, return []. Do not fabricate addresses.`;
 
-  if (!OPENROUTER_API_KEY) return [];
   try {
     const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",

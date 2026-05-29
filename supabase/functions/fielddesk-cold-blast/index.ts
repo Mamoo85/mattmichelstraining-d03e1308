@@ -1,11 +1,10 @@
 // fielddesk-cold-blast — Cold email pitch for FieldDesk to home-service shops
 // in outreach_leads that haven't received a FieldDesk pitch yet.
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { dwaEmail, listUnsubHeaders } from "../_shared/dwa-email.ts";
-import { teaserCardHtml } from "../_shared/teaser-card.ts";
-import { isBlocked, frequencyCapExceeded } from "../_shared/outreach-blocklist.ts";
+import { dwaColdEmail } from "../_shared/dwa-email.ts";
+import { isBlocked } from "../_shared/outreach-blocklist.ts";
 import { isMarketingBlocked } from "../_shared/marketing-kill-switch.ts";
-import { wasContactedRecently } from "../_shared/cold-email-dedup.ts";
+import { wasRecentlyEmailed } from "../_shared/cold-email-dedup.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -27,29 +26,16 @@ function emailHtml(lead: any): string {
   const fn = lead.first_name || lead.owner_name?.split(" ")[0] || "there";
   const biz = lead.business_name || "your shop";
   const city = lead.city || "Michigan";
-  const card = teaserCardHtml({
-    headline: `🛠 FieldDesk for ${biz}`,
-    scoreLabel: "$199/mo · 7-day trial · 50% off 3 mo",
-    bullets: [
-      "Live tech GPS, job dispatch, customer portal — one screen",
-      "Migrates from eWay/ServiceTitan in a weekend (we do it)",
-      "Built for 2–20 tech shops · no per-seat ripoff",
-    ],
-    ctaText: "Start free 7-day trial →",
-    ctaUrl: `${SITE}/start-trial?product=field_desk`,
-    badge: "FIELDDESK · TRIAL",
-  });
-  return `<div style="max-width:600px;margin:0 auto;padding:24px 16px;background:#fff;">
-  <p style="font:15px/1.55 -apple-system,Segoe UI,Arial;color:#0f2540;margin:0 0 10px;">Hey ${fn},</p>
-  <p style="font:15px/1.55 -apple-system,Segoe UI,Arial;color:#0f2540;margin:0 0 10px;">Quick one — what's ${biz} using to dispatch jobs and track tech location in ${city}? Most shops your size are stuck on either paper, eWay, or ServiceTitan (which costs $300+ per seat).</p>
-  <p style="font:15px/1.55 -apple-system,Segoe UI,Arial;color:#0f2540;margin:0 0 10px;">FieldDesk is the modern alternative built in Michigan for trades shops. One flat $199/mo, unlimited techs.</p>
-  ${card}
-  <p style="font:13px/1.5 -apple-system,Segoe UI,Arial;color:#7a8aa0;margin:16px 0 0;">P.S. — Also hiring? We monitor LARA licenses + job boards 24/7 and alert you the moment a licensed HVAC tech enters the market. <a href="${SITE}/start-trial?product=techalert" style="color:#0077b6;">Free trial →</a></p>
-  <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0;"/>
-  <p style="font:12px/1.5 -apple-system,Segoe UI,Arial;color:#7a8aa0;margin:0;">
-    Matt Michels — Detroit Web Agency · (313) 992-1219<br/>
-    <a href="${SITE}/unsubscribe?email=${encodeURIComponent(lead.email)}" style="color:#7a8aa0;">Unsubscribe</a> · Reply STOP to opt out.
-  </p>
+  const ctaUrl = `${SITE}/start-trial?product=field_desk&email=${encodeURIComponent(lead.email || "")}&utm_source=cold_email&utm_medium=email&utm_campaign=fielddesk_blast`;
+  return `<div style="font:15px/1.55 -apple-system,Segoe UI,Arial,sans-serif;color:#111;max-width:560px;">
+<p style="margin:0 0 14px;">Hey ${fn},</p>
+<p style="margin:0 0 14px;">Quick one — what's ${biz} using to dispatch jobs and track tech GPS in ${city}? Most shops your size are either on paper, a spreadsheet, or paying $300+ per seat for ServiceTitan.</p>
+<p style="margin:0 0 14px;">FieldDesk is $199/mo flat — unlimited techs, live GPS tracking, job dispatch, and a customer portal. Built for 2–20 tech trades shops in Michigan. We do the migration from whatever you're on now (usually a weekend).</p>
+<p style="margin:0 0 14px;">Free 7-day trial, no card:</p>
+<p style="margin:0 0 14px;"><a href="${ctaUrl}" style="color:#0a58ca;">${ctaUrl}</a></p>
+<p style="margin:18px 0 4px;">— Matt Michels</p>
+<p style="margin:0 0 4px;color:#555;">Detroit Web Agency · (313) 992-1219</p>
+<p style="margin:14px 0 0;font-size:12px;color:#888;">Reply STOP to opt out. <a href="${SITE}/unsubscribe?email=${encodeURIComponent(lead.email)}" style="color:#888;">Unsubscribe</a>.</p>
 </div>`;
 }
 
@@ -78,16 +64,23 @@ Deno.serve(async (req) => {
     if ((lead.drip_campaign_status as any)?.last_product_pitched === "field_crm") { skipped++; continue; }
 
     try {
-      const cap = await frequencyCapExceeded(sb, lead.email, { currentTemplate: "fielddesk_cold_blast" });
-      if (cap.exceeded) { blockedCount++; continue; }
       const b = await isBlocked(sb, { email: lead.email, business_name: lead.business_name });
       if (b.blocked) { blockedCount++; continue; }
     } catch (_) {}
 
-    if (await wasContactedRecently(sb, lead.email, 5)) { skipped++; continue; }
+    // Cross-product 5-day dedup
+    if (await wasRecentlyEmailed(sb, lead.email)) { skipped++; continue; }
 
-    const subject = `${lead.business_name || "your shop"} — dispatch + tech tracking for $199 flat`;
-    const r = await dwaEmail({ to: lead.email, subject, html: emailHtml(lead), headers: listUnsubHeaders(lead.email) });
+    const subject = `${lead.business_name || "your shop"} — what are you using to dispatch jobs right now?`;
+    const r = await dwaColdEmail({
+      to: lead.email,
+      subject,
+      bodyHtml: emailHtml(lead),
+      product: "fielddesk",
+      ctaUrl: `${SITE}/start-trial?product=field_desk`,
+      templateName: "fielddesk_cold_blast",
+      plainMode: true,
+    }, sb);
     if (r.ok) {
       sent++;
       await sb.from("outreach_leads").update({

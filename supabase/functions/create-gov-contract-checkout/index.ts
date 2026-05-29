@@ -80,8 +80,8 @@ serve(async (req) => {
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "M² System <matt@mattmichelstraining.com>",
-          to: ["matt@mattmichelstraining.com"],
+          from: "M² System <matt@detroitwebagent.com>",
+          to: ["matt@detroitwebagent.com"],
           bcc: ["matthewmichels4@gmail.com"],
           subject: `New Gov Contract Monitor checkout — ${company_name}`,
           html: `<p>New government contract monitor checkout started:<br><strong>${company_name}</strong><br>${customer_email}<br>NAICS: ${naics_codes || "n/a"}<br>Keywords: ${keywords || "n/a"}<br>Set-Asides: ${set_aside_types || "n/a"}</p>`,

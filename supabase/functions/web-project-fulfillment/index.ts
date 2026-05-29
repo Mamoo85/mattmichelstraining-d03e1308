@@ -44,7 +44,7 @@ function wrapHtml(body: string, title: string): string {
     </td></tr>
     <tr><td style="background:#f8fafc;padding:16px 32px;border-top:1px solid #e2e8f0;font-size:12px;color:#94a3b8;">
       Matt Michels Web Design · Grosse Pointe, MI<br>
-      <a href="mailto:matt@mattmichelstraining.com" style="color:#e8621a;">matt@mattmichelstraining.com</a> ·
+      <a href="mailto:matt@detroitwebagent.com" style="color:#e8621a;">matt@detroitwebagent.com</a> ·
       <a href="tel:+13139921219" style="color:#94a3b8;">(313) 992-1219</a> ·
       <a href="https://www.mattmichelstraining.com/detroit-web-design" style="color:#94a3b8;">See my work</a>
     </td></tr>
@@ -74,7 +74,7 @@ function emailApprove(business: string, clientName: string, projectId: string): 
       <li>Preferred colors / vibe (or just say "professional" and I'll handle it)</li>
     </ul>
     <p>Once I have that, I'll be in design mode. You'll get a preview link within 7 days.</p>
-    <p>Questions? Email me at <a href="mailto:matt@mattmichelstraining.com" style="color:#e8621a;">matt@mattmichelstraining.com</a> or text <a href="tel:+13139921219" style="color:#e8621a;">(313) 992-1219</a> — whichever works best for you. I'm fast to respond.</p>
+    <p>Questions? Email me at <a href="mailto:matt@detroitwebagent.com" style="color:#e8621a;">matt@detroitwebagent.com</a> or text <a href="tel:+13139921219" style="color:#e8621a;">(313) 992-1219</a> — whichever works best for you. I'm fast to respond.</p>
     <p>— Matt Michels</p>`;
   return { subject, html: wrapHtml(body, subject) };
 }
@@ -92,7 +92,7 @@ function emailPreviewReady(business: string, clientName: string, previewUrl: str
     <p><strong>How to review it:</strong> Check it on your phone AND on a desktop. Make sure your services, phone number, and contact form are all exactly right.</p>
     <p><strong>You have 2 rounds of revisions included.</strong> Just reply to this email with a list of anything you want changed — be as specific as you like. I'll turn revisions around within 2 business days.</p>
     <p>If it looks good and you're ready to go live, just reply and say <strong>"Approved — go live"</strong> and I'll get it live on your domain within 24 hours.</p>
-    <p>Email <a href="mailto:matt@mattmichelstraining.com" style="color:#e8621a;">matt@mattmichelstraining.com</a> or text <a href="tel:+13139921219" style="color:#e8621a;">(313) 992-1219</a> — I'm here.</p>
+    <p>Email <a href="mailto:matt@detroitwebagent.com" style="color:#e8621a;">matt@detroitwebagent.com</a> or text <a href="tel:+13139921219" style="color:#e8621a;">(313) 992-1219</a> — I'm here.</p>
     <p>— Matt</p>`;
   return { subject, html: wrapHtml(body, subject) };
 }
@@ -116,7 +116,7 @@ function emailGoLive(business: string, clientName: string, siteUrl: string): { s
     <p><strong>You're in control:</strong> I'll email you login info separately. You can update your hours, services, and photos anytime — or just text me and I'll do it for you, no extra charge.</p>
     <p><strong>Get more Google reviews now:</strong> Ask your last 5 happy customers to leave a review. That's the fastest way to start ranking higher.</p>
     <p>Thank you for trusting me with this. If you ever need anything — changes, questions, new pages — I'm one text away.</p>
-    <p>Email <a href="mailto:matt@mattmichelstraining.com" style="color:#e8621a;">matt@mattmichelstraining.com</a> or text <a href="tel:+13139921219" style="color:#e8621a;">(313) 992-1219</a>.</p>
+    <p>Email <a href="mailto:matt@detroitwebagent.com" style="color:#e8621a;">matt@detroitwebagent.com</a> or text <a href="tel:+13139921219" style="color:#e8621a;">(313) 992-1219</a>.</p>
     <p>— Matt Michels</p>`;
   return { subject, html: wrapHtml(body, subject) };
 }
@@ -265,7 +265,7 @@ serve(async (req) => {
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "Matt Michels <matt@mattmichelstraining.com>",
+          from: "Matt Michels <matt@detroitwebagent.com>",
           to: [clientEmail], bcc: ["matthewmichels4@gmail.com"],
           subject: clientEmail_payload.subject,
           html: clientEmail_payload.html,
@@ -288,8 +288,8 @@ serve(async (req) => {
       method: "POST",
       headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        from: "M2 System <matt@mattmichelstraining.com>",
-        to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"],
+        from: "M2 System <matt@detroitwebagent.com>",
+        to: ["matt@detroitwebagent.com"], bcc: ["matthewmichels4@gmail.com"],
         subject: mattEmail.subject,
         html: mattEmail.html,
       }),

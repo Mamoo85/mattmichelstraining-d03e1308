@@ -34,7 +34,6 @@ async function sonarAddress(businessName: string, county: string | null): Promis
   // we hand it to the cheap extraction helper next for clean structured fields.
   const prompt = `Find the verified business street address for "${businessName}" located in ${countyHint}Michigan. This is a licensed contractor (HVAC, plumbing, boiler, or electrical). Search Michigan LARA license records, Google Business Profile, BBB, and the company website. Include street address, city, state, ZIP, phone, and owner name if listed. If you cannot verify, say so explicitly. Do not invent data.`;
 
-  if (!OPENROUTER_API_KEY) return {};
   let raw = "";
   try {
     const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {

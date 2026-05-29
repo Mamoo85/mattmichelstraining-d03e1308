@@ -9,6 +9,7 @@
 //    (not name+city+trade) so a roofer found via a gutter query isn't duplicated
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { canonicalizeTrade, getSearchQueries } from "../_shared/trade-canonical.ts";
+import { checkAndConsume } from "../_shared/api-budget.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -66,6 +67,14 @@ Deno.serve(async (req) => {
 
     // Trade-specific search queries (e.g. "Roofing" → ["roofing contractor", "roof replacement", ...])
     const queries = getSearchQueries(canonicalTradeValue).map(q => `${q} ${city} ${state}`);
+
+    const mapsOk = await checkAndConsume(supabase, "google_maps", queries.length * 2, "google_maps_text_search");
+    if (!mapsOk.allowed) {
+      return new Response(JSON.stringify({ error: "Daily Maps budget exceeded — try tomorrow", skipped: true }), {
+        status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const resultSets = await Promise.all(queries.map(q => searchPlaces(q)));
 
     // Deduplicate by place_id across all variant results

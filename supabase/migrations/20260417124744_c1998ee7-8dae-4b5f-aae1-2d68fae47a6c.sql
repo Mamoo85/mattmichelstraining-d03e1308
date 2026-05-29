@@ -78,6 +78,6 @@ CREATE TABLE IF NOT EXISTS public.contractor_referrals (
 ALTER TABLE public.contractor_referrals ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "service_role all contractor_referrals" ON public.contractor_referrals FOR ALL TO service_role USING (true) WITH CHECK (true);
 
-ALTER TABLE public.hire_alert_client_candidates
+ALTER TABLE public.hire_REDACTED
   ADD COLUMN IF NOT EXISTS claim_lock_token TEXT;
-CREATE INDEX IF NOT EXISTS idx_haccc_claim_token ON public.hire_alert_client_candidates(claim_lock_token) WHERE claim_lock_token IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_haccc_claim_token ON public.hire_REDACTED(claim_lock_token) WHERE claim_lock_token IS NOT NULL;

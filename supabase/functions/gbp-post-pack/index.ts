@@ -131,7 +131,7 @@ async function sendPostsEmail(email: string, businessName: string, postsText: st
         <p style="margin:0 0 8px;font-weight:700;color:#1e293b;font-family:sans-serif">Questions?</p>
         <p style="margin:0;color:#475569;font-size:14px;font-family:sans-serif">
           Call or text Matt: <a href="tel:3138064952" style="color:#e8621a;font-weight:700">(313) 992-1219</a>
-          &nbsp;·&nbsp; <a href="mailto:matt@mattmichelstraining.com" style="color:#e8621a">matt@mattmichelstraining.com</a>
+          &nbsp;·&nbsp; <a href="mailto:matt@detroitwebagent.com" style="color:#e8621a">matt@detroitwebagent.com</a>
         </p>
       </div>
     </div>
@@ -148,7 +148,7 @@ async function sendPostsEmail(email: string, businessName: string, postsText: st
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: "Matt Michels <matt@mattmichelstraining.com>",
+      from: "Matt Michels <matt@detroitwebagent.com>",
       to: [email],
       bcc: ["matthewmichels4@gmail.com"],
       subject: `Your 30 Google Business Profile Posts — ${businessName || "M² Development"}`,
@@ -228,8 +228,8 @@ serve(async (req) => {
           method: "POST",
           headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            from: "M² Alerts <matt@mattmichelstraining.com>",
-            to: ["matt@mattmichelstraining.com"],
+            from: "M² Alerts <matt@detroitwebagent.com>",
+            to: ["matt@detroitwebagent.com"],
             subject: `🚨 DELIVERY FAILED — gbp-post-pack — ${body.email || "unknown"}`,
             html: `<p><strong>Function:</strong> gbp-post-pack</p><p><strong>Customer:</strong> ${body.email || "unknown"}</p><p><strong>Error:</strong> ${err.message}</p>`,
           }),

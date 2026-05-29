@@ -39,7 +39,7 @@ async function sendEmail(opts: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: "Matt Michels <matt@mattmichelstraining.com>",
+      from: "Matt Michels <matt@detroitwebagent.com>",
       to: [opts.to], bcc: ["matthewmichels4@gmail.com"],
       subject: opts.subject,
       html: opts.html,
@@ -109,7 +109,7 @@ function friendEmailHtml(p: ReferralPayload): string {
     </div>
 
     <div style="text-align:center;padding:16px;">
-      <div style="color:#94a3b8;font-size:12px;">mattmichelstraining.com &nbsp;|&nbsp; (313) 992-1219 &nbsp;|&nbsp; matt@mattmichelstraining.com</div>
+      <div style="color:#94a3b8;font-size:12px;">mattmichelstraining.com &nbsp;|&nbsp; (313) 992-1219 &nbsp;|&nbsp; matt@detroitwebagent.com</div>
     </div>
   </div>
 </body>
@@ -210,7 +210,7 @@ function referrerEmailHtml(p: ReferralPayload): string {
 
     <div style="text-align:center;padding:16px;">
       <div style="color:#94a3b8;font-size:12px;">
-        mattmichelstraining.com &nbsp;|&nbsp; (313) 992-1219 &nbsp;|&nbsp; matt@mattmichelstraining.com
+        mattmichelstraining.com &nbsp;|&nbsp; (313) 992-1219 &nbsp;|&nbsp; matt@detroitwebagent.com
       </div>
     </div>
   </div>
@@ -276,7 +276,7 @@ serve(async (req) => {
 
     // 2. Email Matt
     await sendEmail({
-      to: "matt@mattmichelstraining.com",
+      to: "matt@detroitwebagent.com",
       subject: `Referral lead: ${p.friendBusiness} from ${p.yourName}`,
       html: mattEmailHtml(p),
     });

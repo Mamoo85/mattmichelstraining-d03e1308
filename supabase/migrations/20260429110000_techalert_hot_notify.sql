@@ -2,7 +2,7 @@
 ALTER TABLE public.hire_alert_candidates
   ADD COLUMN IF NOT EXISTS hot_notified_at timestamptz;
 
-CREATE INDEX IF NOT EXISTS idx_hire_alert_candidates_hot_notify
+CREATE INDEX IF NOT EXISTS idx_hire_REDACTED
   ON public.hire_alert_candidates (score, hot_notified_at)
   WHERE hot_notified_at IS NULL;
 

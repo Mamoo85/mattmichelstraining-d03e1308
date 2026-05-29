@@ -18,7 +18,7 @@ const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
-const MATT_EMAIL = "matt@mattmichelstraining.com";
+const MATT_EMAIL = "matt@detroitwebagent.com";
 
 // ── Built-in command prompts ──────────────────────────────────────────────────
 
@@ -118,6 +118,17 @@ Format as HTML with DWA branding (dark teal #00d4ff on dark background).`,
 Format as actionable HTML with red/yellow/green risk indicators.`,
   },
 
+  cfo: {
+    label: "CFO Revenue Snapshot",
+    prompt: `You are the CFO of M² AI Corporation. Provide a quick revenue snapshot:
+1. List all active revenue channels: Gumroad digital products, KDP books on Gumroad, Etsy POD listings (mugs/shirts), Fiverr gigs, Web Agency clients
+2. Estimate current monthly run rate from each channel
+3. Top 3 actions to grow revenue this month
+4. Any channels that need immediate attention (0 products live, broken pipeline, etc.)
+
+Format as clean HTML Matt can read in 60 seconds. Use green for healthy, yellow for caution, red for broken.`,
+  },
+
   comply: {
     label: "Compliance Check",
     prompt: `You are Comply, the M² compliance auditor. Run a compliance check across:
@@ -197,7 +208,7 @@ async function notifyMatt(subject: string, html: string): Promise<void> {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: "M² Remote Control <matt@mattmichelstraining.com>",
+      from: "M² Remote Control <matt@detroitwebagent.com>",
       to: [MATT_EMAIL],
       bcc: ["matthewmichels4@gmail.com"],
       subject,

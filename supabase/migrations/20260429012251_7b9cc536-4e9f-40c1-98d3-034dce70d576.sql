@@ -196,18 +196,18 @@ ON CONFLICT (key) DO NOTHING;
 -- ============================================================================
 SELECT cron.schedule(
   'quarantine-daily-report', '0 11 * * *',
-  $$select net.http_post(url:='https://eauvubfpanpeuxsrqesu.supabase.co/functions/v1/quarantine-daily-report', headers:='{"Content-Type":"application/json","apikey":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVhdXZ1YmZwYW5wZXV4c3JxZXN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2MzI3MDYsImV4cCI6MjA4OTIwODcwNn0.QF4PaTIhhwBkl0hgh68W4R2CxH22ReokGwJUebI2tKw"}'::jsonb, body:='{}'::jsonb) as request_id$$
+  $$select net.http_post(url:='https://eauvubfpanpeuxsrqesu.supabase.co/functions/v1/quarantine-daily-report', headers:='{"Content-Type":"application/json","apikey":"eyJ.REDACTED.JWT"}'::jsonb, body:='{}'::jsonb) as request_id$$
 )
 WHERE NOT EXISTS (SELECT 1 FROM cron.job WHERE jobname='quarantine-daily-report');
 
 SELECT cron.schedule(
   'edge-function-health-check', '*/15 * * * *',
-  $$select net.http_post(url:='https://eauvubfpanpeuxsrqesu.supabase.co/functions/v1/edge-function-health-check', headers:='{"Content-Type":"application/json","apikey":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVhdXZ1YmZwYW5wZXV4c3JxZXN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2MzI3MDYsImV4cCI6MjA4OTIwODcwNn0.QF4PaTIhhwBkl0hgh68W4R2CxH22ReokGwJUebI2tKw"}'::jsonb, body:='{}'::jsonb) as request_id$$
+  $$select net.http_post(url:='https://eauvubfpanpeuxsrqesu.supabase.co/functions/v1/edge-function-health-check', headers:='{"Content-Type":"application/json","apikey":"eyJ.REDACTED.JWT"}'::jsonb, body:='{}'::jsonb) as request_id$$
 )
 WHERE NOT EXISTS (SELECT 1 FROM cron.job WHERE jobname='edge-function-health-check');
 
 SELECT cron.schedule(
   'intent-score-decay', '0 10 * * *',
-  $$select net.http_post(url:='https://eauvubfpanpeuxsrqesu.supabase.co/functions/v1/intent-score-decay', headers:='{"Content-Type":"application/json","apikey":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVhdXZ1YmZwYW5wZXV4c3JxZXN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2MzI3MDYsImV4cCI6MjA4OTIwODcwNn0.QF4PaTIhhwBkl0hgh68W4R2CxH22ReokGwJUebI2tKw"}'::jsonb, body:='{}'::jsonb) as request_id$$
+  $$select net.http_post(url:='https://eauvubfpanpeuxsrqesu.supabase.co/functions/v1/intent-score-decay', headers:='{"Content-Type":"application/json","apikey":"eyJ.REDACTED.JWT"}'::jsonb, body:='{}'::jsonb) as request_id$$
 )
 WHERE NOT EXISTS (SELECT 1 FROM cron.job WHERE jobname='intent-score-decay');

@@ -1,0 +1,80 @@
+import { useState, useEffect, lazy, Suspense } from "react";
+import SEOHead from "@/components/layout/SEOHead";
+import AppNavbar from "@/components/layout/AppNavbar";
+import StoreTab from "@/components/store/StoreTab";
+import MerchTab from "@/components/store/MerchTab";
+import ExerciseLibrary from "@/components/features/ExerciseLibrary";
+import FixItLibrary from "@/components/features/FixItLibrary";
+import PaywallGate from "@/components/billing/PaywallGate";
+const DoNotPressButton = lazy(() => import("@/components/landing/DoNotPressButton"));
+const FirstMonthPromo = lazy(() => import("@/components/landing/FirstMonthPromo"));
+
+const TABS = [
+  { key: "store", label: "Digital Programs" },
+  { key: "merch", label: "Apparel & Gear" },
+  { key: "library", label: "Exercise Library" },
+  { key: "fixit", label: "Fix It Library" },
+] as const;
+
+const Shop = () => {
+  const [activeTab, setActiveTab] = useState("store");
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail) setActiveTab(detail);
+    };
+    window.addEventListener("switch-shop-tab", handler);
+    return () => window.removeEventListener("switch-shop-tab", handler);
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-background">
+      <SEOHead
+        title="Shop — Training Programs & Exercise Library"
+        description="Sport-specific training guides, custom programs, and a growing exercise library from Coach Matt Michels. Programs start at $9."
+        path="/shop"
+      />
+      <AppNavbar />
+      <div className="container pt-20 pb-12">
+        {/* Tab switcher */}
+        <div className="flex gap-1 mb-6 overflow-x-auto">
+          {TABS.map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setActiveTab(t.key)}
+              className={`px-4 py-2 text-xs font-bold uppercase tracking-widest transition-m2 whitespace-nowrap ${
+                activeTab === t.key
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {activeTab === "store" && (
+          <>
+            <Suspense fallback={null}><FirstMonthPromo /></Suspense>
+            <StoreTab />
+          </>
+        )}
+        {activeTab === "merch" && <MerchTab />}
+        {activeTab === "library" && (
+          <PaywallGate featureKey="exercise_library" featureName="Exercise Library">
+            <ExerciseLibrary />
+          </PaywallGate>
+        )}
+        {activeTab === "fixit" && (
+          <PaywallGate featureKey="fix_it_library" featureName="Fix It Rehab Library">
+            <FixItLibrary />
+          </PaywallGate>
+        )}
+        <Suspense fallback={null}><DoNotPressButton /></Suspense>
+      </div>
+    </div>
+  );
+};
+
+export default Shop;

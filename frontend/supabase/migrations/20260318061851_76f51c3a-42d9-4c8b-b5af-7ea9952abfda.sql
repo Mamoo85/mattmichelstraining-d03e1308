@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN trial_path text DEFAULT NULL;

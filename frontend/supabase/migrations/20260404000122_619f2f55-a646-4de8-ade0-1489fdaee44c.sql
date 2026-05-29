@@ -1,0 +1,1 @@
+ALTER TABLE public.sport_guides ADD COLUMN IF NOT EXISTS slug TEXT;

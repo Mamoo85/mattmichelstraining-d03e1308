@@ -38,10 +38,10 @@ const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY") || "";
 const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY") || "";
 const DWA_PHONE = "+13139921219";
 
-function streetViewUrl(_address: string, _city: string, _zip: string): string {
-  // Disabled: previously baked the API key into stored URLs and was billed on every page view.
-  // UI now links directly to free Google Maps (no API cost). See google-budget-gate.ts.
-  return "";
+function streetViewUrl(address: string, city: string, zip: string): string {
+  if (!GOOGLE_MAPS_API_KEY || !address) return "";
+  const loc = encodeURIComponent(`${address}, ${city || ""} ${zip || ""}, MI`);
+  return `https://maps.googleapis.com/maps/api/streetview?size=600x300&location=${loc}&fov=80&key=${GOOGLE_MAPS_API_KEY}`;
 }
 
 
@@ -696,8 +696,10 @@ async function upsertWithDedup(sb: ReturnType<typeof createClient>, s: RawSignal
     }],
     suggested_opener: opener,
     best_call_window: window,
-    // street_view_url disabled (cost control). UI links to Google Maps directly.
-    street_view_url: null,
+    // Use validated coordinates for Street View when available — kills the fuzzy-match bug.
+    street_view_url: s.lat != null && s.lon != null && GOOGLE_MAPS_API_KEY
+      ? `https://maps.googleapis.com/maps/api/streetview?size=600x300&location=${s.lat},${s.lon}&fov=80&key=${GOOGLE_MAPS_API_KEY}`
+      : streetViewUrl(s.address || "", s.city || "", s.zip || ""),
     lat: s.lat ?? null,
     lon: s.lon ?? null,
     pipeline_stage: (s as any).pipeline_stage || "active",
@@ -1492,9 +1494,7 @@ serve(async (req) => {
     }
   }
 
-  // Only email Matt when there's actual activity — autoscaler fires this every 15 min
-  const hasActivity = inserted > 0 || updated > 0 || alertsQueued > 0 || hotSmsFired > 0;
-  if (RESEND_API_KEY && hasActivity) {
+  if (RESEND_API_KEY) {
     try {
       await fetch("https://api.resend.com/emails", {
         method: "POST",

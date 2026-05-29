@@ -67,7 +67,7 @@ Deno.serve(async (req) => {
       if (days === 3) {
         // Check if they've received any alerts yet
         const { count: alertCount } = await sb
-          .from("hire_alert_client_candidates")
+          .from("hire_REDACTED")
           .select("id", { count: "exact", head: true })
           .eq("client_id", client.id);
 
@@ -139,12 +139,12 @@ Want to add it to your account? I'll set it up in 10 minutes. Just reply yes.
       // ── Day 14 success report ────────────────────────────────────────────
       if (days === 14) {
         const { count: totalCandidates } = await sb
-          .from("hire_alert_client_candidates")
+          .from("hire_REDACTED")
           .select("id", { count: "exact", head: true })
           .eq("client_id", client.id);
 
         const { count: hotCandidates } = await sb
-          .from("hire_alert_client_candidates")
+          .from("hire_REDACTED")
           .select("id", { count: "exact", head: true })
           .eq("client_id", client.id)
           .gte("score", 7);

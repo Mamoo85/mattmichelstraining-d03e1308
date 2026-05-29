@@ -251,9 +251,9 @@ async function upsertWithDedup(
     estimated_value: signal.estimated_value,
     source_method: signal.source_method,
     raw_source_data: signal.raw_source_data,
-    // street_view_url removed: previously baked the API key into the row and
-    // billed every page view. UI now links to free Google Maps instead.
-    street_view_url: null,
+    street_view_url: validation.lat != null && validation.lon != null && GOOGLE_MAPS_API_KEY
+      ? `https://maps.googleapis.com/maps/api/streetview?size=600x300&location=${validation.lat},${validation.lon}&fov=80&source=outdoor&key=${GOOGLE_MAPS_API_KEY}`
+      : null,
     status: "new",
     signal_count: 1,
     last_signal_at: new Date().toISOString(),

@@ -1,5 +1,5 @@
 // Monthly ROI digest per TechAlert client. Item #47.
-// READ-ONLY against hire_alert_client_candidates; writes to NEW client_roi_monthly table.
+// READ-ONLY against hire_REDACTED; writes to NEW client_roi_monthly table.
 // Optionally emails Matt a summary. Does NOT email clients (manual review first).
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
@@ -31,7 +31,7 @@ serve(async (req) => {
 
     for (const client of clients) {
       const { data: alerts } = await sb
-        .from("hire_alert_client_candidates")
+        .from("hire_REDACTED")
         .select("client_action, alerted_at")
         .eq("client_id", client.id)
         .gte("alerted_at", monthStart.toISOString())

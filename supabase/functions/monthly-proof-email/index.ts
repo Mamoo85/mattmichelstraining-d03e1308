@@ -46,7 +46,7 @@ serve(async (req) => {
         .eq("active", true);
 
       for (const c of (data || [])) {
-        if (!c.email || c.email === "matt@mattmichelstraining.com" || c.email === "matt@detroitwebagent.com") continue;
+        if (!c.email || c.email === "matt@detroitwebagent.com" || c.email === "matt@detroitwebagent.com") continue;
         const existing = clientMap.get(c.email);
         if (existing) {
           existing.products.push(t.product);

@@ -27,8 +27,8 @@ serve(async (req) => {
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "M² System <matt@mattmichelstraining.com>",
-          to: ["matt@mattmichelstraining.com"],
+          from: "M² System <matt@detroitwebagent.com>",
+          to: ["matt@detroitwebagent.com"],
           bcc: ["matthewmichels4@gmail.com"],
           subject: `⚖️ ${dueDocs.length} Legal Document(s) Due for Review`,
           html: `<p>The following legal documents are past their review date and should be regenerated/reviewed in your Admin → Legal & Compliance panel:</p><table style="border-collapse:collapse;width:100%;margin:16px 0;"><thead><tr><th style="padding:6px 12px;border:1px solid #ddd;text-align:left;">Document</th><th style="padding:6px 12px;border:1px solid #ddd;text-align:left;">Due Date</th></tr></thead><tbody>${rows}</tbody></table><p>Go to Admin → Legal & Compliance → click "Generate" on each to update.</p><p>— M² Automated Legal Review</p>`,

@@ -1,4 +1,4 @@
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -349,8 +349,8 @@ Respond in EXACT JSON (no markdown):
           Authorization: `Bearer ${resendKey}`,
         },
         body: JSON.stringify({
-          from: "Scarlett — M² Creative <matt@mattmichelstraining.com>",
-          to: ["matt@mattmichelstraining.com"],
+          from: "Scarlett — M² Creative <matt@detroitwebagent.com>",
+          to: ["matt@detroitwebagent.com"],
           bcc: ["matthewmichels4@gmail.com"],
           subject: `🎨 Creative Campaign: ${campaign.service} on ${campaign.platform}`,
           html: `<div style="font-family:sans-serif;max-width:600px">

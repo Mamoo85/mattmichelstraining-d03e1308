@@ -7,6 +7,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { sendSMS } from "../_shared/twilio.ts";
 import { extractFaxNumber } from "../_shared/firecrawl.ts";
 import { canonicalizeTrade, getSearchQueries } from "../_shared/trade-canonical.ts";
+import { checkAndConsume } from "../_shared/api-budget.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,6 +24,9 @@ const LOB_API_KEY = Deno.env.get("LOB_API_KEY") || "";
 const DATAFORSEO_LOGIN = Deno.env.get("DATAFORSEO_LOGIN") || "";
 const DATAFORSEO_PASSWORD = Deno.env.get("DATAFORSEO_PASSWORD") || "";
 const SAM_GOV_API_KEY = Deno.env.get("SAM_GOV_API_KEY") || "";
+
+const MAX_PLACES_SEARCHES_PER_RUN = 5;  // was up to 28 — hard cap to stay under $1.50/day
+const MAX_DETAILS_PER_RUN = 10;         // was up to 40
 
 // SAM.gov NAICS codes for construction trades
 const TRADE_NAICS: Record<string, string[]> = {
@@ -340,8 +344,8 @@ serve(async (req) => {
     const sbAuth = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY") || "", {
       global: { headers: { Authorization: authHeader } },
     });
-    const { data: { user } } = await sbAuth.auth.getUser(authHeader.replace("Bearer ", ""));
-    const userId = user?.id;
+    const { data: claims } = await sbAuth.auth.getClaims(authHeader.replace("Bearer ", ""));
+    const userId = claims?.claims?.sub;
     if (!userId) {
       return new Response(JSON.stringify({ ok: false, error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
@@ -398,11 +402,19 @@ serve(async (req) => {
   }
 
   // ── Build query list (multi-query fan-out, 2 variants per city to stay within budget) ──
-  const variants = getSearchQueries(tradeForCopy).slice(0, 2); // cap at 2 variants per city
+  const variants = getSearchQueries(tradeForCopy).slice(0, 1); // 1 variant per city (budget cap)
 
   const queries: { q: string; city: string }[] = [];
   for (const c of cityList) {
     for (const v of variants) queries.push({ q: `${v} in ${c}`, city: c });
+  }
+
+  // Budget gate — skip Maps/DFS calls if google_maps daily cap already hit
+  const mapsOk = await checkAndConsume(sb, "google_maps",
+    MAX_PLACES_SEARCHES_PER_RUN + MAX_DETAILS_PER_RUN, "google_maps_details");
+  if (!mapsOk.allowed) {
+    return new Response(JSON.stringify({ ok: true, skipped: true, reason: "google_maps_daily_cap", channel }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
   // ── PHASE 1: Parallel searches (Google + DataForSEO + SAM.gov) ───────────
@@ -417,7 +429,7 @@ serve(async (req) => {
   allPlaces.push(...samResults.map((p: any) => ({ place: p, city: p._sam_city ? `${p._sam_city} ${p._sam_state}` : samCity })));
 
   await pLimit(
-    queries.map(({ q, city }) => async () => {
+    queries.slice(0, MAX_PLACES_SEARCHES_PER_RUN).map(({ q, city }) => async () => {
       const [googlePlaces, dfsPlaces] = await Promise.all([
         searchGoogleMaps(q).then(places => places.map((p: any) => ({ place: p, city }))),
         searchDataForSEO(tradeForCopy, city).then(places => places.map((p: any) => ({ place: p, city }))),
@@ -446,7 +458,7 @@ serve(async (req) => {
   const found = dedupedPlaces.length;
 
   // ── PHASE 1b: Parallel detail fetch + scraping (cap at 40 places) ──────────
-  const phase1Slice = dedupedPlaces.slice(0, 40);
+  const phase1Slice = dedupedPlaces.slice(0, MAX_DETAILS_PER_RUN);
   const normalize = (raw: string): string => {
     const digits = raw.replace(/[^\d]/g, "");
     if (digits.length === 11 && digits.startsWith("1")) return `+${digits}`;

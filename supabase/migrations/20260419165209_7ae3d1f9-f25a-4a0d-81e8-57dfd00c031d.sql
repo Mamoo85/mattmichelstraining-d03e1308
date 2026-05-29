@@ -38,8 +38,8 @@ CREATE INDEX IF NOT EXISTS idx_candidates_company_score
 -- 4. Add the missing last_error column for scanner observability
 DO $$
 BEGIN
-  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='hire_alert_scanner_checkpoints') THEN
-    ALTER TABLE public.hire_alert_scanner_checkpoints
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='hire_REDACTED') THEN
+    ALTER TABLE public.hire_REDACTED
       ADD COLUMN IF NOT EXISTS last_error TEXT;
   END IF;
 END

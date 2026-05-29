@@ -162,7 +162,7 @@ serve(async (req) => {
             Authorization: `Bearer ${resendKey}`,
           },
           body: JSON.stringify({
-            from: "Matt Michels <matt@mattmichelstraining.com>",
+            from: "Matt Michels <matt@detroitwebagent.com>",
             to: [profile.email], bcc: ["matthewmichels4@gmail.com"],
             subject: `Welcome to ${programTitle}. Here's step one.`,
             html: `

@@ -89,8 +89,8 @@ serve(async (req) => {
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "M² System <matt@mattmichelstraining.com>",
-          to: ["matt@mattmichelstraining.com"],
+          from: "M² System <matt@detroitwebagent.com>",
+          to: ["matt@detroitwebagent.com"],
           bcc: ["matthewmichels4@gmail.com"],
           subject: `🎙️ New Podcast Revenue Machine checkout — ${podcast_name || customer_email}`,
           html: `<p>New checkout started:<br><strong>${customer_name || "Unknown"}</strong><br>${customer_email}<br>Podcast: ${podcast_name || "n/a"}<br>RSS: ${rss_feed_url}<br>Niche: ${podcast_niche || "n/a"}<br>Tone: ${tone}<br>$199/mo<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;"><strong style="color:#e2e8f0;">Matt Michels</strong><br/><span style="color:#94a3b8;font-size:13px;">Grosse Pointe, MI · (313) 992-1219</span></div></p>`,

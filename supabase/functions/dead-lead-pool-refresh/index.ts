@@ -7,6 +7,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { sendSMS, ADMIN_PHONE } from "../_shared/twilio.ts";
 import { shouldScanMore } from "../_shared/intake-throttle.ts";
 import { wrapServe } from "../_shared/telemetry.ts";
+import { checkAndConsume } from "../_shared/api-budget.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -195,14 +196,15 @@ serve(wrapServe("dead-lead-pool-refresh", async (req) => {
 
     // SOURCE E — Google Maps Places API: Detroit-area trade businesses
     // Text search doesn't return phone numbers — fetch Place Details per result to get phone.
-    if (GOOGLE_MAPS_KEY) {
-      for (const query of TRADE_SEARCHES.slice(0, 5)) { // limit to 5 searches per run to control quota
+    const mapsOk = await checkAndConsume(sb, "google_maps", 12, "google_maps_details");
+    if (GOOGLE_MAPS_KEY && mapsOk.allowed) {
+      for (const query of TRADE_SEARCHES.slice(0, 3)) { // limit to 3 searches/run ($0.10/day cap)
         try {
           const placesUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&key=${GOOGLE_MAPS_KEY}`;
           const res = await fetch(placesUrl, { signal: AbortSignal.timeout(10_000) });
           if (!res.ok) break;
           const d = await res.json();
-          const places = (d?.results ?? []).slice(0, 10);
+          const places = (d?.results ?? []).slice(0, 3); // 3 details/search = 9 Maps calls max/run
 
           // Fetch phone numbers in parallel via Place Details (text search never returns phone)
           const phoneResults = await Promise.allSettled(
@@ -325,17 +327,6 @@ serve(wrapServe("dead-lead-pool-refresh", async (req) => {
         });
       }
     }
-
-    // Heartbeat — proves the scanner ran even when all 5 sources returned 0.
-    try {
-      await sb.from("scanner_heartbeats").insert({
-        scanner_name: "dead-lead-pool-refresh",
-        status: "ok",
-        rows_inserted: inserted,
-        duration_ms: ms,
-        meta: { candidates: candidates.length, target: gate.target, had: gate.fresh, inserted },
-      });
-    } catch (e) { console.warn("[pool-refresh] heartbeat insert failed:", e); }
 
     return new Response(
       JSON.stringify({ inserted, candidates: candidates.length, target: gate.target, had: gate.fresh, ms }),

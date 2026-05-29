@@ -1,25 +1,5 @@
 project_id = "zmyczlfuufhngzovkjdh"
 
-[functions.pod-image-rebake]
-verify_jwt = false
-
-[functions.printify-direct-publish]
-verify_jwt = false
-
-[functions.pod-republish-broken]
-verify_jwt = false
-
-[functions.pod-audit-dimensions]
-verify_jwt = false
-
-[functions.pod-republish-wrong-dims]
-verify_jwt = false
-
-
-
-[functions.cold-email-pool-router]
-verify_jwt = false
-
 [functions.scanner-monitor-alert]
 verify_jwt = false
 
@@ -39,12 +19,6 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.cold-email-ramp-scheduler]
-verify_jwt = false
-
-[functions.cold-sender-master]
-verify_jwt = false
-
-[functions.cold-sender-health-check]
 verify_jwt = false
 
 [functions.trial-drip-runner]
@@ -743,6 +717,9 @@ verify_jwt = false
 [functions.create-rfp-alerts-checkout]
 verify_jwt = false
 
+[functions.create-seo-audit-checkout]
+verify_jwt = false
+
 [functions.create-seo-package-checkout]
 verify_jwt = false
 
@@ -1005,9 +982,6 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.hoa-lead-magnet-capture]
-verify_jwt = false
-
-[functions.techalert-staffing-lead-magnet]
 verify_jwt = false
 
 [functions.hoa-secretary]
@@ -2048,6 +2022,12 @@ verify_jwt = false
 [functions.resend-bounce-webhook]
 verify_jwt = false
 
+[functions.missed-call-prospect-scanner]
+verify_jwt = false
+
+[functions.outreach-prospect-replenisher]
+verify_jwt = false
+
 [functions.outreach-reply-handler]
 verify_jwt = false
 
@@ -2231,9 +2211,6 @@ verify_jwt = false
 [functions.siteradar-cold-blast]
 verify_jwt = false
 
-[functions.agency-blast-scheduler]
-verify_jwt = false
-
 [functions.trade-radar-outreach]
 verify_jwt = false
 
@@ -2339,6 +2316,9 @@ verify_jwt = false
 [functions.build-talent-prospect-list]
 verify_jwt = false
 
+[functions.agency-blast-scheduler]
+verify_jwt = false
+
 [functions.notify-source-promoted]
 verify_jwt = false
 
@@ -2396,170 +2376,17 @@ verify_jwt = false
 [functions.enrich-lo-prospect]
 verify_jwt = false
 
-[functions.staffing-agency-prospector]
+[functions.onboarding-send]
 verify_jwt = false
 
-[functions.inventory-sentinel]
+[functions.onboarding-followup]
 verify_jwt = false
 
-[functions.inventory-daily-digest]
+[functions.kalshi-trader]
 verify_jwt = false
 
-[functions.staffing-agency-discover]
+[functions.trading-monitor]
 verify_jwt = false
 
-[functions.staffing-agency-enrich]
-verify_jwt = false
-
-[functions.apify-actor-runner]
-verify_jwt = false
-
-[functions.buyer-universe-orchestrator]
-verify_jwt = false
-
-[functions.buyer-pool-promote]
-verify_jwt = false
-
-[functions.admin-database-matrix]
-verify_jwt = false
-
-[functions.buyer-pool-apollo-discovery]
-verify_jwt = false
-
-[functions.buyer-pool-google-places-discovery]
-verify_jwt = false
-
-[functions.buyer-pool-foursquare-discovery]
-verify_jwt = false
-
-[functions.buyer-pool-osm-overpass-discovery]
-verify_jwt = false
-
-[functions.buyer-pool-sam-gov-discovery]
-verify_jwt = false
-
-[functions.buyer-pool-bing-serp-discovery]
-verify_jwt = false
-
-[functions.buyer-pool-openrouter-osint-discovery]
-verify_jwt = false
-
-[functions.enrichment-health-alerter]
-verify_jwt = false
-
-[functions.pipeline-autoscaler]
-verify_jwt = false
-
-[functions.etsy-trend-scanner]
-verify_jwt = false
-
-[functions.pod-product-orchestrator]
-verify_jwt = false
-
-[functions.etsy-sales-sync]
-verify_jwt = false
-
-[functions.pod-etsy-publisher]
-verify_jwt = false
-
-[functions.etsy-winner-prioritizer]
-verify_jwt = false
-
-[functions.printify-auto-sync]
-verify_jwt = false
-
-[functions.printify-webhook]
-verify_jwt = false
-
-[functions.etsy-shop-get]
-verify_jwt = false
-
-[functions.etsy-shop-update]
-verify_jwt = false
-
-[functions.etsy-announcement-rotator]
-verify_jwt = false
-
-[functions.etsy-announcement-on-publish]
-verify_jwt = false
-
-[functions.etsy-oauth-start]
-verify_jwt = false
-
-[functions.etsy-oauth-callback]
-verify_jwt = false
-
-[functions.etsy-token-refresh]
-verify_jwt = false
-
-[functions.etsy-product-sync]
-verify_jwt = false
-
-[functions.pod-republish-resume]
-verify_jwt = false
-
-[functions.etsy-scope-check]
-verify_jwt = false
-
-[functions.gng-supply-chain-audit]
-verify_jwt = false
-
-[functions.gng-drift-detector]
-verify_jwt = false
-
-[functions.gng-sms-inbound]
-verify_jwt = false
-
-[functions.gng-price-floor-queue]
-verify_jwt = false
-
-[functions.etsy-translate-top-listings]
-verify_jwt = false
-
-[functions.etsy-enable-auto-renew]
-verify_jwt = false
-
-[functions.gng-price-floor-auto-apply]
-verify_jwt = false
-
-[functions.gng-sitemap-rebuild]
-verify_jwt = false
-
-[functions.gng-cohort-report]
-verify_jwt = false
-
-[functions.gng-dead-sku-sweeper]
-verify_jwt = false
-
-[functions.gng-trend-scraper]
-verify_jwt = false
-
-[functions.etsy-tag-refresh]
-verify_jwt = false
-
-[functions.etsy-listing-rewriter]
-verify_jwt = false
-
-[functions.gng-title-linter]
-verify_jwt = false
-
-[functions.gng-duplicate-detector]
-verify_jwt = false
-
-[functions.gng-velocity-tracker]
-verify_jwt = false
-
-[functions.gng-tag-overlap-analyzer]
-verify_jwt = false
-
-[functions.create-gng-subscription-checkout]
-verify_jwt = false
-
-[functions.gng-subscription-fulfillment]
-verify_jwt = false
-
-[functions.create-gng-digital-checkout]
-verify_jwt = false
-
-[functions.gng-download-resolve]
+[functions.outreach-checkout]
 verify_jwt = false

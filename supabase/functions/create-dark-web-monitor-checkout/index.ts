@@ -76,8 +76,8 @@ serve(async (req) => {
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "M² System <matt@mattmichelstraining.com>",
-          to: ["matt@mattmichelstraining.com"],
+          from: "M² System <matt@detroitwebagent.com>",
+          to: ["matt@detroitwebagent.com"],
           bcc: ["matthewmichels4@gmail.com"],
           subject: `New Dark Web Monitor checkout — ${company_name || customer_email} (${priceLabel})`,
           html: `<p>Dark Web Monitor checkout started:<br><strong>${company_name || customer_name || customer_email}</strong><br>Email: ${customer_email}<br>Domain: ${monitored_domain}<br>Plan: ${plan_type} (${priceLabel})</p>`,

@@ -304,7 +304,7 @@ Deno.serve(async (req) => {
     if (tradeVertical) {
       const zipCodes = Array.isArray(body.zip_codes) && body.zip_codes.length > 0 ? body.zip_codes : [];
       const dt = genToken();
-      const { data: row, error } = await sb.from("trade_radar_clients" as any).upsert({
+      const { error } = await (sb.from("trade_radar_clients" as any) as any).upsert({
         email,
         vertical: tradeVertical,
         business_name: body.business_name || null,
@@ -313,24 +313,27 @@ Deno.serve(async (req) => {
         active: true,
         trial_ends_at: expiresAt,
         dashboard_token: dt,
-      }, { onConflict: "email,vertical" }).select("dashboard_token").maybeSingle();
+      }, { onConflict: "email,vertical", ignoreDuplicates: true });
       if (error) throw error;
+      const { data: row } = await (sb.from("trade_radar_clients" as any) as any)
+        .select("dashboard_token").eq("email", email).eq("vertical", tradeVertical).maybeSingle();
       nativeToken = row?.dashboard_token || dt;
     } else if (product === "missed_call") {
       const dt = genToken();
-      const { data: row, error } = await sb.from("missed_call_clients").upsert({
+      await sb.from("missed_call_clients").upsert({
         email,
         business_name: body.business_name || null,
         phone: body.phone || null,
         active: true,
         dashboard_token: dt,
-      }, { onConflict: "email" }).select("dashboard_token").maybeSingle();
-      if (error) throw error;
+      }, { onConflict: "email", ignoreDuplicates: true });
+      const { data: row } = await sb.from("missed_call_clients")
+        .select("dashboard_token").eq("email", email).maybeSingle();
       nativeToken = row?.dashboard_token || dt;
       useNativeTokenAsTrial = true;
     } else if (product === "contractor_leads") {
       const dt = genToken();
-      const { data: row, error } = await sb.from("contractor_clients").upsert({
+      await sb.from("contractor_clients").upsert({
         email,
         business_name: body.business_name || null,
         name: body.business_name || null,
@@ -339,25 +342,27 @@ Deno.serve(async (req) => {
         state: body.state || "MI",
         active: true,
         roi_token: dt,
-      }, { onConflict: "email" }).select("roi_token").maybeSingle();
-      if (error) throw error;
+      }, { onConflict: "email", ignoreDuplicates: true });
+      const { data: row } = await sb.from("contractor_clients")
+        .select("roi_token").eq("email", email).maybeSingle();
       nativeToken = row?.roi_token || dt;
       useNativeTokenAsTrial = true;
     } else if (product === "fielddesk" || product === "site_radar") {
       const dt = genToken();
-      const { data: row, error } = await sb.from("field_crm_clients").upsert({
+      await sb.from("field_crm_clients").upsert({
         email,
         business_name: body.business_name || null,
         phone: body.phone || null,
         status: "active",
         dispatch_token: dt,
-      }, { onConflict: "email" }).select("dispatch_token").maybeSingle();
-      if (error) throw error;
+      }, { onConflict: "email", ignoreDuplicates: true });
+      const { data: row } = await sb.from("field_crm_clients")
+        .select("dispatch_token").eq("email", email).maybeSingle();
       nativeToken = row?.dispatch_token || dt;
       useNativeTokenAsTrial = true;
     } else if (product === "techalert") {
       const dt = genToken();
-      const { data: row, error } = await sb.from("hire_alert_clients").upsert({
+      await sb.from("hire_alert_clients").upsert({
         owner_email: email,
         company_name: body.business_name || null,
         owner_phone: body.phone || null,
@@ -366,20 +371,22 @@ Deno.serve(async (req) => {
         trial_started_at: new Date().toISOString(),
         trial_ends_at: expiresAt,
         dashboard_token: dt,
-      }, { onConflict: "owner_email" }).select("dashboard_token").maybeSingle();
-      if (error) throw error;
+      }, { onConflict: "owner_email", ignoreDuplicates: true });
+      const { data: row } = await sb.from("hire_alert_clients")
+        .select("dashboard_token").eq("owner_email", email).maybeSingle();
       nativeToken = row?.dashboard_token || dt;
       useNativeTokenAsTrial = true;
     } else if (product === "industry_pulse") {
       const dt = genToken();
-      const { data: row, error } = await sb.from("industry_pulse_clients").upsert({
+      await sb.from("industry_pulse_clients").upsert({
         email,
         company_name: body.business_name || null,
         phone: body.phone || null,
         active: true,
         dashboard_token: dt,
-      }, { onConflict: "email" }).select("dashboard_token").maybeSingle();
-      if (error) throw error;
+      }, { onConflict: "email", ignoreDuplicates: true });
+      const { data: row } = await sb.from("industry_pulse_clients")
+        .select("dashboard_token").eq("email", email).maybeSingle();
       nativeToken = row?.dashboard_token || dt;
       useNativeTokenAsTrial = true;
     }
@@ -443,19 +450,31 @@ Deno.serve(async (req) => {
   // Anything else (direct, paid ads, organic, referral) = a real person clicked through.
   const src = (body.source || "direct").toLowerCase();
   const isAutoProvisioned = /teaser|blast|auto|prospect_hunter|seed/.test(src);
-  // Only ping Matt for REAL human trial signups. Auto-provisioned teaser blasts
-  // were spamming his phone (one SMS per email sent). Those are tracked in
-  // trial_signups + email_send_log instead.
-  if (!isAutoProvisioned) {
-    sendSMS(
-      ADMIN_PHONE,
-      TWILIO_FROM,
-      `🎯 NEW TRIAL STARTED — ${cfg.label}\n${email}${body.business_name ? `\n${body.business_name}` : ""}${body.phone ? `\n${body.phone}` : ""}${founder ? "\n(founder seat)" : ""}\nsrc: ${body.source || "direct"}`,
-      "trial_signup_alert",
-      false,
-      { bypassQuietHours: true },
-    ).catch((e) => console.error("[start-radar-trial] admin SMS failed", e));
-  }
+  const prefix = isAutoProvisioned ? "📨 TEASER SENT" : "🎯 NEW TRIAL STARTED";
+  sendSMS(
+    ADMIN_PHONE,
+    TWILIO_FROM,
+    `${prefix} — ${cfg.label}\n${email}${body.business_name ? `\n${body.business_name}` : ""}${body.phone ? `\n${body.phone}` : ""}${founder ? "\n(founder seat)" : ""}\nsrc: ${body.source || "direct"}`,
+    isAutoProvisioned ? "trial_teaser_alert" : "trial_signup_alert",
+    false,
+    { bypassQuietHours: !isAutoProvisioned },
+  ).catch((e) => console.error("[start-radar-trial] admin SMS failed", e));
+
+  // Fire-and-forget setup onboarding email for products that require manual steps.
+  // site_radar needs pixel install; missed_call needs phone forwarding.
+  // Other products (demand_radar, buyer_radar, industry_pulse, etc.) send a
+  // "you're ready" welcome email so the client knows how to reach the dashboard.
+  fetch(`${SUPABASE_URL}/functions/v1/onboarding-send`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      email,
+      product,
+      name: body.business_name?.split(" ")[0] || null,
+      dashboard_url: magicUrl,
+      business_phone: body.phone || null,
+    }),
+  }).catch((e) => console.error("[start-radar-trial] onboarding-send failed", e));
 
   return new Response(
     JSON.stringify({

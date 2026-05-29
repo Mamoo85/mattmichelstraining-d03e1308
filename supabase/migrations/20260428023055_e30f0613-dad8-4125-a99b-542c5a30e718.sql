@@ -63,12 +63,12 @@ CREATE INDEX IF NOT EXISTS idx_iss_budget
 
 ALTER TABLE public.intent_score_snapshots ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "intent_score_snapshots_service_role_all"
+CREATE POLICY "intent_score_REDACTED"
   ON public.intent_score_snapshots FOR ALL
   USING (auth.jwt() ->> 'role' = 'service_role')
   WITH CHECK (auth.jwt() ->> 'role' = 'service_role');
 
-CREATE POLICY "intent_score_snapshots_admin_select"
+CREATE POLICY "intent_score_REDACTED"
   ON public.intent_score_snapshots FOR SELECT
   USING (public.has_role(auth.uid(), 'admin'::app_role));
 

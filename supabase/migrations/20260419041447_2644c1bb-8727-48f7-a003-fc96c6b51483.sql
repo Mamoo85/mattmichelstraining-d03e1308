@@ -54,7 +54,7 @@ SELECT 'dlq_enrich',
 GRANT SELECT ON public.queue_status TO authenticated, anon, service_role;
 
 -- 5. Scanner checkpoints table (A7) — per-source state to prevent double dispatch
-CREATE TABLE IF NOT EXISTS public.hire_alert_scanner_checkpoints (
+CREATE TABLE IF NOT EXISTS public.hire_REDACTED (
   source text PRIMARY KEY,
   status text NOT NULL DEFAULT 'idle' CHECK (status IN ('idle','queued','processing','ok','error')),
   last_dispatched_at timestamptz,
@@ -62,9 +62,9 @@ CREATE TABLE IF NOT EXISTS public.hire_alert_scanner_checkpoints (
   last_error text,
   updated_at timestamptz NOT NULL DEFAULT now()
 );
-ALTER TABLE public.hire_alert_scanner_checkpoints ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "service_role checkpoints" ON public.hire_alert_scanner_checkpoints FOR ALL TO service_role USING (true) WITH CHECK (true);
-CREATE POLICY "admins read checkpoints" ON public.hire_alert_scanner_checkpoints FOR SELECT TO authenticated USING (public.has_role(auth.uid(), 'admin'));
+ALTER TABLE public.hire_REDACTED ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "service_role checkpoints" ON public.hire_REDACTED FOR ALL TO service_role USING (true) WITH CHECK (true);
+CREATE POLICY "admins read checkpoints" ON public.hire_REDACTED FOR SELECT TO authenticated USING (public.has_role(auth.uid(), 'admin'));
 
 -- 6. Trigger: enqueue stage-1 enrich job for every new candidate (A2 / replaces synchronous enrich trigger)
 CREATE OR REPLACE FUNCTION public.trigger_enqueue_enrich()

@@ -70,8 +70,8 @@ serve(async (req) => {
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "M² System <matt@mattmichelstraining.com>",
-          to: ["matt@mattmichelstraining.com"],
+          from: "M² System <matt@detroitwebagent.com>",
+          to: ["matt@detroitwebagent.com"],
           bcc: ["matthewmichels4@gmail.com"],
           subject: `New Pet Memorial checkout — ${pet_name} (${customer_name || customer_email})`,
           html: `<p>New pet memorial started checkout:<br><strong>${customer_name || "Unknown"}</strong><br>${customer_email}<br>Pet: ${pet_name} (${pet_species || "species not listed"})<br>Amount: $79 one-time</p>`,

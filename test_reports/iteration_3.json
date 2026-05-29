@@ -1,0 +1,158 @@
+{
+  "summary": "Full E2E regression testing of Detroit Web Agency platform before launch. Tested 14 routes/features across desktop (1920x800) and mobile (390x844) viewports. 13/14 tests passed. One bug found: /dead-lead-reactivation route returns 404 (should be /dead-lead-intake).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "FieldServiceDispatch.tsx",
+        "issue": "Dead Leads product CTA URL is '/dead-lead-reactivation' but correct route is '/dead-lead-intake'. Results in 404 when user clicks CTA.",
+        "selector": "[data-testid='fd-detail-cta']",
+        "priority": "HIGH",
+        "fix": "Change ctaUrl from '/dead-lead-reactivation' to '/dead-lead-intake' in PRODUCTS array (line 169)"
+      },
+      {
+        "component": "DemoModeBadge",
+        "issue": "DEMO MODE badge (fixed position, z-50) overlaps with Shop toggle button in header on desktop. Known LOW priority issue from previous iterations.",
+        "selector": ".fixed.top-3.right-3.z-50",
+        "priority": "LOW"
+      }
+    ],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": ["/app/test_reports/iteration_3.json"],
+  "action_items": [
+    "FIX: Change ctaUrl in FieldServiceDispatch.tsx line 169 from '/dead-lead-reactivation' to '/dead-lead-intake'"
+  ],
+  "critical_code_review_comments": [
+    "FieldServiceDispatch.tsx line 169: ctaUrl: '/dead-lead-reactivation' should be '/dead-lead-intake'"
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "N/A (frontend only testing)",
+    "frontend": "93% (13/14 tests passed)"
+  },
+  "test_credentials": "Demo mode: ?demo=1 or ?token=DWA_DEMO_MASTER. Healthcare mode: ?demo=1&industry=healthcare",
+  "seed_data_creation": "None required - demo mode uses hardcoded values",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "All major routes tested. The /dead-lead-reactivation 404 bug is a simple URL fix in FieldServiceDispatch.tsx. All other features working correctly including: Demand Radar ($99/mo), Industry Pulse ($99/mo - pricing fix verified), GoTechAlert, FieldDesk dispatch (trades 8 products, healthcare 6 products), ProductDetail views, locked tabs, mobile bottom nav with 7 items, mobile FAB with Buy Names + Text Matt actions.",
+  "test_results": {
+    "demand_radar": {
+      "status": "PASS",
+      "tests": [
+        "Hero section loads with 'Know Who's Buying Before They Call'",
+        "Form inputs: dr-email, dr-company, dr-phone all present",
+        "Checkout button shows '$99/mo'",
+        "Pricing CTA (dr-pricing-cta) present",
+        "4 signal types: Hiring Surge, Predicted Equipment, Cross-Referenced Intel, MIOSHA Compliance"
+      ]
+    },
+    "industry_pulse": {
+      "status": "PASS",
+      "tests": [
+        "Hero section loads",
+        "Form inputs present",
+        "CTA shows '$99/mo' (NOT $299 - pricing fix verified)",
+        "4 signal types present"
+      ]
+    },
+    "go_techalert": {
+      "status": "PASS",
+      "tests": [
+        "Hero section loads",
+        "Email form present",
+        "On-demand buttons: '10 Names — $50' and '5 Names — $25'",
+        "Main CTA shows '$99/mo'"
+      ]
+    },
+    "go_techalert_success": {
+      "status": "PASS",
+      "tests": [
+        "Shows 'You're In.' confirmation",
+        "TechAlert scanning message present",
+        "Contact info present"
+      ]
+    },
+    "fielddesk_trades_desktop": {
+      "status": "PASS",
+      "tests": [
+        "3-panel layout: header, left nav, center content, shop sidebar",
+        "Company name: 'Great Lakes Mechanical'",
+        "8 products in shop sidebar (trades mode)",
+        "All products found: talent-pipeline, ondemand-pack, missed-call, dead-leads, fielddesk-pro, industry-pulse, review-engine, website-seo"
+      ]
+    },
+    "fielddesk_healthcare_desktop": {
+      "status": "PASS",
+      "tests": [
+        "Company name: 'Great Lakes Home Health'",
+        "6 products in shop sidebar (healthcare mode)",
+        "FieldDesk Pro and Industry Pulse correctly hidden"
+      ]
+    },
+    "fielddesk_product_detail": {
+      "status": "PASS",
+      "tests": [
+        "ProductDetail view displays on product click",
+        "4 process flow steps present",
+        "3 stat cards present",
+        "CTA and back button present"
+      ]
+    },
+    "fielddesk_locked_tabs": {
+      "status": "PASS",
+      "tests": [
+        "Dispatch tab shows LockedFeatureTab overlay",
+        "Map tab shows LockedFeatureTab overlay",
+        "Invoicing tab shows LockedFeatureTab overlay",
+        "Assets tab shows LockedFeatureTab overlay",
+        "Contracts tab shows LockedFeatureTab overlay",
+        "Unlock CTA shows '$199/mo'"
+      ]
+    },
+    "fielddesk_mobile": {
+      "status": "PASS",
+      "tests": [
+        "Left nav hidden on mobile",
+        "Bottom nav visible with 7 items",
+        "Shop overlay opens from bottom nav",
+        "Shop backdrop and close button present",
+        "FAB toggle present",
+        "FAB actions: 'Buy Names' and 'Text Matt' visible when expanded"
+      ]
+    },
+    "field_service_landing": {
+      "status": "PASS",
+      "tests": [
+        "Page loads without errors",
+        "Field Service content present"
+      ]
+    },
+    "missed_call_catch": {
+      "status": "PASS",
+      "tests": [
+        "Page loads without errors",
+        "Missed Call Text-Back content present"
+      ]
+    },
+    "dead_lead_reactivation": {
+      "status": "FAIL",
+      "tests": [
+        "Route /dead-lead-reactivation returns 404",
+        "Correct route is /dead-lead-intake which works"
+      ],
+      "bug": "FieldServiceDispatch.tsx line 169 has wrong URL"
+    },
+    "dead_lead_intake": {
+      "status": "PASS",
+      "tests": [
+        "Page loads without errors",
+        "Dead Lead Reactivation form present"
+      ]
+    }
+  }
+}

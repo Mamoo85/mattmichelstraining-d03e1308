@@ -1956,6 +1956,12 @@ serve(async (req: Request) => {
   const { data: allClients } = await sb.from("hire_alert_clients").select("*").or("active.eq.true,trial_status.eq.active");
   if (!allClients?.length) {
     console.log("[hire-alert-scanner] No active clients");
+    const skipStats = { completed_at: new Date().toISOString(), status: "no_clients", candidates_found: 0, new_candidates: 0, candidates_alerted: 0, alerts_sent: 0 };
+    if (runRowId) {
+      await sb.from("hire_alert_runs").update(skipStats).eq("id", runRowId).catch(() => {});
+    } else {
+      await sb.from("hire_alert_runs").insert({ started_at: runStart, run_at: runStart, source: "all", lara_status: "not_attempted", ...skipStats }).catch(() => {});
+    }
     return new Response(JSON.stringify({ processed: 0 }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
@@ -1967,6 +1973,12 @@ serve(async (req: Request) => {
   }
   if (!clients.length) {
     console.log("[hire-alert-scanner] All clients blocked by TOS gate");
+    const tosStats = { completed_at: new Date().toISOString(), status: "tos_blocked", candidates_found: 0, new_candidates: 0, candidates_alerted: 0, alerts_sent: 0 };
+    if (runRowId) {
+      await sb.from("hire_alert_runs").update(tosStats).eq("id", runRowId).catch(() => {});
+    } else {
+      await sb.from("hire_alert_runs").insert({ started_at: runStart, run_at: runStart, source: "all", lara_status: "not_attempted", ...tosStats }).catch(() => {});
+    }
     return new Response(JSON.stringify({ processed: 0, tos_blocked: tosBlockedCount }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
@@ -2598,7 +2610,7 @@ serve(async (req: Request) => {
           .map((c) => (c as any)._db_id)
           .filter(Boolean);
         if (candidateIds.length) {
-          await sb.from("hire_alert_client_candidates" as any).upsert(
+          await sb.from("hire_REDACTED" as any).upsert(
             candidateIds.map((candidateId: string) => ({
               client_id: client.id,
               candidate_id: candidateId,

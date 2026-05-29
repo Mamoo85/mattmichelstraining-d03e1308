@@ -195,7 +195,7 @@ async function processClient(client: any): Promise<{ items: number; criticals: n
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${RESEND_API_KEY}` },
       body: JSON.stringify({
-        from: "M² System <matt@mattmichelstraining.com>",
+        from: "M² System <matt@detroitwebagent.com>",
         to: [client.email],
         subject: `Regulatory Filing Monitor — ${digestItems.length} new finding${digestItems.length > 1 ? "s" : ""}`,
         html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto"><h2 style="color:#1e293b">Regulatory Scan Report</h2><p>Hi ${client.company_name},</p><p>We found <strong>${digestItems.length}</strong> new regulatory items for your review.</p><table style="width:100%;border-collapse:collapse"><thead><tr style="background:#f8fafc"><th style="padding:8px;text-align:left">Title</th><th style="padding:8px;text-align:left">Impact</th><th style="padding:8px;text-align:left">Deadline</th></tr></thead><tbody>${itemsHtml}</tbody></table><p style="margin-top:16px;color:#64748b;font-size:13px">M² Performance Training — Regulatory Filing Monitor</p></div>`,
@@ -230,7 +230,7 @@ async function deadlineCheck(): Promise<string> {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${RESEND_API_KEY}` },
         body: JSON.stringify({
-          from: "M² System <matt@mattmichelstraining.com>",
+          from: "M² System <matt@detroitwebagent.com>",
           to: [client.email],
           subject: `Deadline Reminder: ${dl.title} — ${daysUntil} day${daysUntil !== 1 ? "s" : ""} remaining`,
           html: `<div style="font-family:sans-serif"><h2 style="color:#e8621a">Filing Deadline Reminder</h2><p><strong>${dl.title}</strong> is due in <strong>${daysUntil} day${daysUntil !== 1 ? "s" : ""}</strong> (${dl.due_date}).</p><p>Please review and take action.</p><p style="color:#64748b;font-size:13px">M² Regulatory Filing Monitor</p></div>`,

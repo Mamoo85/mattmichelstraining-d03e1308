@@ -1,0 +1,107 @@
+// missed-call-handler — Twilio VoiceUrl webhook
+// Multi-tenant: serves both Matt's DWA number AND customer subscription numbers.
+// For customer numbers: looks up missed_call_clients, forwards to their business phone.
+// For Matt's DWA number (+13139921219): forwards to Matt's personal Google Fi.
+
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "npm:@supabase/supabase-js@2";
+import { verifyTwilioSignature } from "../_shared/webhook-verify.ts";
+
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
+const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219";
+const MATT_PERSONAL = Deno.env.get("MATT_PERSONAL_PHONE") || "+13138064952";
+const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN");
+
+const TWIML_HEADERS = { "Content-Type": "text/xml" };
+
+function twiml(body: string): Response {
+  return new Response(`<?xml version="1.0" encoding="UTF-8"?><Response>${body}</Response>`, {
+    headers: TWIML_HEADERS,
+  });
+}
+
+serve(async (req) => {
+  if (req.method !== "POST") {
+    return twiml("<Hangup/>");
+  }
+  if (!TWILIO_AUTH_TOKEN) {
+    console.error("[missed-call-handler] TWILIO_AUTH_TOKEN not set");
+    return new Response("Misconfigured", { status: 500 });
+  }
+
+  try {
+    const text = await req.text();
+    const params = new URLSearchParams(text);
+    const formObj: Record<string, string> = {};
+    for (const [k, v] of params.entries()) formObj[k] = v;
+    const sig = req.headers.get("x-twilio-signature");
+    const ok = await verifyTwilioSignature(req.url, formObj, sig, TWILIO_AUTH_TOKEN);
+    if (!ok) return new Response("Forbidden", { status: 403 });
+    const fromNumber = params.get("From") || "";
+    const toNumber = params.get("To") || "";
+
+    console.log(`[missed-call-handler] Call from=${fromNumber} to=${toNumber}`);
+
+    if (!fromNumber) {
+      return twiml("<Hangup/>");
+    }
+
+    const statusUrl = `${SUPABASE_URL}/functions/v1/missed-call-status`;
+    const whisperUrl = `${SUPABASE_URL}/functions/v1/call-whisper`;
+
+    // ── MULTI-TENANT: check if this is a customer subscription number ──────
+    if (toNumber && SUPABASE_URL && SUPABASE_SERVICE_KEY) {
+      const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+      const { data: client } = await sb
+        .from("missed_call_clients")
+        .select("business_phone, business_name")
+        .eq("twilio_number", toNumber)
+        .maybeSingle();
+
+      if (client) {
+        const bizName = (client as any).business_name || "us";
+        const bizPhone = (client as any).business_phone;
+
+        if (!bizPhone) {
+          // No forwarding phone stored — play message, status callback will text caller
+          return twiml(
+            `<Say voice="Polly.Joanna">You've reached ${bizName}. We're sorry we missed your call — we'll text you right back shortly.</Say>` +
+            `<Hangup/>`
+          );
+        }
+
+        // Forward to the business owner's phone; action URL fires when dial completes
+        return twiml(
+          `<Dial timeout="20" action="${statusUrl}" method="POST">` +
+          `<Number>${bizPhone}</Number>` +
+          `</Dial>` +
+          `<Say voice="Polly.Joanna">You've reached ${bizName}. We'll text you right back.</Say>` +
+          `<Hangup/>`
+        );
+      }
+    }
+
+    // ── SELF-CALL DETECTION: skip forwarding when Matt calls his own line ──
+    if (fromNumber === MATT_PERSONAL) {
+      return twiml(
+        `<Say voice="Polly.Joanna">You've reached Detroit Web Agency. We missed your call but we'll text you right back shortly.</Say>` +
+        `<Hangup/>`
+      );
+    }
+
+    // ── DWA MODE: Matt's personal number (+13139921219) ────────────────────
+    const transcriptionUrl = `${SUPABASE_URL}/functions/v1/voicemail-transcription-handler`;
+    return twiml(
+      `<Dial timeout="20" action="${statusUrl}" method="POST">` +
+      `<Number url="${whisperUrl}">${MATT_PERSONAL}</Number>` +
+      `</Dial>` +
+      `<Say voice="Polly.Joanna">You've reached Detroit Web Agency. Leave a message and Matt will text you right back.</Say>` +
+      `<Record maxLength="60" transcribeCallback="${transcriptionUrl}" playBeep="true"/>` +
+      `<Hangup/>`
+    );
+  } catch (e: unknown) {
+    console.error("[missed-call-handler] Error:", e instanceof Error ? e.message : String(e));
+    return twiml("<Hangup/>");
+  }
+});

@@ -25,7 +25,7 @@ async function sendCashierEmail(subject: string, html: string) {
     method: "POST",
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: "Agent Cashier <matt@mattmichelstraining.com>",
+      from: "Agent Cashier <matt@detroitwebagent.com>",
       to: ["matthewmichels4@gmail.com"],
       subject,
       html: `<div style="font-family:sans-serif;max-width:640px;margin:auto;padding:20px;background:#022c22;color:#e2e8f0;border-radius:12px;">
@@ -106,7 +106,7 @@ serve(async (req) => {
             method: "POST",
             headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({
-              from: "M² Development <matt@mattmichelstraining.com>",
+              from: "M² Development <matt@detroitwebagent.com>",
               to: [custEmail],
               subject: "⚠️ Your payment needs attention",
               html: `<div style="font-family:sans-serif;max-width:600px;margin:auto;padding:24px;">

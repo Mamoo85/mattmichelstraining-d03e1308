@@ -11,13 +11,13 @@ ALTER TABLE public.hire_alert_candidates
   ADD COLUMN IF NOT EXISTS ingest_confidence numeric(3,2) DEFAULT 1.0,
   ADD COLUMN IF NOT EXISTS needs_review boolean DEFAULT false;
 
-CREATE UNIQUE INDEX IF NOT EXISTS uq_hire_alert_candidates_fingerprint
+CREATE UNIQUE INDEX IF NOT EXISTS uq_hire_REDACTED
   ON public.hire_alert_candidates (fingerprint) WHERE fingerprint IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_hire_alert_candidates_trade_state_name
+CREATE INDEX IF NOT EXISTS idx_hire_REDACTED
   ON public.hire_alert_candidates (trade, state, name_normalized);
-CREATE INDEX IF NOT EXISTS idx_hire_alert_candidates_license
+CREATE INDEX IF NOT EXISTS idx_hire_REDACTED
   ON public.hire_alert_candidates (license_number, license_type) WHERE license_number IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_hire_alert_candidates_sources
+CREATE INDEX IF NOT EXISTS idx_hire_REDACTED
   ON public.hire_alert_candidates USING gin (sources);
 
 ALTER TABLE public.hire_alert_runs
@@ -97,7 +97,7 @@ END $$;
 DO $migration$
 DECLARE
   v_url text := 'https://eauvubfpanpeuxsrqesu.supabase.co';
-  v_key text := 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVhdXZ1YmZwYW5wZXV4c3JxZXN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2MzI3MDYsImV4cCI6MjA4OTIwODcwNn0.QF4PaTIhhwBkl0hgh68W4R2CxH22ReokGwJUebI2tKw';
+  v_key text := 'eyJ.REDACTED.JWT';
 BEGIN
   IF v_url IS NULL OR v_url = '' THEN RAISE EXCEPTION 'v_url empty'; END IF;
   IF v_key IS NULL OR LENGTH(v_key) < 100 THEN RAISE EXCEPTION 'v_key invalid'; END IF;

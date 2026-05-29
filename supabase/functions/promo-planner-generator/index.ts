@@ -78,7 +78,7 @@ Format as an HTML table with clean styling. Use colors #e8621a for headers and #
             Authorization: `Bearer ${Deno.env.get("RESEND_API_KEY")}`,
             "Content-Type": "application/json" },
           body: JSON.stringify({
-            from: "Matt Michels <matt@mattmichelstraining.com>",
+            from: "Matt Michels <matt@detroitwebagent.com>",
             to: [client.client_email], bcc: ["matthewmichels4@gmail.com"],
             subject: `📅 Your ${monthName} Promo Calendar — ${client.business_name}`,
             html: `

@@ -1,5 +1,5 @@
 -- Phase 3: Resumable checkpoints
-CREATE TABLE IF NOT EXISTS public.hire_alert_scanner_checkpoints (
+CREATE TABLE IF NOT EXISTS public.hire_REDACTED (
   source TEXT PRIMARY KEY,
   last_completed_at TIMESTAMPTZ,
   last_started_at TIMESTAMPTZ,
@@ -9,8 +9,8 @@ CREATE TABLE IF NOT EXISTS public.hire_alert_scanner_checkpoints (
   error_message TEXT,
   updated_at TIMESTAMPTZ DEFAULT now()
 );
-ALTER TABLE public.hire_alert_scanner_checkpoints ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "service_role_all_checkpoints" ON public.hire_alert_scanner_checkpoints
+ALTER TABLE public.hire_REDACTED ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "service_role_all_checkpoints" ON public.hire_REDACTED
   FOR ALL TO service_role USING (true) WITH CHECK (true);
 
 -- Phase 4: Enrichment log

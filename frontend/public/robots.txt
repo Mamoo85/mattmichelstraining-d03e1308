@@ -1,0 +1,45 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /dwa-admin
+Disallow: /unsubscribe
+Disallow: /admin
+Disallow: /progress
+Disallow: /profile
+Disallow: /coach
+Disallow: /trial-welcome
+Disallow: /welcome
+Disallow: /auth
+Disallow: /assessment
+Disallow: /nutrition
+Disallow: /matrix
+
+User-agent: Googlebot
+Allow: /
+Allow: /demo-plumber
+Allow: /demo-electrician
+Allow: /demo-landscaping
+Allow: /demo-lawyer
+Allow: /demo-clinic
+Allow: /detroit-web-design
+Allow: /free-ai-generator
+Allow: /demo-roofing
+Allow: /demo-youngblood
+Allow: /demo-dental
+Allow: /results
+Allow: /studio-rental
+Allow: /whats-included
+Allow: /free-program
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: facebookexternalhit
+Allow: /
+
+Sitemap: https://www.mattmichelstraining.com/sitemap.xml
+Sitemap: https://eauvubfpanpeuxsrqesu.supabase.co/functions/v1/sitemap-hire

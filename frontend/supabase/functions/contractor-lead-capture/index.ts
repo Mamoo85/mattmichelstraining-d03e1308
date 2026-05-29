@@ -1,0 +1,172 @@
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "npm:@supabase/supabase-js@2";
+import { sendSMS } from "../_shared/twilio.ts";
+
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
+const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  try {
+    const { site_slug, name, phone, email, message, project_type, source } = await req.json();
+    if (!site_slug || !name || !phone) {
+      return new Response(JSON.stringify({ error: "name and phone are required" }), { status: 400, headers: corsHeaders });
+    }
+
+    const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+
+    // Find the lead site — a missing or inactive site is NOT a reason to drop the lead
+    const { data: site } = await sb
+      .from("contractor_lead_sites")
+      .select("id, trade, city, state, active_contractor_id, active")
+      .eq("slug", site_slug)
+      .maybeSingle();
+
+    // Parse trade/city from slug as fallback when site row doesn't exist yet
+    const slugParts = site_slug.split("-");
+    const fallbackTrade = slugParts[0] || "service";
+    const fallbackCity = slugParts.slice(1).map((s: string) => s.charAt(0).toUpperCase() + s.slice(1)).join(" ") || "Unknown";
+
+    const tradeLabel = site?.trade || fallbackTrade;
+    const cityLabel = site?.city || fallbackCity;
+    const stateLabel = site?.state || "";
+
+    // Insert the lead — site_id is nullable so we capture even if no DB row exists
+    const { data: lead } = await sb
+      .from("contractor_leads")
+      .insert({
+        site_id: site?.id || null,
+        client_id: site?.active_contractor_id || null,
+        name,
+        phone,
+        email: email || null,
+        message: message || null,
+        project_type: project_type || null,
+        source: source || "direct",
+        status: "new",
+      })
+      .select()
+      .single();
+
+    const siteNote = !site
+      ? `<p style='font-size:13px;color:#dc2626;font-weight:bold;'>⚠ Slug "${site_slug}" has no site record — run migration to add this territory.</p>`
+      : !site.active_contractor_id
+      ? "<p style='font-size:13px;color:#f59e0b;'>⚠ No contractor assigned yet — this is a free lead until you sign one.</p>"
+      : "<p style='font-size:13px;color:#16a34a;'>✓ Contractor has been notified automatically.</p>";
+
+    console.log(`[LEAD-CAPTURE] New lead: ${name} ${phone} for ${tradeLabel} in ${cityLabel}`);
+
+    // Email Matt immediately
+    if (RESEND_API_KEY) {
+      await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          from: "Detroit Web Agency <matt@mattmichelstraining.com>",
+          to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"],
+          subject: `🔥 New ${tradeLabel} lead — ${cityLabel} — ${name}`,
+          html: `<!DOCTYPE html><html><body style="font-family:sans-serif;background:#f8fafc;padding:24px;">
+<div style="max-width:480px;margin:0 auto;background:#fff;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden;">
+  <div style="background:#e8621a;padding:12px 24px;color:#fff;font-weight:700;font-size:16px;">
+    New ${tradeLabel.toUpperCase()} Lead — ${cityLabel}${stateLabel ? `, ${stateLabel}` : ""}
+  </div>
+  <div style="padding:24px;font-size:15px;color:#1e293b;line-height:1.8;">
+    <p><strong>Name:</strong> ${name}</p>
+    <p><strong>Phone:</strong> <a href="tel:${phone}" style="color:#e8621a;">${phone}</a></p>
+    ${email ? `<p><strong>Email:</strong> <a href="mailto:${email}" style="color:#e8621a;">${email}</a></p>` : ""}
+    ${project_type ? `<p><strong>Project:</strong> ${project_type}</p>` : ""}
+    ${message ? `<p><strong>Notes:</strong> ${message}</p>` : ""}
+    <hr style="border:1px solid #e2e8f0;margin:16px 0;">
+    <p style="font-size:13px;color:#64748b;">Lead captured from <strong>${site_slug}</strong> at ${new Date().toLocaleString("en-US", { timeZone: "America/New_York" })} ET</p>
+    ${siteNote}
+  </div>
+<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;">
+        <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" />
+        <div style="font-size:13px;color:#94a3b8;">
+          <strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI · (313) 992-1219
+        </div>
+        <img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M² Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" />
+      </div></div>
+</body></html>`,
+        }),
+      });
+
+      // If contractor is assigned, notify them too
+      if (site?.active_contractor_id) {
+        const { data: contractor } = await sb
+          .from("contractor_clients")
+          .select("name, email, phone, business_name")
+          .eq("id", site.active_contractor_id)
+          .single();
+
+        if (contractor) {
+          // Email the contractor (if Resend is configured)
+          if (contractor.email && RESEND_API_KEY) {
+            await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              from: "Detroit Web Agency <matt@mattmichelstraining.com>",
+              to: [contractor.email], bcc: ["matthewmichels4@gmail.com"],
+              subject: `🔥 New ${tradeLabel} lead — ${name} in ${cityLabel}`,
+              html: `<!DOCTYPE html><html><body style="font-family:sans-serif;background:#f8fafc;padding:24px;">
+<div style="max-width:480px;margin:0 auto;background:#fff;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden;">
+  <div style="background:#e8621a;padding:12px 24px;color:#fff;font-weight:700;font-size:16px;">
+    New Exclusive Lead — ${tradeLabel.toUpperCase()}
+  </div>
+  <div style="padding:24px;font-size:15px;color:#1e293b;line-height:1.9;">
+    <p>Hey ${contractor.name || contractor.business_name || "there"} —</p>
+    <p>A new ${tradeLabel} lead just came in for your territory. <strong>You're the only one getting this.</strong></p>
+    <p><strong>Name:</strong> ${name}</p>
+    <p><strong>Phone:</strong> <a href="tel:${phone}" style="color:#e8621a;font-size:18px;font-weight:700;">${phone}</a></p>
+    ${email ? `<p><strong>Email:</strong> ${email}</p>` : ""}
+    ${project_type ? `<p><strong>Project type:</strong> ${project_type}</p>` : ""}
+    ${message ? `<p><strong>Notes:</strong> ${message}</p>` : ""}
+    <p style="margin-top:20px;font-size:13px;color:#64748b;">Received ${new Date().toLocaleString("en-US", { timeZone: "America/New_York" })} ET</p>
+    <p style="font-size:13px;color:#64748b;">Questions? Email <a href="mailto:matt@mattmichelstraining.com" style="color:#e8621a;">matt@mattmichelstraining.com</a> or text <a href="tel:+13139921219" style="color:#e8621a;">(313) 992-1219</a>.</p>
+  </div>
+<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;">
+        <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" />
+        <div style="font-size:13px;color:#94a3b8;">
+          <strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI · (313) 992-1219
+        </div>
+        <img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M² Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" />
+      </div></div>
+</body></html>`,
+            }),
+          });
+          }
+
+          // SMS the contractor immediately (independent of email)
+          if (contractor.phone) {
+            const TWILIO_PHONE = Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219";
+            const smsBody = `🔥 New ${tradeLabel} lead in ${cityLabel}!\n${name} — ${phone}${project_type ? `\nProject: ${project_type}` : ""}\nThis lead is EXCLUSIVE to you. Call them now!\n— Detroit Web Agency`;
+            const smsResult = await sendSMS(contractor.phone, TWILIO_PHONE, smsBody, "contractor_leads");
+            if (smsResult.success) {
+              console.log(`[LEAD-CAPTURE] SMS sent to contractor ${contractor.phone} — SID: ${smsResult.sid}`);
+            } else {
+              console.error(`[LEAD-CAPTURE] SMS failed to contractor: ${smsResult.error}`);
+            }
+          }
+
+          // Mark lead as notified
+          if (lead) {
+            await sb.from("contractor_leads").update({ notified_at: new Date().toISOString(), status: "notified" }).eq("id", lead.id);
+          }
+        }
+      }
+    }
+
+    return new Response(JSON.stringify({ success: true, lead_id: lead?.id }), { status: 200, headers: corsHeaders });
+  } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
+    console.error("[LEAD-CAPTURE] Error:", e);
+    return new Response(JSON.stringify({ error: msg }), { status: 500, headers: corsHeaders });
+  }
+});

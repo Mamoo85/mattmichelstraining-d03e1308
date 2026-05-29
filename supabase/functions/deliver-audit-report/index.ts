@@ -109,7 +109,7 @@ serve(async (req: Request) => {
       auditContent = aiData.choices?.[0]?.message?.content || "";
     } else {
       log("AI generation failed", { status: aiRes.status });
-      auditContent = `Audit report for ${business_name} in ${city} is being finalized. Please contact matt@mattmichelstraining.com if you have questions.`;
+      auditContent = `Audit report for ${business_name} in ${city} is being finalized. Please contact matt@detroitwebagent.com if you have questions.`;
     }
 
     // Format audit as HTML sections
@@ -157,15 +157,25 @@ serve(async (req: Request) => {
       <hr style="border:none;border-top:2px solid #f97316;margin:0 0 24px;">
       ${auditParagraphs}
       <hr style="border:none;border-top:1px solid #eee;margin:28px 0 20px;">
+      <div style="margin:0 0 24px;padding:16px 20px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;">
+        <p style="margin:0 0 6px;font-weight:700;color:#0369a1;font-size:14px;">Want this fixed for you?</p>
+        <p style="margin:0 0 12px;font-size:13px;color:#0c4a6e;line-height:1.5;">
+          Detroit Web Agency implements these fixes for local businesses. Full SEO + site packages from $2,500.
+        </p>
+        <a href="https://detroitwebagent.com/start-here?utm_source=seo_audit&utm_medium=email&utm_campaign=audit_upsell"
+           style="display:inline-block;background:#0369a1;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;font-weight:700;font-size:13px;">
+          Book a Free 15-Min Call →
+        </a>
+      </div>
       <p style="font-size:13px;color:#555;line-height:1.7;margin:0 0 8px;">
         Have questions about your audit or ready to fix these issues? I can handle everything for you.
       </p>
-      <a href="mailto:matt@mattmichelstraining.com" style="display:inline-block;background:#f97316;color:#fff;font-weight:700;font-size:13px;padding:10px 20px;border-radius:6px;text-decoration:none;margin-top:4px;">
+      <a href="mailto:matt@detroitwebagent.com" style="display:inline-block;background:#f97316;color:#fff;font-weight:700;font-size:13px;padding:10px 20px;border-radius:6px;text-decoration:none;margin-top:4px;">
         Reply to Matt →
       </a>
     </td></tr>
     <tr><td style="background:#1a1a2e;padding:20px 32px;text-align:center;">
-      <p style="color:#888;font-size:11px;margin:0;">Matt Michels · Web Design &amp; Local SEO · Grosse Pointe, MI · matt@mattmichelstraining.com</p>
+      <p style="color:#888;font-size:11px;margin:0;">Matt Michels · Web Design &amp; Local SEO · Grosse Pointe, MI · matt@detroitwebagent.com</p>
     </td></tr>
   </table>
 </td></tr>
@@ -181,7 +191,7 @@ serve(async (req: Request) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "Matt Michels <matt@mattmichelstraining.com>",
+        from: "Matt Michels <matt@detroitwebagent.com>",
         to: [customer_email], bcc: ["matthewmichels4@gmail.com"],
         subject: `Your Website Audit — ${business_name}`,
         html: emailHtml,

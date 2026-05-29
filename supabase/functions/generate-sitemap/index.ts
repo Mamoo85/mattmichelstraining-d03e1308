@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SITE_URL = "https://www.mattmichelstraining.com";
+const SITEMAP_URL = `${SITE_URL}/sitemap.xml`;
 
 const STATIC_ROUTES = [
   { path: "/", changefreq: "weekly", priority: "1.0" },
@@ -21,7 +22,23 @@ const STATIC_ROUTES = [
   { path: "/demo-landscaping", changefreq: "monthly", priority: "0.7" },
   { path: "/demo-lawyer", changefreq: "monthly", priority: "0.7" },
   { path: "/demo-clinic", changefreq: "monthly", priority: "0.7" },
+  // Gift shop pages — high priority for Google Shopping intent
+  { path: "/gifts", changefreq: "daily", priority: "0.9" },
+  { path: "/gifts/nurse-gifts", changefreq: "weekly", priority: "0.9" },
+  { path: "/gifts/teacher-gifts", changefreq: "weekly", priority: "0.9" },
+  { path: "/gifts/dog-mom-gifts", changefreq: "weekly", priority: "0.9" },
+  { path: "/gifts/cat-mom-gifts", changefreq: "weekly", priority: "0.9" },
+  { path: "/gifts/funny-mugs", changefreq: "weekly", priority: "0.9" },
+  { path: "/gifts/retirement-gifts", changefreq: "weekly", priority: "0.9" },
 ];
+
+async function pingSearchEngines(): Promise<void> {
+  const encoded = encodeURIComponent(SITEMAP_URL);
+  await Promise.allSettled([
+    fetch(`https://www.google.com/ping?sitemap=${encoded}`, { signal: AbortSignal.timeout(8_000) }),
+    fetch(`https://www.bing.com/ping?sitemap=${encoded}`, { signal: AbortSignal.timeout(8_000) }),
+  ]);
+}
 
 serve(async (_req) => {
   try {
@@ -77,6 +94,9 @@ ${staticEntries}
 ${dynamicEntries}
 ${toolEntries}
 </urlset>`;
+
+    // Ping search engines after generating sitemap (fire-and-forget)
+    pingSearchEngines().catch(() => {});
 
     return new Response(xml, {
       headers: {

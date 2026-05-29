@@ -42,7 +42,7 @@ serve(async (req) => {
         body: JSON.stringify({
           from: "Detroit Web Agency <matt@detroitwebagent.com>",
           reply_to: "matt@detroitwebagent.com",
-          to: ["matt@mattmichelstraining.com"],
+          to: ["matt@detroitwebagent.com"],
           bcc: ["matthewmichels4@gmail.com"],
           subject: `🔗 New Web Design Referral — ${friend_business || friend_email}`,
           html: `<p><strong>New web design referral submitted!</strong></p>

@@ -81,8 +81,8 @@ serve(async (req) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          from: "M² System <matt@mattmichelstraining.com>",
-          to: ["matt@mattmichelstraining.com"],
+          from: "M² System <matt@detroitwebagent.com>",
+          to: ["matt@detroitwebagent.com"],
           bcc: ["matthewmichels4@gmail.com"],
           subject: `New SEO Guard checkout — ${business_name || email} ($29/mo)`,
           html: `<p><strong>${business_name || email}</strong> started SEO Guard trial.<br>URL: ${website_url}<br>Keywords: ${keywords || "none"}<br>Phone: ${phone || "n/a"}</p>`,

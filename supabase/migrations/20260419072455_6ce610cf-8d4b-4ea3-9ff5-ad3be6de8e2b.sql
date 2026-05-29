@@ -13,9 +13,9 @@ UPDATE public.hire_alert_clients SET target_state = 'MI' WHERE target_state IS N
 UPDATE public.hire_alert_clients SET target_metro = 'detroit' WHERE target_metro IS NULL;
 UPDATE public.hire_alert_candidates SET state = 'MI' WHERE state IS NULL;
 
-CREATE INDEX IF NOT EXISTS idx_hire_alert_clients_target_state ON public.hire_alert_clients(target_state);
-CREATE INDEX IF NOT EXISTS idx_hire_alert_candidates_state ON public.hire_alert_candidates(state);
-CREATE INDEX IF NOT EXISTS idx_hire_alert_candidates_metro ON public.hire_alert_candidates(metro);
+CREATE INDEX IF NOT EXISTS idx_hire_REDACTED ON public.hire_alert_clients(target_state);
+CREATE INDEX IF NOT EXISTS idx_hire_REDACTED ON public.hire_alert_candidates(state);
+CREATE INDEX IF NOT EXISTS idx_hire_REDACTED ON public.hire_alert_candidates(metro);
 
 -- Same on high_volume_buyer_subscribers if it exists
 DO $$

@@ -53,7 +53,7 @@ serve(async (req) => {
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "System Alert <matt@mattmichelstraining.com>",
+          from: "System Alert <matt@detroitwebagent.com>",
           to: ["matthewmichels4@gmail.com"],
           subject: `🚨 ${missing.length} Agent(s) DOWN — Heartbeat Alert`,
           html: `<div style="font-family:sans-serif;max-width:640px;margin:auto;padding:20px;background:#7f1d1d;color:#fecaca;border-radius:12px;">

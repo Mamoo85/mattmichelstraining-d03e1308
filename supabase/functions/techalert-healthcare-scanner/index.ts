@@ -17,6 +17,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { sendSMS, ADMIN_PHONE } from "../_shared/twilio.ts";
+import { checkAndConsume } from "../_shared/api-budget.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -89,6 +90,14 @@ async function scanNursingHomesGoogleMaps(): Promise<Facility[]> {
     console.log("[healthcare] GOOGLE_MAPS_API_KEY not set — skipping Places scan");
     return [];
   }
+  try {
+    const _sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const mapsOk = await checkAndConsume(_sb, "google_maps", 10, "google_maps_details");
+    if (!mapsOk.allowed) {
+      console.log("[healthcare] Daily Maps budget exceeded — skipping Places scan");
+      return [];
+    }
+  } catch { /* fail open */ }
   const facilities: Facility[] = [];
   const seen = new Set<string>();
 

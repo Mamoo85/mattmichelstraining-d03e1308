@@ -51,7 +51,7 @@ serve(async (req) => {
       try {
         // Top 5 new candidates this week (for the candidate spotlight section)
         const { data: topCandidateRows } = await sb
-          .from("hire_alert_client_candidates")
+          .from("hire_REDACTED")
           .select("candidate_id, alerted_at, pipeline_stage, hire_alert_candidates(name, trade, city, state, score, license_type, years_experience)")
           .eq("client_id", client.id)
           .gte("alerted_at", sevenDaysAgo)
@@ -63,7 +63,7 @@ serve(async (req) => {
 
         // 7-day pipeline stats
         const { data: weekCandidates } = await sb
-          .from("hire_alert_client_candidates")
+          .from("hire_REDACTED")
           .select("pipeline_stage, client_action, hired_revenue_estimate, alerted_at")
           .eq("client_id", client.id)
           .gte("alerted_at", sevenDaysAgo);
@@ -77,7 +77,7 @@ serve(async (req) => {
 
         // 90-day totals for ROI
         const { data: allCandidates } = await sb
-          .from("hire_alert_client_candidates")
+          .from("hire_REDACTED")
           .select("pipeline_stage, hired_revenue_estimate")
           .eq("client_id", client.id)
           .gte("alerted_at", ninetyDaysAgo);

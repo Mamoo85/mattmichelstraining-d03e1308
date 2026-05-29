@@ -121,7 +121,7 @@ Dark-themed professional HTML. Concise, scannable, executive-friendly.` }] }) })
           method: "POST",
           headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            from: "M² Development <matt@mattmichelstraining.com>",
+            from: "M² Development <matt@detroitwebagent.com>",
             to: [client.email],
             bcc: ["matthewmichels4@gmail.com"],
             subject: `${client.business_name} — Weekly Market Intelligence Brief`,

@@ -57,8 +57,8 @@ serve(async (_req) => {
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "M² System <matt@mattmichelstraining.com>",
-          to: ["matt@mattmichelstraining.com"],
+          from: "M² System <matt@detroitwebagent.com>",
+          to: ["matt@detroitwebagent.com"],
           bcc: ["matthewmichels4@gmail.com"],
           subject: `💰 Weekly Referral Payouts Due — $${totalDue.toFixed(2)}`,
           html: `<h2>Referral Partner Payouts Due</h2>

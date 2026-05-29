@@ -1,0 +1,1 @@
+ALTER TABLE hire_alert_clients ADD COLUMN IF NOT EXISTS owner_name text;

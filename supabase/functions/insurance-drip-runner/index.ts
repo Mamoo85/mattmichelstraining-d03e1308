@@ -130,8 +130,8 @@ Write ONLY the email body — no subject line, no "Hi" greeting on its own line 
           headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
             from: agentEmail
-              ? `${agentName} <matt@mattmichelstraining.com>`
-              : `${agentName} <matt@mattmichelstraining.com>`,
+              ? `${agentName} <matt@detroitwebagent.com>`
+              : `${agentName} <matt@detroitwebagent.com>`,
             to: [prospectEmail],
             subject: ctx.subject,
             html: `<!DOCTYPE html>

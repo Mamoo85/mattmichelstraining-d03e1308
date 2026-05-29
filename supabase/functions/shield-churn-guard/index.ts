@@ -38,7 +38,7 @@ async function sendShieldEmail(subject: string, html: string) {
     method: "POST",
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: "Agent Shield <matt@mattmichelstraining.com>",
+      from: "Agent Shield <matt@detroitwebagent.com>",
       to: ["matthewmichels4@gmail.com"],
       subject,
       html: `<div style="font-family:sans-serif;max-width:640px;margin:auto;padding:20px;background:#1c1917;color:#e2e8f0;border-radius:12px;">
@@ -185,7 +185,7 @@ serve(async (req) => {
               method: "POST",
               headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
               body: JSON.stringify({
-                from: "Matt Michels <matt@mattmichelstraining.com>",
+                from: "Matt Michels <matt@detroitwebagent.com>",
                 to: [client.email],
                 subject: `Quick check-in on your ${product.name} setup`,
                 html: `<div style="font-family:sans-serif;max-width:600px;margin:auto;padding:24px;">

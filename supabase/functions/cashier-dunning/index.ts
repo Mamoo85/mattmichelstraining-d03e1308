@@ -9,7 +9,7 @@ const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
 const STRIPE_SECRET_KEY = Deno.env.get("STRIPE_SECRET_KEY")!;
 const STRIPE_BILLING_PORTAL_URL = Deno.env.get("STRIPE_BILLING_PORTAL_URL") || "https://billing.stripe.com/p/login/live_placeholder";
-const MATT_EMAIL = "matt@mattmichelstraining.com";
+const MATT_EMAIL = "matt@detroitwebagent.com";
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
@@ -51,7 +51,7 @@ async function sendDunningEmail(record: DunningRecord) {
     method: "POST",
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: "Matt at M² <matt@mattmichelstraining.com>",
+      from: "Matt at M² <matt@detroitwebagent.com>",
       to: [record.customer_email],
       subject: subjects[record.day_number],
       html: `
@@ -60,7 +60,7 @@ async function sendDunningEmail(record: DunningRecord) {
           <h2 style="margin:0 0 16px;font-size:20px">Payment Update Needed</h2>
           ${bodies[record.day_number]}
           <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0" />
-          <p style="color:#94a3b8;font-size:12px">M² Development · matt@mattmichelstraining.com · (313) 992-1219</p>
+          <p style="color:#94a3b8;font-size:12px">M² Development · matt@detroitwebagent.com · (313) 992-1219</p>
         </div>`,
     }),
   });
@@ -177,7 +177,7 @@ Deno.serve(async () => {
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "M² Cashier <matt@mattmichelstraining.com>",
+          from: "M² Cashier <matt@detroitwebagent.com>",
           to: [MATT_EMAIL],
           subject: `💳 Dunning: ${sent} payment failure email${sent > 1 ? "s" : ""} sent`,
           html: `<p>Cashier sent <strong>${sent}</strong> dunning email${sent > 1 ? "s" : ""} today (${skipped} skipped as duplicates). Day breakdown: ${day1Sends.length} Day-1, ${day3Sends.length} Day-3, ${day7Sends.length} Day-7.</p>`,

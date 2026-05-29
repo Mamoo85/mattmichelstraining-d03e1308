@@ -10,6 +10,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { runEmailWaterfall, WaterfallCounters } from "../_shared/email-waterfall.ts";
+import { checkAndConsume } from "../_shared/api-budget.ts";
 import { isAggregatorDomain, isEnterprise, googlePlacesWebsite, cleanWebsite } from "../_shared/enrichment-pipeline.ts";
 import { apolloPeopleSearch } from "../_shared/apollo.ts";
 
@@ -290,6 +291,11 @@ async function stageGooglePlaces(p: Prospect): Promise<{ patch: Prospect; trace:
   const patch: Prospect = {};
   if (!GOOGLE_MAPS_API_KEY) { trace.error = "no_key"; trace.duration_ms = Date.now() - t0; return { patch, trace }; }
   if (p.google_rating != null && p.review_count != null) { trace.error = "already_filled"; trace.duration_ms = Date.now() - t0; return { patch, trace }; }
+  try {
+    const _sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const mapsOk = await checkAndConsume(_sb, "google_maps", 2, "google_maps_details");
+    if (!mapsOk.allowed) { trace.error = "budget_exceeded"; trace.duration_ms = Date.now() - t0; return { patch, trace }; }
+  } catch { /* fail open */ }
   try {
     const q = `${p.business_name} ${p.city ?? ""} ${p.state ?? ""}`.trim();
     const findRes = await safeFetch(

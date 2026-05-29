@@ -1,0 +1,1 @@
+ALTER TABLE exercise_library ADD COLUMN sport text[] NOT NULL DEFAULT '{}'::text[];

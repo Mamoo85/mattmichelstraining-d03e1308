@@ -1,0 +1,1 @@
+ALTER TABLE public.tier_features ADD COLUMN IF NOT EXISTS tier_free BOOLEAN NOT NULL DEFAULT false;

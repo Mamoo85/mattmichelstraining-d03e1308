@@ -4,9 +4,8 @@
 // {{business_name}}, {{vertical}}, {{city}}, {{cta_url}}.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { dwaColdEmail } from "../_shared/dwa-email.ts";
+import { dwaEmail, dwaWrap } from "../_shared/dwa-email.ts";
 import { isFounder } from "../_shared/founder-seats.ts";
-import { isBlocked, frequencyCapExceeded } from "../_shared/outreach-blocklist.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -87,26 +86,8 @@ Deno.serve(async (req) => {
     const sentSet = new Set((existing || []).map((r: any) => r.target_id));
     const eligible = targets.filter((t) => !sentSet.has(t.id) && !isFounder(t.email)).slice(0, remaining);
 
-    let sent = 0, failed = 0, skippedFreq = 0, skippedBlocked = 0;
+    let sent = 0, failed = 0;
     for (const t of eligible) {
-      // P0-2: Cross-template frequency cap (max 2 cold sends per 7d to same recipient)
-      const cap = await frequencyCapExceeded(sb, t.email, { currentTemplate: `outreach-blast-${c.id}` });
-      if (cap.exceeded) {
-        skippedFreq++;
-        await sb.from("outreach_sends").insert({
-          campaign_id: c.id, target_id: t.id, channel: "email", provider: "resend",
-          recipient_email: t.email, status: "suppressed",
-          error_message: `freq_cap: ${cap.recentCount} sends in 7d (${cap.recentTemplates.join(",")})`,
-        });
-        continue;
-      }
-      // Blocklist (paying clients, 90d cooldown)
-      const block = await isBlocked(sb, { email: t.email, business_name: t.business_name });
-      if (block.blocked) {
-        skippedBlocked++;
-        continue;
-      }
-
       const vars: Record<string, string> = {
         first_name: t.owner_first_name || "there",
         last_name: t.owner_last_name || "",
@@ -118,21 +99,10 @@ Deno.serve(async (req) => {
       };
       const subject = fillTemplate(c.template_subject || `A quick note for ${vars.business_name}`, vars);
       const body = fillTemplate(c.template_body, vars);
-      // P0-1: Plain-text cold email — no DWA dark-shell branding (avoids spam filters,
-      // looks like a real human-written note). dwaColdEmail appends 1 bare CTA URL.
-      const bodyHtml = `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;font-size:15px;line-height:1.6;color:#1a1a1a;">${
-        body.split(/\n{2,}/).map((p) => `<p style="margin:0 0 14px;">${p.replace(/\n/g, "<br>")}</p>`).join("")
-      }</div>`;
+      const html = dwaWrap(`<p style="white-space:pre-wrap;line-height:1.6;font-size:15px;">${body}</p>`,
+        c.cta_url ? { ctaText: "Start your free 7-day trial →", ctaUrl: c.cta_url } : undefined);
 
-      const res = await dwaColdEmail({
-        to: t.email,
-        subject,
-        bodyHtml,
-        product: c.product || "Detroit Web Agency",
-        ctaUrl: vars.cta_url,
-        templateName: `outreach-blast-${c.name || c.id}`,
-        plainMode: true,
-      }, sb);
+      const res = await dwaEmail({ to: t.email, subject, html });
 
       const sendRow = {
         campaign_id: c.id,
@@ -164,7 +134,7 @@ Deno.serve(async (req) => {
       last_run_at: new Date().toISOString(),
     }).eq("id", c.id);
 
-    results.push({ campaign: c.id, name: c.name, eligible: eligible.length, sent, failed, skipped_freq_cap: skippedFreq, skipped_blocked: skippedBlocked });
+    results.push({ campaign: c.id, name: c.name, eligible: eligible.length, sent, failed });
   }
 
   return new Response(JSON.stringify({ ok: true, results }), {

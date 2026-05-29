@@ -33,7 +33,7 @@ Include:
 3. 5 podcast episode description templates (for different episode types: interview, solo, roundtable, case study, Q&A)
 4. Social media caption templates for promoting episodes (Instagram, LinkedIn, Twitter/X)
 
-Reminder: To get show notes written for a specific episode, simply email your episode link or transcript to matt@mattmichelstraining.com and we'll have your notes back within 24 hours.
+Reminder: To get show notes written for a specific episode, simply email your episode link or transcript to matt@detroitwebagent.com and we'll have your notes back within 24 hours.
 
 Month: ${month}` }],
           }),
@@ -46,10 +46,10 @@ Month: ${month}` }],
             method: "POST",
             headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({
-              from: "M² Development <matt@mattmichelstraining.com>",
+              from: "M² Development <matt@detroitwebagent.com>",
               to: [client.email], bcc: ["matthewmichels4@gmail.com"],
               subject: `${client.business_name} — ${month} Show Notes Templates`,
-              html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#1e293b;color:#e2e8f0;border-radius:12px;"><h2 style="color:#e8621a;">🎙️ Monthly Podcast Show Notes Pack</h2><p>Here are your ${month} templates. For custom show notes on a specific episode, email the link or transcript to <a href="mailto:matt@mattmichelstraining.com" style="color:#e8621a;">matt@mattmichelstraining.com</a> and we'll have notes back within 24 hours.</p><pre style="white-space:pre-wrap;font-family:sans-serif;color:#e2e8f0;">${content}</pre><p style="color:#64748b;font-size:12px;">Powered by M² Development — matt@mattmichelstraining.com</p></div>`,
+              html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#1e293b;color:#e2e8f0;border-radius:12px;"><h2 style="color:#e8621a;">🎙️ Monthly Podcast Show Notes Pack</h2><p>Here are your ${month} templates. For custom show notes on a specific episode, email the link or transcript to <a href="mailto:matt@detroitwebagent.com" style="color:#e8621a;">matt@detroitwebagent.com</a> and we'll have notes back within 24 hours.</p><pre style="white-space:pre-wrap;font-family:sans-serif;color:#e2e8f0;">${content}</pre><p style="color:#64748b;font-size:12px;">Powered by M² Development — matt@detroitwebagent.com</p></div>`,
             }),
           });
         }

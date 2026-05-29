@@ -2,7 +2,7 @@
 DO $$
 DECLARE
   v_hdr text := format('{"Content-Type":"application/json","Authorization":"Bearer %s"}',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVhdXZ1YmZwYW5wZXV4c3JxZXN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2MzI3MDYsImV4cCI6MjA4OTIwODcwNn0.QF4PaTIhhwBkl0hgh68W4R2CxH22ReokGwJUebI2tKw');
+    'eyJ.REDACTED.JWT');
 BEGIN
   PERFORM public.safe_cron_schedule(
     'enrichment-kpi-monitor',

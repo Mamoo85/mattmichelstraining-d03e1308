@@ -40,7 +40,7 @@ serve(async (req) => {
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "M² Hiring Assistant <matt@mattmichelstraining.com>", to: [client.email], bcc: ["matthewmichels4@gmail.com"],
+          from: "M² Hiring Assistant <matt@detroitwebagent.com>", to: [client.email], bcc: ["matthewmichels4@gmail.com"],
           subject: `Candidate Screening: ${candidateName || "New Applicant"} — Score ${score}/10`,
           html: `<div style="font-family:sans-serif;max-width:600px;padding:20px;"><h2 style="color:#1e293b;">Candidate: ${candidateName || "Unknown"}</h2><p>Position: ${jobTitle}</p><pre style="white-space:pre-wrap;line-height:1.8;font-family:sans-serif;color:#334155;">${report}</pre><div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;">
         <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" />
@@ -56,7 +56,7 @@ serve(async (req) => {
           method: "POST",
           headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            from: `${client.business_name} <matt@mattmichelstraining.com>`,
+            from: `${client.business_name} <matt@detroitwebagent.com>`,
             to: [candidateEmail],
             subject: `Thanks for applying — ${jobTitle} at ${client.business_name}`,
             html: `<p>Hi ${candidateName || "there"},</p><p>Thanks for your interest in the <strong>${jobTitle}</strong> position at ${client.business_name}. We've reviewed your resume and would like to schedule an interview.</p><p>Please reply to this email with your availability over the next week and we'll get something on the calendar.</p><p>Looking forward to speaking with you!</p><p>— ${client.contact_name || client.business_name}</p>` }) });

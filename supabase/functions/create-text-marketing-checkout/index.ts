@@ -1,0 +1,50 @@
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import Stripe from "npm:stripe@18.5.0";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { apiVersion: "2025-08-27.basil" });
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  try {
+    const { email, name, businessName, phone, industry } = await req.json();
+    if (!email || !businessName) {
+      return new Response(JSON.stringify({ error: "email and businessName are required" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const session = await stripe.checkout.sessions.create({
+      mode: "subscription",
+      payment_method_types: ["card"],
+      customer_email: email,
+      subscription_data: { trial_period_days: 7 },
+      line_items: [{
+        price_data: {
+          currency: "usd",
+          recurring: { interval: "month" },
+          unit_amount: 7900,
+          product_data: {
+            name: "Text Message Marketing — $79/month",
+            description: "AI-written SMS campaigns sent monthly to your customer list. Done-for-you.",
+          },
+        },
+        quantity: 1,
+      }],
+      metadata: { type: "text_marketing_subscription", email, name: name || "", businessName, phone: phone || "", industry: industry || "" },
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/text-message-marketing?status=success`,
+      cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/text-message-marketing`,
+    });
+    return new Response(JSON.stringify({ url: session.url }), {
+      status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
+    console.error("[CREATE-TEXT-MARKETING-CHECKOUT] Error:", e);
+    return new Response(JSON.stringify({ error: msg }), {
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+});

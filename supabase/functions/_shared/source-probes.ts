@@ -71,6 +71,40 @@ export const SOURCE_PROBES: Record<string, SourceProbe[]> = {
     { name: "OpenRouter", url: "https://openrouter.ai/api/v1/", method: "HEAD", okStatuses: [200, 401, 405] },
     { name: "Twilio Lookup", url: "https://lookups.twilio.com/v2/PhoneNumbers/+13139921219", method: "HEAD", okStatuses: [200, 401, 403] },
   ],
+  "Buyer Radar": [
+    { name: "SAM.gov Opportunities", url: "https://api.sam.gov/opportunities/v2/search?api_key=DEMO&limit=1", method: "HEAD", okStatuses: [200, 400, 401, 403] },
+    { name: "BSEED ArcGIS", url: "https://services2.arcgis.com/qvkbeam7Wirps6zC/ArcGIS/rest/services?f=json" },
+    { name: "OSHA DOL", url: "https://api.dol.gov/", method: "HEAD", okStatuses: [200, 401, 403, 404] },
+    { name: "OpenRouter/Sonar", url: "https://openrouter.ai/api/v1/", method: "HEAD", okStatuses: [200, 401, 405] },
+  ],
+  "Demand Radar": [
+    { name: "OpenRouter/Sonar", url: "https://openrouter.ai/api/v1/", method: "HEAD", okStatuses: [200, 401, 405] },
+    { name: "BSEED ArcGIS", url: "https://services2.arcgis.com/qvkbeam7Wirps6zC/ArcGIS/rest/services?f=json" },
+    { name: "Census ACS", url: "https://api.census.gov/data.json", method: "HEAD", okStatuses: [200] },
+    { name: "MIOSHA/DOL OSHA", url: "https://api.dol.gov/", method: "HEAD", okStatuses: [200, 401, 403, 404] },
+  ],
+  "Missed-Call Catch": [
+    { name: "LARA COFS (SSL issue)", url: "https://cofs.lara.state.mi.us/SearchApi/Search/EntitySearch", method: "HEAD", okStatuses: [200, 400, 405] },
+    { name: "Google Maps Places", url: "https://maps.googleapis.com/maps/api/place/findplacefromtext/json", method: "HEAD", okStatuses: [200, 400] },
+    { name: "Twilio SMS", url: "https://api.twilio.com/2010-04-01/", method: "HEAD", okStatuses: [200, 401, 405] },
+  ],
+  "Outreach Prospect Replenisher": [
+    { name: "BSEED ArcGIS", url: "https://services2.arcgis.com/qvkbeam7Wirps6zC/ArcGIS/rest/services?f=json" },
+    { name: "Google Maps Places", url: "https://maps.googleapis.com/maps/api/place/findplacefromtext/json", method: "HEAD", okStatuses: [200, 400] },
+    { name: "SAM.gov Entity API", url: "https://api.sam.gov/entity-information/v3/entities?api_key=DEMO&limit=1", method: "HEAD", okStatuses: [200, 400, 401, 403] },
+  ],
+  "Staffing Agency (TechAlert)": [
+    { name: "Apollo.io", url: "https://api.apollo.io/v1/", method: "HEAD", okStatuses: [200, 401, 403, 404] },
+    { name: "OpenRouter/Sonar", url: "https://openrouter.ai/api/v1/", method: "HEAD", okStatuses: [200, 401, 405] },
+    { name: "SAM.gov Entity API", url: "https://api.sam.gov/entity-information/v3/entities?api_key=DEMO&limit=1", method: "HEAD", okStatuses: [200, 400, 401, 403] },
+    { name: "Resend Email", url: "https://api.resend.com/domains", method: "HEAD", okStatuses: [200, 401, 429] },
+  ],
+  "Contractor Leads": [
+    { name: "Google Maps Places", url: "https://maps.googleapis.com/maps/api/place/findplacefromtext/json", method: "HEAD", okStatuses: [200, 400] },
+    { name: "OpenRouter/Sonar", url: "https://openrouter.ai/api/v1/", method: "HEAD", okStatuses: [200, 401, 405] },
+    { name: "Apollo.io", url: "https://api.apollo.io/v1/", method: "HEAD", okStatuses: [200, 401, 403, 404] },
+    { name: "Twilio SMS", url: "https://api.twilio.com/2010-04-01/", method: "HEAD", okStatuses: [200, 401, 405] },
+  ],
 };
 
 export async function probeSource(probe: SourceProbe, timeoutMs = 5000): Promise<ProbeResult> {

@@ -16,6 +16,7 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { MICHIGAN_CITIES, tierToPriority, type MichiganTier } from "../_shared/michigan-cities.ts";
+import { checkAndConsume } from "../_shared/api-budget.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -81,6 +82,13 @@ Deno.serve(async (req) => {
   const jobs: Array<{ city: typeof cities[number]; trade: string }> = [];
   for (const c of cities) {
     for (const t of trades) jobs.push({ city: c, trade: t });
+  }
+
+  const mapsOk = await checkAndConsume(supabase, "google_maps", Math.min(jobs.length, 60), "google_maps_text_search");
+  if (!mapsOk.allowed) {
+    return new Response(JSON.stringify({ ok: false, error: "Daily Maps budget exceeded — try tomorrow", scanned: 0, inserted: 0 }), {
+      status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 
   let scanned = 0;

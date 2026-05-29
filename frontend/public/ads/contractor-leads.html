@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Contractor Leads Ad</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background:#0a0a14;
+    display:flex; justify-content:center; align-items:center;
+    min-height:100vh;
+    font-family:-apple-system,'SF Pro Display','Helvetica Neue',sans-serif;
+  }
+
+  .scene { width:390px; height:844px; background:#0a0a14; position:relative; overflow:hidden; }
+
+  /* Hook */
+  .hook-overlay {
+    position:absolute; inset:0; z-index:80; background:#0a0a14;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    gap:14px; padding:40px;
+    opacity:0; transition:opacity .4s ease;
+  }
+  .hook-overlay.visible { opacity:1; }
+  .hook-line {
+    font-size:48px; font-weight:900; color:#fff;
+    text-align:center; line-height:1.05; letter-spacing:-1px;
+    opacity:0; transform:translateY(20px);
+    transition:all .5s cubic-bezier(.34,1.2,.64,1);
+  }
+  .hook-line.in { opacity:1; transform:translateY(0); }
+  .hook-line.red   { color:#ff3b30; }
+  .hook-line.blue  { color:#007aff; }
+  .hook-line.small { font-size:19px; font-weight:600; color:rgba(255,255,255,.4); margin-top:8px; }
+
+  /* Angi comparison screen */
+  .scr-split {
+    position:absolute; inset:0; background:#0d0d1a;
+    display:flex; flex-direction:column; align-items:center;
+    padding:60px 24px 24px; gap:12px;
+    opacity:0; transition:opacity .5s ease; z-index:20;
+  }
+  .scr-split.visible { opacity:1; }
+
+  .split-lbl { font-size:13px; font-weight:700; color:rgba(255,255,255,.4); text-transform:uppercase; letter-spacing:1px; }
+
+  .angi-card {
+    width:100%; background:rgba(255,255,255,.05);
+    border:1.5px solid rgba(255,59,48,.3);
+    border-radius:18px; padding:18px 20px;
+    opacity:0; transform:translateY(14px);
+    transition:all .5s cubic-bezier(.34,1.1,.64,1);
+  }
+  .angi-card.in { opacity:1; transform:translateY(0); }
+  .angi-header { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+  .angi-logo { font-size:22px; font-weight:900; color:#ff6633; }
+  .angi-sub  { font-size:14px; color:rgba(255,255,255,.45); }
+  .angi-lead-row {
+    background:rgba(255,255,255,.06);
+    border-radius:12px; padding:12px 14px; margin-bottom:8px;
+    display:flex; align-items:center; gap:10px;
+  }
+  .angi-lead-name { font-size:18px; font-weight:700; color:#fff; }
+  .angi-lead-need { font-size:14px; color:rgba(255,255,255,.5); }
+
+  .shared-row {
+    display:flex; gap:6px; flex-wrap:wrap; margin-top:10px;
+  }
+  .contractor-chip {
+    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12);
+    border-radius:20px; padding:6px 12px; font-size:13px; color:rgba(255,255,255,.6);
+    display:flex; align-items:center; gap:5px;
+  }
+  .contractor-chip.you { background:rgba(0,122,255,.15); border-color:rgba(0,122,255,.3); color:#007aff; font-weight:700; }
+
+  .angi-warning {
+    background:rgba(255,59,48,.08); border:1px solid rgba(255,59,48,.25);
+    border-radius:12px; padding:12px 14px; margin-top:10px;
+    font-size:18px; font-weight:800; color:#ff3b30; text-align:center;
+    line-height:1.3;
+    opacity:0; transform:scale(.95);
+    transition:all .4s cubic-bezier(.34,1.2,.64,1);
+  }
+  .angi-warning.in { opacity:1; transform:scale(1); }
+
+  .vs-divider {
+    font-size:32px; font-weight:900; color:rgba(255,255,255,.25);
+    opacity:0; transition:opacity .4s ease;
+  }
+  .vs-divider.in { opacity:1; }
+
+  /* DWA exclusive card */
+  .dwa-card {
+    width:100%; background:rgba(0,122,255,.06);
+    border:2px solid rgba(0,122,255,.35);
+    border-radius:18px; padding:18px 20px;
+    opacity:0; transform:translateY(14px);
+    transition:all .5s cubic-bezier(.34,1.1,.64,1);
+  }
+  .dwa-card.in { opacity:1; transform:translateY(0); }
+  .dwa-header { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+  .dwa-logo { font-size:16px; font-weight:900; color:#007aff; text-transform:uppercase; letter-spacing:.5px; }
+  .dwa-exclusive-badge {
+    background:#007aff; color:#fff; font-size:12px; font-weight:900;
+    padding:4px 10px; border-radius:6px; letter-spacing:.5px; margin-left:auto;
+  }
+  .dwa-lead-row {
+    background:rgba(0,122,255,.08); border:1px solid rgba(0,122,255,.2);
+    border-radius:12px; padding:14px; margin-bottom:10px;
+    display:flex; align-items:center; gap:12px;
+  }
+  .dwa-lead-nm   { font-size:20px; font-weight:800; color:#fff; }
+  .dwa-lead-need { font-size:15px; color:rgba(255,255,255,.55); margin-top:2px; }
+  .dwa-sent-to { font-size:15px; color:rgba(255,255,255,.35); margin-bottom:6px; }
+  .you-only {
+    font-size:28px; font-weight:900; color:#007aff; text-align:center;
+    padding:10px;
+  }
+
+  /* Phone wrap */
+  .phone-wrap {
+    position:absolute; top:50%; left:50%;
+    transform:translate(-50%,-50%);
+    width:330px; height:714px;
+    opacity:0; transition:opacity .5s ease; z-index:30;
+  }
+  .phone-wrap.visible { opacity:1; }
+  .phone {
+    width:100%; height:100%; background:#000;
+    border-radius:44px; overflow:hidden; position:relative;
+    box-shadow:0 0 0 10px #1c1c1e,0 0 0 12px #2c2c2e,0 30px 60px rgba(0,0,0,.9);
+  }
+  .sb {
+    position:absolute; top:0; left:0; right:0; z-index:100;
+    display:flex; justify-content:space-between; align-items:center;
+    padding:14px 24px 0; color:#fff; font-size:16px; font-weight:700;
+  }
+  .di {
+    position:absolute; top:10px; left:50%;
+    transform:translateX(-50%);
+    width:120px; height:34px; background:#000; border-radius:18px; z-index:200;
+  }
+
+  /* App screen */
+  .scr-app {
+    position:absolute; inset:0; background:#f2f2f7;
+    opacity:0; transition:opacity .4s ease; z-index:22;
+  }
+  .scr-app.visible { opacity:1; }
+
+  .app-hdr {
+    background:linear-gradient(135deg,#0058d0,#003ea8);
+    padding:52px 20px 18px; color:#fff;
+  }
+  .app-hdr-row { display:flex; align-items:center; justify-content:space-between; }
+  .app-nm  { font-size:24px; font-weight:900; }
+  .app-sub { font-size:14px; opacity:.7; margin-top:2px; }
+  .live-pill {
+    background:rgba(255,255,255,.2); border:1px solid rgba(255,255,255,.3);
+    border-radius:20px; padding:5px 12px;
+    font-size:13px; font-weight:800; display:flex; align-items:center; gap:6px;
+  }
+  .live-dot { width:8px; height:8px; border-radius:4px; background:#30d158; animation:lp 1.2s ease infinite; }
+  @keyframes lp { 0%,100%{opacity:1} 50%{opacity:.2} }
+
+  .leads-area { padding:14px 14px; display:flex; flex-direction:column; gap:12px; }
+  .sec-lbl { font-size:13px; font-weight:700; color:#8e8e93; text-transform:uppercase; letter-spacing:.6px; }
+
+  .lead-card {
+    background:#fff; border-radius:16px;
+    padding:16px 14px;
+    box-shadow:0 2px 8px rgba(0,0,0,.08);
+    display:flex; align-items:center; gap:12px;
+    opacity:0; transform:translateX(24px);
+    transition:all .45s cubic-bezier(.34,1.1,.64,1);
+    position:relative; overflow:hidden;
+  }
+  .lead-card.in { opacity:1; transform:translateX(0); }
+  .lead-card.excl { border-left:4px solid #007aff; }
+  .lead-card.excl::after {
+    content:'EXCLUSIVE'; position:absolute; top:8px; right:10px;
+    background:#007aff; color:#fff; font-size:10px; font-weight:900;
+    letter-spacing:.5px; padding:3px 8px; border-radius:6px;
+  }
+  .lead-av {
+    width:48px; height:48px; border-radius:24px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:24px; flex-shrink:0;
+  }
+  .av-roof { background:#fff8e1; }
+  .av-hvac { background:#e8f5e9; }
+  .av-pl   { background:#e3f2fd; }
+
+  .lead-nm   { font-size:19px; font-weight:800; color:#1c1c1e; }
+  .lead-need { font-size:15px; color:#555; margin-top:2px; }
+  .lead-tags { display:flex; gap:6px; margin-top:6px; }
+  .tag { font-size:13px; font-weight:700; border-radius:7px; padding:3px 9px; }
+  .tag-v { background:#fff8e1; color:#ff9f0a; }
+  .tag-d { background:#f0f4ff; color:#007aff; }
+  .tag-e { background:#f0f4ff; color:#007aff; font-weight:900; }
+
+  .acc-btn {
+    background:#007aff; border:none; border-radius:12px;
+    padding:10px 16px; color:#fff; font-size:16px; font-weight:800;
+    cursor:pointer; flex-shrink:0;
+    transition:transform .15s ease;
+  }
+  .acc-btn.tap { transform:scale(.9); }
+
+  /* Confirm */
+  .scr-confirm {
+    position:absolute; inset:0; background:#000;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:36px; gap:16px; text-align:center;
+    opacity:0; transition:opacity .4s ease; z-index:26;
+  }
+  .scr-confirm.visible { opacity:1; }
+  .check-ring {
+    width:90px; height:90px; border-radius:45px;
+    background:#007aff; display:flex; align-items:center; justify-content:center;
+    font-size:44px; box-shadow:0 0 40px rgba(0,122,255,.5);
+    transform:scale(0); transition:transform .5s cubic-bezier(.34,1.56,.64,1);
+  }
+  .check-ring.pop { transform:scale(1); }
+  .conf-title { font-size:30px; font-weight:900; color:#fff; }
+  .conf-sub   { font-size:17px; color:rgba(255,255,255,.5); line-height:1.5; }
+  .conf-excl {
+    background:rgba(0,122,255,.1); border:1.5px solid rgba(0,122,255,.3);
+    border-radius:14px; padding:14px 18px; width:100%;
+    opacity:0; transform:translateY(10px);
+    transition:all .4s ease;
+  }
+  .conf-excl.in { opacity:1; transform:translateY(0); }
+  .conf-excl-txt { font-size:22px; font-weight:900; color:#007aff; line-height:1.3; }
+
+  /* Final */
+  .scr-final {
+    position:absolute; inset:0; background:#000814;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:36px; gap:16px; text-align:center;
+    opacity:0; transition:opacity .6s ease; z-index:30;
+  }
+  .scr-final.visible { opacity:1; }
+  .final-logo { font-size:12px; font-weight:800; color:#007aff; letter-spacing:2px; text-transform:uppercase; }
+  .final-title{ font-size:40px; font-weight:900; color:#fff; letter-spacing:-1px; line-height:1.0; }
+  .final-sub  { font-size:17px; color:rgba(255,255,255,.5); line-height:1.5; }
+  .final-stat {
+    background:rgba(0,122,255,.1); border:1.5px solid rgba(0,122,255,.3);
+    border-radius:14px; padding:14px 20px; width:100%;
+  }
+  .final-stat-txt { color:#007aff; font-size:22px; font-weight:900; line-height:1.3; }
+  .final-cta {
+    background:#007aff; color:#fff; border:none;
+    border-radius:16px; padding:18px; font-size:20px;
+    font-weight:900; width:100%; cursor:pointer;
+  }
+  .final-price { color:rgba(255,255,255,.35); font-size:14px; }
+
+  /* Caption */
+  .caption {
+    position:absolute; left:12px; right:12px; z-index:90;
+    bottom:68px; pointer-events:none;
+  }
+  .cap-inner {
+    background:rgba(0,0,0,.82); border-radius:16px;
+    padding:16px 20px; text-align:center;
+    opacity:0; transform:translateY(12px);
+    transition:all .45s cubic-bezier(.34,1.2,.64,1);
+  }
+  .cap-inner.in { opacity:1; transform:translateY(0); }
+  .cap-txt { color:#fff; font-size:26px; font-weight:800; line-height:1.3; }
+  .cap-txt em { color:#ff3b30; font-style:normal; }
+  .cap-txt .blue { color:#007aff; }
+</style>
+</head>
+<body>
+<div class="scene">
+
+  <!-- Hook -->
+  <div class="hook-overlay" id="hook">
+    <div class="hook-line red" id="h1">Angi just sent<br>your lead to<br>5 other guys.</div>
+    <div class="hook-line blue" id="h2">We send it<br>to you only.</div>
+    <div class="hook-line small" id="h3">Exclusive contractor leads → Metro Detroit</div>
+  </div>
+
+  <!-- Split comparison (no phone) -->
+  <div class="scr-split" id="scr-split">
+    <div class="split-lbl">The difference</div>
+    <div class="angi-card" id="angi-card">
+      <div class="angi-header">
+        <div class="angi-logo">Angi</div>
+        <div class="angi-sub">/ HomeAdvisor</div>
+      </div>
+      <div class="angi-lead-row">
+        <div>
+          <div class="angi-lead-name">Mike D. — Roofing repair</div>
+          <div class="angi-lead-need">Livonia, MI · Urgent</div>
+        </div>
+      </div>
+      <div class="angi-warning" id="angi-warn">
+        Same lead sent to<br>5 other contractors
+      </div>
+      <div class="shared-row" id="shared-row" style="margin-top:10px">
+        <div class="contractor-chip">⚒ ABC Roofing</div>
+        <div class="contractor-chip you">⚒ You</div>
+        <div class="contractor-chip">⚒ Metro Roofers</div>
+        <div class="contractor-chip">⚒ Best Roof Co</div>
+        <div class="contractor-chip">⚒ Quick Fix</div>
+      </div>
+    </div>
+    <div class="vs-divider" id="vs">vs.</div>
+    <div class="dwa-card" id="dwa-card">
+      <div class="dwa-header">
+        <div class="dwa-logo">Detroit Web Agency</div>
+        <div class="dwa-exclusive-badge">EXCLUSIVE</div>
+      </div>
+      <div class="dwa-lead-row">
+        <div>
+          <div class="dwa-lead-nm">Mike D. — Roofing repair</div>
+          <div class="dwa-lead-need">Livonia, MI · Urgent</div>
+        </div>
+      </div>
+      <div class="dwa-sent-to">Sent to:</div>
+      <div class="you-only">Only you. ✓</div>
+    </div>
+  </div>
+
+  <!-- Phone with app -->
+  <div class="phone-wrap" id="phone">
+    <div class="phone">
+      <div class="di"></div>
+      <div class="sb"><span>9:41</span><div>▪▪▪▪ 📶 🔋</div></div>
+
+      <!-- App -->
+      <div class="scr-app" id="scr-app">
+        <div class="app-hdr">
+          <div class="app-hdr-row">
+            <div><div class="app-nm">Contractor Leads</div><div class="app-sub">Metro Detroit</div></div>
+            <div class="live-pill"><div class="live-dot"></div>LIVE</div>
+          </div>
+        </div>
+        <div class="leads-area">
+          <div class="sec-lbl">New Leads — Today</div>
+          <div class="lead-card excl" id="lc1">
+            <div class="lead-av av-roof">🏠</div>
+            <div>
+              <div class="lead-nm">Mike D.</div>
+              <div class="lead-need">Roofing repair · Livonia</div>
+              <div class="lead-tags">
+                <span class="tag tag-v">Urgent</span>
+                <span class="tag tag-d">3.2 mi</span>
+              </div>
+            </div>
+            <button class="acc-btn" id="acc-btn">Accept</button>
+          </div>
+          <div class="lead-card excl" id="lc2">
+            <div class="lead-av av-hvac">❄️</div>
+            <div>
+              <div class="lead-nm">Sandra P.</div>
+              <div class="lead-need">HVAC install · Dearborn</div>
+              <div class="lead-tags"><span class="tag tag-d">5.1 mi</span></div>
+            </div>
+            <button class="acc-btn">Accept</button>
+          </div>
+          <div class="lead-card excl" id="lc3">
+            <div class="lead-av av-pl">🔧</div>
+            <div>
+              <div class="lead-nm">James R.</div>
+              <div class="lead-need">Plumbing repair · Garden City</div>
+              <div class="lead-tags"><span class="tag tag-d">4.8 mi</span></div>
+            </div>
+            <button class="acc-btn">Accept</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Confirm -->
+      <div class="scr-confirm" id="scr-confirm">
+        <div class="check-ring" id="checkmark">✓</div>
+        <div class="conf-title">Lead Accepted!</div>
+        <div class="conf-sub">Mike D. is waiting for your call. Nobody else got this lead.</div>
+        <div class="conf-excl" id="conf-excl">
+          <div class="conf-excl-txt">Nobody else<br>got this lead.</div>
+        </div>
+      </div>
+
+      <!-- Final -->
+      <div class="scr-final" id="scr-final">
+        <div class="final-logo">Detroit Web Agency</div>
+        <div class="final-title">Exclusive<br>Contractor<br>Leads</div>
+        <div class="final-sub">Metro Detroit roofing, HVAC, plumbing &amp; more. Never shared.</div>
+        <div class="final-stat"><div class="final-stat-txt">10 free leads<br>to start — no commitment</div></div>
+        <button class="final-cta">Get 10 Free Leads →</button>
+        <div class="final-price">$399/month after trial · Cancel anytime</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Caption -->
+  <div class="caption" id="caption">
+    <div class="cap-inner" id="cap-inner">
+      <div class="cap-txt" id="cap-txt"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const show = id => $(id).classList.add('visible');
+  const hide = id => $(id).classList.remove('visible');
+  const fi   = id => $(id).classList.add('in');
+  const fo   = id => $(id).classList.remove('in');
+
+  function cap(html, on=true) {
+    $('cap-txt').innerHTML = html;
+    on ? fi('cap-inner') : fo('cap-inner');
+  }
+
+  function seq() {
+    // Hook
+    show('hook');
+    setTimeout(()=>fi('h1'), 300);
+    setTimeout(()=>fi('h2'), 1600);
+    setTimeout(()=>fi('h3'), 2700);
+
+    // Comparison split
+    setTimeout(()=>{ hide('hook'); show('scr-split'); cap('<em>Same lead. 5 contractors. You fight for scraps.</em>'); }, 3700);
+    setTimeout(()=>fi('angi-card'), 4200);
+    setTimeout(()=>fi('angi-warn'), 5000);
+    setTimeout(()=>fi('vs'), 6200);
+    setTimeout(()=>{ fi('dwa-card'); cap('<span class="blue">Only you. Every time.</span>'); }, 6700);
+
+    // Phone with app
+    setTimeout(()=>{ hide('scr-split'); show('phone'); show('scr-app'); cap('Your leads. Ready now.'); }, 10500);
+    setTimeout(()=>fi('lc1'), 11000);
+    setTimeout(()=>fi('lc2'), 11600);
+    setTimeout(()=>fi('lc3'), 12100);
+
+    // Accept
+    setTimeout(()=>{ $('acc-btn').classList.add('tap'); cap(''); }, 13800);
+    setTimeout(()=>$('acc-btn').classList.remove('tap'), 14000);
+
+    // Confirm
+    setTimeout(()=>{ hide('scr-app'); show('scr-confirm'); }, 14400);
+    setTimeout(()=>$('checkmark').classList.add('pop'), 14700);
+    setTimeout(()=>{ fi('conf-excl'); cap('<span class="blue">Nobody else got this.</span>'); }, 15600);
+
+    // Final
+    setTimeout(()=>{ hide('scr-confirm'); hide('phone'); cap('', false); show('scr-final'); }, 18500);
+
+    // Loop
+    setTimeout(()=>{
+      ['hook','scr-split','phone','scr-app','scr-confirm','scr-final'].forEach(hide);
+      ['h1','h2','h3','angi-card','dwa-card','vs','angi-warn','lc1','lc2','lc3','conf-excl'].forEach(fo);
+      fo('cap-inner'); $('checkmark').classList.remove('pop');
+      setTimeout(seq, 800);
+    }, 24000);
+  }
+  seq();
+</script>
+</body>
+</html>

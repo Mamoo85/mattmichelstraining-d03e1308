@@ -6,19 +6,9 @@
  * - Logs failures with { status, body_preview } so the diagnostics drawer can show them
  */
 
-import { assertDwaBudget, BudgetExceeded } from "./dwa-budget-gate.ts";
-
 const APOLLO_API_KEY = Deno.env.get("APOLLO_API_KEY") || "";
 const APOLLO_BASE = "https://api.apollo.io/api/v1";
 const DEFAULT_TIMEOUT_MS = 12_000;
-
-function providerForEndpoint(endpoint: string): string {
-  if (endpoint.includes("/organizations/enrich") || endpoint.includes("/mixed_companies")) return "apollo_org_enrich";
-  if (endpoint.includes("/people/match")) return "apollo_people_match";
-  if (endpoint.includes("/mixed_people") || endpoint.includes("/people")) return "apollo_people_search";
-  return "apollo_people_search";
-}
-
 
 export interface ApolloResult<T = any> {
   ok: boolean;
@@ -83,24 +73,12 @@ async function callApollo<T = any>(
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), init.timeoutMs ?? DEFAULT_TIMEOUT_MS);
 
-  let logSpend: ((c?: number) => void) | null = null;
-  try {
-    logSpend = await assertDwaBudget(providerForEndpoint(endpoint), undefined, "apollo");
-  } catch (e) {
-    if (e instanceof BudgetExceeded) {
-      return { ok: false, status: 0, data: null, error: "dwa_budget_exceeded", endpoint: url };
-    }
-    throw e;
-  }
-
   try {
     const res = await fetch(url, {
       ...init,
       headers: buildHeaders(init.headers as Record<string, string> | undefined),
       signal: ctrl.signal,
     });
-    if (res.ok) logSpend?.();
-
 
     const text = await res.text();
     let data: T | null = null;
@@ -196,10 +174,6 @@ export async function apolloPeopleSearch(params: {
     ...rest,
     ...(titleFilter ? { person_titles: titleFilter } : {}),
   } as Record<string, unknown>);
-
-  if (!res.ok) {
-    console.warn(`[apollo.peopleSearch] status=${res.status} error=${(res.error || "").slice(0, 200)}`);
-  }
 
   const people = (res.data?.people || []) as ApolloContact[];
   // Client-side scrub for excluded titles

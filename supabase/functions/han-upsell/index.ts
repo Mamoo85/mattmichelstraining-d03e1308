@@ -21,7 +21,7 @@ const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 
 const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
-const MATT = "matt@mattmichelstraining.com";
+const MATT = "matt@detroitwebagent.com";
 
 // What to pitch based on what they bought
 const UPSELL_MAP: Record<string, { product: string; headline: string; pitch: string; price: string; url: string; step2pitch: string }> = {
@@ -52,7 +52,7 @@ const UPSELL_MAP: Record<string, { product: string; headline: string; pitch: str
 };
 
 // Matt's own test emails — never upsell these
-const TEST_EMAILS = ["matt@mattmichelstraining.com", "matthewmichels@gmail.com", "matthewmichels4@gmail.com"];
+const TEST_EMAILS = ["matt@detroitwebagent.com", "matthewmichels@gmail.com", "matthewmichels4@gmail.com"];
 
 // Check if this email is already a subscriber (don't upsell subscribers)
 async function isSubscriber(sb: any, email: string): Promise<boolean> {

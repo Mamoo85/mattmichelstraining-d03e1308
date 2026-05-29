@@ -96,7 +96,7 @@ serve(async (req) => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            from: "matt@mattmichelstraining.com",
+            from: "matt@detroitwebagent.com",
             to: clientEmail,
             subject: `Your Regulatory Filing Draft — ${draft.title || "Ready for Review"}`,
             html: draft.draft_html || `<p>Your filing draft has been approved and is attached.</p>`,

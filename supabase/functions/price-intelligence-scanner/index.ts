@@ -212,7 +212,7 @@ FORMAT AS JSON:
 </div>
 <div class="footer">
   <img src="https://mattmichelstraining.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;vertical-align:middle;margin-right:8px;" alt="Matt">
-  <span>Matt Michels | M2 Development | matt@mattmichelstraining.com</span>
+  <span>Matt Michels | M2 Development | matt@detroitwebagent.com</span>
 </div>
 </body>
 </html>`;
@@ -221,7 +221,7 @@ FORMAT AS JSON:
             method: "POST",
             headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({
-              from: "Matt Michels <matt@mattmichelstraining.com>",
+              from: "Matt Michels <matt@detroitwebagent.com>",
               to: [client.email],
               subject: `🔔 Competitor Price Change Detected — ${todayStr}`,
               html: alertHtml,
@@ -254,7 +254,7 @@ FORMAT AS JSON:
 ${parsed.weeklyReportHtml}
 <div class="footer">
   <img src="https://mattmichelstraining.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;vertical-align:middle;margin-right:8px;" alt="Matt">
-  <span>Matt Michels | M2 Development | matt@mattmichelstraining.com</span>
+  <span>Matt Michels | M2 Development | matt@detroitwebagent.com</span>
 </div>
 </body>
 </html>`;
@@ -263,7 +263,7 @@ ${parsed.weeklyReportHtml}
             method: "POST",
             headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({
-              from: "Matt Michels <matt@mattmichelstraining.com>",
+              from: "Matt Michels <matt@detroitwebagent.com>",
               to: [client.email],
               subject: `📊 Weekly Price Intelligence Report — ${todayStr}`,
               html: weeklyHtml,

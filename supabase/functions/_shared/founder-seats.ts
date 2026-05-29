@@ -11,7 +11,7 @@
 
 export const FOUNDER_SEATS: ReadonlySet<string> = new Set([
   // Matt — owner / operator
-  "matt@mattmichelstraining.com",
+  "matt@detroitwebagent.com",
   "matt@detroitwebagent.com",
   "matthewmichels4@gmail.com",
   // Mitchell Michels — Mortgage Radar founder seat ($0/mo, lifetime)

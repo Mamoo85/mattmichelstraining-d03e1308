@@ -79,7 +79,7 @@ serve(async () => {
         await fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ from: "M² System <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], subject: `📱 Weekly SMS sent — ${client.business_name} (${sent} recipients)`, html: `<p><strong>${client.business_name}</strong> weekly SMS delivered to ${sent} contacts.<br>Message: "${message}"</p>` }),
+          body: JSON.stringify({ from: "M² System <matt@detroitwebagent.com>", to: ["matt@detroitwebagent.com"], subject: `📱 Weekly SMS sent — ${client.business_name} (${sent} recipients)`, html: `<p><strong>${client.business_name}</strong> weekly SMS delivered to ${sent} contacts.<br>Message: "${message}"</p>` }),
         });
       }
     } catch (e) {
