@@ -58,9 +58,18 @@ jobs:
         id: branch
         run: |
           BRANCH="mirror/source-$(date -u +%Y%m%d-%H%M%S)"
+          BASE="$(git rev-parse HEAD)"
           git reset --hard HEAD
-          git clean -fd
-          git checkout -B "$BRANCH" source/main --force
+          git clean -fdx
+
+          # IMPORTANT: do not push source/main's commit history directly.
+          # GitHub Push Protection scans every pushed commit, so a secret in an
+          # old source commit blocks the push even if the final file is scrubbed.
+          # Instead, create a branch from Lovable main and overlay source/main's
+          # final tree as one sanitized commit.
+          git checkout -B "$BRANCH" "$BASE" --force
+          git rm -r --ignore-unmatch .
+          git checkout source/main -- .
 
           # Scrub secrets that GitHub Push Protection blocks across ALL tracked
           # text files in the source tree (not just a hardcoded allowlist).
@@ -102,9 +111,9 @@ jobs:
             fi
           done
 
-          if ! git diff --quiet; then
-            git add -A
-            git commit -m "mirror: redact secrets blocked by push protection"
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "mirror: sync sanitized source tree"
           fi
 
           git push origin "$BRANCH"
