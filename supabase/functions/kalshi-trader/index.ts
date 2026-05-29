@@ -46,9 +46,19 @@ async function kalshiRequest(keyPem: string, keyId: string, method: string, path
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
   const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-  const keyPem = Deno.env.get("KALSHI_PRIVATE_KEY_PEM") ?? Deno.env.get("KALSHI_RSA_PRIVATE_KEY") ?? "";
+  const keyPem = Deno.env.get("KALSHI_PRIVATE_KEY_PEM") ?? Deno.env.get("KALSHI_RSA_PRIVATE_KEY") ?? Deno.env.get("KALSHI_PRIVATE_KEY") ?? "";
   const keyId  = Deno.env.get("KALSHI_API_KEY_ID") ?? Deno.env.get("KALSHI_KEY_ID") ?? "4661674e-a384-4af9-a3ca-6a8c6af836a9";
-  if (!keyPem) return new Response(JSON.stringify({ error: "No Kalshi private key" }), { status: 500, headers: { ...CORS, "Content-Type": "application/json" } });
+  if (!keyPem) {
+    const probe = {
+      KALSHI_PRIVATE_KEY_PEM_len: (Deno.env.get("KALSHI_PRIVATE_KEY_PEM") ?? "").length,
+      KALSHI_RSA_PRIVATE_KEY_len: (Deno.env.get("KALSHI_RSA_PRIVATE_KEY") ?? "").length,
+      KALSHI_PRIVATE_KEY_len: (Deno.env.get("KALSHI_PRIVATE_KEY") ?? "").length,
+      KALSHI_API_KEY_ID_len: (Deno.env.get("KALSHI_API_KEY_ID") ?? "").length,
+      env_keys_with_kalshi: Object.keys(Deno.env.toObject()).filter(k => k.toUpperCase().includes("KALSHI")),
+    };
+    return new Response(JSON.stringify({ error: "No Kalshi private key", probe }), { status: 500, headers: { ...CORS, "Content-Type": "application/json" } });
+  }
+
 
   try {
     const body = await req.json();
