@@ -111,9 +111,9 @@ jobs:
             fi
           done
 
-          if ! git diff --quiet; then
-            git add -A
-            git commit -m "mirror: redact secrets blocked by push protection"
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "mirror: sync sanitized source tree"
           fi
 
           git push origin "$BRANCH"
