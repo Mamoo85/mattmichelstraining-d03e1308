@@ -60,15 +60,23 @@ jobs:
           BRANCH="mirror/source-$(date -u +%Y%m%d-%H%M%S)"
           git checkout -b "$BRANCH" source/main
 
-          # Scrub secrets that GitHub Push Protection blocks.
-          # The source repo's frontend/CLAUDE.md contains example tokens/keys
-          # that trip secret scanning. Redact them before pushing the mirror.
-          SCRUBBED=0
-          for f in frontend/CLAUDE.md CLAUDE.md .claude/settings.json .claude/settings.local.json; do
-            if [ -f "$f" ]; then
-              # Redact common secret patterns: GitHub PATs, OpenAI/Anthropic keys, JWTs, Stripe, generic long base64
+          # Scrub secrets that GitHub Push Protection blocks across ALL tracked
+          # text files in the source tree (not just a hardcoded allowlist).
+          # Skips binaries, lockfiles, and node_modules/dist/build dirs.
+          echo "Scanning tracked files for secret patterns..."
+          git ls-files -z | while IFS= read -r -d '' f; do
+            case "$f" in
+              node_modules/*|dist/*|build/*|.next/*|*.lock|*.lockb|package-lock.json|yarn.lock|bun.lockb|pnpm-lock.yaml) continue ;;
+              *.png|*.jpg|*.jpeg|*.gif|*.webp|*.ico|*.pdf|*.zip|*.tar|*.gz|*.mp4|*.mov|*.woff|*.woff2|*.ttf|*.otf|*.eot) continue ;;
+            esac
+            # Skip binary files
+            if [ -f "$f" ] && file "$f" 2>/dev/null | grep -q "text\|empty\|JSON\|XML\|HTML\|script\|source"; then
               perl -i -pe '
                 s/ghp_[A-Za-z0-9]{20,}/ghp_REDACTED/g;
+                s/gho_[A-Za-z0-9]{20,}/gho_REDACTED/g;
+                s/ghu_[A-Za-z0-9]{20,}/ghu_REDACTED/g;
+                s/ghs_[A-Za-z0-9]{20,}/ghs_REDACTED/g;
+                s/ghr_[A-Za-z0-9]{20,}/ghr_REDACTED/g;
                 s/github_pat_[A-Za-z0-9_]{20,}/github_pat_REDACTED/g;
                 s/sk-ant-[A-Za-z0-9_\-]{20,}/sk-ant-REDACTED/g;
                 s/sk-proj-[A-Za-z0-9_\-]{20,}/sk-proj-REDACTED/g;
@@ -76,14 +84,23 @@ jobs:
                 s/sk_live_[A-Za-z0-9]{20,}/sk_live_REDACTED/g;
                 s/sk_test_[A-Za-z0-9]{20,}/sk_test_REDACTED/g;
                 s/rk_live_[A-Za-z0-9]{20,}/rk_live_REDACTED/g;
+                s/pk_live_[A-Za-z0-9]{20,}/pk_live_REDACTED/g;
+                s/whsec_[A-Za-z0-9]{20,}/whsec_REDACTED/g;
                 s/AIza[0-9A-Za-z_\-]{30,}/AIza_REDACTED/g;
-                s/xox[baprs]-[A-Za-z0-9\-]{20,}/xoxb-REDACTED/g;
+                s/AKIA[0-9A-Z]{16}/AKIA_REDACTED/g;
+                s/ASIA[0-9A-Z]{16}/ASIA_REDACTED/g;
+                s/xox[baprs]-[A-Za-z0-9\-]{20,}/xox-REDACTED/g;
                 s/eyJ[A-Za-z0-9_\-]{20,}\.[A-Za-z0-9_\-]{20,}\.[A-Za-z0-9_\-]{20,}/eyJ.REDACTED.JWT/g;
-              ' "$f" && SCRUBBED=1 || true
+                s/SG\.[A-Za-z0-9_\-]{20,}\.[A-Za-z0-9_\-]{20,}/SG.REDACTED/g;
+                s/AC[a-f0-9]{32}/AC_REDACTED_TWILIO_SID/g;
+                s/SK[a-f0-9]{32}/SK_REDACTED_TWILIO_KEY/g;
+                s/re_[A-Za-z0-9_]{20,}/re_REDACTED/g;
+                s/key-[a-f0-9]{32}/key-REDACTED/g;
+              ' "$f" 2>/dev/null || true
             fi
           done
 
-          if [ "$SCRUBBED" = "1" ] && ! git diff --quiet; then
+          if ! git diff --quiet; then
             git add -A
             git commit -m "mirror: redact secrets blocked by push protection"
           fi
@@ -91,8 +108,6 @@ jobs:
           git push origin "$BRANCH"
           echo "branch=$BRANCH" >> $GITHUB_OUTPUT
 
-          git push origin "$BRANCH"
-          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
 
       - name: Open or update mirror PR
         if: steps.diff.outputs.ahead != '0'
