@@ -3,7 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "predev": "npm --prefix frontend install --include=dev",
     "dev": "npm --prefix frontend run dev --",
+    "prebuild": "npm --prefix frontend ci --include=dev || npm --prefix frontend install --include=dev",
     "build": "npm --prefix frontend run build",
     "build:dev": "npm --prefix frontend run build:dev",
     "preview": "npm --prefix frontend run preview"
