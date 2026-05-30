@@ -3,6 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "npm --prefix frontend run dev -- --host 0.0.0.0 --port 8080"
+    "dev": "npm --prefix frontend run dev -- --host 0.0.0.0 --port 8080",
+    "build": "npm --prefix frontend run build",
+    "build:dev": "npm --prefix frontend run build:dev",
+    "preview": "npm --prefix frontend run preview"
   }
 }
