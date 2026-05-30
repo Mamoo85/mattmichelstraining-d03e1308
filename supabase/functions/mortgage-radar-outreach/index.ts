@@ -69,10 +69,51 @@ async function sendEmail(to: string, subject: string, body: string, fromName: st
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  // Auth guard: require an authenticated user who owns the referenced client_id
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
+  const userClient = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY") ?? "", {
+    global: { headers: { Authorization: authHeader } },
+    auth: { persistSession: false },
+  });
+  const { data: userData, error: userErr } = await userClient.auth.getUser();
+  if (userErr || !userData?.user) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
+  const userId = userData.user.id;
+
   const sb = createClient(SUPABASE_URL, SERVICE_ROLE, { auth: { persistSession: false } });
+
+  // Helper: verify caller owns the given client_id
+  async function assertClientOwnership(clientId: string): Promise<boolean> {
+    const { data } = await (sb.from as any)("mortgage_radar_clients")
+      .select("user_id").eq("id", clientId).maybeSingle();
+    return !!data && data.user_id === userId;
+  }
+  // Helper: verify caller owns the client referenced by an outreach row
+  async function assertOutreachOwnership(outreachId: string): Promise<string | null> {
+    const { data } = await (sb.from as any)("mortgage_radar_outreach")
+      .select("client_id").eq("id", outreachId).maybeSingle();
+    if (!data) return null;
+    const ok = await assertClientOwnership(data.client_id);
+    return ok ? data.client_id : null;
+  }
 
   try {
     const body: Body = await req.json();
+
+    // Authorization: every action must reference a client_id owned by the caller
+    if (body.action === "create" || body.action === "list") {
+      if (!body.client_id || !(await assertClientOwnership(body.client_id))) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+    } else if (body.action === "approve" || body.action === "reject") {
+      if (!body.outreach_id || !(await assertOutreachOwnership(body.outreach_id))) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+    }
 
     if (body.action === "create") {
       const { lead_id, client_id, channel, draft_subject, draft_body } = body;

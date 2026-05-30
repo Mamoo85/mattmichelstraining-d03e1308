@@ -15,10 +15,31 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
+    // Use Cloudflare-set header first (not client-spoofable); fall back to x-forwarded-for.
+    const ip = req.headers.get("cf-connecting-ip")
+      || req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+      || "unknown";
+
     const { url, email } = await req.json();
     if (!url) {
       return new Response(JSON.stringify({ error: "url required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+
+    // Per-IP rate limit (5 req/hour) — DB-backed so it survives across instances.
+    try {
+      const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+      const sinceIso = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      const { count } = await sb
+        .from("free_generation_log")
+        .select("id", { count: "exact", head: true })
+        .eq("ip_address", `ada:${ip}`)
+        .gte("created_at", sinceIso);
+      if ((count ?? 0) >= 5) {
+        return new Response(JSON.stringify({ success: false, error: "Rate limit exceeded. Try again in an hour." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      await sb.from("free_generation_log").insert({ ip_address: `ada:${ip}` });
+    } catch (e) { console.warn("rate-limit check failed:", e); }
+
 
     if (email) {
       try {

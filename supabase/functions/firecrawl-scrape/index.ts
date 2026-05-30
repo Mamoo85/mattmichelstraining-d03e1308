@@ -34,6 +34,24 @@ Deno.serve(async (req) => {
         status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+    const userId = claims.claims.sub as string;
+
+    // Per-user rate limit: 10 scrapes/hour to prevent paid-API abuse.
+    try {
+      const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+      const svc = createClient(SUPABASE_URL, SERVICE_KEY);
+      const sinceIso = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      const key = `firecrawl-scrape:${userId}`;
+      const { count } = await svc.from('free_generation_log').select('id', { count: 'exact', head: true })
+        .eq('ip_address', key).gte('created_at', sinceIso);
+      if ((count ?? 0) >= 10) {
+        return new Response(JSON.stringify({ success: false, error: 'Rate limit exceeded (10/hour). Try again later.' }), {
+          status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      await svc.from('free_generation_log').insert({ ip_address: key });
+    } catch (e) { console.warn('rate-limit check failed:', e); }
+
 
     const { url, options } = await req.json();
     if (!url) {
