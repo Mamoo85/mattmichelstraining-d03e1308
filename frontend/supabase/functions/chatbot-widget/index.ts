@@ -22,6 +22,11 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    // Cloudflare-set IP (not client-spoofable); fall back to x-forwarded-for.
+    const ip = req.headers.get("cf-connecting-ip")
+      || req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+      || "unknown";
+
     const { client_id, session_id, message, history = [] } = await req.json();
 
     if (!client_id || !session_id || !message) {
@@ -32,6 +37,24 @@ serve(async (req) => {
     }
 
     const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+
+    // Per-IP+client rate limit: 20 AI calls per hour to prevent credit drain.
+    try {
+      const sinceIso = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      const key = `chatbot:${client_id}:${ip}`;
+      const { count } = await sb
+        .from("free_generation_log")
+        .select("id", { count: "exact", head: true })
+        .eq("ip_address", key)
+        .gte("created_at", sinceIso);
+      if ((count ?? 0) >= 20) {
+        return new Response(
+          JSON.stringify({ response: "You're sending messages too quickly. Please try again in a few minutes.", lead_captured: false, rate_limited: true }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      await sb.from("free_generation_log").insert({ ip_address: key });
+    } catch (e) { console.warn("rate-limit check failed:", e); }
 
     const { data: client, error: clientErr } = await sb
       .from("chatbot_clients")
@@ -100,9 +123,9 @@ serve(async (req) => {
           method: "POST",
           headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            from: "M² Chatbot <matt@mattmichelstraining.com>",
+            from: "M² Chatbot <matt@detroitwebagent.com>",
             to: ["matthewmichels@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"],
-            reply_to: "matt@mattmichelstraining.com",
+            reply_to: "matt@detroitwebagent.com",
             subject: `New chatbot lead from ${client.business_name}'s website: ${name}, ${phone}`,
             html: `<div style="font-family:sans-serif;font-size:15px;line-height:1.8;color:#1e293b;max-width:500px;">
 <p><strong>New lead captured from the ${client.business_name} chat widget.</strong></p>
