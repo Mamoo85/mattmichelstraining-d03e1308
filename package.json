@@ -6,8 +6,8 @@
     "predev": "npm --prefix frontend install --include=dev",
     "dev": "npm --prefix frontend run dev --",
     "prebuild": "npm --prefix frontend ci --include=dev || npm --prefix frontend install --include=dev",
-    "build": "npm --prefix frontend run build && rm -rf dist && cp -R frontend/dist dist",
-    "build:dev": "npm --prefix frontend run build:dev",
+    "build": "sh -c 'npm --prefix frontend run build && rm -rf dist && cp -R frontend/dist dist'",
+    "build:dev": "sh -c 'npm --prefix frontend run build:dev && rm -rf dist && cp -R frontend/dist dist'",
     "preview": "npm --prefix frontend run preview"
   }
 }
